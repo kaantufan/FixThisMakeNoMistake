@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Too Late to Panic! — Hazırlık Defteri Maketi</title>
+<style>
+/* =====================================================================
+   1) TOKEN'LAR
+   ===================================================================== */
+:root{
+  /* --- Verilen palet (değişmez) --- */
+  --c-green : #586F57;   /* marka ana rengi */
+  --c-ink   : #2F3E46;   /* metin / çerçeve */
+  --c-yellow: #E9D758;   /* ikincil vurgu (yalnızca dolgu) */
+  --c-paper : #F7F9F6;   /* HUD zemini */
+  --c-olive : #879A78;   /* güvenli durum */
+  --c-alarm : #BC4749;   /* panik / alarm */
+
+  /* --- Türetilmiş katman/gölge tonları (yalnızca derinlik için) --- */
+  --c-ink-2 : #232D33;
+  --c-ink-3 : #1A2226;
+  --c-green-d:#465A45;
+  --c-alarm-d:#9B3A3C;
+  --c-paper-2:#EDF1EB;
+  --c-paper-3:#DCE2D8;
+  --line    : rgba(47,62,70,.16);
+  --line-2  : rgba(47,62,70,.34);
+  --ink-mut : rgba(47,62,70,.66);
+  --hair-on-dark: rgba(247,249,246,.24);
+  --shadow  : 4px 4px 0 rgba(26,34,38,.16);
+
+  /* --- Tipografi --- */
+  --f-cond: "Bahnschrift SemiCondensed","Bahnschrift","DIN Alternate","Arial Narrow",system-ui,sans-serif;
+  --f-ui  : "Bahnschrift","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --f-mono: "Cascadia Mono","Consolas","SFMono-Regular",ui-monospace,monospace;
+
+  /* --- Ölçek --- */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+  --r-1:12px; --r-2:3px; --r-pill:999px;
+  --r-panel:16px; --r-slot:11px;
+  --edge:28px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:#141A1E;
+  color:#E7ECE8;
+  font-family:var(--f-ui);
+  -webkit-font-smoothing:antialiased;
+}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+
+:where(button,a,[tabindex]):focus-visible{
+  outline:2px solid var(--c-ink);box-shadow:0 0 0 4px var(--c-yellow);border-radius:var(--r-1)
+}
+
+/* =====================================================================
+   2) SAHNE (16:9 ölçekli 1920x1080)
+   ===================================================================== */
+.workspace{padding:var(--sp-4);max-width:2200px;margin:0 auto}
+.stage-wrap{
+  position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;
+  background:#0E1214;border:1px solid rgba(247,249,246,.14);border-radius:3px;
+}
+.stage{
+  position:absolute;top:0;left:0;width:1920px;height:1080px;
+  transform-origin:top left;overflow:hidden;
+  font-family:var(--f-ui);
+}
+
+/* Sahne kenar teknik işaretleri */
+.reg{position:absolute;width:18px;height:18px;border:1px solid rgba(247,249,246,.28);pointer-events:none}
+.reg--tl{top:10px;left:10px;border-right:0;border-bottom:0}
+.reg--tr{top:10px;right:10px;border-left:0;border-bottom:0}
+.reg--bl{bottom:10px;left:10px;border-right:0;border-top:0}
+.reg--br{bottom:10px;right:10px;border-left:0;border-top:0}
+
+/* Yer tutucu arka plan sahnesi */
+.scene{position:absolute;inset:0;overflow:hidden;background:#2A2623}
+.scene__wall{position:absolute;inset:0;background:
+  linear-gradient(103deg,#8A7867 0%,#7A6A5B 26%,#5C5046 62%,#3A332C 100%)}
+.scene__wall::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(58% 46% at 30% 26%, rgba(255,214,158,.30), transparent 70%)}
+.scene__window{position:absolute;left:150px;top:120px;width:360px;height:430px;
+  background:linear-gradient(180deg,#4E6B82,#7C93A6 62%,#9AA7A2);
+  border:14px solid #1C2529;box-shadow:0 0 0 6px rgba(0,0,0,.25) inset}
+.scene__window::before,.scene__window::after{content:"";position:absolute;background:#1C2529}
+.scene__window::before{left:calc(50% - 6px);top:0;bottom:0;width:12px}
+.scene__window::after{top:calc(50% - 6px);left:0;right:0;height:12px}
+.scene__lamp{position:absolute;left:640px;top:96px;width:78px;height:118px;
+  background:linear-gradient(180deg,#2B3539,#1A2226);border-radius:6px;box-shadow:0 0 90px 34px rgba(255,196,120,.34)}
+.scene__floor{position:absolute;left:-40px;right:-40px;bottom:-40px;height:470px;
+  background:linear-gradient(180deg,#4A3A2C,#33281E);transform:perspective(900px) rotateX(52deg);transform-origin:bottom}
+.scene__floor::after{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0 118px,rgba(0,0,0,.28) 118px 124px)}
+.scene__cabinet{position:absolute;left:196px;top:352px;width:242px;height:520px;
+  background:linear-gradient(180deg,#232D33,#161D21);border:3px solid #0D1215;border-radius:3px}
+.scene__cabinet::after{content:"";position:absolute;left:60px;top:80px;right:60px;height:10px;background:#0C1114;box-shadow:0 26px 0 #0C1114,0 52px 0 #0C1114}
+.scene__counter{position:absolute;left:600px;top:520px;width:520px;height:300px;
+  background:linear-gradient(180deg,#2A343A,#1D262B);border:3px solid #0D1215;border-radius:3px}
+.scene__vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(72% 62% at 50% 45%,transparent 28%,rgba(6,9,11,.84) 100%)}
+
+.screen{position:absolute;inset:0;display:none}
+.screen.is-active{display:block}
+.dim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,13,15,.86),rgba(9,13,15,.94))}
+
+/* =====================================================================
+   3) ENVANTER YUVALARI & ORTAK ATOMLAR
+   ===================================================================== */
+.ico{width:26px;height:26px;fill:none;stroke:var(--c-ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.slot{position:relative;width:64px;height:64px;border:1px solid var(--line-2);border-radius:var(--r-1);
+  background:var(--c-paper);display:grid;place-items:center}
+.slot--filled{border-color:var(--c-ink);background:#fff}
+.slot--empty{background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(47,62,70,.06) 5px 10px)}
+.slot__k{position:absolute;top:2px;left:5px;font-family:var(--f-mono);font-size:9px;color:var(--ink-mut)}
+.slot__qty{position:absolute;right:4px;bottom:3px;font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--c-ink)}
+.slot--bag{border-style:dashed;border-color:var(--c-green-d)}
+.slot--bag.slot--filled{border-style:solid}
+
+.slots{display:flex;gap:6px}
+.slots--grid{display:grid;grid-template-columns:repeat(6,64px);gap:8px}
+.slots--grid.slots--bag{grid-template-columns:repeat(4,64px)}
+.slots__lbl{font-family:var(--f-cond);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-mut);
+  writing-mode:horizontal-tb;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.slots__lbl i{font-family:var(--f-mono);font-style:normal;font-size:10px;border:1px solid var(--line-2);padding:0 4px;border-radius:2px}
+
+/* =====================================================================
+   4) DEFTER (JOURNAL) — AÇILAN HAZIRLIK DEFTERİ
+   ===================================================================== */
+.book-wrap{position:absolute;left:calc(50% - 4px);top:50%;transform:translate(-50%,-50%);width:1210px;height:650px}
+.book{position:absolute;inset:0 132px 0 0;display:grid;grid-template-columns:1fr 1fr;z-index:2;
+  border-radius:20px;box-shadow:0 36px 72px -30px rgba(0,0,0,.8),0 0 0 1px rgba(26,34,38,.55)}
+.book__page{position:relative;display:flex;flex-direction:column;overflow:hidden;
+  padding:32px 34px 26px;
+  background:
+    linear-gradient(180deg,rgba(47,62,70,.06),rgba(47,62,70,0) 130px),
+    linear-gradient(90deg,rgba(47,62,70,.052) 1px,transparent 1px) 0 0/23px 23px,
+    linear-gradient(180deg,rgba(47,62,70,.052) 1px,transparent 1px) 0 0/23px 23px,
+    #FBFCFA;}
+.book__page--l{border-radius:20px 3px 3px 20px;transform-origin:center top}
+.book__page--r{border-radius:3px 20px 20px 3px}
+.book__spiral{position:absolute;left:28px;right:calc(50% + 28px);top:-18px;height:38px;
+  z-index:6;display:flex;justify-content:space-between;pointer-events:none}
+.book__spiral i{position:relative;display:block;width:17px;height:36px;border-radius:48%;
+  border:3px solid #66736B;border-left-color:#B9C3B9;border-top-color:#D9DFD5;
+  border-right-color:#34453E;background:transparent;
+  box-shadow:2px 3px 2px rgba(25,35,28,.3),inset 1px 0 1px rgba(255,255,255,.75)}
+.book__spiral i::before{content:"";position:absolute;right:-5px;bottom:-5px;width:12px;height:7px;
+  border-radius:50%;background:#344139;box-shadow:0 1px 0 #fff;z-index:-1}
+.book__ttl{font-family:var(--f-cond);font-weight:700;font-size:31px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--c-ink);margin:0;line-height:1.05}
+.book__sub{font-family:var(--f-mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-mut);margin:6px 0 0}
+.book__rule{height:2px;background:var(--c-green);border-radius:2px;margin:13px 0 15px}
+.book__ttl--sm{font-size:22px;margin-bottom:2px}
+
+/* --- Sol sayfanın yaprakları: seçilen ayraca göre değişir --- */
+.sheet{display:none;flex-direction:column;flex:1;min-height:0}
+.sheet.is-on{display:flex}
+
+/* --- Büyük tehlike/araç görseli (morph'lu leke arkasında) --- */
+.hazard{position:relative;margin-top:3px;flex:0 0 158px;display:grid;place-items:center;
+  border:1px solid rgba(47,62,70,.2);border-radius:14px;background:rgba(255,255,255,.55);overflow:hidden}
+.hazard svg{position:relative;z-index:1;width:82%;height:82%;stroke:var(--c-ink);fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.hazard svg .rough{opacity:.3}
+.hazard .blob{left:15%;right:15%;top:11%;bottom:11%}
+.hazard.is-pulse svg{animation:morphPulse .55s cubic-bezier(.3,1.3,.4,1)}
+
+/* --- Önlem listesi (oyuncunun tik attığı checkbox'lar) --- */
+.prec{list-style:none;margin:13px 0 0;padding:0 9px 10px 0;overflow-y:auto;flex:1;min-height:0;
+  display:flex;flex-direction:column;gap:9px}
+.prec li{display:flex}
+.prec label{display:flex;gap:13px;align-items:flex-start;width:100%;cursor:pointer;
+  border:1px solid rgba(47,62,70,.2);border-radius:12px;background:rgba(255,255,255,.72);
+  padding:12px 14px;font-size:15.5px;line-height:1.4;color:var(--c-ink);
+  transition:background .15s,border-color .15s}
+.prec label:hover{background:#fff;border-color:rgba(47,62,70,.44)}
+.prec input{appearance:none;-webkit-appearance:none;flex:0 0 24px;height:24px;margin:1px 0 0;
+  border:2px solid var(--c-ink);border-radius:7px;background:#fff;cursor:pointer;position:relative;
+  transition:background .15s,border-color .15s}
+.prec input::after{content:"";position:absolute;left:6px;top:2px;width:7px;height:13px;
+  border:solid var(--c-paper);border-width:0 3px 3px 0;transform:rotate(42deg) scale(0);transition:transform .16s}
+.prec input:checked{background:var(--c-green);border-color:var(--c-green-d)}
+.prec input:checked::after{transform:rotate(42deg) scale(1)}
+.prec input:focus-visible{outline:2px solid var(--c-yellow);outline-offset:2px}
+.prec li.is-done label{background:rgba(135,154,120,.18);border-color:rgba(88,111,87,.55)}
+.prec li.is-done span{color:var(--ink-mut);text-decoration:line-through;
+  text-decoration-color:rgba(47,62,70,.4)}
+.prec::-webkit-scrollbar{width:10px}
+.prec::-webkit-scrollbar-thumb{background:rgba(47,62,70,.32);border-radius:99px;
+  border:3px solid transparent;background-clip:content-box}
+.prec::-webkit-scrollbar-track{background:rgba(47,62,70,.07);border-radius:99px}
+
+/* --- morph çekirdeği --- */
+@keyframes wobble{0%,100%{transform:rotate(0)}30%{transform:rotate(.7deg)}70%{transform:rotate(-.7deg)}}
+.blob{position:absolute;left:12%;right:12%;top:8%;bottom:2%;z-index:0;
+  background:rgba(88,111,87,.14);border-radius:46% 54% 40% 60%/55% 45% 55% 45%;
+  animation:blob 9s ease-in-out infinite}
+@keyframes blob{
+  0%,100%{border-radius:46% 54% 40% 60%/55% 45% 55% 45%;transform:rotate(0) scale(1)}
+  33%{border-radius:64% 36% 58% 42%/40% 62% 38% 60%;transform:rotate(7deg) scale(1.07)}
+  66%{border-radius:36% 64% 46% 54%/62% 38% 60% 40%;transform:rotate(-6deg) scale(.96)}
+}
+@keyframes morphPulse{0%{transform:scale(1)}45%{transform:scale(1.14) rotate(2.5deg)}100%{transform:scale(1)}}
+
+/* --- Sağ sayfa: büyük, bağımsız durum widget'ları --- */
+.journal-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-shrink:0}
+.journal-stat{position:relative;min-width:0;min-height:142px;padding:19px 20px;
+  border:1px solid rgba(47,62,70,.28);border-radius:14px;background:#F0F4EB;
+  box-shadow:0 4px 0 rgba(47,62,70,.09);color:var(--c-ink);overflow:hidden}
+.journal-stat__label{position:relative;z-index:1;display:block;font-family:var(--f-cond);
+  font-size:16px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.journal-stat__value{position:relative;z-index:1;display:block;margin-top:13px;
+  font-family:var(--f-mono);font-size:52px;font-weight:700;line-height:1;
+  letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.journal-stat__value small{font-size:26px;font-weight:500;letter-spacing:-.04em}
+.journal-stat__art{position:absolute;right:16px;top:14px;width:68px;height:68px;
+  fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.12}
+.journal-stat--damage{grid-column:1/-1;min-height:146px;background:#F7EDE6}
+.journal-stat--damage .journal-stat__value{font-size:70px;margin-top:8px;color:var(--c-alarm)}
+.journal-stat--damage .journal-stat__art{width:112px;height:112px;right:26px;top:12px;opacity:.25}
+.journal-stat__meter{position:absolute;left:20px;right:20px;bottom:16px;height:5px;
+  border-radius:99px;background:rgba(47,62,70,.12);overflow:hidden}
+.journal-stat__meter i{display:block;width:38%;height:100%;background:var(--c-alarm)}
+.journal-stat--capacity{background:#E9EEF0}
+
+.plan__note{margin:auto 0 0;font-size:14px;line-height:1.5;color:rgba(47,62,70,.78)}
+
+.book__sign{margin-top:auto;display:flex;align-items:center;gap:10px;padding-top:16px;
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-mut)}
+.book__sign i{flex:1;height:1px;background:rgba(47,62,70,.22)}
+
+/* --- İnteraktif kat planı --- */
+.plan{margin-top:13px;border:1px solid rgba(47,62,70,.26);border-radius:14px;background:#fff;
+  padding:11px 13px 9px;transform:rotate(.35deg)}
+.plan__head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.plan__lbl{font-family:var(--f-cond);font-size:13.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mut)}
+.switch{display:flex;border:1.5px solid var(--c-ink);border-radius:99px;overflow:hidden}
+.switch__b{border:0;background:transparent;color:var(--c-ink);cursor:pointer;
+  font-family:var(--f-cond);font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+  padding:6px 15px;transition:background .15s,color .15s}
+.switch__b.is-on{background:var(--c-ink);color:var(--c-paper)}
+.plan__svg{width:100%;height:auto;display:block}
+.plan__svg .floor{display:none}
+.plan__svg .floor.is-on{display:block}
+.plan__svg .room{cursor:pointer}
+.plan__svg .room rect{fill:#FBFCFA;transition:fill .16s}
+.plan__svg .room:hover rect{fill:#E7EFE3}
+.plan__svg .room:focus-visible rect{stroke:var(--c-green);stroke-width:2.6}
+.plan__svg .room.is-done rect{fill:#D6E1CD}
+.plan__svg .room text{font-family:var(--f-ui);font-size:12px;fill:var(--c-ink);text-anchor:middle;pointer-events:none}
+.plan__svg .room.is-done text{font-weight:600}
+.plan__svg .walls{pointer-events:none}
+.plan__svg .walls path{fill:none;stroke:var(--c-ink);stroke-width:1.7;stroke-linecap:square}
+.plan__svg .check{color:var(--c-green);opacity:0;transition:opacity .18s;pointer-events:none}
+.plan__svg .room.is-done .check{opacity:1}
+.plan__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;
+  font-family:var(--f-mono);font-size:12.5px;color:var(--ink-mut)}
+.plan__foot b{color:var(--c-ink)}
+
+.sticky{position:relative;align-self:flex-end;flex-shrink:0;width:100%;margin-top:24px;transform:rotate(1.2deg);z-index:7;
+  background:var(--c-yellow);border-radius:8px;padding:17px 19px;
+  box-shadow:0 16px 26px -12px rgba(0,0,0,.6);font-size:15.5px;color:var(--c-ink);line-height:1.5}
+.sticky::before{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%) rotate(-3deg);
+  width:106px;height:24px;background:rgba(247,249,246,.62);border:1px solid rgba(47,62,70,.18);border-radius:2px}
+.sticky > b{font-family:var(--f-cond);letter-spacing:.14em;text-transform:uppercase;font-size:12.5px;display:block;margin-bottom:6px}
+.sticky p{margin:0}
+
+/* --- Sayfa yığını: defterin altındaki diğer sayfalar (derinlik) --- */
+.book__stack{position:absolute;inset:16px 0 16px 0;z-index:0;pointer-events:none}
+.book__stack i{position:absolute;top:0;bottom:0;border-radius:8px 22px 22px 8px;
+  border:1px solid rgba(47,62,70,.2);box-shadow:0 18px 30px -22px rgba(0,0,0,.85)}
+.book__stack i:nth-child(1){right:124px;background:#EDF1EA;transform:translateY(7px)}
+.book__stack i:nth-child(2){right:112px;background:#E7ECE2;transform:translateY(13px)}
+.book__stack i:nth-child(3){right:100px;background:#E1E6DC;transform:translateY(19px)}
+
+/* --- Ayraçlar: defterden taşan büyük, görselli sayfa ayraçları --- */
+.book__tabs{position:absolute;inset:0;z-index:1;pointer-events:none}
+.dv{position:absolute;pointer-events:auto;cursor:pointer;text-align:left;
+  width:238px;height:122px;padding:12px 16px;display:flex;align-items:center;gap:14px;
+  border:1px solid var(--c-ink);border-left:0;border-radius:0 20px 20px 0;
+  background:var(--c-paper);color:var(--c-ink);
+  box-shadow:10px 14px 24px -16px rgba(0,0,0,.85);
+  transition:transform .24s cubic-bezier(.2,.9,.3,1),background .16s,box-shadow .24s}
+.dv:nth-child(1){--dv-slide:60px;top:50px;right:-46px;z-index:4}
+.dv:nth-child(2){--dv-slide:74px;top:184px;right:-32px;z-index:3;background:#F2F5EF}
+.dv:nth-child(3){--dv-slide:88px;top:318px;right:-18px;z-index:2;background:#EDF1EA}
+.dv:nth-child(4){--dv-slide:100px;top:452px;right:-6px;z-index:1;background:#E7EBE4}
+.dv__art{position:relative;flex:0 0 88px;height:88px;display:block}
+.dv__art svg{position:relative;z-index:1;width:100%;height:100%;stroke:var(--c-ink);fill:none;
+  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:.9;
+  animation:wobble 8s ease-in-out infinite}
+.dv__art svg .rough{opacity:.3}
+.dv:nth-child(2) .dv__art svg{animation-delay:-2s}
+.dv:nth-child(3) .dv__art svg{animation-delay:-4s}
+.dv:nth-child(4) .dv__art svg{animation-delay:-6s}
+.dv__lbl{display:block;flex:1;min-width:0}
+.dv__lbl b{display:block;font-family:var(--f-cond);font-weight:700;font-size:22px;letter-spacing:.07em;
+  text-transform:uppercase;line-height:1}
+.dv__lbl i{display:block;font-family:var(--f-mono);font-style:normal;font-size:11px;letter-spacing:.07em;
+  text-transform:uppercase;opacity:.62;margin-top:9px;line-height:1.35}
+.dv:hover,.dv:focus-visible{transform:translateX(var(--dv-slide));box-shadow:12px 16px 26px -16px rgba(0,0,0,.9)}
+.dv:focus-visible{outline:2px solid var(--c-yellow);outline-offset:-3px}
+.dv.is-on{background:var(--c-green);color:var(--c-paper);border-color:var(--c-green-d);z-index:5}
+.dv.is-on .dv__art svg{stroke:var(--c-paper);opacity:.96}
+.dv.is-on .blob{background:rgba(247,249,246,.24)}
+.dv.is-on .dv__lbl i{opacity:.82}
+
+@keyframes dvOut{from{transform:translateX(-72px);opacity:.15}to{transform:none;opacity:1}}
+.screen[data-screen="journal"].is-active .dv{animation:dvOut .55s cubic-bezier(.2,.9,.3,1) backwards}
+.screen[data-screen="journal"].is-active .dv:nth-child(1){animation-delay:.10s}
+.screen[data-screen="journal"].is-active .dv:nth-child(2){animation-delay:.19s}
+.screen[data-screen="journal"].is-active .dv:nth-child(3){animation-delay:.28s}
+.screen[data-screen="journal"].is-active .dv:nth-child(4){animation-delay:.37s}
+
+/* --- Spiralden önden arkaya kıvrılan yaprak: parçalar ortak 3B yay üzerinde --- */
+.book__underleaf{position:absolute;inset:0 50% 0 0;pointer-events:none;
+  border-radius:20px 3px 3px 20px;
+  background:linear-gradient(180deg,#DDE3D8,#F3F5EE 20%,#F8F9F4);
+  box-shadow:inset 0 5px 12px rgba(47,62,70,.12)}
+.book__leaf-shadow{position:absolute;inset:0 50% 0 0;z-index:3;pointer-events:none;opacity:0;
+  border-radius:20px 3px 3px 20px;transform-origin:center top;
+  background:linear-gradient(180deg,rgba(35,45,34,.38),rgba(35,45,34,.16) 62%,transparent)}
+.book__page--l{z-index:2;backface-visibility:hidden}
+.book.is-turning .book__page--l{pointer-events:none;animation:none!important}
+.book.has-turned .book__page--l{animation:none!important}
+.book__turn-window{position:absolute;inset:0 50% 0 0;z-index:4;overflow:visible;
+  border-radius:20px 3px 3px 20px;pointer-events:none;perspective:2200px;perspective-origin:50% 0}
+.book__turn-mesh{position:absolute;inset:0;transform-style:preserve-3d}
+.book__strip{position:absolute;left:0;top:0;width:100%;transform-origin:50% 0;
+  transform-style:preserve-3d;will-change:transform}
+.book__strip-face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden}
+.book__strip-front{filter:brightness(var(--paper-light,1))}
+.book__strip-back{transform:rotateX(180deg);background:
+  repeating-linear-gradient(0deg,transparent 0 22px,rgba(65,80,57,.05) 22px 23px),#E9EDE2;
+  filter:brightness(var(--paper-light,1));box-shadow:inset 0 -1px rgba(47,62,70,.05)}
+.book__snapshot{position:absolute;left:0;top:0;margin:0;border-radius:20px 3px 3px 20px;
+  transform:none!important}
+.book__snapshot,.book__snapshot *{animation:none!important;transition:none!important;pointer-events:none!important}
+
+@keyframes bookIn{from{opacity:.15;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+.screen[data-screen="journal"].is-active .book{animation:bookIn .46s ease-out both}
+.screen[data-screen="journal"].is-active .book__stack{animation:bookIn .5s ease-out both}
+
+/* Hareket azaltma tercihi */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== İKON SPRITE ==================== -->
+<svg class="sprite" aria-hidden="true">
+  <!-- yangın tüpü -->
+  <symbol id="i-ext" viewBox="0 0 32 32">
+    <rect x="10" y="9" width="12" height="19" rx="3"/>
+    <path d="M13 9V6h6v3M16 6V3"/><path d="M22 12h5"/>
+    <path d="M12 15h8"/>
+  </symbol>
+  <!-- battaniye -->
+  <symbol id="i-blanket" viewBox="0 0 32 32">
+    <rect x="5" y="8" width="22" height="16" rx="2"/><path d="M5 13h22M5 19h22"/>
+    <path d="M12 8v16"/>
+  </symbol>
+  <!-- snack bar -->
+  <symbol id="i-snack" viewBox="0 0 32 32">
+    <rect x="5" y="11" width="22" height="13" rx="2"/><path d="M8 11l4 13M20 11l4 13"/>
+  </symbol>
+  <!-- elma -->
+  <symbol id="i-apple" viewBox="0 0 32 32">
+    <path d="M16 11c-4-4-10-1-10 5s5 12 10 12 10-6 10-12-6-9-10-5z"/>
+    <path d="M16 11V6M16 6c1-2 3-3 5-3"/>
+  </symbol>
+  <!-- konserve -->
+  <symbol id="i-can" viewBox="0 0 32 32">
+    <rect x="9" y="8" width="14" height="18" rx="2"/><ellipse cx="16" cy="8" rx="7" ry="2.6"/>
+    <path d="M9 12h14"/>
+  </symbol>
+  <!-- su şişesi -->
+  <symbol id="i-water" viewBox="0 0 32 32">
+    <path d="M13 4h6v5l3 4v14a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V13l3-4z"/>
+    <path d="M13 9h6M11 19h10"/>
+  </symbol>
+  <!-- enerji içeceği -->
+  <symbol id="i-energy" viewBox="0 0 32 32">
+    <rect x="10" y="5" width="12" height="22" rx="3"/><path d="M16 10l-4 7h4l-1 6 5-8h-4z"/>
+  </symbol>
+  <!-- batarya (büyük) -->
+  <symbol id="i-batt" viewBox="0 0 32 32">
+    <rect x="6" y="10" width="20" height="12" rx="2"/><path d="M26 14v4"/>
+    <path d="M11 13v6M16 13v6M21 13v6"/>
+  </symbol>
+  <!-- küçük pil -->
+  <symbol id="i-cell" viewBox="0 0 32 32">
+    <rect x="11" y="6" width="10" height="20" rx="2"/><path d="M14 4h4"/>
+    <path d="M11 12h10"/>
+  </symbol>
+  <!-- telsiz -->
+  <symbol id="i-radio" viewBox="0 0 32 32">
+    <rect x="5" y="13" width="22" height="13" rx="2"/><path d="M22 13V5l-6 3"/>
+    <path d="M9 18h6M9 22h6"/><circle cx="22" cy="19.5" r="2.6"/>
+  </symbol>
+  <!-- oda tamam tiki -->
+  <symbol id="check" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10.5" fill="currentColor"/>
+    <path d="M7.4 12.6l3.1 3.2 6.1-7.2" fill="none" stroke="#F7F9F6" stroke-width="2.6"
+      stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+</svg>
+
+<main class="workspace">
+  <div class="stage-wrap" id="stageWrap">
+    <div class="stage" id="stage">
+
+      <!-- ============ YER TUTUCU SAHNE ============ -->
+      <div class="scene" id="scene">
+        <div class="scene__wall"></div>
+        <div class="scene__window"></div>
+        <div class="scene__lamp"></div>
+        <div class="scene__cabinet"></div>
+        <div class="scene__floor"></div>
+        <div class="scene__counter"></div>
+        <div class="scene__vignette"></div>
+      </div>
+      <i class="reg reg--tl"></i><i class="reg reg--tr"></i><i class="reg reg--bl"></i><i class="reg reg--br"></i>
+
+      <!-- ==================================================== -->
+      <!-- DEFTER (JOURNAL) — bağımsız oyuncu menüsü            -->
+      <!-- ==================================================== -->
+      <section class="screen is-active" data-screen="journal">
+        <div class="dim" style="background:linear-gradient(180deg,rgba(9,13,15,.9),rgba(9,13,15,.96))"></div>
+        <div class="book-wrap">
+
+          <!-- defterin altındaki diğer sayfalar (derinlik) -->
+          <div class="book__stack" aria-hidden="true"><i></i><i></i><i></i></div>
+
+          <div class="book">
+            <div class="book__underleaf" aria-hidden="true"></div>
+            <div class="book__leaf-shadow" aria-hidden="true"></div>
+            <!-- SOL SAYFA: ayraca göre değişen yapraklar -->
+            <div class="book__page book__page--l">
+
+              <!-- YAPRAK 0 · ODA TAKİBİ (defter açılınca gelen ilk yaprak) -->
+              <div class="sheet is-on" data-sheet="oda">
+                <h2 class="book__ttl">Oda<br>Takibi</h2>
+                <p class="book__sub">aldığını aldıysan odaya dokun</p>
+                <div class="book__rule"></div>
+
+                <div class="plan">
+                  <div class="plan__head">
+                    <span class="plan__lbl">Kat seç</span>
+                    <div class="switch" role="tablist" aria-label="Kat seçimi">
+                      <button class="switch__b" data-floor="alt" role="tab" aria-selected="false">Alt kat</button>
+                      <button class="switch__b is-on" data-floor="ust" role="tab" aria-selected="true">Üst kat</button>
+                    </div>
+                  </div>
+
+                  <svg class="plan__svg" viewBox="0 0 300 170" aria-label="Kat planı">
+                    <!-- ÜST KAT -->
+                    <g class="floor is-on" data-floor="ust">
+                      <g class="room" data-room="ust-yatak" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="8" y="8" width="142" height="87"/><text x="79" y="55">Yatak</text>
+                        <use class="check" href="#check" x="116" y="14" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="ust-cocuk" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="150" y="8" width="142" height="87"/><text x="221" y="55">Çocuk</text>
+                        <use class="check" href="#check" x="258" y="14" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="ust-banyo" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="8" y="95" width="82" height="67"/><text x="49" y="133">Banyo</text>
+                        <use class="check" href="#check" x="56" y="101" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="ust-koridor" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="90" y="95" width="120" height="67"/><text x="150" y="133">Koridor</text>
+                        <use class="check" href="#check" x="176" y="101" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="ust-calisma" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="210" y="95" width="82" height="67"/><text x="251" y="133">Çalışma</text>
+                        <use class="check" href="#check" x="258" y="101" width="22" height="22"/>
+                      </g>
+                      <g class="walls" aria-hidden="true">
+                        <path d="M8 8h284v154H8z"/><path d="M150 8v87"/><path d="M8 95h284"/>
+                        <path d="M90 95v67"/><path d="M210 95v67"/>
+                      </g>
+                    </g>
+
+                    <!-- ALT KAT -->
+                    <g class="floor" data-floor="alt">
+                      <g class="room" data-room="alt-salon" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="8" y="8" width="142" height="87"/><text x="79" y="55">Salon</text>
+                        <use class="check" href="#check" x="116" y="14" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="alt-mutfak" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="150" y="8" width="142" height="87"/><text x="221" y="55">Mutfak</text>
+                        <use class="check" href="#check" x="258" y="14" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="alt-giris" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="8" y="95" width="82" height="67"/><text x="49" y="133">Giriş</text>
+                        <use class="check" href="#check" x="56" y="101" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="alt-depo" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="90" y="95" width="120" height="67"/><text x="150" y="133">Depo</text>
+                        <use class="check" href="#check" x="176" y="101" width="22" height="22"/>
+                      </g>
+                      <g class="room" data-room="alt-garaj" tabindex="0" role="button" aria-pressed="false">
+                        <rect x="210" y="95" width="82" height="67"/><text x="251" y="133">Garaj</text>
+                        <use class="check" href="#check" x="258" y="101" width="22" height="22"/>
+                      </g>
+                      <g class="walls" aria-hidden="true">
+                        <path d="M8 8h284v154H8z"/><path d="M150 8v87"/><path d="M8 95h284"/>
+                        <path d="M90 95v67"/><path d="M210 95v67"/>
+                      </g>
+                    </g>
+                  </svg>
+
+                  <div class="plan__foot">
+                    <span><b id="planCount">0 / 5</b> oda tamam</span>
+                    <span>odaya tıkla &rarr; tik</span>
+                  </div>
+                </div>
+
+                <p class="plan__note">Bir odaya girip alacağını aldıysan plana dokun: tik düşer, sayaç işler.
+                  Kat anahtarıyla üst ve alt katı ayrı ayrı işaretleyebilirsin.</p>
+              </div>
+
+              <!-- YAPRAK · SEL -->
+              <div class="sheet" data-sheet="sel">
+                <h2 class="book__ttl book__ttl--sm">Sel</h2>
+                <p class="book__sub">önlemler &middot; <span id="sc-sel">0 / 6 tamam</span></p>
+                <div class="book__rule"></div>
+                <div class="hazard"><span class="blob"></span>
+                  <svg viewBox="0 0 120 84" aria-hidden="true">
+                    <path d="M32 50V26l24-14 24 14v24"/>
+                    <path d="M44 50V36h12v14"/>
+                    <path d="M68 34h12v10"/>
+                    <path d="M18 58c9-6 17-6 26 0s17 6 26 0 17-6 26 0"/>
+                    <path class="rough" d="M16 64c10-6 18-6 28 0s18 6 28 0 18-6 28 0"/>
+                  </svg>
+                </div>
+                <ul class="prec">
+                  <li><label><input type="checkbox"><span>Bodrum ve girişteki ana su vanasını kapat.</span></label></li>
+                  <li><label><input type="checkbox"><span>Prizleri ve uzatma kablolarını yerden kaldır.</span></label></li>
+                  <li><label><input type="checkbox"><span>Evrak ve elektroniği üst kata taşı.</span></label></li>
+                  <li><label><input type="checkbox"><span>Kıymetli eşyayı yerden en az 40 cm yukarı koy.</span></label></li>
+                  <li><label><input type="checkbox"><span>Bodrum penceresini ve kapı altı boşluğunu bantla.</span></label></li>
+                  <li><label><input type="checkbox"><span>Yağmur suyu giderini ve mazgalı temizle.</span></label></li>
+                </ul>
+              </div>
+
+              <!-- YAPRAK · DEPREM -->
+              <div class="sheet" data-sheet="deprem">
+                <h2 class="book__ttl book__ttl--sm">Deprem</h2>
+                <p class="book__sub">önlemler &middot; <span id="sc-deprem">0 / 6 tamam</span></p>
+                <div class="book__rule"></div>
+                <div class="hazard"><span class="blob"></span>
+                  <svg viewBox="0 0 120 84" aria-hidden="true">
+                    <path d="M10 70l14-9 11 7 13-11 11 9 13-13 15 11"/>
+                    <path d="M58 14h22v34H58z"/>
+                    <path d="M58 14l-9 6"/>
+                    <path d="M86 20l9 6-7 6 9 7-7 6"/>
+                    <path class="rough" d="M8 74l15-9 11 7 13-11 11 9 13-13 16 11"/>
+                  </svg>
+                </div>
+                <ul class="prec">
+                  <li><label><input type="checkbox"><span>Ağır ve yüksek mobilyayı duvara ankrajla.</span></label></li>
+                  <li><label><input type="checkbox"><span>Üst dolaplara kilit tak.</span></label></li>
+                  <li><label><input type="checkbox"><span>Televizyon ve monitörü sabitle.</span></label></li>
+                  <li><label><input type="checkbox"><span>Pencere altına yatak veya koltuk koyma.</span></label></li>
+                  <li><label><input type="checkbox"><span>Şofbeni ve kombiyi esnek bağlantıyla sabitle.</span></label></li>
+                  <li><label><input type="checkbox"><span>Afet çantasını girişe yakın tut.</span></label></li>
+                </ul>
+              </div>
+
+              <!-- YAPRAK · FIRTINA (hortum) -->
+              <div class="sheet" data-sheet="firtina">
+                <h2 class="book__ttl book__ttl--sm">Fırtına</h2>
+                <p class="book__sub">önlemler &middot; <span id="sc-firtina">0 / 6 tamam</span></p>
+                <div class="book__rule"></div>
+                <div class="hazard"><span class="blob"></span>
+                  <svg viewBox="0 0 120 84" aria-hidden="true">
+                    <path d="M26 14c24 7 44 7 68 0"/>
+                    <path d="M32 22c20 5 36 5 56 0"/>
+                    <path d="M33 24c-1 14 8 20 13 29 5 8 12 16 14 24"/>
+                    <path d="M87 24c1 14-8 20-13 29-5 8-12 16-14 24"/>
+                    <path d="M37 38c15 4 31 4 46 0"/>
+                    <path d="M43 50c11 3 23 3 34 0"/>
+                    <path d="M49 61c7 2 15 2 22 0"/>
+                    <path class="rough" d="M30 79c11-3 19-3 30 0s17 3 28 0"/>
+                  </svg>
+                </div>
+                <ul class="prec">
+                  <li><label><input type="checkbox"><span>Balkon ve bahçedeki gevşek eşyayı içeri al.</span></label></li>
+                  <li><label><input type="checkbox"><span>Panjur ve kepenkleri kapat, camları bantla.</span></label></li>
+                  <li><label><input type="checkbox"><span>Ağaç dallarını ve su oluklarını temizle.</span></label></li>
+                  <li><label><input type="checkbox"><span>Şarj cihazlarını ve yedek pilleri doldur.</span></label></li>
+                  <li><label><input type="checkbox"><span>Tabela ve anten gibi dış cephe parçalarını sabitle.</span></label></li>
+                  <li><label><input type="checkbox"><span>Fırtına dinene kadar camdan uzak dur.</span></label></li>
+                </ul>
+              </div>
+
+              <!-- YAPRAK · ENVANTER (dağcı çantası) -->
+              <div class="sheet" data-sheet="envanter">
+                <h2 class="book__ttl book__ttl--sm">Envanter</h2>
+                <p class="book__sub">çantayı buradan tamamla</p>
+                <div class="book__rule"></div>
+                <div class="slots__lbl"><i>Tab</i> Envanter
+                  <span class="num" style="margin-left:auto;color:var(--ink-mut)">8 / 12</span></div>
+                <div class="slots slots--grid" style="margin-bottom:16px"></div>
+                <div class="slots__lbl"><i>B</i> Afet Çantası
+                  <span class="num" style="margin-left:auto;color:var(--ink-mut)">5 / 8</span></div>
+                <div class="slots slots--bag slots--grid"></div>
+                <p class="plan__note">Kesikli çerçeveli yuvalar afet çantasıdır; yuva doldukça çerçeve düzleşir
+                  ve ilerleme renk değiştirmeden okunur.</p>
+              </div>
+            </div>
+
+            <!-- SAĞ SAYFA: durum widget'ları ve not (tüm ayraçlarda sabit kalır) -->
+            <div class="book__page book__page--r">
+              <h2 class="book__ttl">Durum Kaydı</h2>
+              <p class="book__sub">16.10.2026 &middot; hazırlık aşaması</p>
+              <div class="book__rule"></div>
+
+              <div class="journal-stats" role="group" aria-label="Durum istatistikleri">
+                <div class="journal-stat journal-stat--damage">
+                  <span class="journal-stat__label">Hasar</span>
+                  <b class="journal-stat__value">%38</b>
+                  <svg class="journal-stat__art" viewBox="0 0 80 80" aria-hidden="true"><path d="M9 36 40 10 71 36M18 29v40h44V29M42 27l-8 15 13 5-9 19M24 49v10M55 38v10"/></svg>
+                  <span class="journal-stat__meter" aria-hidden="true"><i></i></span>
+                </div>
+                <div class="journal-stat journal-stat--budget">
+                  <span class="journal-stat__label">Bütçe</span>
+                  <b class="journal-stat__value"><small>₺</small>720</b>
+                  <svg class="journal-stat__art" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 18h42v34H10zM10 18l32-8v8M42 29h14v13H42z"/><circle cx="48" cy="35.5" r="1.5"/></svg>
+                </div>
+                <div class="journal-stat journal-stat--capacity">
+                  <span class="journal-stat__label">Taşıma kapasitesi</span>
+                  <b class="journal-stat__value">6 <small>/ 8</small></b>
+                  <svg class="journal-stat__art" viewBox="0 0 64 64" aria-hidden="true"><path d="M22 17v-4c0-8 20-8 20 0v4M18 17h28c5 0 8 4 8 9v28H10V26c0-5 3-9 8-9zM10 29h44M20 37h24v12H20z"/></svg>
+                </div>
+              </div>
+
+              <aside class="sticky" aria-label="Yapışkan not">
+                <b>Yapışkan not</b>
+                <p>Bu dalganın işi: <strong>üst kat dolaplarını kilitle.</strong> Çantada battaniye ve küçük direnç eksik.</p>
+              </aside>
+
+              <div class="book__sign"><span>kayıt</span><i></i><span>s. 07</span></div>
+            </div>
+
+            <div class="book__spiral" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+          </div>
+
+          <!-- Ayraçlar: her biri defterden taşan büyük bir sayfa ayracı -->
+          <nav class="book__tabs" aria-label="Defter ayraçları">
+            <button class="dv" data-sheet="sel">
+              <span class="dv__art"><span class="blob"></span>
+                <svg viewBox="0 0 120 84" aria-hidden="true">
+                  <path d="M32 50V26l24-14 24 14v24"/>
+                  <path d="M44 50V36h12v14"/>
+                  <path d="M68 34h12v10"/>
+                  <path d="M18 58c9-6 17-6 26 0s17 6 26 0 17-6 26 0"/>
+                  <path class="rough" d="M16 64c10-6 18-6 28 0s18 6 28 0 18-6 28 0"/>
+                </svg>
+              </span>
+              <span class="dv__lbl"><b>Sel</b><i id="cnt-sel">0 / 6 önlem</i></span>
+            </button>
+
+            <button class="dv" data-sheet="deprem">
+              <span class="dv__art"><span class="blob"></span>
+                <svg viewBox="0 0 120 84" aria-hidden="true">
+                  <path d="M10 70l14-9 11 7 13-11 11 9 13-13 15 11"/>
+                  <path d="M58 14h22v34H58z"/>
+                  <path d="M58 14l-9 6"/>
+                  <path d="M86 20l9 6-7 6 9 7-7 6"/>
+                  <path class="rough" d="M8 74l15-9 11 7 13-11 11 9 13-13 16 11"/>
+                </svg>
+              </span>
+              <span class="dv__lbl"><b>Deprem</b><i id="cnt-deprem">0 / 6 önlem</i></span>
+            </button>
+
+            <button class="dv" data-sheet="firtina">
+              <span class="dv__art"><span class="blob"></span>
+                <svg viewBox="0 0 120 84" aria-hidden="true">
+                  <path d="M26 14c24 7 44 7 68 0"/>
+                  <path d="M32 22c20 5 36 5 56 0"/>
+                  <path d="M33 24c-1 14 8 20 13 29 5 8 12 16 14 24"/>
+                  <path d="M87 24c1 14-8 20-13 29-5 8-12 16-14 24"/>
+                  <path d="M37 38c15 4 31 4 46 0"/>
+                  <path d="M43 50c11 3 23 3 34 0"/>
+                  <path d="M49 61c7 2 15 2 22 0"/>
+                  <path class="rough" d="M30 79c11-3 19-3 30 0s17 3 28 0"/>
+                </svg>
+              </span>
+              <span class="dv__lbl"><b>Fırtına</b><i id="cnt-firtina">0 / 6 önlem</i></span>
+            </button>
+
+            <button class="dv" data-sheet="envanter">
+              <span class="dv__art"><span class="blob"></span>
+                <svg viewBox="0 0 120 84" aria-hidden="true">
+                  <path d="M44 22c0-7 7-12 16-12s16 5 16 12"/>
+                  <path d="M32 24h56c5 0 8 3 8 8v38c0 5-3 8-8 8H32c-5 0-8-3-8-8V32c0-5 3-8 8-8z"/>
+                  <path d="M38 24v-3c0-5 4-9 10-9h24c6 0 10 4 10 9v3"/>
+                  <path d="M60 42v32"/>
+                  <path d="M38 56h44"/>
+                  <path d="M26 66c-5 2-8 6-8 10"/>
+                  <path d="M94 66c5 2 8 6 8 10"/>
+                  <path class="rough" d="M34 72h52"/>
+                </svg>
+              </span>
+              <span class="dv__lbl"><b>Envanter</b><i>6 / 8 çanta</i></span>
+            </button>
+          </nav>
+
+        </div>
+      </section>
+
+    </div><!-- /.stage -->
+  </div><!-- /.stage-wrap -->
+</main>
+
+<script>
+const stage = document.getElementById("stage");
+const stageWrap = document.getElementById("stageWrap");
+
+/* ---- envanter yuvalarını üret ---- */
+const INVENTORY = [
+  ["i-water", 2], ["i-can", 3], ["i-snack", 2], ["i-apple", 2],
+  ["i-blanket", 1], ["i-batt", 1], ["i-cell", 2], ["i-radio", 1],
+];
+const BAG = [["i-water", 1], ["i-can", 1], ["i-radio", 1], ["i-batt", 1], ["i-energy", 1]];
+
+function slotHTML(idx, item, isBag) {
+  if (item) {
+    return `<div class="slot slot--filled${isBag ? " slot--bag" : ""}">
+        <span class="slot__k">${String(idx).padStart(2, "0")}</span>
+        <svg class="ico"><use href="#${item[0]}"/></svg>
+        <span class="slot__qty">${item[1]}</span>
+      </div>`;
+  }
+  return `<div class="slot slot--empty${isBag ? " slot--bag" : ""}">
+      <span class="slot__k">${String(idx).padStart(2, "0")}</span>
+    </div>`;
+}
+
+function fillSlots() {
+  document.querySelectorAll(".slots:not(.slots--bag)").forEach(g => {
+    g.innerHTML = Array.from({ length: 12 }, (_, i) => slotHTML(i + 1, INVENTORY[i])).join("");
+  });
+  document.querySelectorAll(".slots--bag").forEach(g => {
+    g.innerHTML = Array.from({ length: 8 }, (_, i) => slotHTML(i + 1, BAG[i], true)).join("");
+  });
+}
+
+/* ---- ölçekleme ---- */
+function fit() {
+  const w = stageWrap.clientWidth;
+  const s = w / 1920;
+  stage.style.transform = `scale(${s})`;
+}
+window.addEventListener("resize", fit);
+
+/* ---- defter: ayraçlar + sayfa çevirme ---- */
+const bookEl   = document.querySelector(".book");
+const sheets   = document.querySelectorAll(".book__page--l .sheet");
+const dividers = document.querySelectorAll(".dv");
+const leftPage = document.querySelector(".book__page--l");
+const leafShadow = document.querySelector(".book__leaf-shadow");
+const spiralEl = document.querySelector(".book__spiral");
+const reducedPageMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let turning = false;
+let requestedSheet = document.querySelector(".book__page--l .sheet.is-on")?.dataset.sheet || "oda";
+
+function paperCurve(progress, height, count) {
+  const phase = progress * progress * (3 - 2 * progress);
+  const rootAngle = 360 * phase * phase * (3 - 2 * phase);
+  const curl = Math.min(480 * Math.pow(Math.sin(Math.PI * phase), .75), 720 - 2 * rootAngle);
+  const step = height / count;
+  let y = 0, z = -6 * phase;
+  return Array.from({length:count}, (_, index) => {
+    const angle = rootAngle + curl * (index + .5) / count;
+    const radians = angle * Math.PI / 180;
+    const point = {y, z, angle, light: .9 + .12 * Math.cos(radians - .4)};
+    y += step * Math.cos(radians);
+    z += step * Math.sin(radians);
+    return point;
+  });
+}
+
+function paperHiddenInterval(point, length) {
+  const radians = point.angle * Math.PI / 180;
+  let start = 0, end = length;
+  for (const [value, slope] of [[point.y, Math.cos(radians)], [-point.z - .15, -Math.sin(radians)]]) {
+    if (Math.abs(slope) < 1e-8) { if (value < 0) return null; }
+    else if (slope > 0) start = Math.max(start, -value / slope);
+    else end = Math.min(end, -value / slope);
+  }
+  return end > start ? [start / length, end / length] : null;
+}
+
+function paperFaceClip(interval, back = false) {
+  if (!interval) return "none";
+  const start = (back ? 1 - interval[1] : interval[0]) * 100;
+  const end = (back ? 1 - interval[0] : interval[1]) * 100;
+  return `polygon(0 0,100% 0,100% ${start}%,0 ${start}%,0 ${end}%,100% ${end}%,100% 100%,0 100%)`;
+}
+
+function makeTurningLeaf() {
+  const width = leftPage.offsetWidth, height = leftPage.offsetHeight;
+  const count = 24, step = height / count;
+  const viewport = document.createElement("div");
+  viewport.className = "book__turn-window";
+  viewport.setAttribute("aria-hidden", "true");
+  viewport.inert = true;
+  const mesh = document.createElement("div");
+  mesh.className = "book__turn-mesh";
+  viewport.append(mesh);
+  const snapshot = leftPage.cloneNode(true);
+  snapshot.className = "book__page book__snapshot";
+  snapshot.style.width = width + "px";
+  snapshot.style.height = height + "px";
+  snapshot.querySelectorAll(".sheet:not(.is-on)").forEach(sheet => sheet.remove());
+  [snapshot, ...snapshot.querySelectorAll("*")].forEach(node => {
+    ["id", "for", "tabindex", "data-sheet", "data-floor", "aria-controls", "aria-labelledby"].forEach(attr => node.removeAttribute(attr));
+  });
+  const originals = leftPage.querySelectorAll(".sheet.is-on input");
+  snapshot.querySelectorAll("input").forEach((input, index) => { input.checked = originals[index].checked; });
+  const scrollSources = leftPage.querySelectorAll(".sheet.is-on, .sheet.is-on *");
+  const scrollPositions = Array.from(scrollSources, node => node.scrollTop);
+  const strips = Array.from({length:count}, (_, index) => {
+    const strip = document.createElement("div");
+    strip.className = "book__strip";
+    strip.style.height = (step + .65) + "px";
+    const front = document.createElement("div");
+    front.className = "book__strip-face book__strip-front";
+    const copy = snapshot.cloneNode(true);
+    copy.style.top = (-index * step) + "px";
+    front.append(copy);
+    const back = document.createElement("div");
+    back.className = "book__strip-face book__strip-back";
+    strip.append(front, back);
+    mesh.append(strip);
+    return strip;
+  });
+  bookEl.append(viewport);
+  strips.forEach(strip => {
+    strip.querySelectorAll(".sheet.is-on, .sheet.is-on *").forEach((node, index) => {
+      if (scrollPositions[index]) node.scrollTop = scrollPositions[index];
+    });
+  });
+  return {viewport, strips, height};
+}
+
+function updateSpiralOcclusion(progress, points, height, viewport) {
+  if (!spiralEl) return;
+  const step = height / points.length;
+  const spiralTop = -18, spiralBottom = 24, spiralHeight = spiralBottom - spiralTop;
+  const persp = 2200;
+  let frontMinSY = Infinity;
+  let allMinSY = Infinity;
+
+  points.forEach(point => {
+    const radians = point.angle * Math.PI / 180;
+    const y2 = point.y + step * Math.cos(radians);
+    const z2 = point.z + step * Math.sin(radians);
+    const sy1 = point.y * persp / (persp - point.z);
+    const sy2 = y2 * persp / (persp - z2);
+    const segMinSY = Math.min(sy1, sy2);
+    allMinSY = Math.min(allMinSY, segMinSY);
+    if (point.angle > 60 && Math.max(point.z, z2) > 0) {
+      frontMinSY = Math.min(frontMinSY, segMinSY);
+    }
+  });
+
+  if (viewport) {
+    viewport.style.zIndex = (progress >= 0.38 && progress <= 0.62) ? "7" : "";
+  }
+
+  if (progress < 0.35) {
+    if (frontMinSY >= spiralBottom) {
+      spiralEl.style.opacity = "1";
+      spiralEl.style.clipPath = "none";
+      return;
+    }
+    if (frontMinSY <= spiralTop) {
+      spiralEl.style.opacity = "0";
+      spiralEl.style.clipPath = "inset(0 0 100% 0)";
+      return;
+    }
+    const visible = Math.max(0, Math.min(1, (frontMinSY - spiralTop) / spiralHeight));
+    const bottomClipPx = 20 - frontMinSY;
+    spiralEl.style.opacity = String(visible);
+    spiralEl.style.clipPath = `inset(-10px -10px ${bottomClipPx.toFixed(1)}px -10px)`;
+    return;
+  }
+
+  if (allMinSY <= spiralTop || progress < 0.575) {
+    spiralEl.style.opacity = "0";
+    spiralEl.style.clipPath = "inset(0 0 100% 0)";
+    return;
+  }
+
+  const t = Math.min(1, Math.max(0, (progress - 0.575) / 0.095));
+  const ease = t * t * (3 - 2 * t);
+  const revealY = spiralTop + ease * spiralHeight;
+  const bottomClipPx = 20 - revealY;
+  spiralEl.style.opacity = String(ease);
+  spiralEl.style.clipPath = ease >= 0.999 ? "none" : `inset(-10px -10px ${bottomClipPx.toFixed(1)}px -10px)`;
+}
+
+async function showSheet(key) {
+  if (!bookEl || !leftPage || !Array.from(sheets).some(s => s.dataset.sheet === key)) return;
+  requestedSheet = key;
+  if (turning) return;
+  const cur = document.querySelector(".book__page--l .sheet.is-on");
+  if (cur && cur.dataset.sheet === key) return;
+  const reveal = target => sheets.forEach(s => s.classList.toggle("is-on", s.dataset.sheet === target));
+  if (reducedPageMotion.matches) { reveal(key); return; }
+  turning = true;
+  bookEl.classList.add("is-turning", "has-turned");
+  let leaf;
+  let shownKey = key;
+  try {
+    leaf = makeTurningLeaf();
+    const draw = progress => {
+      const points = paperCurve(progress, leaf.height, leaf.strips.length);
+      points.forEach((point, index) => {
+        const strip = leaf.strips[index];
+        strip.style.transform = `translate3d(0,${point.y}px,${point.z}px) rotateX(${point.angle}deg)`;
+        const hidden = paperHiddenInterval(point, leaf.height / leaf.strips.length + .65);
+        strip.children[0].style.clipPath = paperFaceClip(hidden);
+        strip.children[1].style.clipPath = paperFaceClip(hidden, true);
+        const weight = Math.min(1, progress * 8);
+        strip.style.setProperty("--paper-light", 1 + (point.light - 1) * weight);
+      });
+      updateSpiralOcclusion(progress, points, leaf.height, leaf.viewport);
+      const frontPoints = points.filter(point => point.z > 0 && point.y > 0);
+      const extent = Math.max(0, ...frontPoints.map(point => point.y)) / leaf.height;
+      leafShadow.style.opacity = frontPoints.length ? String(.72 * Math.sin(Math.PI * progress)) : "0";
+      leafShadow.style.transform = `scaleY(${Math.max(.015, extent)})`;
+      leafShadow.style.filter = `blur(${4 + 12 * Math.sin(Math.PI * progress)}px)`;
+    };
+    draw(0);
+    reveal(shownKey);
+    await new Promise((resolve, reject) => {
+      let start;
+      function frame(now) {
+        try {
+          if (start === undefined) start = now;
+          if (reducedPageMotion.matches || document.hidden || !bookEl.closest(".screen").classList.contains("is-active")) {
+            resolve(); return;
+          }
+          const progress = Math.min(1, (now - start) / 1400);
+          draw(progress);
+          if (progress < 1) requestAnimationFrame(frame); else resolve();
+        } catch (error) { reject(error); }
+      }
+      requestAnimationFrame(frame);
+    });
+  } catch (error) {
+    shownKey = requestedSheet;
+    reveal(shownKey);
+  } finally {
+    leaf?.viewport.remove();
+    if (spiralEl) {
+      spiralEl.style.opacity = "";
+      spiralEl.style.clipPath = "";
+    }
+    leafShadow.style.opacity = "0";
+    leafShadow.style.transform = "";
+    leafShadow.style.filter = "";
+    bookEl.classList.remove("is-turning");
+    turning = false;
+  }
+  if (requestedSheet !== shownKey) showSheet(requestedSheet);
+}
+
+function selectDivider(el) {
+  const key = el.dataset.sheet;
+  if (el.classList.contains("is-on")) {
+    dividers.forEach(x => x.classList.remove("is-on"));
+    showSheet("oda");
+    return;
+  }
+  dividers.forEach(x => x.classList.toggle("is-on", x === el));
+  showSheet(key);
+
+  const art = el.querySelector(".dv__art");
+  if (art) { art.style.animation = "none"; void art.offsetWidth; art.style.animation = ""; }
+  const hz = document.querySelector('.sheet[data-sheet="' + key + '"] .hazard');
+  if (hz) { hz.classList.remove("is-pulse"); void hz.offsetWidth; hz.classList.add("is-pulse"); }
+}
+
+dividers.forEach(el => el.addEventListener("click", () => selectDivider(el)));
+
+/* ---- önlem checkbox'ları: sayaç hem sayfada hem ayraçta ---- */
+function refreshPrec(sheetKey) {
+  const sheet = document.querySelector('.sheet[data-sheet="' + sheetKey + '"]');
+  if (!sheet) return;
+  const boxes = sheet.querySelectorAll(".prec input");
+  const done = sheet.querySelectorAll(".prec input:checked").length;
+  const total = boxes.length;
+  const onPage = document.getElementById("sc-" + sheetKey);
+  const onDiv  = document.getElementById("cnt-" + sheetKey);
+  if (onPage) onPage.textContent = done + " / " + total + " tamam";
+  if (onDiv)  onDiv.textContent  = done + " / " + total + " önlem";
+}
+
+document.querySelectorAll(".prec input").forEach(inp => {
+  inp.addEventListener("change", () => {
+    const li = inp.closest("li");
+    if (li) li.classList.toggle("is-done", inp.checked);
+    const sheet = inp.closest(".sheet");
+    if (sheet) refreshPrec(sheet.dataset.sheet);
+  });
+});
+
+/* ---- defter: kat planı (kat değiştir + oda işaretle) ---- */
+const planCount = document.getElementById("planCount");
+const planFloors = document.querySelectorAll(".plan__svg .floor");
+
+function updatePlan() {
+  const cur = document.querySelector(".plan__svg .floor.is-on");
+  if (!cur || !planCount) return;
+  const total = cur.querySelectorAll(".room").length;
+  const done = cur.querySelectorAll(".room.is-done").length;
+  planCount.textContent = done + " / " + total;
+}
+
+document.querySelectorAll(".switch__b").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".switch__b").forEach(x => {
+      const on = x === b;
+      x.classList.toggle("is-on", on);
+      x.setAttribute("aria-selected", String(on));
+    });
+    planFloors.forEach(g => g.classList.toggle("is-on", g.dataset.floor === b.dataset.floor));
+    updatePlan();
+  });
+});
+
+document.querySelectorAll(".plan__svg .room").forEach(r => {
+  const toggle = () => {
+    r.classList.toggle("is-done");
+    r.setAttribute("aria-pressed", String(r.classList.contains("is-done")));
+    updatePlan();
+  };
+  r.addEventListener("click", toggle);
+  r.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+  });
+});
+
+/* ---- başlat ---- */
+fillSlots();
+["sel", "deprem", "firtina"].forEach(refreshPrec);
+updatePlan();
+fit();
+</script>
+</body>
+</html>
