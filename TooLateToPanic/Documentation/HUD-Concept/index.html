@@ -1,0 +1,1472 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TLTP HUD Konsepti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E8; --ink:#292625; --deep:#1A1817; --teal:#256A6C; --teal-hi:#5FB3AA;
+  --amber:#F2A93B; --rust:#C65B3D; --stone:#D8D2C8; --alarm:#E4472D; --muted:#A9A299;
+  --line:rgba(216,210,200,.14); --line2:rgba(216,210,200,.28);
+  --ease:cubic-bezier(.2,.8,.2,1); --s:1;
+  --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#121110;color:var(--cream);overflow-x:hidden}
+body{font-family:'Barlow',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+button{font:inherit;color:inherit}
+
+/* ---------- page chrome (outside the 1600×900 game canvas) ---------- */
+.bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px 20px;padding:10px 16px;background:rgba(18,17,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font:600 18px Oswald;letter-spacing:.04em;white-space:nowrap}
+.brand em{font-style:normal;color:var(--rust)}
+.tabs,.seg{display:flex;gap:4px;flex-wrap:wrap}
+.tab,.seg button{font:600 14px 'Barlow Condensed';letter-spacing:.06em;text-transform:uppercase;color:var(--stone);background:transparent;border:1px solid var(--line);padding:6px 10px;border-radius:6px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.tab:hover,.seg button:hover{border-color:var(--line2);color:var(--cream)}
+.tab[aria-pressed=true]{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.seg button[aria-pressed=true]{background:var(--rust);border-color:var(--rust);color:var(--cream)}
+.seg-l{font:600 12px 'Barlow Condensed';letter-spacing:.14em;color:var(--muted);align-self:center;margin-right:4px}
+.navhint{margin-left:auto;font:500 13px 'Barlow Condensed';letter-spacing:.06em;color:var(--muted)}
+.navhint kbd{font:700 12px 'Barlow Condensed';background:var(--stone);color:var(--ink);border-radius:3px;padding:1px 5px}
+.view{padding:16px}
+.frame{position:relative;max-width:100%;width:calc(1600px * var(--s));height:calc(900px * var(--s));margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);outline:1px solid var(--line);background:#0d0c0c}
+
+/* ---------- stage ---------- */
+.stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0;transform:scale(var(--s));overflow:hidden;font-family:'Barlow',sans-serif;color:var(--cream);user-select:none}
+.L{position:absolute;inset:0}
+#bgwrap{z-index:0}
+.bgimg{position:absolute;inset:-2%;background-size:cover;background-position:center;opacity:0;transition:opacity .9s ease;animation:kb 38s ease-in-out infinite alternate}
+.bgimg.show{opacity:1}
+.bgimg.blur{filter:blur(7px) saturate(.6) brightness(.5)}
+.bgimg.dim{filter:saturate(.75) brightness(.78)}
+.bgimg.gray{filter:grayscale(.85) brightness(.45) contrast(1.1)}
+@keyframes kb{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.09) translate(-1.2%,-.8%)}}
+#bgwrap.shake{animation:shake .38s linear infinite}
+@keyframes shake{0%{transform:translate(0,0)}20%{transform:translate(-7px,3px) rotate(-.25deg)}40%{transform:translate(6px,-4px)}60%{transform:translate(-4px,5px) rotate(.2deg)}80%{transform:translate(5px,2px)}100%{transform:translate(0,0)}}
+.grade{z-index:1;pointer-events:none;transition:background .8s;background:
+  linear-gradient(180deg,rgba(20,18,17,.62) 0%,rgba(20,18,17,0) 20%,rgba(20,18,17,0) 70%,rgba(20,18,17,.72) 100%),
+  radial-gradient(ellipse 75% 70% at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.5) 100%)}
+.stage[data-state=panic] .grade{background:
+  linear-gradient(180deg,rgba(30,10,8,.6) 0%,rgba(30,10,8,0) 22%,rgba(30,10,8,0) 70%,rgba(30,10,8,.75) 100%),
+  radial-gradient(ellipse 75% 70% at 50% 50%,rgba(0,0,0,0) 45%,rgba(90,14,6,.55) 100%)}
+#fx{z-index:2;pointer-events:none;position:absolute;inset:0;width:1600px;height:900px}
+.grain{z-index:40;pointer-events:none;background-image:var(--noise);opacity:.07;mix-blend-mode:overlay}
+
+/* components */
+.cmp{position:absolute;display:none;z-index:5}
+.cmp.on{display:block}
+.on .rise,.cmp.on.rise{animation:rise .55s var(--ease) both;animation-delay:var(--d,0s)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.on .drop,.cmp.on.drop{animation:drop .55s var(--ease) both;animation-delay:var(--d,0s)}
+@keyframes drop{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+.on .slideL{animation:slideL .55s var(--ease) both;animation-delay:var(--d,0s)}
+@keyframes slideL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+.on .slideR{animation:slideR .55s var(--ease) both;animation-delay:var(--d,0s)}
+@keyframes slideR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+.on .fade{animation:fade .7s ease both;animation-delay:var(--d,0s)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* ---------- shared atoms ---------- */
+.pnl{position:absolute;background:linear-gradient(180deg,rgba(43,40,38,.93),rgba(24,22,21,.94));border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05)}
+.pnl::after{content:'';position:absolute;inset:0;border-radius:inherit;background-image:var(--noise);opacity:.22;mix-blend-mode:overlay;pointer-events:none}
+.lbl{font:600 13px 'Barlow Condensed';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ttl{position:relative;isolation:isolate;display:inline-block;font:600 21px/1.1 Oswald;letter-spacing:.05em;padding:3px 12px}
+.ttl .brush{position:absolute;left:-12px;top:-7px;width:calc(100% + 26px);height:calc(100% + 14px);z-index:-1;color:var(--rust)}
+.on .ttl .brush{animation:wipe .7s var(--ease) both;animation-delay:calc(var(--d,0s) + .15s)}
+@keyframes wipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.brush{display:block;overflow:visible}
+.ico{width:1em;height:1em;display:inline-block;vertical-align:middle;flex:none}
+.pix{image-rendering:pixelated}
+
+.kc{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 14px 0 6px;border:1px solid var(--line2);border-radius:8px;background:rgba(26,24,23,.9);font:600 16px 'Barlow Condensed';letter-spacing:.08em;color:var(--cream);white-space:nowrap;cursor:default;transition:border-color .2s,box-shadow .2s}
+.kc b{display:inline-grid;place-items:center;min-width:34px;height:30px;padding:0 8px;border-radius:5px;background:var(--stone);color:var(--ink);font:700 15px 'Barlow Condensed';letter-spacing:.04em;box-shadow:0 3px 0 #8E877D,inset 0 1px 0 rgba(255,255,255,.6);transition:transform .08s,box-shadow .08s}
+.kc.hot{border-color:var(--teal-hi);box-shadow:0 0 18px rgba(37,106,108,.5)}
+.kc.hot b{background:var(--teal-hi);box-shadow:0 3px 0 #1D5354}
+.kc.amb b{background:var(--amber);box-shadow:0 3px 0 #A86C17}
+.kc.red b{background:var(--alarm);color:var(--cream);box-shadow:0 3px 0 #7C2213}
+.kc.press b{transform:translateY(3px);box-shadow:0 0 0 transparent}
+.kc.press{border-color:var(--amber)}
+.kc.sm{height:36px;font-size:14px;gap:8px;padding-right:10px}
+.kc.sm b{height:24px;min-width:28px;font-size:13px}
+.kc.btn{cursor:pointer}
+.kc.btn:hover{border-color:var(--amber)}
+
+/* ---------- top status strip ---------- */
+#strip{inset:0;pointer-events:none}
+#strip > *{pointer-events:auto}
+.s-left{left:24px;top:18px;width:452px;height:90px;display:flex;align-items:center;gap:14px;padding:0 18px 0 12px}
+.ring{position:relative;width:68px;height:68px;flex:none}
+.ring svg{position:absolute;inset:0;overflow:visible}
+.ring .spin{transform-origin:34px 34px;animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font:600 28px Oswald}
+.dis{display:flex;align-items:center;gap:9px;font:600 31px/1 Oswald;letter-spacing:.03em;margin-top:3px}
+.dis .ico{width:28px;height:28px;color:var(--rust)}
+.hint{font:600 12.5px 'Barlow Condensed';letter-spacing:.13em;color:var(--amber);margin-top:6px}
+.s-timer{left:610px;top:12px;width:380px;height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-top-left-radius:4px;border-top-right-radius:4px}
+.t-row{display:flex;align-items:center;gap:14px}
+.t-watch{width:46px;height:46px;color:var(--rust)}
+.t-watch .hand{transform-origin:24px 27px;animation:spin 6s steps(60) infinite}
+.t-digits{font:600 60px/1 Oswald;letter-spacing:.02em;font-variant-numeric:tabular-nums;min-width:150px;text-align:center}
+.t-digits.tick{animation:tick .35s var(--ease)}
+@keyframes tick{from{transform:scale(1.09)}to{transform:none}}
+.t-side{display:flex;flex-direction:column;gap:3px}
+.t-side .ph{font:700 15px 'Barlow Condensed';letter-spacing:.12em;color:var(--teal-hi)}
+.t-bar{position:relative;width:330px;height:6px;margin-top:9px;border-radius:3px;background:rgba(216,210,200,.13)}
+.t-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--teal-hi));transition:width 1s linear}
+.t-bar .notch{position:absolute;top:-4px;width:2px;height:14px;background:var(--amber)}
+.t-bar .notch span{position:absolute;top:15px;left:50%;transform:translateX(-50%);font:700 10px 'Barlow Condensed';letter-spacing:.14em;color:var(--amber);white-space:nowrap}
+.s-timer.alarm{border-color:rgba(228,71,45,.55);box-shadow:0 0 0 1px rgba(228,71,45,.25),0 0 44px rgba(228,71,45,.35)}
+.s-timer.alarm .t-digits{color:var(--alarm);animation:tpulse 1s ease-in-out infinite}
+.s-timer.alarm .t-watch{animation:wobble .5s ease-in-out infinite}
+.s-timer.alarm .t-bar i{background:linear-gradient(90deg,var(--rust),var(--alarm))}
+.s-timer.alarm .t-side .ph{color:var(--alarm)}
+@keyframes tpulse{0%,100%{text-shadow:0 0 0 rgba(228,71,45,0);transform:scale(1)}50%{text-shadow:0 0 26px rgba(228,71,45,.75);transform:scale(1.05)}}
+@keyframes wobble{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+.s-right{right:24px;top:18px;height:90px;display:flex;align-items:center;padding:0 12px 0 4px}
+.stat{display:flex;align-items:center;gap:9px;padding:0 10px;height:58px;border-right:1px solid var(--line)}
+.stat img{width:42px;height:42px;border-radius:9px}
+.stat .v{font:600 24px/1 Oswald;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:15px;color:var(--muted)}
+.stat .lbl{font-size:11px;margin-top:4px;letter-spacing:.14em}
+.stat .coin{width:32px;height:32px;color:var(--amber)}
+.stat.bump .v{animation:bump .45s var(--ease)}
+@keyframes bump{40%{transform:scale(1.25);color:var(--amber)}}
+.stat.okv .v{color:var(--teal-hi)}
+.bagi{width:34px;height:34px;color:var(--muted);transition:color .3s}
+.stat.ready .bagi{color:var(--teal-hi)}
+.stat.ready .lbl{color:var(--teal-hi)}
+.keys{display:flex;flex-direction:column;gap:6px;padding-left:8px}
+.ticker{left:24px;top:116px;width:452px;height:34px;display:flex;align-items:center;overflow:hidden;border-radius:8px}
+.ticker .tag{flex:none;display:flex;align-items:center;gap:7px;height:100%;padding:0 11px;background:var(--teal);font:700 13px 'Barlow Condensed';letter-spacing:.14em}
+.ticker .tag i{width:7px;height:7px;border-radius:50%;background:var(--cream);animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.15}}
+.ticker .track{flex:1;overflow:hidden;white-space:nowrap}
+.ticker .run{display:inline-block;padding-left:100%;font:500 15px Barlow;color:var(--stone);animation:marquee 26s linear infinite}
+@keyframes marquee{to{transform:translateX(-100%)}}
+
+/* ---------- requirements card ---------- */
+#req{left:1104px;top:166px;width:472px;padding:16px 16px 14px}
+.req-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.req-h .cost{font:600 14px 'Barlow Condensed';letter-spacing:.1em;color:var(--muted)}
+.row{position:relative;display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;padding:8px 14px 8px 8px;border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.2);margin-top:8px;transition:border-color .3s,background .3s}
+.row img{width:72px;height:72px;border-radius:10px}
+.row .nm{font:600 21px/1 'Barlow Condensed';letter-spacing:.03em}
+.pips{display:flex;gap:4px;margin-top:8px}
+.pips i{width:20px;height:7px;border-radius:2px;background:rgba(216,210,200,.14);transition:background .3s}
+.pips i.on{background:var(--teal-hi)}
+.row .vg{font:500 14px Barlow;color:var(--muted);margin-top:6px}
+.row .miss{font:600 30px/1 Oswald;color:var(--amber);text-align:right;min-width:70px}
+.row .miss small{display:block;font:700 11px 'Barlow Condensed';letter-spacing:.16em;color:var(--muted);margin-bottom:3px}
+.row.ok{border-color:rgba(95,179,170,.55);background:rgba(37,106,108,.14)}
+.row.ok .miss{color:var(--teal-hi)}
+.row.bump .miss{animation:bump .5s var(--ease)}
+.req-f{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line2);font:600 15px 'Barlow Condensed';letter-spacing:.06em}
+.req-f .ok{color:var(--teal-hi)}
+
+/* ---------- world markers ---------- */
+.mk{position:absolute;z-index:4;transform:translate(-50%,-100%);display:none;flex-direction:column;align-items:center;pointer-events:none}
+.mk.on{display:flex}
+.mk .chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:7px;background:rgba(26,24,23,.92);border:1px solid var(--amber);font:600 15px 'Barlow Condensed';letter-spacing:.08em;white-space:nowrap;animation:bob 1.8s ease-in-out infinite;box-shadow:0 8px 20px rgba(0,0,0,.45)}
+.mk .chip b{display:grid;place-items:center;width:26px;height:24px;border-radius:4px;background:var(--amber);color:var(--ink);font:700 14px 'Barlow Condensed'}
+.mk .chip small{color:var(--muted);font-weight:500}
+.mk .stem{width:2px;height:34px;background:linear-gradient(var(--amber),rgba(242,169,59,0))}
+.mk .ping{position:relative;width:12px;height:12px;border-radius:50%;background:var(--amber)}
+.mk .ping::after{content:'';position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--amber);animation:ping 1.6s ease-out infinite}
+@keyframes ping{from{transform:scale(.6);opacity:1}to{transform:scale(3.2);opacity:0}}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.mk.red .chip{border-color:var(--alarm)}
+.mk.red .chip b{background:var(--alarm);color:var(--cream)}
+.mk.red .stem{background:linear-gradient(var(--alarm),rgba(228,71,45,0))}
+.mk.red .ping,.mk.red .ping::after{background:var(--alarm);border-color:var(--alarm)}
+.mk.red .ping::after{background:transparent}
+
+/* ---------- context, controls, toast, help ---------- */
+.ctr{left:0;right:0;margin:0 auto;width:fit-content}
+#controls{bottom:26px;display:none;gap:8px}
+#controls.on{display:flex}
+#action{bottom:90px;display:none;align-items:center;gap:12px;padding:7px 18px 7px 7px;border-radius:9px}
+#action.on{display:flex}
+#action .what{font:600 18px 'Barlow Condensed';letter-spacing:.06em}
+#action .where{font:500 14px Barlow;color:var(--muted)}
+#toast{bottom:150px;padding:12px 20px 14px;min-width:420px;border-color:rgba(242,169,59,.7);display:none;align-items:center;gap:12px}
+#toast.on{display:flex;animation:toastIn .45s var(--ease) both}
+#toast.out{animation:toastOut .35s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(10px)}}
+#toast .ti{width:26px;height:26px;color:var(--amber)}
+#toast .tx{font:600 18px 'Barlow Condensed';letter-spacing:.04em}
+#toast .life{position:absolute;left:12px;right:12px;bottom:5px;height:2px;background:rgba(242,169,59,.2);border-radius:1px;overflow:hidden}
+#toast .life i{position:absolute;inset:0;background:var(--amber);transform-origin:left;animation:life 2.6s linear forwards}
+@keyframes life{to{transform:scaleX(0)}}
+.stage[data-state=loot] #toast{bottom:340px}
+.stage[data-state=inv] #toast,.stage[data-state=work] #toast{bottom:auto;top:24px;z-index:30}
+#toast.good{border-color:rgba(95,179,170,.7)} #toast.good .ti{color:var(--teal-hi)} #toast.good .life i{background:var(--teal-hi)}
+#help{left:24px;bottom:96px;width:330px;padding:14px 16px 16px;border-color:rgba(95,179,170,.4)}
+#help .hl{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;margin-top:10px;align-items:center;font:500 15px Barlow;color:var(--stone)}
+#help .hl .kc{height:30px;padding-right:0;border:0;background:none;gap:0}
+#help .hl .kc b{height:24px;min-width:30px;font-size:13px}
+
+/* ---------- loot strip ---------- */
+#loot{top:588px;padding:14px 16px 16px}
+.loot-h{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-bottom:12px}
+.loot-b{display:flex;gap:10px;align-items:stretch}
+.cell{position:relative;width:112px;height:120px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease),border-color .25s,box-shadow .25s,opacity .3s}
+.cell img{width:70px;height:70px;border-radius:10px}
+.cell .cnt{position:absolute;top:6px;right:6px;font:700 13px 'Barlow Condensed';background:var(--deep);border:1px solid var(--line2);border-radius:4px;padding:1px 6px;color:var(--amber)}
+.cell .nm{font:600 14px 'Barlow Condensed';letter-spacing:.06em;margin-top:6px}
+.cell:hover{border-color:var(--line2)}
+.cell.sel{transform:translateY(-7px);border-color:var(--teal-hi);box-shadow:0 0 0 1px var(--teal-hi),0 12px 26px rgba(37,106,108,.5)}
+.cell.sel .nm{color:var(--teal-hi)}
+.cell.sel::after{content:'';position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--teal-hi)}
+.cell.gone{opacity:0;transform:scale(.6)}
+.loot-a{display:flex;flex-direction:column;justify-content:center;gap:10px;padding-left:8px;border-left:1px solid var(--line);margin-left:4px}
+.empty{display:flex;align-items:center;gap:14px;padding:6px 20px 6px 6px;font:600 26px Oswald}
+.empty small{display:block;font:500 15px Barlow;color:var(--muted)}
+
+/* ---------- inventory ---------- */
+#inv{left:110px;top:96px;width:1380px;padding:26px 34px 30px;z-index:10}
+.inv-g{display:grid;grid-template-columns:600px 1fr;gap:44px;height:100%}
+.inv-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.slots{display:grid;gap:12px}
+.slots.inv12{grid-template-columns:repeat(4,138px)}
+.slots.bag8{grid-template-columns:repeat(4,158px)}
+.slot{position:relative;height:118px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.24);display:grid;place-items:center;cursor:pointer;transition:transform .2s var(--ease),border-color .2s,box-shadow .2s}
+.bag8 .slot{height:146px;background:rgba(37,106,108,.08);border-style:dashed}
+.bag8 .slot.f{border-style:solid;background:rgba(37,106,108,.16);border-color:rgba(95,179,170,.35)}
+.slot img{width:74px;height:74px;border-radius:10px}
+.bag8 .slot img{width:90px;height:90px}
+.slot .cnt{position:absolute;bottom:6px;right:8px;font:700 15px 'Barlow Condensed';color:var(--amber)}
+.slot .no{position:absolute;top:6px;left:8px;font:600 11px 'Barlow Condensed';color:rgba(216,210,200,.35)}
+.slot.sel{border-color:var(--teal-hi);transform:translateY(-3px);box-shadow:0 0 0 1px var(--teal-hi),0 10px 24px rgba(37,106,108,.45)}
+.slot.pop{animation:pop .45s var(--ease)}
+@keyframes pop{40%{transform:scale(1.12)}}
+.detail{display:grid;grid-template-columns:96px 1fr;gap:18px;align-items:center;margin-top:20px;padding:16px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.2)}
+.detail img{width:96px;height:96px;border-radius:12px}
+.detail .dn{font:600 30px/1 Oswald}
+.detail .dd{font:500 15px/1.4 Barlow;color:var(--stone);margin-top:8px;max-width:430px}
+.detail .dt{display:flex;gap:8px;margin-top:10px}
+.tagp{font:700 11.5px 'Barlow Condensed';letter-spacing:.14em;padding:3px 8px;border-radius:4px;background:rgba(216,210,200,.1);color:var(--stone)}
+.tagp.t{background:rgba(37,106,108,.35);color:#BFE7DF}
+.tagp.a{background:rgba(242,169,59,.2);color:var(--amber)}
+.inv-k{display:flex;gap:10px;margin-top:20px}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.meter{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.2)}
+.meter .mh{display:flex;align-items:center;gap:10px}
+.meter img{width:34px;height:34px;border-radius:7px}
+.meter .mv{font:600 24px/1 Oswald;margin-left:auto}
+.meter .mv small{font-size:15px;color:var(--muted)}
+.meter .mb{height:6px;border-radius:3px;background:rgba(216,210,200,.12);margin-top:10px;overflow:hidden}
+.meter .mb i{display:block;height:100%;background:var(--amber);transition:width .6s var(--ease)}
+.meter.ok .mb i{background:var(--teal-hi)} .meter.ok .mv{color:var(--teal-hi)}
+.bagstate{display:flex;align-items:center;gap:10px;margin-top:14px;font:700 15px 'Barlow Condensed';letter-spacing:.12em;color:var(--amber)}
+.bagstate.ok{color:var(--teal-hi)}
+.craft{display:flex;align-items:center;gap:14px;margin-top:16px;padding:12px 14px;border:1px solid rgba(242,169,59,.35);border-radius:10px;background:rgba(242,169,59,.06)}
+.craft img{width:46px;height:46px;border-radius:8px}
+.craft .eq{font:600 22px Oswald;color:var(--muted)}
+.craft .need{display:flex;align-items:center;gap:6px;font:600 16px 'Barlow Condensed'}
+.craft .need.ok{color:var(--teal-hi)} .craft .need.no{color:var(--amber)}
+
+/* ---------- work ---------- */
+#work{left:80px;top:56px;width:1440px;height:788px;z-index:10;border-color:rgba(242,169,59,.55)}
+.w-view{position:absolute;left:28px;top:28px;width:1010px;height:732px;border-radius:8px;overflow:hidden;background:#0f1012}
+.w-view img{position:absolute;left:0;top:44px;width:1010px;height:644px;object-fit:cover}
+.w-view .live{position:absolute;left:14px;top:12px;display:flex;align-items:center;gap:8px;font:700 13px 'Barlow Condensed';letter-spacing:.16em;color:var(--stone)}
+.w-view .live i{width:9px;height:9px;border-radius:50%;background:var(--alarm);animation:blink 1s infinite}
+.w-view .cost{position:absolute;right:14px;top:10px;display:flex;align-items:center;gap:8px;font:600 14px 'Barlow Condensed';letter-spacing:.08em;color:var(--muted)}
+.w-view .cost img{position:static;width:24px;height:24px;border-radius:4px}
+.corner{position:absolute;width:26px;height:26px;border:3px solid var(--amber)}
+.corner.a{left:10px;top:52px;border-right:0;border-bottom:0}.corner.b{right:10px;top:52px;border-left:0;border-bottom:0}
+.corner.c{left:10px;bottom:52px;border-right:0;border-top:0}.corner.d{right:10px;bottom:52px;border-left:0;border-top:0}
+.w-view .scan{position:absolute;left:0;right:0;height:120px;background:linear-gradient(180deg,rgba(95,179,170,0),rgba(95,179,170,.07),rgba(95,179,170,0));animation:scan 4s linear infinite}
+@keyframes scan{from{top:-120px}to{top:740px}}
+.w-view .flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,rgba(242,169,59,.35),transparent 60%);opacity:0}
+.w-view .flash.go{animation:flashA .45s ease}
+@keyframes flashA{30%{opacity:1}}
+.w-side{position:absolute;left:1066px;top:30px;width:346px;bottom:28px;display:flex;flex-direction:column}
+.w-step{font:600 17px 'Barlow Condensed';letter-spacing:.06em;margin-top:12px;color:var(--stone)}
+.steps{display:flex;gap:10px;margin-top:12px}
+.steps i{display:grid;place-items:center;width:62px;height:42px;border:1px solid var(--line2);border-radius:7px;font:600 18px Oswald;font-style:normal;transition:all .3s var(--ease)}
+.steps i.cur{border-color:var(--amber);color:var(--amber);box-shadow:0 0 16px rgba(242,169,59,.3)}
+.steps i.done{background:rgba(37,106,108,.5);border-color:var(--teal-hi);color:var(--cream)}
+.w-meter{margin-top:24px}
+.track{position:relative;height:40px;margin-top:10px;border-radius:6px;background:rgba(0,0,0,.45);border:1px solid var(--line)}
+.track .zone{position:absolute;top:0;bottom:0;background:rgba(37,106,108,.75);border-left:2px solid var(--teal-hi);border-right:2px solid var(--teal-hi);transition:left .3s var(--ease)}
+.track .tgt{position:absolute;top:-6px;bottom:-6px;width:3px;margin-left:-1.5px;background:var(--amber)}
+.track .cur{position:absolute;top:-10px;bottom:-10px;width:10px;margin-left:-5px;border-radius:3px;background:var(--cream);box-shadow:0 0 12px rgba(246,241,232,.6)}
+.track.al .cur{background:var(--teal-hi);box-shadow:0 0 18px var(--teal-hi)}
+.track.al .zone{background:rgba(95,179,170,.85)}
+.track.miss{animation:miss .35s}
+@keyframes miss{25%{transform:translateX(-8px);border-color:var(--alarm)}75%{transform:translateX(8px)}}
+.turns{display:flex;gap:10px;margin-top:12px}
+.turns i{flex:1;display:grid;place-items:center;height:52px;border:1px solid var(--line2);border-radius:7px;font:600 18px 'Barlow Condensed';font-style:normal;letter-spacing:.06em;color:var(--muted);transition:all .25s}
+.turns i.cur{border-color:var(--amber);color:var(--amber)}
+.turns i.done{border-color:var(--teal-hi);background:rgba(37,106,108,.4);color:var(--cream)}
+.w-say{min-height:26px;margin-top:12px;font:600 17px 'Barlow Condensed';letter-spacing:.06em}
+.w-note{margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.25);display:flex;align-items:center;gap:14px}
+.w-note .t-watch{width:34px;height:34px;color:var(--rust)}
+.w-note .v{font:600 30px/1 Oswald;font-variant-numeric:tabular-nums}
+.w-note p{font:500 13.5px/1.35 Barlow;color:var(--muted);margin-left:auto;max-width:170px}
+.w-keys{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto}
+.w-keys .kc{justify-content:flex-start}
+.w-keys .wide{grid-column:span 2}
+.w-prog{height:8px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden;margin:16px 0 4px}
+.w-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--teal-hi));transition:width .4s var(--ease)}
+.modes{display:flex;gap:6px;margin-top:14px}
+.modes button{flex:1;padding:6px 0;font:600 13px 'Barlow Condensed';letter-spacing:.1em;border:1px solid var(--line);border-radius:6px;background:transparent;cursor:pointer;color:var(--muted)}
+.modes button[aria-pressed=true]{border-color:var(--amber);color:var(--amber)}
+
+/* ---------- panic ---------- */
+#panic{inset:0;pointer-events:none}
+.vig{position:absolute;inset:0;box-shadow:inset 0 0 160px 40px rgba(228,71,45,.55);animation:heart 1s ease-in-out infinite}
+@keyframes heart{0%,100%{opacity:.45}14%{opacity:1}28%{opacity:.55}42%{opacity:.9}}
+.banner{left:0;right:0;margin:auto;width:fit-content;top:134px;display:flex;align-items:center;gap:16px;padding:10px 22px 10px 12px;border-color:rgba(228,71,45,.6);background:linear-gradient(90deg,rgba(80,18,10,.94),rgba(36,20,18,.94))}
+.banner .bi{width:36px;height:36px;color:var(--alarm);animation:wobble .5s ease-in-out infinite}
+.banner .b1{font:700 13px 'Barlow Condensed';letter-spacing:.2em;color:#F3A190}
+.banner .b2{font:600 24px/1.1 Oswald;letter-spacing:.04em}
+.bagcheck{left:24px;top:166px;width:300px;padding:14px 16px 16px}
+.bc-r{display:flex;align-items:center;gap:12px;margin-top:10px;font:600 17px 'Barlow Condensed';letter-spacing:.05em}
+.bc-r img{width:38px;height:38px;border-radius:8px}
+.bc-r .st{margin-left:auto;display:flex;align-items:center;gap:6px;font:600 20px Oswald}
+.bc-r.ok .st{color:var(--teal-hi)} .bc-r.no .st{color:var(--alarm)}
+.bc-r.no{animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{0%,80%,100%{transform:none}85%{transform:translateX(4px)}90%{transform:translateX(-3px)}}
+.stamp{position:absolute;left:44px;bottom:110px;width:330px;height:118px;display:grid;place-items:center;transform:rotate(-11deg)}
+.stamp .brush{position:absolute;inset:-10px -16px;width:calc(100% + 32px);height:calc(100% + 20px);color:var(--rust)}
+.stamp span{position:relative;font:700 30px/1.02 Oswald;letter-spacing:.04em;text-align:center;color:var(--cream);text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.on .stamp{animation:stampIn .5s cubic-bezier(.3,1.6,.5,1) .5s both}
+@keyframes stampIn{from{opacity:0;transform:rotate(-11deg) scale(2.2)}to{opacity:1;transform:rotate(-11deg) scale(1)}}
+
+/* ---------- pause ---------- */
+#pause{inset:0;z-index:10}
+.dimmer{position:absolute;inset:0;background:rgba(14,13,12,.5)}
+.pcard{left:96px;top:120px;width:1408px;height:660px;overflow:hidden;border-color:var(--line2)}
+.pcard .scn{position:absolute;inset:0;width:100%;height:100%}
+.pcard .tl{position:absolute;left:70px;top:70px}
+.pcard h2{font:700 68px/1 Oswald;letter-spacing:.03em;margin-top:12px}
+.pcard .sub{font:500 21px Barlow;color:var(--stone);margin-top:10px}
+.bigt{display:flex;align-items:center;gap:20px;margin-top:38px;position:relative;isolation:isolate}
+.bigt .t-watch{width:92px;height:92px;color:var(--alarm)}
+.bigt .t-watch .hand{transform-origin:24px 27px}
+.bigt .d{font:600 168px/1 Oswald;color:var(--alarm);letter-spacing:.01em;font-variant-numeric:tabular-nums;text-shadow:0 6px 0 rgba(0,0,0,.25)}
+.bigt .brush{position:absolute;left:-60px;top:110px;width:640px;height:90px;z-index:-1;color:var(--rust);opacity:.9}
+.frozen{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:5px 12px;border-radius:5px;background:rgba(37,106,108,.35);border:1px solid rgba(95,179,170,.5);font:700 13px 'Barlow Condensed';letter-spacing:.16em;color:#CDEDE7}
+.frozen i{width:8px;height:8px;border-radius:1px;background:#CDEDE7;box-shadow:11px 0 0 #CDEDE7;margin-right:10px}
+.menu{position:absolute;right:80px;top:120px;width:470px;display:flex;flex-direction:column;gap:14px}
+.mbtn{position:relative;white-space:nowrap;display:flex;align-items:center;gap:18px;height:74px;padding:0 26px;border:1px solid var(--line2);border-radius:8px;background:rgba(26,24,23,.86);font:600 27px Oswald;letter-spacing:.06em;cursor:pointer;transform:skewX(-7deg);transition:background .2s,color .2s,border-color .2s,transform .25s var(--ease)}
+.mbtn > *{transform:skewX(7deg)}
+.mbtn .ico{width:26px;height:26px;color:var(--stone)}
+.mbtn:hover{border-color:var(--amber)}
+.mbtn.sel{background:var(--amber);border-color:var(--amber);color:var(--ink);transform:skewX(-7deg) translateX(-14px);box-shadow:-8px 0 0 var(--teal),0 12px 28px rgba(242,169,59,.25)}
+.mbtn.sel .ico{color:var(--ink);animation:nudgeR 1s ease-in-out infinite}
+@keyframes nudgeR{50%{transform:skewX(7deg) translateX(5px)}}
+.mbtn .k{margin-left:auto;font:700 13px 'Barlow Condensed';letter-spacing:.14em;opacity:.6}
+.menu .mk2{display:flex;gap:8px;margin-top:10px}
+.tip{position:absolute;left:70px;bottom:56px;width:560px;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:9px;background:rgba(18,17,16,.78);border:1px solid var(--line)}
+.tip .ico{width:24px;height:24px;color:var(--amber);margin-top:2px}
+.tip p{font:500 16px/1.4 Barlow;color:var(--stone)}
+.tip b{color:var(--cream);font-weight:600}
+.bigwatch{position:absolute;right:60px;top:-40px;width:170px;height:170px;color:var(--rust);opacity:.18}
+
+/* ---------- cinematic ---------- */
+#cine{inset:0;z-index:8}
+.lb{position:absolute;left:0;right:0;height:132px;background:#070707}
+.lb.t{top:0;transform:translateY(-100%)} .lb.b{bottom:0;transform:translateY(100%)}
+.on .lb{animation:lbIn .8s var(--ease) forwards}
+@keyframes lbIn{to{transform:none}}
+.lb .rec{position:absolute;left:60px;top:52px;display:flex;align-items:center;gap:10px;font:700 15px 'Barlow Condensed';letter-spacing:.18em;color:var(--stone)}
+.lb .rec i{width:10px;height:10px;border-radius:50%;background:var(--alarm);animation:blink 1s infinite}
+.lb .rt{position:absolute;right:60px;top:52px;font:700 15px 'Barlow Condensed';letter-spacing:.18em;color:var(--muted)}
+.ctitle{position:absolute;left:84px;bottom:46px;display:flex;align-items:flex-end;gap:26px}
+.ctitle .big{position:relative;isolation:isolate;min-width:250px;text-align:center;font:700 76px/1 Oswald;letter-spacing:.04em;padding:0 16px}
+.ctitle .big .brush{position:absolute;left:-22px;top:2px;width:calc(100% + 44px);height:88%;z-index:-1;color:var(--rust)}
+.on .ctitle .big{animation:slam .6s cubic-bezier(.3,1.5,.5,1) .5s both}
+@keyframes slam{from{opacity:0;transform:scale(1.6)}to{opacity:1;transform:none}}
+.on .ctitle .big .brush{animation:wipe .6s var(--ease) .75s both}
+.ctitle .sub{font:500 20px Barlow;color:var(--stone);padding-bottom:12px}
+.cprog{position:absolute;left:84px;right:84px;bottom:26px;height:3px;background:rgba(216,210,200,.12)}
+.cprog i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--amber)}
+.on .cprog i{animation:prog 8s linear .8s forwards}
+@keyframes prog{to{width:100%}}
+.cracks{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none}
+.cracks path{fill:none;stroke:#141210;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:900;stroke-dashoffset:900}
+.cracks path.hl{stroke:rgba(246,241,232,.25);stroke-width:1.5}
+.dz-quake .cracks{display:block}
+.dz-quake.on .cracks path{animation:crack 1.6s ease-out forwards;animation-delay:var(--d,1s)}
+@keyframes crack{to{stroke-dashoffset:0}}
+.flood{position:absolute;left:0;right:0;bottom:0;height:0;display:none;background:linear-gradient(180deg,rgba(95,160,170,.55),rgba(20,58,66,.9))}
+.flood svg{position:absolute;left:0;top:-22px;width:3200px;height:24px;animation:wave 5s linear infinite}
+@keyframes wave{to{transform:translateX(-1600px)}}
+.dz-flood .flood{display:block}
+.dz-flood.on .flood{animation:riseW 9s ease-out .6s forwards}
+@keyframes riseW{to{height:300px}}
+.fireglow{position:absolute;inset:0;display:none;background:radial-gradient(ellipse 85% 55% at 50% 112%,rgba(242,110,40,.7),rgba(198,91,61,.25) 45%,transparent 72%);mix-blend-mode:screen;animation:flick .16s infinite alternate}
+.dz-fire .fireglow{display:block}
+@keyframes flick{from{opacity:.75}to{opacity:1}}
+
+/* ---------- loss ---------- */
+#loss{inset:0;z-index:20}
+.lred{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(70,8,6,.82),rgba(26,3,3,.97))}
+.on .lred{animation:redflash .9s ease-out both}
+@keyframes redflash{0%{background-color:rgba(228,71,45,.9)}100%{background-color:transparent}}
+.hz{position:absolute;left:0;right:0;height:16px;background:repeating-linear-gradient(-45deg,var(--alarm) 0 18px,#1a0705 18px 36px);animation:hz 1s linear infinite;background-size:51px 16px}
+.hz.t{top:0}.hz.b{bottom:0}
+@keyframes hz{to{background-position:51px 0}}
+.lc{position:absolute;left:0;right:0;top:250px;text-align:center}
+.lc .k{font:700 15px 'Barlow Condensed';letter-spacing:.3em;color:#F3A190}
+.glitch{position:relative;display:inline-block;font:700 104px/1 Oswald;letter-spacing:.02em;margin-top:18px}
+.glitch::before,.glitch::after{content:attr(data-t);position:absolute;inset:0}
+.glitch::before{color:var(--alarm);clip-path:inset(0 0 62% 0);animation:gl1 2.2s infinite steps(1)}
+.glitch::after{color:#5FB3AA;clip-path:inset(58% 0 0 0);animation:gl2 2.6s infinite steps(1)}
+@keyframes gl1{0%,86%,95%,100%{opacity:0;transform:none}88%{opacity:1;transform:translate(-6px,-2px)}92%{opacity:1;transform:translate(5px,1px)}}
+@keyframes gl2{0%,80%,92%,100%{opacity:0;transform:none}83%{opacity:1;transform:translate(6px,2px)}90%{opacity:1;transform:translate(-4px,0)}}
+.on .glitch{animation:slam .7s cubic-bezier(.3,1.4,.5,1) .25s both}
+.lc .sub{font:600 26px Oswald;letter-spacing:.2em;color:#F3C3B8;margin-top:16px}
+.lc .zero{display:inline-flex;align-items:center;gap:14px;margin-top:30px;font:600 46px Oswald;color:rgba(246,241,232,.5);text-decoration:line-through;text-decoration-color:var(--alarm);text-decoration-thickness:4px}
+.reasons{display:flex;justify-content:center;gap:10px;margin-top:26px}
+.reasons span{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:6px;border:1px solid rgba(228,71,45,.5);background:rgba(228,71,45,.12);font:600 16px 'Barlow Condensed';letter-spacing:.08em}
+.reasons .ico{color:var(--alarm);width:18px;height:18px}
+.lbtns{display:flex;justify-content:center;gap:14px;margin-top:40px}
+.lbtns .mbtn{width:370px;height:64px;font-size:23px;justify-content:center}
+.lbtns .mbtn.sel{transform:skewX(-7deg)}
+.lnote{position:absolute;left:0;right:0;bottom:44px;text-align:center;font:500 14px Barlow;color:rgba(246,241,232,.45)}
+
+/* ---------- result + inspection ---------- */
+#result{inset:0;z-index:6}
+.rcard{left:48px;top:96px;width:470px;padding:24px 26px 22px}
+.rcard .won{font:700 46px/1 Oswald;letter-spacing:.03em;color:var(--teal-hi);margin-top:10px}
+.gauge{position:relative;width:300px;height:236px;margin:18px auto 0}
+.gauge svg{width:300px;height:170px;overflow:visible}
+.gauge .arc{fill:none;stroke-width:16;stroke-linecap:round}
+.gauge .val{stroke:var(--teal-hi);stroke-dasharray:440;stroke-dashoffset:440;transition:stroke-dashoffset 1.6s var(--ease)}
+.gauge .needle{transform-origin:150px 150px;transform:rotate(-90deg);transition:transform 1.6s var(--ease)}
+.gauge .gv{position:absolute;left:0;right:0;top:170px;text-align:center;font:600 40px/1 Oswald}
+.gauge .gl{position:absolute;left:0;right:0;top:214px;text-align:center}
+.score{margin-top:16px;border-top:1px dashed var(--line2);padding-top:8px}
+.score .sr{display:flex;justify-content:space-between;font:600 17px 'Barlow Condensed';letter-spacing:.05em;padding:6px 0;color:var(--stone)}
+.score .sr b{font:600 19px Oswald;color:var(--cream)}
+.score .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:10px;border-top:1px solid var(--line2)}
+.score .tot b{font:700 44px/1 Oswald;color:var(--amber)}
+.score .bud{display:flex;justify-content:space-between;font:600 17px 'Barlow Condensed';letter-spacing:.05em;margin-top:8px;color:var(--teal-hi)}
+.pin{position:absolute;z-index:4;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;transition:opacity .3s}
+.pin .pc{padding:4px 10px;border-radius:6px;background:rgba(26,24,23,.92);border:1px solid var(--rust);font:600 14px 'Barlow Condensed';letter-spacing:.06em;white-space:nowrap}
+.pin .pc b{color:var(--rust);font-family:Oswald;font-weight:600;margin-left:6px}
+.pin .pd{width:14px;height:14px;margin-top:6px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--rust);border:2px solid var(--cream)}
+.on .pin{animation:pinDrop .6s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d,0s)}
+@keyframes pinDrop{from{opacity:0;transform:translate(-50%,-160%)}to{opacity:1;transform:translate(-50%,-100%)}}
+.pin.dim{opacity:.35}
+.pin.act .pc{border-color:var(--amber);box-shadow:0 0 20px rgba(242,169,59,.4)}
+.pin.act .pd{background:var(--amber)}
+.insp{left:48px;bottom:96px;width:560px;padding:14px 18px;border-color:rgba(242,169,59,.5)}
+.insp .ir{display:flex;align-items:center;gap:14px}
+.insp .in{font:600 22px Oswald;letter-spacing:.03em}
+.insp .ip{margin-left:auto;font:600 22px Oswald;color:var(--rust)}
+.insp .ib{height:4px;border-radius:2px;background:rgba(216,210,200,.12);margin-top:12px;overflow:hidden}
+.insp .ib i{display:block;height:100%;background:var(--amber);transition:width 1s linear}
+.rtimer{right:24px;top:22px;padding:12px 18px;display:flex;align-items:center;gap:14px}
+.rtimer .t-watch{width:34px;height:34px;color:var(--teal-hi)}
+.rtimer .v{font:600 34px/1 Oswald;font-variant-numeric:tabular-nums}
+
+/* ---------- title ---------- */
+#title{inset:0;z-index:5}
+#title .scn{position:absolute;inset:0;width:1600px;height:900px}
+.win{animation:winf 5s ease-in-out infinite}
+@keyframes winf{0%,100%{opacity:1}47%{opacity:1}50%{opacity:.55}53%{opacity:1}}
+.heli{animation:heli 46s linear infinite}
+@keyframes heli{from{transform:translate(1750px,150px)}to{transform:translate(-150px,210px)}}
+.rotor{transform-box:fill-box;transform-origin:center;animation:rot .12s linear infinite}
+@keyframes rot{50%{transform:scaleX(.15)}}
+.blinkr{animation:blink .9s infinite}
+.bird{animation:fly 30s linear infinite}
+@keyframes fly{from{transform:translate(-80px,0)}to{transform:translate(1700px,-60px)}}
+.flap{transform-box:fill-box;transform-origin:center;animation:flap .6s ease-in-out infinite}
+@keyframes flap{50%{transform:scaleY(.3)}}
+.fog{position:absolute;left:-10%;width:120%;height:220px;background:radial-gradient(ellipse 40% 50% at 30% 50%,rgba(216,210,200,.13),transparent 70%),radial-gradient(ellipse 35% 45% at 75% 55%,rgba(216,210,200,.1),transparent 70%);animation:fogd 30s ease-in-out infinite alternate;pointer-events:none}
+@keyframes fogd{to{transform:translateX(6%)}}
+.t-left{position:absolute;left:96px;top:96px;width:640px}
+.kick{font:700 15px 'Barlow Condensed';letter-spacing:.32em;color:var(--amber)}
+.h1{font:700 128px/.88 Oswald;letter-spacing:.01em;margin-top:18px;text-shadow:0 6px 0 rgba(0,0,0,.25)}
+.h1 .p{position:relative;isolation:isolate;display:inline-block;padding:0 20px 0 10px}
+.h1 .p .brush{position:absolute;left:-24px;top:16px;width:calc(100% + 50px);height:84%;z-index:-1;color:var(--rust)}
+.on .h1 .p .brush{animation:wipe .8s var(--ease) .5s both}
+.dzr{display:flex;gap:10px;margin-top:26px}
+.dzr span{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:6px;border:1px solid var(--line2);background:rgba(26,24,23,.6);font:600 16px 'Barlow Condensed';letter-spacing:.14em}
+.dzr .ico{width:20px;height:20px;color:var(--rust)}
+.t-menu{position:absolute;left:96px;top:520px;width:440px;display:flex;flex-direction:column;gap:12px}
+.t-menu .mbtn{height:66px;font-size:25px}
+.t-menu .kk{display:flex;gap:8px;margin-top:8px}
+.scores{right:96px;top:150px;width:420px;padding:22px 24px}
+.sc-r{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:6px 10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.sc-r .rk{font:600 22px Oswald;color:var(--amber)}
+.sc-r .wv{font:600 18px 'Barlow Condensed';letter-spacing:.05em}
+.sc-r .pt{font:600 22px Oswald;font-variant-numeric:tabular-nums}
+.sc-r .dt{grid-column:2/4;font:500 13px Barlow;color:var(--muted);margin-top:-4px}
+.sc-r.first .rk,.sc-r.first .pt{color:var(--amber)}
+.scores .foot{margin-top:14px;font:500 13px Barlow;color:var(--muted)}
+.t-watchbig{position:absolute;right:560px;top:60px;width:150px;height:150px;color:var(--rust);opacity:.85}
+
+/* ---------- guide below the stage ---------- */
+.guide{max-width:1180px;margin:28px auto 60px;padding:0 16px;display:grid;gap:28px}
+.guide h2{font:600 26px Oswald;letter-spacing:.03em}
+.guide h2 small{font:600 13px 'Barlow Condensed';letter-spacing:.16em;color:var(--muted);margin-left:10px}
+.guide p.lead{color:var(--stone);margin-top:6px;max-width:820px;line-height:1.5}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.sw div{border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#1a1817}
+.sw i{display:block;height:68px}
+.sw p{padding:8px 10px;font:600 14px 'Barlow Condensed';letter-spacing:.06em}
+.sw p span{display:block;font:500 12px Barlow;color:var(--muted);letter-spacing:0;margin-top:2px}
+.sw code{font:500 11.5px ui-monospace,Consolas,monospace;color:var(--stone)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+.gcard{border:1px solid var(--line);border-radius:10px;padding:16px;background:#1a1817}
+.gcard h3{font:600 15px 'Barlow Condensed';letter-spacing:.14em;color:var(--amber);text-transform:uppercase}
+.gcard ul{list-style:none;margin-top:8px}
+.gcard li{padding:6px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--stone);display:flex;justify-content:space-between;gap:12px}
+.gcard li:last-child{border-bottom:0}
+.gcard li b{color:var(--cream);font-weight:600}
+.gcard li code{font:500 12.5px ui-monospace,Consolas,monospace;color:var(--teal-hi);text-align:right}
+.fontrow{display:flex;align-items:baseline;gap:14px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fontrow:last-child{border-bottom:0}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+@media (max-width:700px){.navhint{display:none}.bar{gap:8px}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough" x="-6%" y="-30%" width="112%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.11" numOctaves="3" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="rough2" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="9"/>
+      <feDisplacementMap in="SourceGraphic" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <symbol id="brush" viewBox="0 0 600 80" preserveAspectRatio="none">
+      <g filter="url(#rough)" fill="currentColor">
+        <path d="M6 44 C70 18 190 12 300 17 S520 10 596 24 L590 54 C500 64 380 58 290 63 S90 71 12 62 Z"/>
+        <path opacity=".55" d="M16 28 C150 18 310 20 480 15 L476 23 C310 28 150 30 20 36 Z"/>
+        <path opacity=".7" d="M30 66 C200 62 380 64 570 57 L566 63 C380 70 200 73 34 73 Z"/>
+        <circle cx="590" cy="64" r="4"/><circle cx="8" cy="30" r="3"/><circle cx="600" cy="40" r="2.5"/>
+      </g>
+    </symbol>
+    <symbol id="i-quake" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M2 12h4l2-5 3 11 3-14 2 8h2l1-2h3"/></symbol>
+    <symbol id="i-flood" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 14c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/></g></symbol>
+    <symbol id="i-fire" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 3.5 5.5 6 5.5 11.2A5.5 5.5 0 0 1 12 19a5.5 5.5 0 0 1-5.5-5.6c0-2.6 1.4-4.2 2.6-5.5.2 1.6.8 2.7 1.9 3.3C11 8.4 11 5 12 2Zm0 10.5c-1 1.3-2 2.2-2 3.6a2 2 0 0 0 4 0c0-1.2-.9-2.3-2-3.6Z"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><g fill="currentColor"><path d="M9 3h6a2 2 0 0 1 2 2v1h-2V5H9v1H7V5a2 2 0 0 1 2-2Z"/><rect x="3.5" y="6.5" width="17" height="14.5" rx="3"/></g><rect x="7" y="11" width="10" height="2.2" rx="1" fill="#1A1817"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path fill="currentColor" d="M10.2 6.5h2v3.1l2.6-1v1.8l-2.6 1v1l2.6-1v1.8l-2.6 1v2.3c1.5-.2 2.6-1.3 2.8-2.8h1.9c-.3 2.6-2.4 4.6-5 4.7h-1.7v-3.5l-1.6.6v-1.8l1.6-.6v-1l-1.6.6v-1.8l1.6-.6Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4.5v15l12-7.5Z"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path fill="currentColor" d="M3 3.5v6h6Z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 2 11.5h3V21h5.5v-6h3v6H19v-9.5h3Z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path fill="currentColor" d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5a1 1 0 0 0 0 2H20v2H6.5A2.5 2.5 0 0 1 4 19.5Zm4 1v2h8v-2Z"/></symbol>
+    <symbol id="i-exit" viewBox="0 0 24 24"><path fill="currentColor" d="M4 3h10v4h-2V5H6v14h6v-2h2v4H4Zm12 4 5 5-5 5v-3.5H9v-3h7Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.5 5 5 10-11"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 1 21h22Zm-1 7h2v6h-2Zm0 8h2v2h-2Z"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Zm-3 17h6v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24"><path fill="currentColor" d="M4 8h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Zm11 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM4 11v2h6v-2Zm0 4v2h6v-2ZM5 7 17 2.5l.7 1.8L9 7Z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5Zm-1.2 13.6-3.5-3.5 1.4-1.4 2.1 2.1 4.6-4.6 1.4 1.4Z"/></symbol>
+  </defs>
+</svg>
+
+<header class="bar">
+  <div class="brand">TOO LATE TO <em>PANIC!</em> · HUD</div>
+  <nav class="tabs" id="tabs" aria-label="HUD ekranları"></nav>
+  <div class="seg" id="dsel" aria-label="Afet"><span class="seg-l">AFET</span></div>
+  <div class="navhint"><kbd>[</kbd> <kbd>]</kbd> ekran · diğer tuşlar oyundaki gibi</div>
+</header>
+
+<main class="view">
+  <div class="frame" id="frame">
+    <div class="stage" id="stage" data-state="prep">
+      <div class="L" id="bgwrap"><div class="bgimg" id="bgA"></div><div class="bgimg" id="bgB"></div></div>
+      <div class="L grade"></div>
+      <canvas id="fx" width="1600" height="900"></canvas>
+
+      <!-- TITLE -->
+      <section class="cmp" id="title">
+        <svg class="scn" id="titleScene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"></svg>
+        <div class="fog" style="top:560px"></div>
+        <div class="fog" style="top:690px;animation-duration:40s;animation-direction:alternate-reverse"></div>
+        <div class="t-left">
+          <div class="kick slideL" style="--d:.1s">AFETE HAZIRLIK VE ÖNLEM</div>
+          <div class="h1 slideL" style="--d:.2s">TOO LATE<br>TO <span class="p"><svg class="brush"><use href="#brush"/></svg>PANIC!</span></div>
+          <div class="dzr slideL" style="--d:.35s">
+            <span><svg class="ico"><use href="#i-quake"/></svg>DEPREM</span>
+            <span><svg class="ico"><use href="#i-flood"/></svg>SEL</span>
+            <span><svg class="ico"><use href="#i-fire"/></svg>YANGIN</span>
+          </div>
+        </div>
+        <div class="t-menu" id="tmenu"></div>
+        <div class="pnl scores slideR" style="--d:.35s">
+          <div class="ttl"><svg class="brush"><use href="#brush"/></svg>YEREL SKORLAR</div>
+          <div id="scores" style="margin-top:14px"></div>
+          <div class="foot">Skorlar yalnız bu bilgisayarda tutulur.</div>
+        </div>
+      </section>
+
+      <!-- WORLD MARKERS -->
+      <div class="cmp mk" id="marker" style="left:560px;top:214px"><div class="chip"><b>E</b>AÇ <small>· Mutfak dolabı</small></div><div class="stem"></div><div class="ping"></div></div>
+      <div class="cmp mk red" id="bmarker" style="left:1170px;top:612px"><div class="chip"><b>E</b>SIĞINAĞA GİR <small>· 4 m</small></div><div class="stem"></div><div class="ping"></div></div>
+
+      <!-- STATUS STRIP -->
+      <section class="cmp" id="strip">
+        <div class="pnl s-left drop" style="--d:.05s">
+          <div class="ring">
+            <svg viewBox="0 0 68 68"><circle cx="34" cy="34" r="30" fill="none" stroke="var(--rust)" stroke-width="3.5" filter="url(#rough2)"/><circle class="spin" cx="34" cy="34" r="24" fill="none" stroke="rgba(216,210,200,.25)" stroke-width="1.5" stroke-dasharray="3 6"/></svg>
+            <div class="num" id="sWave">01</div>
+          </div>
+          <div>
+            <div class="lbl" id="sWaveL">DALGA 01 · YAKLAŞAN AFET</div>
+            <div class="dis"><svg class="ico"><use id="sDisI" href="#i-quake"/></svg><span id="sDis">DEPREM</span></div>
+            <div class="hint" id="sHint">ÖNLEM · SABİTLE + GÜÇLENDİR</div>
+          </div>
+        </div>
+        <div class="pnl s-timer drop" id="sTimer" style="--d:0s">
+          <div class="t-row">
+            <svg class="t-watch" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><circle cx="24" cy="27" r="16"/><path d="M19 5h10M24 5v6M37 13l3-3"/></g><line class="hand" x1="24" y1="27" x2="24" y2="16" stroke="var(--cream)" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="27" r="2.6" fill="var(--cream)"/></svg>
+            <div class="t-digits" id="sTime">04:32</div>
+            <div class="t-side"><span class="lbl">HAZIRLIK</span><span class="ph" id="sPhase">EVİ HAZIRLA</span></div>
+          </div>
+          <div class="t-bar"><i id="sBar"></i><div class="notch" id="sNotch"><span>ÇANTA</span></div></div>
+        </div>
+        <div class="pnl s-right drop" style="--d:.1s">
+          <div class="stat" id="stBudget"><svg class="coin"><use href="#i-coin"/></svg><div><div class="v" id="sBudget">1.000 ₺</div><div class="lbl">BÜTÇE</div></div></div>
+          <div class="stat" id="stWater"><img class="pix" src="img/icons/water.png" alt=""><div><div class="v" id="sWater">1<small>/1</small></div><div class="lbl">SU</div></div></div>
+          <div class="stat" id="stFood"><img class="pix" src="img/icons/food.png" alt=""><div><div class="v" id="sFood">0<small>/1</small></div><div class="lbl">GIDA</div></div></div>
+          <div class="stat" id="stBag" style="border-right:0"><svg class="bagi"><use href="#i-bag"/></svg><div><div class="v" id="sBagV" style="font-size:18px">ÇANTA</div><div class="lbl" id="sBagL">EKSİK</div></div></div>
+          <div class="keys"><span class="kc sm" data-k="TAB"><b>TAB</b>ÇANTA</span><span class="kc sm" data-k="H"><b>H</b>YARDIM</span></div>
+        </div>
+        <div class="pnl ticker drop" style="--d:.2s">
+          <div class="tag"><i></i>RADYO</div>
+          <div class="track"><span class="run" id="sRadio"></span></div>
+        </div>
+      </section>
+
+      <!-- REQUIREMENTS -->
+      <section class="cmp pnl slideR" id="req" style="--d:.2s"></section>
+
+      <!-- HELP -->
+      <section class="cmp pnl slideL" id="help" style="--d:.3s">
+        <div class="lbl" style="color:var(--teal-hi)">KONTROLLER</div>
+        <div class="hl">
+          <span class="kc"><b>WASD</b></span><span>Yürü · <b style="font-weight:600;color:var(--cream)">Shift</b> koş</span>
+          <span class="kc"><b>SPACE</b></span><span>Zıpla</span>
+          <span class="kc"><b>E</b></span><span>Aç / kapat · etkileşim</span>
+          <span class="kc"><b>F</b></span><span>Seçili malzemeyi al</span>
+          <span class="kc"><b>TAB</b></span><span>Envanter ve çanta</span>
+        </div>
+        <div class="lbl" style="margin-top:12px">H · KAPAT</div>
+      </section>
+
+      <!-- LOOT -->
+      <section class="cmp pnl ctr rise" id="loot" style="--d:.1s"></section>
+
+      <!-- CONTEXT ACTION + CONTROLS -->
+      <section class="cmp pnl ctr rise" id="action" style="--d:.15s"><span class="kc amb" data-k="E"><b>E</b>AÇ</span><div><div class="what" id="aWhat">Mutfak dolabı</div><div class="where" id="aWhere">Zemin kat · içinde malzeme var</div></div></section>
+      <section class="cmp ctr rise" id="controls" style="--d:.2s"></section>
+      <section class="cmp pnl ctr" id="toast"><svg class="ti"><use id="toastI" href="#i-warn"/></svg><span class="tx" id="toastT">Malzeme eksik</span><div class="life"><i></i></div></section>
+
+      <!-- PANIC -->
+      <section class="cmp" id="panic">
+        <div class="vig"></div>
+        <div class="pnl banner rise" style="--d:.1s;position:absolute"><svg class="bi"><use href="#i-warn"/></svg><div><div class="b1">SON 60 SANİYE</div><div class="b2">ÇANTANI AL · SIĞINAĞA KOŞ</div></div></div>
+        <div class="pnl bagcheck slideL" style="--d:.25s" id="bagcheck"></div>
+        <div class="stamp"><svg class="brush"><use href="#brush"/></svg><span>DAHA FAZLA<br>ZAMANIN YOK.</span></div>
+      </section>
+
+      <!-- INVENTORY -->
+      <section class="cmp pnl rise" id="inv"></section>
+
+      <!-- WORK -->
+      <section class="cmp pnl rise" id="work"></section>
+
+      <!-- PAUSE -->
+      <section class="cmp" id="pause">
+        <div class="dimmer fade"></div>
+        <div class="pnl pcard rise" style="position:absolute">
+          <svg class="scn" id="pauseScene" viewBox="0 0 1408 660" preserveAspectRatio="xMidYMid slice"></svg>
+          <svg class="bigwatch" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" filter="url(#rough2)"><circle cx="24" cy="27" r="16"/><path d="M19 5h10M24 5v6M37 13l3-3M24 27l6-7"/></g></svg>
+          <div class="tl">
+            <div class="lbl slideL" style="--d:.15s" id="pWave">DALGA 01 · DEPREM</div>
+            <h2 class="slideL" style="--d:.2s">OYUN DURDURULDU</h2>
+            <div class="sub slideL" style="--d:.25s">Zaman daralıyor. Kararını ver.</div>
+            <div class="bigt slideL" style="--d:.3s">
+              <svg class="brush"><use href="#brush"/></svg>
+              <svg class="t-watch" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><circle cx="24" cy="27" r="16"/><path d="M19 5h10M24 5v6M37 13l3-3"/></g><line class="hand" x1="24" y1="27" x2="30" y2="19" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+              <div class="d" id="pTime">04:32</div>
+            </div>
+            <div class="frozen slideL" style="--d:.4s"><i></i>SAYAÇ DURDU</div>
+          </div>
+          <div class="menu" id="pmenu"></div>
+          <div class="tip rise" style="--d:.5s"><svg class="ico"><use href="#i-bulb"/></svg><p id="pTip"></p></div>
+        </div>
+      </section>
+
+      <!-- CINEMATIC -->
+      <section class="cmp" id="cine">
+        <svg class="cracks" viewBox="0 0 1600 900" preserveAspectRatio="none">
+          <path style="--d:.9s" d="M690 140 l18 40 -14 34 26 46 -10 38 22 52"/><path class="hl" style="--d:.9s" d="M693 140 l18 40 -14 34 26 46 -10 38 22 52"/>
+          <path style="--d:1.4s" d="M1130 150 l-20 30 14 28 -24 40 12 30 -18 44"/><path class="hl" style="--d:1.4s" d="M1133 150 l-20 30 14 28 -24 40 12 30 -18 44"/>
+          <path style="--d:2s" d="M330 160 l12 26 -8 22 20 34"/>
+        </svg>
+        <div class="flood"><svg viewBox="0 0 3200 24" preserveAspectRatio="none"><path fill="rgba(95,160,170,.55)" d="M0 12 Q50 0 100 12 T200 12 T300 12 T400 12 T500 12 T600 12 T700 12 T800 12 T900 12 T1000 12 T1100 12 T1200 12 T1300 12 T1400 12 T1500 12 T1600 12 T1700 12 T1800 12 T1900 12 T2000 12 T2100 12 T2200 12 T2300 12 T2400 12 T2500 12 T2600 12 T2700 12 T2800 12 T2900 12 T3000 12 T3100 12 T3200 12 V24 H0Z"/></svg></div>
+        <div class="fireglow"></div>
+        <div class="lb t"><div class="rec"><i></i>CANLI · <span id="cWave">DALGA 01</span></div><div class="rt">AFET SIRASI · 8 SN</div></div>
+        <div class="lb b">
+          <div class="ctitle"><div class="big"><svg class="brush"><use href="#brush"/></svg><span id="cDis">DEPREM</span></div><div class="sub" id="cSub">Afet başladı · evdeki önlemler sınanıyor</div></div>
+          <div class="cprog"><i></i></div>
+        </div>
+      </section>
+
+      <!-- LOSS -->
+      <section class="cmp" id="loss">
+        <div class="lred"></div>
+        <div class="hz t"></div><div class="hz b"></div>
+        <div class="lc">
+          <div class="k fade" style="--d:.2s">HAZIRLIK SÜRESİ BİTTİ</div>
+          <div class="glitch" data-t="SIĞINAĞA YETİŞEMEDİN">SIĞINAĞA YETİŞEMEDİN</div>
+          <div class="sub fade" style="--d:.8s">KOŞU BİTTİ</div>
+          <div class="zero fade" style="--d:1s">00:00</div>
+          <div class="reasons rise" style="--d:1.3s"><span><svg class="ico"><use href="#i-x"/></svg>Süre doldu</span><span><svg class="ico"><use href="#i-x"/></svg>Sığınağın dışında</span><span><svg class="ico"><use href="#i-x"/></svg>Çantada gıda yok</span></div>
+          <div class="lbtns rise" style="--d:1.7s" id="lbtns"></div>
+        </div>
+        <div class="lnote fade" style="--d:2s">Bu ekran başarısızlık sinematiğinden önce görünür.</div>
+      </section>
+
+      <!-- RESULT + INSPECTION -->
+      <section class="cmp" id="result">
+        <div class="pnl rcard slideL" style="--d:.15s">
+          <div class="ttl" style="--d:.15s"><svg class="brush" style="color:var(--teal)"><use href="#brush"/></svg>DALGA 01 TAMAMLANDI</div>
+          <div class="won">EV GÜVENDE</div>
+          <div class="gauge">
+            <svg viewBox="0 0 300 170">
+              <path class="arc" d="M10 150 A140 140 0 0 1 290 150" stroke="rgba(216,210,200,.12)"/>
+              <path class="arc val" id="gArc" d="M10 150 A140 140 0 0 1 290 150"/>
+              <g id="g65"></g>
+              <g class="needle" id="gNeedle"><line x1="150" y1="150" x2="150" y2="52" stroke="var(--cream)" stroke-width="3" stroke-linecap="round"/><circle cx="150" cy="150" r="7" fill="var(--cream)"/></g>
+            </svg>
+            <div class="gv" id="gVal">%0</div>
+            <div class="gl lbl">TOPLAM HASAR · SINIR %65</div>
+          </div>
+          <div class="score">
+            <div class="sr"><span>Dalga ödülü</span><b data-c="300">+0</b></div>
+            <div class="sr"><span>Düşük hasar</span><b data-c="180">+0</b></div>
+            <div class="sr"><span>Çanta · destek 2/4</span><b data-c="60">+0</b></div>
+            <div class="tot"><span class="lbl">PUAN</span><b data-c="540">0</b></div>
+            <div class="bud"><span>BÜTÇE</span><span data-c="450" data-s="+" data-u=" ₺">+0 ₺</span></div>
+          </div>
+        </div>
+        <div class="pnl rtimer drop" style="--d:.2s;position:absolute">
+          <svg class="t-watch" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><circle cx="24" cy="27" r="16"/><path d="M19 5h10M24 5v6"/></g><line class="hand" x1="24" y1="27" x2="24" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+          <div><div class="lbl">HASAR GEZİSİ</div><div class="v" id="rTime">00:20</div></div>
+        </div>
+        <div id="pins"></div>
+        <div class="pnl insp rise" style="--d:.5s;position:absolute">
+          <div class="ir"><span class="lbl" id="iStep">HASAR 1/3</span><span class="in" id="iName">Kitaplık</span><span class="ip" id="iPct">%8,2</span></div>
+          <div class="ib"><i id="iBar" style="width:100%"></i></div>
+        </div>
+      </section>
+
+      <div class="L grain"></div>
+    </div>
+  </div>
+</main>
+
+<section class="guide" aria-label="Stil rehberi">
+  <div>
+    <h2>Panik modu paleti <small>REFERANS + OYUN RENKLERİ</small></h2>
+    <p class="lead">Referanstaki krem / kömür / petrol / amber / pas / taş paleti, oyunun mevcut <code>PanicHomeHud</code> renkleriyle (Sea, Brass, Ember) aynı rolleri taşır. Arka planlar gerçek oyun karelerinden kırpıldı; ikonlar <code>PanicResidenceArt.Icon</code> çıktılarıdır. Değerler Unity <code>Color</code> karşılığıyla verildi.</p>
+    <div class="sw" id="swatches"></div>
+  </div>
+  <div class="cols">
+    <div class="gcard">
+      <h3>Ekran → PanicHomeHud</h3>
+      <ul>
+        <li><b>Başlık</b><code>DrawTitle</code></li>
+        <li><b>Hazırlık</b><code>DrawStatusStrip · DrawContext</code></li>
+        <li><b>Eksik kartı</b><code>DrawRequirements</code></li>
+        <li><b>Toplama</b><code>DrawLootStrip</code></li>
+        <li><b>Çanta</b><code>DrawInventory</code></li>
+        <li><b>Aktif iş</b><code>DrawWork</code></li>
+        <li><b>Son 60 sn</b><code>TimeRemaining &lt; 60</code></li>
+        <li><b>Duraklat</b><code>DrawPause</code></li>
+        <li><b>Afet</b><code>DrawCinematic · DrawDisasterCue</code></li>
+        <li><b>Kayıp</b><code>DrawLossReveal</code></li>
+        <li><b>Sonuç</b><code>DrawEndCard · DrawInspection</code></li>
+      </ul>
+    </div>
+    <div class="gcard">
+      <h3>Tipografi</h3>
+      <div class="fontrow"><span style="font:600 34px Oswald">04:32</span><span class="lbl">Oswald · sayaç, başlık</span></div>
+      <div class="fontrow"><span style="font:600 22px 'Barlow Condensed';letter-spacing:.08em">ÇANTA · SABİTLE</span><span class="lbl">Barlow Condensed · etiket, tuş</span></div>
+      <div class="fontrow"><span style="font:500 17px Barlow">Malzeme eksik.</span><span class="lbl">Barlow · gövde</span></div>
+      <p style="margin-top:10px;font-size:13.5px;color:var(--muted);line-height:1.45">Üçü de SIL Open Font License; Türkçe karakterleri (İ, Ş, Ğ) içerir. Unity'de şu an <code>LegacyRuntime.ttf</code> kullanılıyor; bu yazı tiplerinin Font asset olarak eklenmesi gerekir.</p>
+    </div>
+    <div class="gcard">
+      <h3>Hareket</h3>
+      <ul>
+        <li><b>Panel girişi</b><code>0.55 s · ease-out · kademeli</code></li>
+        <li><b>Fırça vurgusu</b><code>0.7 s · soldan sağa</code></li>
+        <li><b>Son 60 sn sayaç</b><code>1 s nabız + kırmızı vinyet</code></li>
+        <li><b>Toast</b><code>2.6 s ömür çubuğu</code></li>
+        <li><b>Dünya işareti</b><code>1.8 s salınım + ping</code></li>
+        <li><b>Afet</b><code>sarsıntı / yağmur / kıvılcım</code></li>
+        <li><b>Hasar ibresi</b><code>1.6 s · %65 sınır</code></li>
+      </ul>
+      <p style="margin-top:10px;font-size:13.5px;color:var(--muted)">Hareket azaltma tercihi açıksa animasyonlar kapanır.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const stage = $('#stage'), frame = $('#frame');
+
+/* ---------------- data ---------------- */
+const NAMES = {water:'Su',food:'Gıda',bandage:'Bandaj',antiseptic:'Antiseptik',firstaid:'İlk yardım',flashlight:'Fener',battery:'Pil',radio:'Radyo',blanket:'Battaniye',screws:'Vida',bracket:'Ankraj',plank:'Tahta',sandbag:'Kum torbası',seedling:'Fidan',hose:'Hortum',extinguisher:'Söndürücü'};
+const DESC = {water:'1 günlük su paketi. Çantaya koy; dalgada tüketilir.',food:'1 günlük gıda paketi. Çantaya koy; dalgada tüketilir.',bandage:'2 bandaj + 1 antiseptik = ilk yardım seti.',antiseptic:'İlk yardım seti için gerekir.',firstaid:'Destek ekipmanı. Çantada ek ödül verir.',flashlight:'Destek ekipmanı. Çalışması için pil gerekir.',battery:'Fener ve radyo için gerekir.',radio:'Destek ekipmanı. Pil gerekir.',blanket:'Destek ekipmanı.',screws:'Sabitleme, güçlendirme ve sel çiti için.',bracket:'Duvar ve zemin ankrajı. Bir kez alınır, yeniden kullanılır.',plank:'Güçlendirme, bariyer, drenaj ve çit için.',sandbag:'Sel bariyeri, drenaj ve çit için.',seedling:'Bahçeye dikilir; sele sınırlı katkı.',hose:'Bahçe hortumu; yangın önlemi.',extinguisher:'Yangın önlemi.'};
+const TOOLS = new Set(['flashlight','radio','blanket','firstaid','hose','extinguisher','bracket']);
+const SUPPORT = ['firstaid','flashlight','radio','blanket'];
+const DIS = {
+  quake:{name:'DEPREM',icon:'#i-quake',wave:1,total:300,days:1,hint:'ÖNLEM · SABİTLE + GÜÇLENDİR',sub:'Afet başladı · ankrajlar ve yapı sınanıyor',fx:'dust',radio:'Deprem bekleniyor. Ağır dolapları duvara sabitleyin, raf kapaklarını kapatın, çantanıza su ve gıda koyun.',tip:'<b>Ağır dolapları duvara sabitle.</b> Depremde devrilen eşya hasarı büyütür. Seçip <b>1</b>\'e bas.'},
+  flood:{name:'SEL',icon:'#i-flood',wave:4,total:270,days:2,hint:'ÖNLEM · BARİYER + DRENAJ + ÇİT',sub:'Su yükseliyor · bariyerler ve drenaj sınanıyor',fx:'rain',radio:'Sel uyarısı. Kapı ve pencerelere bariyer kurun, bahçeye drenaj açın, kum torbalarını hazırlayın.',tip:'<b>Kapı ve pencereye sel bariyeri kur.</b> Fidan yardımcı olur ama drenajın yerini tutmaz.'},
+  fire:{name:'YANGIN',icon:'#i-fire',wave:7,total:240,days:3,hint:'ÖNLEM · SÖNDÜRÜCÜ + HORTUM',sub:'Alevler yaklaşıyor · yangın önlemleri sınanıyor',fx:'fire',radio:'Yangın riski yüksek. Söndürücüyü hazır tutun, bahçe hortumunu bağlayın, sığınağa giden yolu açık bırakın.',tip:'<b>Söndürücüyü yerleştir, hortumu bağla.</b> Sığınağa giden yolu boş bırak.'}
+};
+let dz = 'quake';
+const inv = [{id:'water',n:2},{id:'food',n:1},{id:'bandage',n:2},{id:'antiseptic',n:1},{id:'battery',n:2},{id:'flashlight',n:1},{id:'plank',n:1},null,null,null,null,null];
+const bag = [{id:'water',n:1},{id:'radio',n:1},null,null,null,null,null,null];
+let loot = [{id:'screws',n:4},{id:'bracket',n:3},{id:'plank',n:2},{id:'sandbag',n:2},{id:'extinguisher',n:1}];
+const REQ = {title:'SEL ÇİTİ',budget:60,items:[['plank',3],['screws',2],['sandbag',1]]};
+let budget = 1000, prepT = 272, panicT = 47, inspT = 20, inspStep = 0;
+let invSel = 0, lootSel = 0, helpOn = true;
+let state = 'prep', resume = 'prep', menuSel = 0, titleSel = 0, lossSel = 0;
+
+const have = id => inv.reduce((s,x)=>s+(x&&x.id===id?x.n:0),0);
+const inBag = id => bag.reduce((s,x)=>s+(x&&x.id===id?x.n:0),0);
+const supportCount = () => SUPPORT.filter(id=>inBag(id)>0).length;
+const fmt = t => String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+const nf = n => n.toLocaleString('tr-TR');
+const icon = id => `img/icons/${id}.png`;
+const use = (id,cls='ico') => `<svg class="${cls}"><use href="${id}"/></svg>`;
+const kc = (k,label,cls='') => `<span class="kc ${cls}" data-k="${k}"><b>${k}</b>${label}</span>`;
+
+function addInv(id,n){
+  const cap = TOOLS.has(id)?1:5;
+  for(const s of inv){ if(s&&s.id===id&&s.n<cap){ const m=Math.min(cap-s.n,n); s.n+=m; n-=m; if(!n) return true; } }
+  while(n>0){ const i=inv.indexOf(null); if(i<0) return false; const m=Math.min(cap,n); inv[i]={id,n:m}; n-=m; }
+  return true;
+}
+function takeInv(id,n){ for(let i=inv.length-1;i>=0&&n>0;i--){ const s=inv[i]; if(s&&s.id===id){ const m=Math.min(s.n,n); s.n-=m; n-=m; if(!s.n) inv[i]=null; } } }
+
+/* ---------------- states ---------------- */
+const STATES = {
+  title:   {label:'Başlık',     bg:null,          show:['title'],                                   fx:'motes'},
+  prep:    {label:'Hazırlık',   bg:'bg-ground',   show:['strip','req','action','controls','marker'], fx:'motes', ctl:'prepare'},
+  loot:    {label:'Toplama',    bg:'bg-garage',   show:['strip','loot','controls'],                  fx:'motes', ctl:'loot'},
+  inv:     {label:'Çanta',      bg:'bg-upper',    mode:'blur', show:['inv'],                         fx:'none'},
+  work:    {label:'Aktif iş',   bg:'bg-ground',   mode:'blur', show:['work'],                        fx:'none'},
+  panic:   {label:'Son 60 sn',  bg:'bg-bunker',   mode:'dim', show:['strip','panic','controls','bmarker'], fx:'embers', ctl:'panic'},
+  pause:   {label:'Duraklat',   bg:'bg-balcony',  mode:'blur', show:['pause'],                       fx:'none'},
+  disaster:{label:'Afet',       bg:'bg-disaster', show:['cine'],                                     fx:'dz'},
+  loss:    {label:'Kayıp',      bg:'bg-bunker',   mode:'gray', show:['loss'],                        fx:'none'},
+  result:  {label:'Sonuç',      bg:'bg-rescue',   show:['result','controls'],                        fx:'motes', ctl:'inspect'}
+};
+const ORDER = Object.keys(STATES);
+const CTL = {
+  prepare:[['WASD','YÜRÜ','hot'],['SHIFT','KOŞ'],['E','KULLAN'],['TAB','ÇANTA'],['1','SABİTLE'],['2','KORU'],['3','GÜÇLENDİR'],['SAĞ TIK / 4','TAŞI']],
+  loot:[['Z / X','SEÇ','hot'],['F','AL','amb'],['E','KAPAT'],['TAB','ÇANTA']],
+  panic:[['WASD','YÜRÜ'],['SHIFT','KOŞ','hot'],['E','SIĞINAK','red'],['TAB','ÇANTA']],
+  inspect:[['WASD','İNCELE','hot'],['ENTER','İLERİ'],['N','BİTİR'],['ESC','DURAKLAT']]
+};
+
+$('#tabs').innerHTML = ORDER.map(s=>`<button class="tab" data-s="${s}">${STATES[s].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('.tab'); if(b) setState(b.dataset.s)});
+$('#dsel').insertAdjacentHTML('beforeend', Object.entries(DIS).map(([k,v])=>`<button data-d="${k}">${v.name}</button>`).join(''));
+$('#dsel').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; dz=b.dataset.d; prepT=Math.min(prepT,DIS[dz].total); renderDisaster(); if(state==='disaster') setState('disaster'); else renderStrip();});
+
+let bgFront = $('#bgA'), bgBack = $('#bgB'), curBg = '';
+function setBg(name, mode){
+  const key = (name||'')+'|'+(mode||'');
+  if(key===curBg) return; curBg = key;
+  if(!name){ bgFront.classList.remove('show'); return; }
+  bgBack.style.backgroundImage = `url(img/${name}.jpg)`;
+  bgBack.className = 'bgimg ' + (mode||'');
+  void bgBack.offsetWidth; bgBack.classList.add('show');
+  bgFront.classList.remove('show');
+  [bgFront,bgBack] = [bgBack,bgFront];
+}
+
+function setState(s){
+  if(!STATES[s]) return;
+  if(s==='pause' && state!=='pause') resume = (state==='title'||state==='loss'||state==='disaster')?'prep':state;
+  const cfg = STATES[s]; state = s; stage.dataset.state = s;
+  $$('.tab').forEach(b=>b.setAttribute('aria-pressed', b.dataset.s===s));
+  setBg(cfg.bg, cfg.mode);
+  $('#bgwrap').classList.toggle('shake', s==='disaster' && dz==='quake');
+  const show = new Set(cfg.show);
+  if(s==='prep' && helpOn) show.add('help');
+  $$('.cmp').forEach(c=>{
+    if(c.id==='toast') return;
+    c.classList.remove('on');
+    if(show.has(c.id)){ void c.offsetWidth; c.classList.add('on'); }
+  });
+  const cine = $('#cine'); cine.classList.remove('dz-quake','dz-flood','dz-fire'); cine.classList.add('dz-'+dz);
+  if(cfg.ctl) renderControls(CTL[cfg.ctl]);
+  renderAll();
+  setFx(cfg.fx==='dz' ? DIS[dz].fx : cfg.fx);
+  if(s==='result') startResult();
+  if(s==='panic') panicT = Math.max(panicT,1);
+  hideToast(true);
+}
+
+/* ---------------- renderers ---------------- */
+function renderDisaster(){
+  const d = DIS[dz];
+  $$('#dsel button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.d===dz));
+  $('#sWave').textContent = String(d.wave).padStart(2,'0');
+  $('#sWaveL').textContent = `DALGA ${String(d.wave).padStart(2,'0')} · YAKLAŞAN AFET`;
+  $('#sDis').textContent = d.name; $('#sDisI').setAttribute('href', d.icon);
+  $('#sHint').textContent = d.hint;
+  $('#sRadio').textContent = d.radio + '   ·   ' + d.radio;
+  $('#pWave').textContent = `DALGA ${String(d.wave).padStart(2,'0')} · ${d.name}`;
+  $('#pTip').innerHTML = 'İPUCU · ' + d.tip;
+  $('#cDis').textContent = d.name; $('#cSub').textContent = d.sub;
+  $('#cWave').textContent = `DALGA ${String(d.wave).padStart(2,'0')}`;
+  $('#sNotch').style.left = (100 - 60/d.total*100) + '%';
+}
+
+function renderStrip(){
+  const d = DIS[dz], panic = state==='panic';
+  const t = panic ? panicT : prepT;
+  const el = $('#sTime'); const txt = fmt(t);
+  if(el.textContent!==txt){ el.textContent = txt; if(panic){ el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); } }
+  $('#sTimer').classList.toggle('alarm', panic);
+  $('#sPhase').textContent = panic ? 'SIĞINAĞA KOŞ' : state==='loot' ? 'MALZEME TOPLA' : 'EVİ HAZIRLA';
+  $('#sBar').style.width = (t/d.total*100)+'%';
+  $('#sBudget').textContent = nf(budget)+' ₺';
+  const w = inBag('water'), f = inBag('food');
+  $('#sWater').innerHTML = `${w}<small>/${d.days}</small>`; $('#stWater').classList.toggle('okv', w>=d.days);
+  $('#sFood').innerHTML = `${f}<small>/${d.days}</small>`; $('#stFood').classList.toggle('okv', f>=d.days);
+  const ready = w>=d.days && f>=d.days;
+  $('#stBag').classList.toggle('ready', ready);
+  $('#sBagV').textContent = ready ? 'HAZIR' : 'ÇANTA';
+  $('#sBagL').textContent = ready ? `DESTEK ${supportCount()}/4` : 'EKSİK';
+  $('#pTime').textContent = fmt(resume==='panic'?panicT:prepT);
+}
+
+let lastMissing = {};
+function renderReq(){
+  const rows = REQ.items.map(([id,need],i)=>{
+    const v = have(id), miss = Math.max(0,need-v), ok = !miss;
+    const bump = lastMissing[id]!==undefined && lastMissing[id]!==miss; lastMissing[id]=miss;
+    return `<div class="row ${ok?'ok':''} ${bump?'bump':''} rise" style="--d:${.25+i*.08}s">
+      <img class="pix" src="${icon(id)}" alt="">
+      <div><div class="nm">${NAMES[id]}</div><div class="pips">${Array.from({length:need},(_,k)=>`<i class="${k<v?'on':''}"></i>`).join('')}</div><div class="vg">Var ${v} / Gerek ${need}</div></div>
+      <div class="miss">${ok?`<small>TAMAM</small>${use('#i-check','ico')}`:`<small>EKSİK</small>${miss}`}</div></div>`;
+  }).join('');
+  const allOk = REQ.items.every(([id,n])=>have(id)>=n);
+  $('#req').innerHTML = `<div class="req-h"><div class="ttl"><svg class="brush"><use href="#brush"/></svg>${REQ.title} · ${allOk?'HAZIR':'EKSİKLER'}</div><span class="cost">${REQ.budget} ₺ · ${REQ.items.length} MALZEME</span></div>${rows}
+    <div class="req-f"><span>Bütçe ${nf(budget)} / ${REQ.budget} ₺</span><span class="ok">${use('#i-check')} YETERLİ</span></div>`;
+}
+
+function renderLoot(){
+  const items = loot.map((s,i)=>({...s,i})).filter(s=>s.n>0);
+  if(!items.length){
+    $('#loot').innerHTML = `<div class="loot-h"><div class="ttl"><svg class="brush" style="color:var(--teal)"><use href="#brush"/></svg>GARAJ ALET KUTUSU</div></div>
+      <div class="loot-b"><div class="empty"><img class="pix" src="${icon('screws')}" style="width:60px;height:60px;opacity:.25;border-radius:10px" alt=""><div>BOŞ<small>Malzemeler alındı</small></div></div>
+      <div class="loot-a">${kc('E','KAPAT','amb btn')}</div></div>`;
+    return;
+  }
+  if(!items.find(s=>s.i===lootSel)) lootSel = items[0].i;
+  $('#loot').innerHTML = `<div class="loot-h"><div class="ttl"><svg class="brush" style="color:var(--teal)"><use href="#brush"/></svg>GARAJ ALET KUTUSU</div><span class="lbl">${items.length} YIĞIN · Z/X SEÇ · F AL</span></div>
+    <div class="loot-b">${items.map((s,k)=>`<div class="cell ${s.i===lootSel?'sel':''} rise" style="--d:${.15+k*.06}s" data-i="${s.i}"><span class="cnt">×${s.n}</span><img class="pix" src="${icon(s.id)}" alt=""><span class="nm">${NAMES[s.id]}</span></div>`).join('')}
+    <div class="loot-a">${kc('F','AL','hot btn')}${kc('E','KAPAT','btn')}</div></div>`;
+}
+$('#loot').addEventListener('click',e=>{
+  const c=e.target.closest('.cell'); if(c){ lootSel=+c.dataset.i; renderLoot(); return; }
+  const k=e.target.closest('.kc'); if(!k) return;
+  if(k.dataset.k==='F') takeLoot(); else setState('prep');
+});
+function moveLoot(dir){
+  const ids = loot.map((s,i)=>s.n>0?i:-1).filter(i=>i>=0); if(!ids.length) return;
+  let p = ids.indexOf(lootSel); p = (p+dir+ids.length)%ids.length; lootSel = ids[p]; renderLoot();
+}
+function takeLoot(){
+  const s = loot[lootSel]; if(!s||!s.n) return;
+  const cell = $(`#loot .cell[data-i="${lootSel}"]`);
+  if(!addInv(s.id,s.n)){ toast('Envanter dolu','#i-warn'); return; }
+  fly(cell.querySelector('img'), $('#stBag'), icon(s.id));
+  const name = NAMES[s.id], n = s.n; s.n = 0;
+  cell.classList.add('gone');
+  setTimeout(()=>{ renderLoot(); renderStrip(); }, 260);
+  toast(`${name} ×${n} envantere eklendi`, '#i-check', true);
+}
+
+function renderControls(set){
+  $('#controls').innerHTML = set.map(([k,l,c])=>kc(k,l,c||'')).join('');
+}
+
+function renderInv(){
+  const sel = inv[invSel], d = DIS[dz];
+  const w = inBag('water'), f = inBag('food'), sup = supportCount();
+  const ready = w>=d.days && f>=d.days;
+  const b = have('bandage'), a = have('antiseptic');
+  const slot = (s,i,big) => `<div class="slot ${!big&&i===invSel?'sel':''} ${big&&s?'f':''}" data-i="${i}" data-b="${big?1:0}"><span class="no">${String(i+1).padStart(2,'0')}</span>${s?`<img class="pix" src="${icon(s.id)}" alt=""><span class="cnt">×${s.n}</span>`:''}</div>`;
+  $('#inv').innerHTML = `<div class="inv-g">
+    <div>
+      <div class="inv-h"><div class="ttl"><svg class="brush"><use href="#brush"/></svg>ENVANTER</div><span class="lbl">12 YUVA · ${inv.filter(Boolean).length} DOLU</span></div>
+      <div class="slots inv12">${inv.map((s,i)=>slot(s,i,false)).join('')}</div>
+      <div class="detail">${sel?`<img class="pix" src="${icon(sel.id)}" alt=""><div><div class="dn">${NAMES[sel.id]} <span style="color:var(--amber);font-size:22px">×${sel.n}</span></div><div class="dd">${DESC[sel.id]}</div><div class="dt">${TOOLS.has(sel.id)?'<span class="tagp">TEKLİ</span>':'<span class="tagp">5\'Lİ YIĞIN</span>'}${['water','food'].includes(sel.id)?'<span class="tagp a">ZORUNLU</span>':''}${SUPPORT.includes(sel.id)?'<span class="tagp t">DESTEK</span>':''}</div></div>`:`<div style="width:96px;height:96px;border:1px dashed var(--line2);border-radius:12px"></div><div><div class="dn" style="color:var(--muted)">Boş yuva</div><div class="dd">Evde ve bahçede dolapları aç, malzeme topla.</div></div>`}</div>
+      <div class="inv-k">${kc('ENTER','ÇANTAYA','hot btn')}${kc('F','ÜRET','amb btn')}${kc('BACKSPACE','GERİ','btn')}</div>
+    </div>
+    <div>
+      <div class="inv-h"><div class="ttl"><svg class="brush" style="color:var(--teal)"><use href="#brush"/></svg>AFET ÇANTASI</div><span class="lbl">8 YUVA · DALGA ${String(d.wave).padStart(2,'0')}: ${d.days} GÜNLÜK</span></div>
+      <div class="slots bag8">${bag.map((s,i)=>slot(s,i,true)).join('')}</div>
+      <div class="meters">
+        <div class="meter ${w>=d.days?'ok':''}"><div class="mh"><img class="pix" src="${icon('water')}" alt=""><span class="lbl">SU</span><span class="mv">${w}<small>/${d.days}</small></span></div><div class="mb"><i style="width:${Math.min(1,w/d.days)*100}%"></i></div></div>
+        <div class="meter ${f>=d.days?'ok':''}"><div class="mh"><img class="pix" src="${icon('food')}" alt=""><span class="lbl">GIDA</span><span class="mv">${f}<small>/${d.days}</small></span></div><div class="mb"><i style="width:${Math.min(1,f/d.days)*100}%"></i></div></div>
+        <div class="meter ${sup>=4?'ok':''}"><div class="mh"><img class="pix" src="${icon('firstaid')}" alt=""><span class="lbl">DESTEK</span><span class="mv">${sup}<small>/4</small></span></div><div class="mb"><i style="width:${sup/4*100}%;background:var(--teal-hi)"></i></div></div>
+      </div>
+      <div class="bagstate ${ready?'ok':''}">${use(ready?'#i-shield':'#i-warn')}${ready?'ÇANTA HAZIR · SIĞINAĞA GİREBİLİRSİN':(w<d.days?'SU EKSİK':'GIDA EKSİK')+' · ÇANTA YETERSİZ'}</div>
+      <div class="craft"><span class="lbl" style="width:86px">İLK YARDIM ÜRET</span>
+        <span class="need ${b>=2?'ok':'no'}"><img class="pix" src="${icon('bandage')}" alt="">${b}/2</span><span class="eq">+</span>
+        <span class="need ${a>=1?'ok':'no'}"><img class="pix" src="${icon('antiseptic')}" alt="">${a}/1</span><span class="eq">=</span>
+        <img class="pix" src="${icon('firstaid')}" alt="" style="${b>=2&&a>=1?'':'opacity:.35'}">
+        <span style="margin-left:auto">${kc('F','ÜRET',b>=2&&a>=1?'amb sm btn':'sm btn')}</span></div>
+    </div></div>`;
+}
+$('#inv').addEventListener('click',e=>{
+  const s=e.target.closest('.slot'); if(s&&s.dataset.b==='0'){ invSel=+s.dataset.i; renderInv(); return; }
+  const k=e.target.closest('.kc'); if(!k) return;
+  if(k.dataset.k==='ENTER') packSel(); else if(k.dataset.k==='F') craft(); else setState(resume==='panic'?'panic':'prep');
+});
+function packSel(){
+  const s = inv[invSel];
+  if(!s){ toast('Boş yuva seçili','#i-warn'); return; }
+  if(['flashlight','radio'].includes(s.id) && have('battery')<1){ toast('Çantaya koymak için pil gerek','#i-warn'); return; }
+  let slot = bag.findIndex(b=>b&&b.id===s.id&&!TOOLS.has(s.id)&&b.n<5);
+  if(slot<0) slot = bag.indexOf(null);
+  if(slot<0){ toast('Çanta dolu','#i-warn'); return; }
+  const from = $(`#inv .slot[data-b="0"][data-i="${invSel}"] img`);
+  const to = $(`#inv .slot[data-b="1"][data-i="${slot}"]`);
+  fly(from, to, icon(s.id));
+  if(bag[slot]) bag[slot].n++; else bag[slot] = {id:s.id,n:1};
+  if(['flashlight','radio'].includes(s.id)) takeInv('battery',1);
+  s.n--; if(!s.n) inv[invSel]=null;
+  setTimeout(()=>{ renderInv(); const el=$(`#inv .slot[data-b="1"][data-i="${slot}"]`); el&&el.classList.add('pop'); renderStrip(); }, 420);
+  toast(`${NAMES[bag[slot].id]} çantaya kondu`, '#i-check', true);
+}
+function craft(){
+  if(have('bandage')<2||have('antiseptic')<1){ toast('İlk yardım için 2 bandaj + 1 antiseptik gerek','#i-warn'); return; }
+  takeInv('bandage',2); takeInv('antiseptic',1); addInv('firstaid',1);
+  invSel = inv.findIndex(s=>s&&s.id==='firstaid'); renderInv();
+  const el=$(`#inv .slot[data-b="0"][data-i="${invSel}"]`); el&&el.classList.add('pop');
+  toast('İlk yardım seti üretildi','#i-check',true);
+}
+
+/* ---------------- work ---------------- */
+const WORK = {
+  ratchet:{label:'DUVARA SABİTLE',img:'work-ratchet',meter:'HEDEFLE',applyMeter:'ÇEVİR',space:'OTURT',cost:[['bracket',1],['screws',2]],price:60,stage:'Bağlantı'},
+  timing:{label:'FİDAN DİK',img:'work-timing',meter:'HEDEFLE',applyMeter:'DOĞRU AN',space:'DOKUN',cost:[['seedling',1]],price:30,stage:'Çukur'},
+  balance:{label:'HORTUMU BAĞLA',img:'work-balance',meter:'HEDEFLE',applyMeter:'BASINÇ',space:'BASILI TUT',cost:[['hose',1]],price:80,stage:'Bağlantı'}
+};
+let W = null;
+function newWork(mode){ W = {mode, step:0, total:4, phase:'aim', cur:.12, tgt:.35+Math.random()*.4, wid:.07, turns:0, prog:0, say:'A / D ile hedefle · Enter ile yerleştir', t:0}; }
+newWork('ratchet');
+function renderWork(){
+  const m = WORK[W.mode], aligned = Math.abs(W.cur-W.tgt)<=W.wid, apply = W.phase==='apply';
+  const dirs = ['A  ←','D  →','A  ←'];
+  $('#work').innerHTML = `
+    <div class="w-view"><img src="img/${m.img}.jpg" alt=""><div class="scan"></div><div class="flash" id="wFlash"></div>
+      <div class="corner a"></div><div class="corner b"></div><div class="corner c"></div><div class="corner d"></div>
+      <div class="live"><i></i>YAKIN PLAN · İŞ SÜRERKEN SAAT İŞLER</div>
+      <div class="cost">${m.price} ₺ ${m.cost.map(([id,n])=>`· <img class="pix" src="${icon(id)}" alt="">×${n}`).join(' ')} · BİTİNCE DÜŞER</div></div>
+    <div class="w-side">
+      <div class="ttl"><svg class="brush"><use href="#brush"/></svg>${m.label}</div>
+      <div class="w-step">${Math.min(W.step+1,W.total)} / ${W.total} · ${m.stage} ${Math.min(W.step+1,W.total)}</div>
+      <div class="steps">${Array.from({length:W.total},(_,i)=>`<i class="${i<W.step?'done':i===W.step?'cur':''}">${i<W.step?use('#i-check'):i+1}</i>`).join('')}</div>
+      <div class="w-meter"><div class="lbl">${apply?m.applyMeter:m.meter}</div>
+        ${apply&&W.mode==='ratchet'
+          ? `<div class="turns">${dirs.map((d,i)=>`<i class="${i<W.turns?'done':i===W.turns?'cur':''}">${d}</i>`).join('')}</div>`
+          : `<div class="track ${aligned?'al':''}" id="wTrack"><div class="zone" style="left:${(W.tgt-W.wid)*100}%;width:${W.wid*200}%"></div><div class="tgt" style="left:${W.tgt*100}%"></div><div class="cur" id="wCur" style="left:${W.cur*100}%"></div></div>`}
+        ${apply&&W.mode==='balance'?`<div class="w-prog" style="margin-top:12px"><i style="width:${W.prog*100}%"></i></div>`:''}
+      </div>
+      <div class="w-say" style="color:${apply?'var(--teal-hi)':'var(--stone)'}">${W.say}</div>
+      <div class="w-prog"><i style="width:${(W.step/W.total)*100}%"></i></div>
+      <div class="lbl">TOPLAM İLERLEME</div>
+      <div class="w-note"><svg class="t-watch" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><circle cx="24" cy="27" r="16"/><path d="M19 5h10M24 5v6"/></g><line class="hand" x1="24" y1="27" x2="24" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><div><div class="lbl">HAZIRLIK</div><div class="v" id="wClock">${fmt(prepT)}</div></div><p>İş sürerken saat işler. İptal edersen hiçbir şey harcanmaz.</p></div>
+      <div class="w-keys">
+        ${kc('A / D', apply?(W.mode==='ratchet'?'ÇEVİR':'DENGELE'):'HEDEFLE', !apply||W.mode!=='timing'?'amb':'')}
+        ${kc('ENTER','YERLEŞTİR', apply?'':'hot')}
+        <span class="wide">${kc('SPACE', m.space, apply?'hot':'')}</span>
+        <span class="wide">${kc('ESC','İPTAL','btn')}</span>
+      </div>
+      <div class="modes">${Object.entries(WORK).map(([k,v])=>`<button data-m="${k}" aria-pressed="${k===W.mode}">${k==='ratchet'?'VİDA':k==='timing'?'ZAMANLAMA':'DENGE'}</button>`).join('')}</div>
+    </div>`;
+}
+$('#work').addEventListener('click',e=>{
+  const b=e.target.closest('.modes button'); if(b){ newWork(b.dataset.m); renderWork(); return; }
+  const k=e.target.closest('.kc'); if(k&&k.dataset.k==='ESC') cancelWork();
+});
+function workTick(dt){
+  if(state!=='work'||W.phase!=='apply') return;
+  if(W.mode==='timing'){ W.t+=dt; W.cur = .5+.45*Math.sin(W.t*2.6); }
+  else if(W.mode==='balance'){ W.t+=dt; W.cur = Math.min(.98,Math.max(.02, W.cur + Math.sin(W.t*1.7)*.004 + (Math.random()-.5)*.006)); if(spaceHeld && Math.abs(W.cur-W.tgt)<=W.wid){ W.prog=Math.min(1,W.prog+dt*.45); if(W.prog>=1) finishStep(); else renderWork(); return; } }
+  else return;
+  const c=$('#wCur'), tr=$('#wTrack'); if(c){ c.style.left=W.cur*100+'%'; tr.classList.toggle('al', Math.abs(W.cur-W.tgt)<=W.wid); }
+}
+function workKey(e){
+  const k = e.key.toLowerCase();
+  if(e.key==='Escape'){ cancelWork(); return; }
+  if(W.phase==='aim'){
+    if(k==='a'||e.key==='ArrowLeft') W.cur=Math.max(0,W.cur-.035);
+    else if(k==='d'||e.key==='ArrowRight') W.cur=Math.min(1,W.cur+.035);
+    else if(e.key==='Enter'){
+      if(Math.abs(W.cur-W.tgt)<=W.wid){ W.phase='apply'; W.turns=0; W.prog=0; W.t=0; W.say = W.mode==='ratchet'?'A ve D sırayla çevir · sonra Space':W.mode==='timing'?'Yeşilde Space\'e dokun':'A / D ile dengele · Space basılı tut'; }
+      else { W.say='Önce yeşil alana hizala'; renderWork(); const t=$('#wTrack'); t&&t.classList.add('miss'); return; }
+    } else return;
+    renderWork(); return;
+  }
+  if(W.mode==='ratchet'){
+    const need = W.turns%2===0?'a':'d';
+    if(W.turns<3 && k===need){ W.turns++; W.say = W.turns<3?'Devam · '+(W.turns%2===0?'A':'D'):'Space ile oturt'; flashWork(); renderWork(); }
+    else if(W.turns>=3 && e.key===' '){ finishStep(); }
+  } else if(W.mode==='timing'){
+    if(e.key===' '){ if(Math.abs(W.cur-W.tgt)<=W.wid) finishStep(); else { W.say='Erken! Yeşili bekle'; renderWork(); const t=$('#wTrack'); t&&t.classList.add('miss'); } }
+  } else {
+    if(k==='a'||e.key==='ArrowLeft') W.cur=Math.max(0,W.cur-.03);
+    if(k==='d'||e.key==='ArrowRight') W.cur=Math.min(1,W.cur+.03);
+  }
+}
+function flashWork(){ const f=$('#wFlash'); if(f){ f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); } }
+function finishStep(){
+  W.step++; flashWork();
+  if(W.step>=W.total){
+    W.say='Tamamlandı'; renderWork();
+    budget -= WORK[W.mode].price;
+    setTimeout(()=>{ const lbl=WORK[W.mode].label; newWork(W.mode); setState('prep'); toast(lbl.charAt(0)+lbl.slice(1).toLocaleLowerCase('tr')+' · tamamlandı','#i-check',true); bumpStat('#stBudget'); }, 700);
+    return;
+  }
+  W.phase='aim'; W.tgt=.2+Math.random()*.6; W.cur=.1+Math.random()*.2; W.say='Sonraki · A / D ile hedefle'; renderWork();
+}
+function cancelWork(){ newWork(W.mode); setState('prep'); toast('İş iptal · malzeme ve para harcanmadı','#i-warn'); }
+
+/* ---------------- panic ---------------- */
+function renderPanic(){
+  const d = DIS[dz], w=inBag('water'), f=inBag('food'), s=supportCount();
+  const r = (img,label,v,need,ok) => `<div class="bc-r ${ok?'ok':'no'}"><img class="pix" src="${icon(img)}" alt="">${label}<span class="st">${v}/${need}${use(ok?'#i-check':'#i-x')}</span></div>`;
+  $('#bagcheck').innerHTML = `<div class="ttl"><svg class="brush"><use href="#brush"/></svg>ÇANTA KONTROLÜ</div>
+    ${r('water','Su',w,d.days,w>=d.days)}${r('food','Gıda',f,d.days,f>=d.days)}
+    <div class="bc-r ok" style="opacity:.8"><img class="pix" src="${icon('radio')}" alt="">Destek<span class="st" style="color:var(--stone)">${s}/4</span></div>
+    <div class="lbl" style="margin-top:12px;color:${w>=d.days&&f>=d.days?'var(--teal-hi)':'var(--alarm)'}">${w>=d.days&&f>=d.days?'YETERLİ · SIĞINAĞA GİR':'YETERSİZ ÇANTA = KAYIP'}</div>`;
+}
+
+/* ---------------- pause / title / loss menus ---------------- */
+const PMENU = [['DEVAM ET','#i-play','ESC'],['YENİDEN BAŞLA','#i-restart',''],['BAŞLIK','#i-home','']];
+function renderMenu(el, items, sel, delayBase){
+  el.innerHTML = items.map(([t,i,k],n)=>`<div class="mbtn ${n===sel?'sel':''} slideR" style="--d:${delayBase+n*.07}s" data-n="${n}">${use(i)}<span>${t}</span>${k?`<span class="k">${k}</span>`:''}</div>`).join('');
+}
+function renderPause(){
+  renderMenu($('#pmenu'), PMENU, menuSel, .3);
+  $('#pmenu').insertAdjacentHTML('beforeend', `<div class="mk2 rise" style="--d:.55s">${kc('↑ ↓','SEÇ','sm')}${kc('ENTER','ONAY','sm hot')}${kc('ESC','GERİ','sm')}</div>`);
+}
+function pauseDo(n){ if(n===0) setState(resume); else if(n===1) restart(); else setState('title'); }
+$('#pmenu').addEventListener('click',e=>{const b=e.target.closest('.mbtn'); if(b) pauseDo(+b.dataset.n)});
+$('#pmenu').addEventListener('mouseover',e=>{const b=e.target.closest('.mbtn'); if(b&&+b.dataset.n!==menuSel){menuSel=+b.dataset.n; $$('#pmenu .mbtn').forEach((x,i)=>x.classList.toggle('sel',i===menuSel))}});
+const TMENU = [['OYUNA BAŞLA','#i-play',''],['ÖĞRETİCİ','#i-book',''],['ÇIKIŞ','#i-exit','']];
+function renderTitle(){
+  renderMenu($('#tmenu'), TMENU, titleSel, .45);
+  $('#tmenu').insertAdjacentHTML('beforeend', `<div class="kk rise" style="--d:.7s">${kc('↑ ↓','SEÇ','sm')}${kc('ENTER','AÇ','sm hot')}</div>`);
+  const sc = [[7,12480,'16.10.2026 · 22:41'],[5,8920,'16.10.2026 · 21:58'],[3,4310,'16.10.2026 · 20:12'],[2,2150,'16.10.2026 · 19:30'],[1,980,'16.10.2026 · 18:05']];
+  $('#scores').innerHTML = sc.map(([w,p,d],i)=>`<div class="sc-r ${i===0?'first':''} rise" style="--d:${.45+i*.07}s"><span class="rk">${String(i+1).padStart(2,'0')}</span><span class="wv">${w} DALGA</span><span class="pt">${nf(p)}</span><span class="dt">${d}</span></div>`).join('');
+}
+function titleDo(n){ if(n===0){ helpOn=false; restart(); } else if(n===1){ helpOn=true; restart(); } else toast('Masaüstü sürümünde oyunu kapatır','#i-exit'); }
+$('#tmenu').addEventListener('click',e=>{const b=e.target.closest('.mbtn'); if(b) titleDo(+b.dataset.n)});
+$('#tmenu').addEventListener('mouseover',e=>{const b=e.target.closest('.mbtn'); if(b&&+b.dataset.n!==titleSel){titleSel=+b.dataset.n; $$('#tmenu .mbtn').forEach((x,i)=>x.classList.toggle('sel',i===titleSel))}});
+const LMENU = [['YENİDEN BAŞLA','#i-restart','ENTER'],['BAŞLIK','#i-home','']];
+function renderLoss(){ renderMenu($('#lbtns'), LMENU, lossSel, 1.7); }
+$('#lbtns').addEventListener('click',e=>{const b=e.target.closest('.mbtn'); if(b) (+b.dataset.n===0?restart():setState('title'))});
+function restart(){ prepT = DIS[dz].total; panicT = 47; setState('prep'); }
+
+/* ---------------- result ---------------- */
+const PINS = [{x:502,y:340,n:'Kitaplık',p:8.2},{x:800,y:312,n:'Yatak odası duvarı',p:9.1},{x:1174,y:366,n:'Banyo dolabı',p:6.1}];
+let resTimers = [];
+function startResult(){
+  resTimers.forEach(clearTimeout); resTimers=[];
+  inspT = 20; inspStep = 0;
+  $('#pins').innerHTML = PINS.map((p,i)=>`<div class="pin" style="left:${p.x}px;top:${p.y}px;--d:${.9+i*.18}s"><div class="pc">${p.n}<b>%${String(p.p).replace('.',',')}</b></div><div class="pd"></div></div>`).join('');
+  const dmg = PINS.reduce((s,p)=>s+p.p,0), frac = dmg/100;
+  const arc=$('#gArc'), nd=$('#gNeedle'), gv=$('#gVal');
+  arc.style.transition='none'; arc.style.strokeDashoffset=440; nd.style.transition='none'; nd.style.transform='rotate(-90deg)'; gv.textContent='%0';
+  // 65% threshold tick
+  const a = Math.PI*(1-.65), x1=150+Math.cos(a)*126, y1=150-Math.sin(a)*126, x2=150+Math.cos(a)*156, y2=150-Math.sin(a)*156;
+  $('#g65').innerHTML = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--rust)" stroke-width="4" stroke-linecap="round"/><text x="${x2+4}" y="${y2-4}" fill="var(--rust)" font-family="Barlow Condensed" font-weight="700" font-size="13" letter-spacing="1.5">%65</text>`;
+  resTimers.push(setTimeout(()=>{
+    arc.style.transition=''; nd.style.transition='';
+    arc.style.strokeDashoffset = 440*(1-frac); nd.style.transform = `rotate(${-90+180*frac}deg)`;
+    countUp(gv, dmg, 1600, v=>'%'+v.toFixed(1).replace('.',','));
+  }, 500));
+  $$('#result [data-c]').forEach((el,i)=>resTimers.push(setTimeout(()=>{
+    const to=+el.dataset.c, pre=el.dataset.s??(el.tagName==='B'&&el.parentElement.classList.contains('sr')?'+':''), u=el.dataset.u||'';
+    countUp(el,to,900,v=>pre+nf(Math.round(v))+u);
+  }, 900+i*260)));
+  renderInspect();
+}
+function renderInspect(){
+  const p = PINS[inspStep];
+  $('#iStep').textContent = `HASAR ${inspStep+1}/${PINS.length}`;
+  $('#iName').textContent = p.n; $('#iPct').textContent = '%'+String(p.p).replace('.',',');
+  $$('#pins .pin').forEach((el,i)=>{ el.classList.toggle('act',i===inspStep); el.classList.toggle('dim',i!==inspStep); });
+  $('#rTime').textContent = fmt(inspT); $('#iBar').style.width = (inspT/20*100)+'%';
+}
+function countUp(el,to,dur,f){ const t0=performance.now(); const step=t=>{ const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3); el.textContent=f(to*e); if(k<1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
+
+/* ---------------- toast, fly, bump ---------------- */
+let toastTimer;
+function toast(msg, ico='#i-warn', good=false){
+  const t=$('#toast'); clearTimeout(toastTimer);
+  $('#toastT').textContent=msg; $('#toastI').setAttribute('href',ico);
+  t.classList.toggle('good',good); t.classList.remove('on','out'); void t.offsetWidth; t.classList.add('on');
+  const li=t.querySelector('.life i'); li.style.animation='none'; void li.offsetWidth; li.style.animation='';
+  toastTimer=setTimeout(()=>{ t.classList.add('out'); toastTimer=setTimeout(()=>t.classList.remove('on','out'),350); },2600);
+}
+function hideToast(now){ clearTimeout(toastTimer); $('#toast').classList.remove('on','out'); }
+function fly(fromEl,toEl,src){
+  if(!fromEl||!toEl) return;
+  const fr=frame.getBoundingClientRect(), a=fromEl.getBoundingClientRect(), b=toEl.getBoundingClientRect();
+  const img=document.createElement('img'); img.src=src; img.className='pix';
+  Object.assign(img.style,{position:'absolute',zIndex:60,left:(a.left-fr.left)+'px',top:(a.top-fr.top)+'px',width:a.width+'px',height:a.height+'px',borderRadius:'10px',pointerEvents:'none',boxShadow:'0 10px 30px rgba(0,0,0,.5)'});
+  frame.appendChild(img);
+  const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+  img.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx*.5}px,${dy*.5-80}px) scale(1.15)`,opacity:1,offset:.5},{transform:`translate(${dx}px,${dy}px) scale(.35)`,opacity:.2}],{duration:520,easing:'cubic-bezier(.4,0,.2,1)'}).onfinish=()=>{ img.remove(); };
+  if(toEl.classList.contains('stat')) setTimeout(()=>bumpStat(toEl),500);
+}
+function bumpStat(el){ el=typeof el==='string'?$(el):el; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+
+function renderAll(){
+  renderDisaster(); renderStrip();
+  if(state==='prep') renderReq();
+  if(state==='loot') renderLoot();
+  if(state==='inv') renderInv();
+  if(state==='work') renderWork();
+  if(state==='panic') renderPanic();
+  if(state==='pause') renderPause();
+  if(state==='title') renderTitle();
+  if(state==='loss') renderLoss();
+}
+
+/* ---------------- keyboard ---------------- */
+const KEYNAME = e => {
+  const k=e.key;
+  if(k===' ') return ['SPACE']; if(k==='Enter') return ['ENTER']; if(k==='Escape') return ['ESC']; if(k==='Tab') return ['TAB'];
+  if(k==='Backspace') return ['BACKSPACE']; if(k==='Shift') return ['SHIFT'];
+  if(k.startsWith('Arrow')) return ['↑ ↓','A / D'];
+  const u=k.toLocaleUpperCase('tr'); const l=k.toLowerCase();
+  if('wasd'.includes(l)&&l) return ['WASD','A / D'].filter(x=>x!=='A / D'||l==='a'||l==='d');
+  if(l==='z'||l==='x') return ['Z / X'];
+  if(l==='4') return ['SAĞ TIK / 4'];
+  return [u==='İ'?'I':u];
+};
+function pressFx(e){ for(const n of KEYNAME(e)) $$(`.cmp.on .kc[data-k="${n}"]`).forEach(el=>{ el.classList.add('press'); setTimeout(()=>el.classList.remove('press'),150); }); }
+let spaceHeld=false;
+document.addEventListener('keyup',e=>{ if(e.key===' ') spaceHeld=false; });
+document.addEventListener('keydown',e=>{
+  if(e.code==='BracketRight'||e.code==='BracketLeft'){ const i=ORDER.indexOf(state); setState(ORDER[(i+(e.code==='BracketRight'?1:-1)+ORDER.length)%ORDER.length]); return; }
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=e.key, l=k.toLowerCase();
+  if([' ','Tab','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Backspace'].includes(k)) e.preventDefault();
+  pressFx(e);
+  if(k===' ') spaceHeld=true;
+  switch(state){
+    case 'title':
+      if(k==='ArrowUp'||l==='w'){ titleSel=(titleSel+2)%3; renderTitle(); $$('#tmenu .slideR, #tmenu .rise').forEach(x=>x.style.animation='none'); }
+      else if(k==='ArrowDown'||l==='s'){ titleSel=(titleSel+1)%3; renderTitle(); $$('#tmenu .slideR, #tmenu .rise').forEach(x=>x.style.animation='none'); }
+      else if(k==='Enter') titleDo(titleSel);
+      break;
+    case 'prep':
+      if(k==='Tab'||l==='b') setState('inv');
+      else if(k==='Escape') setState('pause');
+      else if(l==='e') setState('loot');
+      else if(l==='h'){ helpOn=!helpOn; const h=$('#help'); h.classList.toggle('on',helpOn); }
+      else if(k==='1'||k==='3'){ newWork('ratchet'); setState('work'); }
+      else if(k==='2'){ newWork(dz==='fire'?'balance':'timing'); setState('work'); }
+      else if(k==='4') toast('Taşıma: fareyle yerleştir · sol tık bırak · R döndür','#i-home');
+      else if(l==='f') toast('Malzeme eksik','#i-warn');
+      break;
+    case 'loot':
+      if(l==='z'||k==='ArrowLeft') moveLoot(-1);
+      else if(l==='x'||k==='ArrowRight') moveLoot(1);
+      else if(l==='f') takeLoot();
+      else if(l==='e') setState('prep');
+      else if(k==='Tab') setState('inv');
+      else if(k==='Escape') setState('pause');
+      break;
+    case 'inv':{
+      if(k==='ArrowLeft') invSel=(invSel+11)%12; else if(k==='ArrowRight') invSel=(invSel+1)%12;
+      else if(k==='ArrowUp') invSel=(invSel+8)%12; else if(k==='ArrowDown') invSel=(invSel+4)%12;
+      else if(k==='Enter'){ packSel(); break; }
+      else if(l==='f'){ craft(); break; }
+      else if(k==='Backspace'||k==='Escape'||k==='Tab'||l==='b'){ setState(resume==='panic'?'panic':'prep'); break; }
+      else break;
+      renderInv();
+      break;}
+    case 'work': workKey(e); break;
+    case 'panic':
+      if(k==='Escape') setState('pause');
+      else if(k==='Tab'){ resume='panic'; setState('inv'); }
+      else if(l==='e'){ const d=DIS[dz]; if(inBag('water')>=d.days&&inBag('food')>=d.days) setState('disaster'); else { toast('Çanta yetersiz · yine de girersen koşu kaybedilir','#i-warn'); } }
+      break;
+    case 'pause':
+      if(k==='ArrowUp'||l==='w'){ menuSel=(menuSel+2)%3; $$('#pmenu .mbtn').forEach((x,i)=>x.classList.toggle('sel',i===menuSel)); }
+      else if(k==='ArrowDown'||l==='s'){ menuSel=(menuSel+1)%3; $$('#pmenu .mbtn').forEach((x,i)=>x.classList.toggle('sel',i===menuSel)); }
+      else if(k==='Enter') pauseDo(menuSel);
+      else if(k==='Escape') setState(resume);
+      break;
+    case 'loss':
+      if(k==='Enter') restart();
+      else if(k==='ArrowLeft'||k==='ArrowRight'){ lossSel=1-lossSel; $$('#lbtns .mbtn').forEach((x,i)=>x.classList.toggle('sel',i===lossSel)); }
+      break;
+    case 'result':
+      if(k==='Enter'){ if(inspStep<PINS.length-1){ inspStep++; renderInspect(); } else { toast('Hasar gezisi bitti · yeni dalga','#i-check',true); } }
+      else if(l==='n') toast('Hasar gezisi bitti · yeni dalga','#i-check',true);
+      else if(k==='Escape') setState('pause');
+      break;
+  }
+});
+
+/* ---------------- clocks ---------------- */
+setInterval(()=>{
+  if(state==='prep'||state==='loot'||state==='work'){ prepT--; if(prepT<=61) prepT=DIS[dz].total; renderStrip(); const wc=$('#wClock'); if(wc) wc.textContent=fmt(prepT); }
+  else if(state==='panic'){ panicT--; renderStrip(); if(panicT<=0){ panicT=47; setState('loss'); } }
+  else if(state==='result'){ inspT=Math.max(0,inspT-1); if(!inspT) inspT=20; renderInspect(); }
+},1000);
+setInterval(()=>{ if(state==='prep' && Math.random()<.5 && !$('#toast').classList.contains('on')) toast('Malzeme eksik · Sel çiti için tahta, vida ve kum torbası gerek','#i-warn'); }, 9000);
+
+/* ---------------- particles ---------------- */
+const cv=$('#fx'), cx=cv.getContext('2d'); let fxMode='none', P=[];
+const sprites={};
+function sprite(r,g,b){ const key=r+','+g+','+b; if(sprites[key]) return sprites[key]; const c=document.createElement('canvas'); c.width=c.height=32; const x=c.getContext('2d'); const gr=x.createRadialGradient(16,16,0,16,16,16); gr.addColorStop(0,`rgba(${key},1)`); gr.addColorStop(.35,`rgba(${key},.6)`); gr.addColorStop(1,`rgba(${key},0)`); x.fillStyle=gr; x.fillRect(0,0,32,32); return sprites[key]=c; }
+const R=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function mk(mode,init){
+  if(mode==='motes') return {x:R(0,1600),y:R(0,900),vx:R(-.12,.12),vy:R(-.22,-.04),s:R(2,5),a:R(.1,.35),c:pick([[242,169,59],[246,241,232],[95,179,170]]),p:R(0,6.28)};
+  if(mode==='embers') return {x:R(0,1600),y:init?R(0,900):R(900,960),vx:R(-.4,.4),vy:R(-2.4,-.8),s:R(2,6),a:R(.5,1),c:pick([[242,120,50],[228,71,45],[242,169,59]]),p:R(0,6.28)};
+  if(mode==='dust') return Math.random()<.12 ? {chunk:1,x:R(0,1600),y:init?R(-200,700):R(-60,-10),vx:R(-.5,.5),vy:R(3,6),s:R(4,10),r:R(0,6),vr:R(-.1,.1),a:.85} : {x:R(0,1600),y:init?R(0,900):R(-20,0),vx:R(-.3,.3),vy:R(.3,1.3),s:R(3,10),a:R(.08,.3),c:[216,200,180],p:R(0,6.28)};
+  if(mode==='rain') return {x:R(-200,1700),y:init?R(0,900):R(-60,0),v:R(16,24),len:R(16,30),a:R(.15,.4)};
+  if(mode==='smoke') return {smoke:1,x:R(0,1600),y:init?R(300,900):R(900,1000),vx:R(-.3,.3),vy:R(-.9,-.4),s:R(60,140),a:R(.08,.18)};
+}
+function setFx(mode){
+  fxMode=mode; P=[];
+  const n={motes:46,embers:110,dust:150,rain:420,fire:0,none:0}[mode]||0;
+  for(let i=0;i<n;i++) P.push(mk(mode,true));
+  if(mode==='fire'){ for(let i=0;i<120;i++) P.push(mk('embers',true)); for(let i=0;i<26;i++) P.push(mk('smoke',true)); }
+  if(mode==='none') cx.clearRect(0,0,1600,900);
+}
+let last=performance.now();
+function loop(t){
+  const dt=Math.min(.05,(t-last)/1000); last=t;
+  workTick(dt);
+  if(fxMode!=='none'){
+    cx.clearRect(0,0,1600,900);
+    if(fxMode==='rain'){ cx.lineWidth=1.3; cx.lineCap='round'; }
+    for(let i=0;i<P.length;i++){
+      const p=P[i];
+      if(fxMode==='rain'){
+        p.x+=p.v*.28; p.y+=p.v; if(p.y>900){ P[i]=mk('rain'); continue; }
+        cx.strokeStyle=`rgba(200,226,230,${p.a})`; cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(p.x-p.len*.28,p.y-p.len); cx.stroke(); continue;
+      }
+      if(p.smoke){ p.x+=p.vx; p.y+=p.vy; p.s+=.25; if(p.y<-160){ P[i]=mk('smoke'); continue; } cx.globalAlpha=p.a*Math.min(1,(900-p.y)/200); cx.drawImage(sprite(40,34,32),p.x-p.s,p.y-p.s,p.s*2,p.s*2); continue; }
+      if(p.chunk){ p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; if(p.y>920){ P[i]=mk('dust'); continue; } cx.globalAlpha=p.a; cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle='#3a3430'; cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.7); cx.restore(); continue; }
+      p.p+=.03; p.x+=p.vx+Math.sin(p.p)*(fxMode==='embers'||fxMode==='fire'?.6:.15); p.y+=p.vy;
+      const mode = fxMode==='fire'?'embers':fxMode;
+      if(p.y<-20||p.y>930||p.x<-30||p.x>1630){ P[i]=mk(mode); continue; }
+      let a=p.a; if(mode==='embers') a*=Math.min(1,p.y/500)*(.6+.4*Math.sin(p.p*4)); if(mode==='motes') a*=.6+.4*Math.sin(p.p);
+      cx.globalAlpha=Math.max(0,a); cx.drawImage(sprite(...p.c),p.x-p.s*2,p.y-p.s*2,p.s*4,p.s*4);
+    }
+    cx.globalAlpha=1;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---------------- illustrated scenes ---------------- */
+function rng(seed){ return ()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; }; }
+function pines(seed,base,h0,h1,x0,x1,g0,g1){
+  const r=rng(seed); let d='';
+  for(let x=x0;x<x1;x+=g0+r()*(g1-g0)){
+    const h=h0+r()*(h1-h0), w=h*(.36+r()*.1);
+    for(let t=0;t<4;t++){ const top=base-h+t*h*.2, bot=top+h*.42, hw=w*(.3+t*.24); d+=`M${x.toFixed(1)} ${top.toFixed(1)}L${(x+hw).toFixed(1)} ${bot.toFixed(1)}L${(x-hw).toFixed(1)} ${bot.toFixed(1)}Z`; }
+  }
+  return d;
+}
+function house(x,base,s){
+  const W='#F2A93B';
+  const win=(wx,wy,ww,wh,dl)=>`<rect class="win" style="animation-delay:${dl}s" x="${wx}" y="${wy}" width="${ww}" height="${wh}" fill="${W}" opacity=".9"/><path d="M${wx+ww/2} ${wy}v${wh}M${wx} ${wy+wh/2}h${ww}" stroke="#141716" stroke-width="2"/>`;
+  return `<g transform="translate(${x} ${base}) scale(${s})">
+    <rect x="300" y="-96" width="140" height="96" fill="#121615"/><path d="M296 -96h148l-10 -12h-128z" fill="#0f1312"/>
+    <rect x="322" y="-70" width="96" height="70" fill="#1B2533"/>
+    <rect x="218" y="-262" width="22" height="50" fill="#121615"/>
+    <path d="M-16 -176 L150 -258 L316 -176 Z" fill="#101413"/>
+    <rect x="0" y="-178" width="300" height="178" fill="#151a19"/>
+    ${win(28,-150,48,40,1.2)}${win(112,-150,48,40,3.4)}${win(210,-150,48,40,.2)}
+    ${win(28,-72,48,42,2.1)}${win(112,-72,48,42,4.4)}
+    <rect x="196" y="-82" width="34" height="82" fill="#0d100f"/><rect x="200" y="-78" width="26" height="30" fill="${W}" opacity=".25"/>
+    <rect x="8" y="-104" width="132" height="5" fill="#0f1312"/><path d="M12 -104v-22M36 -104v-22M60 -104v-22M84 -104v-22M108 -104v-22M132 -104v-22M10 -126h128" stroke="#0f1312" stroke-width="3"/>
+    <rect x="0" y="-2" width="440" height="4" fill="#0c0f0e"/>
+  </g>`;
+}
+function heli(){ return `<g class="heli"><g transform="scale(1.1)"><ellipse cx="0" cy="0" rx="24" ry="10" fill="#0e1110"/><rect x="16" y="-3" width="40" height="5" fill="#0e1110"/><rect x="54" y="-11" width="4" height="14" fill="#0e1110"/><path d="M-14 12h30M-10 10v-6M10 10v-6" stroke="#0e1110" stroke-width="2.5"/><rect class="rotor" x="-38" y="-13" width="76" height="2.5" fill="#0e1110"/><rect x="-1.5" y="-12" width="3" height="4" fill="#0e1110"/><circle class="blinkr" cx="-20" cy="2" r="2.6" fill="#E4472D"/><circle class="blinkr" style="animation-delay:.45s" cx="57" cy="-11" r="2" fill="#F6F1E8"/></g></g>`; }
+function birds(n,seed){ const r=rng(seed); let s=''; for(let i=0;i<n;i++){ const y=120+r()*200, d=-r()*30, sc=.6+r()*.7; s+=`<g class="bird" style="animation-delay:${d}s;animation-duration:${26+r()*16}s"><g transform="translate(0 ${y}) scale(${sc})"><path class="flap" style="animation-delay:${r()}s" d="M0 0q7 -8 14 0q7 -8 14 0" fill="none" stroke="#151918" stroke-width="2.4" stroke-linecap="round"/></g></g>`; } return s; }
+$('#titleScene').innerHTML = `
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#18252A"/><stop offset=".45" stop-color="#2C3B3A"/><stop offset=".7" stop-color="#6A4A33"/><stop offset=".86" stop-color="#C46F3C"/><stop offset="1" stop-color="#2a2220"/></linearGradient>
+    <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#F2A93B" stop-opacity=".85"/><stop offset=".3" stop-color="#E07A3A" stop-opacity=".45"/><stop offset="1" stop-color="#C65B3D" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C46F3C" stop-opacity="0"/><stop offset="1" stop-color="#C46F3C" stop-opacity=".22"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1060" cy="660" r="330" fill="url(#sun)"/>
+  ${birds(7,11)}
+  ${heli()}
+  <path d="M0 640 Q160 560 340 600 T720 590 T1100 560 T1600 600 V900 H0Z" fill="#26302E"/>
+  <path d="${pines(7,660,40,96,-20,1640,14,30)}" fill="#1F2827"/><rect y="658" width="1600" height="242" fill="#1F2827"/>
+  <rect y="600" width="1600" height="120" fill="url(#mist)"/>
+  ${house(760,742,1)}
+  <path d="${pines(21,770,90,190,-30,700,22,44)}" fill="#151C1B"/><path d="${pines(29,770,90,190,1230,1640,22,44)}" fill="#151C1B"/><rect y="768" width="1600" height="132" fill="#151C1B"/>
+  <path d="${pines(3,920,200,360,-60,520,46,80)}" fill="#0D1110"/><path d="${pines(5,920,200,380,1340,1680,46,80)}" fill="#0D1110"/>
+  <g transform="translate(1180 820) rotate(-6)" color="#C65B3D" opacity=".9"><svg width="460" height="70" overflow="visible"><use href="#brush"/></svg></g>
+  <g transform="translate(-60 860) rotate(-4)" color="#C65B3D"><svg width="560" height="60" overflow="visible"><use href="#brush"/></svg></g>`;
+$('#pauseScene').innerHTML = `
+  <defs><linearGradient id="psky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F1D1C" stop-opacity=".92"/><stop offset=".6" stop-color="#2A2624" stop-opacity=".78"/><stop offset="1" stop-color="#5A3422" stop-opacity=".85"/></linearGradient></defs>
+  <rect width="1408" height="660" fill="url(#psky)"/>
+  ${birds(4,41)}
+  <path d="${pines(13,610,60,140,-20,1430,18,36)}" fill="#1A201F" opacity=".95"/><rect y="606" width="1408" height="60" fill="#1A201F"/>
+  ${house(980,618,.62)}
+  <path d="${pines(17,680,140,260,-40,420,36,64)}" fill="#0E1211"/><path d="${pines(19,680,140,240,1160,1450,36,64)}" fill="#0E1211"/>
+  <g transform="translate(-40 600) rotate(-8)" color="#C65B3D" opacity=".85"><svg width="520" height="64" overflow="visible"><use href="#brush"/></svg></g>`;
+
+/* ---------------- swatches ---------------- */
+const SW=[['Krem','#F6F1E8','Metin, başlık'],['Kömür','#292625','Panel zemini'],['Petrol','#256A6C','Olumlu, seçili, hazır'],['Amber','#F2A93B','Birincil eylem, eksik'],['Pas','#C65B3D','Afet, fırça vurgusu'],['Taş','#D8D2C8','Tuş, ikincil metin'],['Alarm','#E4472D','Son 60 sn, kayıp']];
+$('#swatches').innerHTML = SW.map(([n,h,r])=>{ const c=[1,3,5].map(i=>(parseInt(h.substr(i,2),16)/255).toFixed(3)); return `<div><i style="background:${h}"></i><p>${n} · ${h}<span>${r}</span><code>new Color(${c.join('f, ')}f)</code></p></div>`; }).join('');
+
+/* ---------------- fit ---------------- */
+function fit(){
+  const bar=document.querySelector('.bar').offsetHeight;
+  const w=Math.min(document.querySelector('.view').clientWidth-32, 1600), h=window.innerHeight-bar-32;
+  const s=Math.max(.2, Math.min(w/1600, h>260?h/900:w/1600));
+  document.documentElement.style.setProperty('--s', s.toFixed(4));
+}
+addEventListener('resize',fit); fit();
+setState('prep');
+})();
+</script>
+</body>
+</html>

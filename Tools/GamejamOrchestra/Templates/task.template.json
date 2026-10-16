@@ -1,0 +1,68 @@
+{
+  "isTemplate": true,
+  "taskId": null,
+  "batchId": null,
+  "conceptId": null,
+  "themeBriefPath": null,
+  "targetProjectPath": null,
+  "role": null,
+  "category": null,
+  "state": "planned",
+  "requestedModel": null,
+  "requestedReasoningEffort": null,
+  "fastRequired": false,
+  "actualRouteEvidence": null,
+  "agentId": null,
+  "goalInGame": null,
+  "dependsOn": [],
+  "ownedTargetPaths": [],
+  "beforeHashes": [],
+  "stagingPath": null,
+  "inputs": [],
+  "requiredAssetIds": [],
+  "acceptance": [],
+  "invariants": [
+    "real saves",
+    "collision and physical access",
+    "atomic budget/material costs",
+    "inventory/bag/deadline/bunker/damage conditions",
+    "progression/reward",
+    "performance",
+    "active user player",
+    "independent sibling project"
+  ],
+  "requiredOutput": [
+    "payload files",
+    "target path mapping",
+    "before and after SHA256",
+    "concise receipt",
+    "unresolved dependencies"
+  ],
+  "forbidden": [
+    "live Unity/import/build/player",
+    "unassigned live edits",
+    "subagent spawning",
+    "silent model substitution"
+  ],
+  "retry": {
+    "attempt": 0,
+    "maxQuickArtRevision": 1,
+    "lastFailure": null,
+    "managerDecisionRequiredAfterLimit": true
+  },
+  "watchdog": {
+    "expectedFirstUsefulOutputMinutes": null,
+    "lastProgressUtc": null,
+    "providerTaskId": null,
+    "onStall": "root checks known task once; revise or defer, do not duplicate provider jobs"
+  },
+  "receiptPath": null,
+  "evidence": [],
+  "completionClaims": {
+    "prepared": false,
+    "filesExist": false,
+    "sourceIntegrated": false,
+    "nativeObserved": false,
+    "finalArtAccepted": false
+  }
+}

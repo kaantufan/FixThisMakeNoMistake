@@ -1,0 +1,23 @@
+# Too Late to Panic! — Home V4.5 geliştirici menüsü
+
+17 Ekim 2026. Kullanıcı oyun içinden seçilebilir developer/hile seçenekleri ve güncel oyunun https://github.com/kaantufan/FixThisMakeNoMistake.git deposuna yüklenmesini istedi.
+
+F2 veya başlık/duraklat menüsündeki Geliştirici düğmesi paneli açar. Üç bağımsız seçenek: sınırsız bütçe, iş/üretim malzemesi harcamama, hazırlık süresini dondurma. +1000 bütçe hazırlık/öğretici/hasar gezisinde kullanılabilir. Yukarı/aşağı ve Enter/Space veya fareyle seçim; F2/Esc kapatır. Panel açıkken oyun girişi ve model saati durur. Önceki pause/help/inputlock sahipliği geri gelir; Time.timeScale değiştirilmez. İş/taşıma/çanta/sinematik/afet/kayıp gibi meşgul durumlarda menü açılmaz; kısa açıklama gösterilir. Önce işlemi kapatıp F2 kullanılabilir.
+
+Menüyü açmak hile değildir. Bir seçeneği açmak veya bütçe eklemek koşuyu kalıcı hileli yapar; seçenekleri kapatmak bu koşuyu skor için tekrar uygun yapmaz. HİLELİ KOŞU rozeti görünür, normal skor tablosuna eklenmez. Yeni temiz koşu normal skor tutabilir. Seçenekler mevcut süreçte başlığa dönüş/yeni koşuda korunur, diske ayar yazılmaz. Önceden açık seçenek yeni koşuyu hileli başlatır. Mevcut gerçek skorlar korunur.
+
+Sınırsız bütçe gerçek harcama/karşılanabilirlik yolunda ücret atlar; para sayacına sürekli dev sayı eklemez. Malzeme seçeneği iş/ilk yardım üretimi ve pil maliyetini atlar; gerçek eşya/çantaya konan erzaklar/slot kapasitesi/hedef/minigame/mesafe/fizik kuralları korunur. İlk yardım üretimi boş slot ister. Dondurma yalnız hazırlığı etkiler; afet/sonuç/hasar fazı saatleri aynı ilerler. Normal seçenekler kapalıyken eski maliyet/tüketim davranışı korunur.
+
+Yeni varlık, ses veya ücretli sağlayıcı yok; aynı104 prefab cache kullanılır. Önceki kapı güvenliği/fizik ve fareyle taşıma korunur. Yalnız afet sesleri etkindir. Aktif oyun izometriktir; FPS askıdadır, yerel dosyaları ve kayıtları korunur.
+
+Root canlı kaynak/Unity/build/player/GitHub sahibidir. Üç iş paketi model, HUD ve GitHub salt okunur yayın denetimi olarak ayrıldı; ardından kısa developer QA staging'i eklendi. Kaynak, C# derlemesi, Unity build, native API kontrolü, elle oynanış ve public kaynak kapanımı ayrı kanıtlardır. Tek ilgili --developer-smoke yeni GUID --home-evidence ile çalışır; gerçek skor dosyasına dokunmaz. Tam iş mini oyunu yerine tamamlanmış iş durum fixture'ı kullanılırsa açık kaydedilir.
+
+GitHub kaynakları Library/Temp/Logs/Builds/yerelEvidence/kimlikbilgisi/save ve kullanılmayan tarihselbakekopyalarını içermez. Mevcut .meta/GUID bağımlılıkları ve vendor/CC0 lisansları korunur. Tarihsel Tolga konuşma WAV'ları dağıtım şartları doğrulanmadığından yalnız yerelde korunur, publicyayına dahil edilmez; güncel oyunda kullanılmaz. Windows ZIP ayrı v0.4.5 releaseassetidir. Uzak başlangıçcommit/README geçmişi normal commit ile korunur, forcepush yoktur. Son hash/build/native/push/release sonucu aşağıya eklenir.
+
+## Nihai yerel kabul
+
+Source-build-v1 / native-v1-a11f71de-8b26-4eeb-ac4e-218de111a073. Unity Windows0.4.5, build UTC2026-10-16T21:35:30.2436192Z, Succeeded0 hata/uyarı,486.955.177 bayt. Aynı104 prefab yeniden kullanıldı;49 kaynak dosyasında/cachete fark0. EXE SHA256 0E1B64A3C0EBA3482F4C7B57F36CF8811997C0CE3BBED914C116CB9D4799FC7C; Assembly-CSharp.dll SHA256 8399ADBAE91D43604CD28936C84927CC425412FF2B2E940090F4193AC690EE4C.
+
+12/12 PASS,0 runtime hata,0.583s API smoke. Menü saati300→300; hazırlık freeze300→300; afet saati10→8. Üç tamamlanmış iş durum fixture'ı,9 yerel model fixture'ı ve1 oyuncu başlangıç yerleştirmesi vardır. Klavye iş mini oyunu, OS fare/klavye, manuel/tam kampanya veya kapı/merdiven yeniden kabulü değildir. Gerçek HUD'nin iki PNG'si açılıp incelendi. Menüde girdi/saat kilidi, önceki pause geri dönüşü, meşgul durum reddi, bağımsız maliyetler ve slot kapasitesi geçti. Gerçek timeout→FailRun kayıt akışı izole skor dosyasında çalıştı:4/9000hileli yazılmadı;1/1234temiz fixture kaydedildi/yüklendi;9/99999sonraki hileli koşu dosyayı değiştirmedi. Önce/sonra skor SHA2563DA40E4B04F848558F20C6CFB49211F33359BF7563DED64B8598AE831E7FBC33 eşleşti. Gerçek kullanıcı skorlarına dokunulmadı.
+
+Normal test argümansız oyuncu PID37280 açıldı; HOME_V45_READY gözlendi, ilk gözlemde exception0. Önceki açık kullanıcı oyuncuları korunur; PID tarihsel gözlemdir. Portable111.753.551 bayt; SHA256 CE63B560CCA25F7640565B8E5D6A55E847F43F9B25DED6C76D40E55340BD4B4C,145entry. ZIPiçi DLL native ile eşleşti. Yerel lisans/provenans ve kısa tuş dosyası dahildir. Son başlatıcı/index/README/GDDv2.0/AGENTS güncellendi. Eski V4.4 ZIP recycle edildi; açık V4.2/V4.3/V4.4 klasörleri istisnadır. cleanup-receipt.json gerçek hedef ve süreçleri kaydeder.

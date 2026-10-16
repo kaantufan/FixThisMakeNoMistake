@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 3,
+  "kind": "declarative-codex-orchestration-policy",
+  "updatedAtLocalDate": "2026-10-16",
+  "platform": "Codex",
+  "autonomousSchedulerInstalled": false,
+  "scope": "Too Late to Panic! active isometric development; FPS discontinued by user decision 2026-10-16, preserve existing files",
+  "gameTarget": {
+    "dimension": "3D isometric",
+    "engine": "Unity 6000.0.73f1",
+    "renderPipeline": "Built-In",
+    "recheckChosenProjectAtTaskStart": true,
+    "unnecessaryFrameworkMigrationDuringDeliveryWindow": false
+  },
+  "deliveryWindow": {
+    "budgetHours": 48,
+    "startsAt": "official jam start; not preparation or first production batch",
+    "productionStartedAt": null,
+    "scopeMustRemainVisibleIfNotCompleted": true,
+    "playbook": "../../Docs/TOO-LATE-TO-PANIC-TEAM.md",
+    "officialStartAt": null,
+    "officialDeadlineAt": null
+  },
+  "routing": {
+    "manager": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "ultra",
+      "role": "research-plan-review-decide",
+      "doesNotChangeRootSessionModel": true
+    },
+    "asset": {
+      "model": "gpt-6.1-sol",
+      "requiredExecutionMode": "Standard",
+      "requiredServiceTier": "default",
+      "reasoningEffort": null,
+      "availability": "available",
+      "modelSubstitutionAllowed": false,
+      "prompt": "Prompts/asset-worker.md"
+    },
+    "miniAssetQc": {
+      "model": "gpt-6.1-sol",
+      "requiredExecutionMode": "Standard",
+      "requiredServiceTier": "default",
+      "availability": "available",
+      "modelSubstitutionAllowed": false,
+      "prompt": "Prompts/asset-mini-qc.md"
+    },
+    "integrateGameplay": {
+      "model": "gpt-6-luna",
+      "reasoningEffort": "xhigh",
+      "prompt": "Prompts/integrate-gameplay.md",
+      "assetAuthoringAllowed": false
+    },
+    "integratePresentation": {
+      "model": "gpt-6-luna",
+      "reasoningEffort": "xhigh",
+      "prompt": "Prompts/integrate-presentation.md",
+      "assetAuthoringAllowed": false
+    },
+    "batchQa": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "ultra",
+      "prompt": "Prompts/batch-qa.md",
+      "nativeExecutionOwner": "root"
+    }
+  },
+  "capabilitiesObserved": {
+    "source": "current-session tool schema, installed model catalog, official Codex subagents/speed docs",
+    "fastSelectorExposed": false,
+    "serviceTierSelectorExposed": false,
+    "serviceTierFollowsRootPreference": true,
+    "fastServiceTierAlias": "priority",
+    "projectConfig": null,
+    "liveRootFastVerified": false,
+    "selectedServiceTier": "default",
+    "fastRequired": false,
+    "latestUserDecision": "Continue with standard GPT 6.1 Sol; Fast is not required",
+    "forkTurnsForModelOverrides": "none",
+    "maxConcurrentIncludingRoot": 4,
+    "maxConcurrentSubagents": 3,
+    "recheckAtDispatch": true
+  },
+  "queues": [
+    {
+      "id": "supplies-items",
+      "scope": "Scavenged supplies, inventory/bag items, crafting materials and interaction assets",
+      "activation": "current_tltp_task"
+    },
+    {
+      "id": "residence",
+      "scope": "Home rooms, furniture, openable storage, basement, balcony, bathroom and garage",
+      "activation": "current_tltp_task"
+    },
+    {
+      "id": "garden-mitigation",
+      "scope": "Garden environment and disaster-preparation equipment",
+      "activation": "current_tltp_task"
+    },
+    {
+      "id": "disasters",
+      "scope": "Earthquake, flood, fire, warnings and aftermath",
+      "activation": "current_tltp_task"
+    },
+    {
+      "id": "characters",
+      "scope": "Isometric clothed player and locomotion/work animation; no FPS dispatch",
+      "activation": "current_tltp_task"
+    },
+    {
+      "id": "presentation",
+      "scope": "Materials, lighting, VFX/SFX, Turkish radio, rescue atmosphere, HUD and cinematics",
+      "activation": "current_tltp_task"
+    },
+    {
+      "id": "qa",
+      "scope": "Mini asset review and root batch evidence review",
+      "activation": "current_tltp_task"
+    }
+  ],
+  "dispatch": {
+    "owner": "root",
+    "subagentSpawningAllowed": false,
+    "currentAssetDispatch": "authorized_scoped_production",
+    "assetReleaseCondition": "User-approved Too Late to Panic! task, explicit variant/ownership, required inputs and standard Sol available",
+    "slotScheduling": "rolling dependency-aware queue; asset, mini-QC and integration share three slots",
+    "noGlobalBarrierForNextBatchStaging": true,
+    "browserControlOwnerCount": 1,
+    "providerJobDedupKey": [
+      "assetId",
+      "revision",
+      "providerTaskId"
+    ]
+  },
+  "ownership": {
+    "stagingRoot": "Evidence/GamejamOrchestra/<batchId>",
+    "assetPath": "assets/<category>/<assetId>/<revision>",
+    "integrationPath": "integration/<taskId>/payload",
+    "liveFilesOwner": "root of the selected independent project",
+    "unityImportBuildPlayerOwner": "root of the selected independent project",
+    "taskLedgerWriter": "root",
+    "existingTargetRequiresBeforeSha256": true,
+    "preserveExistingUnityGuids": true,
+    "freezeIncludedSourcesDuringBuildAndSmoke": true,
+    "documentationTaskException": "Root may assign an explicit unshared Tools/Docs path; no live game or Unity authority is implied"
+  },
+  "states": [
+    "planned",
+    "producing",
+    "artifact_ready",
+    "mini_qc_pass",
+    "integration_ready",
+    "integrated",
+    "batch_frozen",
+    "import_build_pass",
+    "smoke_pass",
+    "delivered"
+  ],
+  "exceptionStates": [
+    "model_route_blocked",
+    "provider_blocked",
+    "download_blocked",
+    "qc_rework",
+    "source_conflict",
+    "build_failed",
+    "smoke_failed",
+    "deferred"
+  ],
+  "qualityBudget": {
+    "miniQcPassesPerAsset": 1,
+    "miniQcTargetMinutes": "1-2 using current file/preview; a guideline, not an acceptance shortcut",
+    "quickArtRevisionsBeforeManagerDecision": 1,
+    "gameplayQaTrigger": "all included batch members integrated and source frozen",
+    "initialCombinedImportBuildPerBatch": 1,
+    "initialShortAffectedMechanicSmokePerBatch": 1,
+    "defaultSmokeMinutes": "3-5; narrow to batch mechanic",
+    "failureRetest": "affected failure only after a concrete fix; unresolved failures stay failed or are deferred by manager",
+    "broadPlaythrough": "day-end or concrete new risk",
+    "historicalGateRebuildForRoutineChanges": false
+  },
+  "sharedSpecialistPrompt": "Prompts/common-3d.md",
+  "promptAssemblyOrder": [
+    "sharedSpecialistPrompt",
+    "selected specialist prompt",
+    "filled task contract and relevant source evidence"
+  ],
+  "specialists": {
+    "contentDirector": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "ultra",
+      "prompt": "Prompts/content-director-3d.md"
+    },
+    "vfx": {
+      "route": "asset",
+      "prompt": "Prompts/vfx-3d.md"
+    },
+    "animationRig": {
+      "route": "asset",
+      "prompt": "Prompts/animation-rig-3d.md"
+    },
+    "lighting": {
+      "route": "asset",
+      "prompt": "Prompts/lighting-3d.md"
+    },
+    "graphicsMaterials": {
+      "route": "asset",
+      "prompt": "Prompts/graphics-materials-3d.md"
+    },
+    "audioSfx": {
+      "route": "asset",
+      "prompt": "Prompts/audio-sfx-3d.md"
+    },
+    "voiceDialogue": {
+      "route": "asset",
+      "prompt": "Prompts/voice-dialogue-3d.md"
+    },
+    "gameplayContent": {
+      "route": "integrateGameplay",
+      "prompt": "Prompts/gameplay-content-3d.md"
+    },
+    "gameFeelIntegration": {
+      "route": "integratePresentation",
+      "prompt": "Prompts/game-feel-integration-3d.md"
+    },
+    "performance": {
+      "route": "integrateGameplay",
+      "prompt": "Prompts/performance-3d.md"
+    },
+    "assetQuality": {
+      "route": "miniAssetQc",
+      "prompt": "Prompts/asset-quality-3d.md"
+    },
+    "bugTester": {
+      "route": "batchQa",
+      "prompt": "Prompts/bug-tester-3d.md"
+    },
+    "themeBrief": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "ultra",
+      "prompt": "Prompts/theme-brief.md"
+    }
+  },
+  "researchReports": [],
+  "acceptance": {
+    "promptIsDeliveredAsset": false,
+    "providerPreviewIsDownloadedAsset": false,
+    "libraryImportIsGameplayIntegration": false,
+    "sourceCompileIsNativeAcceptance": false,
+    "shortSmokeIsFullWorldOrFinalArtAcceptance": false,
+    "requirementsNeedExplicitApplicability": true,
+    "protectedInvariants": [
+      "collision and physical access",
+      "atomic budget/material costs",
+      "inventory and bag rules",
+      "deadline/bunker/damage/loss conditions",
+      "progression/reward",
+      "real saves",
+      "performance",
+      "active user player",
+      "independent sibling project identity"
+    ],
+    "scopeSource": "Docs/TOO-LATE-TO-PANIC-GDD.md"
+  },
+  "managerPrompt": "Prompts/manager.md",
+  "contractTemplates": [
+    "Templates/task.template.json",
+    "Templates/asset-delivery.template.json",
+    "Templates/batch.template.json"
+  ],
+  "playbook": "../../Docs/TOO-LATE-TO-PANIC-TEAM.md",
+  "jamState": {
+    "phase": "implementing_home_v3_and_independent_fps",
+    "theme": "Afete Hazırlık ve Önlem",
+    "rules": null,
+    "selectedConcept": "Too Late to Panic!",
+    "selectedBrief": "Docs/TOO-LATE-TO-PANIC-GDD.md",
+    "targetProjectPath": "TooLateToPanic",
+    "officialStartAt": null,
+    "officialDeadlineAt": null,
+    "themeSpecificProductionAllowed": true,
+    "reuseDecision": "Retain licensed source/provenance; new home, garden, item, character and presentation art is allowed within the selected variant task",
+    "independentProjects": [
+      {
+        "path": "TooLateToPanic",
+        "variant": "isometric Home V4.4",
+        "developmentStatus": "active",
+        "localInstructions": "TooLateToPanic/AGENTS.md",
+        "contract": "Evidence/GamejamOrchestra/TLTP-DOOR-JAM-V44-20261016/CONTRACT.md",
+        "unityImportBuildPlayerOwner": "isometric session root"
+      },
+      {
+        "path": "TooLateToPanicFPS",
+        "variant": "first-person comparison",
+        "developmentStatus": "discontinued_by_user_2026-10-16",
+        "newDispatchAllowed": false,
+        "localInstructions": "TooLateToPanicFPS/AGENTS.md",
+        "contract": "Evidence/GamejamOrchestra/TLTP-FPS-FORK-20261016/FPS-HANDOFF.md",
+        "unityImportBuildPlayerOwner": "FPS session root"
+      }
+    ]
+  },
+  "themeBriefPrompt": "Prompts/theme-brief.md",
+  "deliveryAndDocumentation": {
+    "prompt": "Prompts/delivery-and-documentation.md",
+    "documentationRequiredForEveryBatch": true,
+    "retainLatestVerifiedBuildOnly": true,
+    "retainLatestPortableZipOnly": true,
+    "updateLatestBuildIndex": true,
+    "cleanupOnlyAfterNewBuildOpensAndSmokePasses": true,
+    "preserveSourcesLicensesRealSavesAndActiveUserPlayer": true,
+    "verifyAbsoluteCleanupBoundary": true
+  },
+  "teamDocument": "../../Docs/TOO-LATE-TO-PANIC-TEAM.md",
+  "isometricLatestContract": "Evidence/GamejamOrchestra/TLTP-HOME-V4-20261016/CONTRACT.md",
+  "currentAudioPolicy": {
+    "variant": "isometric",
+    "mode": "disaster_only",
+    "narrationEnabled": false,
+    "futureProvider": "ElevenLabs",
+    "voiceWorkDeferred": true,
+    "providerSpendAuthorized": false
+  }
+}
