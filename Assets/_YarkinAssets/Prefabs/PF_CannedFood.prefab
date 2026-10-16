@@ -1,5 +1,58 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4803753911820283574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2761578174724065299}
+  - component: {fileID: 8879302210035763935}
+  m_Layer: 0
+  m_Name: InteractionTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2761578174724065299
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4803753911820283574}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.085250184, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 94498066479313275}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &8879302210035763935
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4803753911820283574}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.35
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6441733218127862517
 GameObject:
   m_ObjectHideFlags: 0
@@ -11,6 +64,7 @@ GameObject:
   - component: {fileID: 94498066479313275}
   - component: {fileID: 5797799255755492541}
   - component: {fileID: 156595038205874508}
+  - component: {fileID: 7183068257213885650}
   m_Layer: 0
   m_Name: PF_CannedFood
   m_TagString: Untagged
@@ -32,6 +86,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 530274054881993125}
+  - {fileID: 2761578174724065299}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &5797799255755492541
@@ -53,10 +108,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.048
-  m_Height: 0.1125
+  m_Radius: 0.070379995
+  m_Height: 0.17050037
   m_Direction: 1
-  m_Center: {x: 0, y: 0.05625, z: 0}
+  m_Center: {x: 0, y: 0.085250184, z: 0}
 --- !u!114 &156595038205874508
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -76,7 +131,32 @@ MonoBehaviour:
   preparednessScore: 18
   isCollectible: 1
   isSecurableFixture: 0
+  isUtilityValve: 0
+  isSecuredOrClosed: 0
+  triggersSecondaryHazard: 0
+  currentState: 0
+  visualRoot: {fileID: 530274054881993125}
+  securedBracketObject: {fileID: 0}
+  valveHandleTransform: {fileID: 0}
   inventoryIcon: {fileID: 21300000, guid: 68c06f896e3361b439d99ecc49d0c7d9, type: 3}
+--- !u!114 &7183068257213885650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6441733218127862517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf2c4d5142489e4fb46b35bf866b975, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetVisual: {fileID: 530274054881993125}
+  enableIdleBobbing: 0
+  bobAmplitude: 0.022
+  bobFrequency: 3.2
+  isShaking: 0
+  shakeIntensity: 0.03
 --- !u!1001 &58916286836868686
 PrefabInstance:
   m_ObjectHideFlags: 0

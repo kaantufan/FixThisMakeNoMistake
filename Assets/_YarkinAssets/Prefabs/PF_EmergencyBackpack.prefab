@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4074939262848297493}
   - component: {fileID: 1124680340862259791}
   - component: {fileID: 8797140813748926560}
+  - component: {fileID: 8543636873617744711}
   m_Layer: 0
   m_Name: PF_EmergencyBackpack
   m_TagString: Untagged
@@ -32,6 +33,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1640593423945126469}
+  - {fileID: 1494640190813306526}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &1124680340862259791
@@ -53,8 +55,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.444, y: 0.53, z: 0.26}
-  m_Center: {x: 0, y: 0.265, z: 0}
+  m_Size: {x: 0.58, y: 0.6536169, z: 0.355}
+  m_Center: {x: 0, y: 0.32680845, z: 0}
 --- !u!114 &8797140813748926560
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -74,7 +76,85 @@ MonoBehaviour:
   preparednessScore: 50
   isCollectible: 1
   isSecurableFixture: 0
+  isUtilityValve: 0
+  isSecuredOrClosed: 0
+  triggersSecondaryHazard: 0
+  currentState: 0
+  visualRoot: {fileID: 1640593423945126469}
+  securedBracketObject: {fileID: 0}
+  valveHandleTransform: {fileID: 0}
   inventoryIcon: {fileID: 21300000, guid: c281bac2551c6e743b75db3d837ce7fd, type: 3}
+--- !u!114 &8543636873617744711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 26071474898844353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf2c4d5142489e4fb46b35bf866b975, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetVisual: {fileID: 1640593423945126469}
+  enableIdleBobbing: 0
+  bobAmplitude: 0.022
+  bobFrequency: 3.2
+  isShaking: 0
+  shakeIntensity: 0.03
+--- !u!1 &5482793398166524071
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1494640190813306526}
+  - component: {fileID: 5927355622158473167}
+  m_Layer: 0
+  m_Name: InteractionTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1494640190813306526
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5482793398166524071}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.32680845, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4074939262848297493}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &5927355622158473167
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5482793398166524071}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5423442
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &1246994051449370030
 PrefabInstance:
   m_ObjectHideFlags: 0

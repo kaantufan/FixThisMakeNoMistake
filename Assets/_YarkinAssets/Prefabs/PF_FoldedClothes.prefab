@@ -1,5 +1,58 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4696160776066483733
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6716280295474678738}
+  - component: {fileID: 494926056064125440}
+  m_Layer: 0
+  m_Name: InteractionTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6716280295474678738
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4696160776066483733}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.09204927, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7767224392755809085}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &494926056064125440
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4696160776066483733}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.35388944
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7461975661374017172
 GameObject:
   m_ObjectHideFlags: 0
@@ -11,6 +64,7 @@ GameObject:
   - component: {fileID: 7767224392755809085}
   - component: {fileID: 5869566991129242368}
   - component: {fileID: 4441169171747105598}
+  - component: {fileID: 4065224835979692959}
   m_Layer: 0
   m_Name: PF_FoldedClothes
   m_TagString: Untagged
@@ -32,6 +86,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6525458371526540845}
+  - {fileID: 6716280295474678738}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &5869566991129242368
@@ -53,8 +108,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.35999998, y: 0.146, z: 0.28}
-  m_Center: {x: 0, y: 0.073, z: 0}
+  m_Size: {x: 0.45954618, y: 0.18409854, z: 0.3656719}
+  m_Center: {x: 0, y: 0.09204927, z: 0}
 --- !u!114 &4441169171747105598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -74,7 +129,32 @@ MonoBehaviour:
   preparednessScore: 15
   isCollectible: 1
   isSecurableFixture: 0
+  isUtilityValve: 0
+  isSecuredOrClosed: 0
+  triggersSecondaryHazard: 0
+  currentState: 0
+  visualRoot: {fileID: 6525458371526540845}
+  securedBracketObject: {fileID: 0}
+  valveHandleTransform: {fileID: 0}
   inventoryIcon: {fileID: 21300000, guid: 9c361523b3dfded49b818fb88a590dd8, type: 3}
+--- !u!114 &4065224835979692959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7461975661374017172}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf2c4d5142489e4fb46b35bf866b975, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetVisual: {fileID: 6525458371526540845}
+  enableIdleBobbing: 0
+  bobAmplitude: 0.022
+  bobFrequency: 3.2
+  isShaking: 0
+  shakeIntensity: 0.03
 --- !u!1001 &6702953482557413830
 PrefabInstance:
   m_ObjectHideFlags: 0
