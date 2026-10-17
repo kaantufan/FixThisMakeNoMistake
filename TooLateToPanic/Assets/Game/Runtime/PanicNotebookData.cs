@@ -32,6 +32,11 @@ namespace TooLateToPanic
             if (source.Contents != null) for (int i = 0; i < source.Contents.Count; i++)
                 if (source.Contents[i] != null && source.Contents[i].Count > 0) { Empty = false; break; }
         }
+        public PanicNotebookPin(PanicWorldSupply source)
+        {
+            Id = source.Id; Label = PanicExpedition.DisplayName(source.ItemId); Position = source.Position;
+            Open = false; Empty = source.Count <= 0;
+        }
     }
 
     /// <summary>Read-only notebook snapshot. Capturing never calls preflight, work, pack or score mutations.</summary>
@@ -59,6 +64,16 @@ namespace TooLateToPanic
             if (!world || world.Model == null || world.Expedition == null) return null;
             var result = Capture(world.Model, world.Expedition, world.Selected, floor, world.JurySnapshot);
             result.ActorPosition = world.PlayerPosition;
+            if (world.BagFinalStageActive)
+            {
+                var supplies = new List<PanicNotebookPin>();
+                foreach (var supply in world.Expedition.WorldSupplies)
+                    if (supply.Floor == floor && supply.Count > 0) supplies.Add(new PanicNotebookPin(supply));
+                result.Pins = supplies.ToArray();
+                result.SelectedAction = string.Empty;
+                result.SelectedRequirements = new PanicMaterialRequirement[0];
+                result.SelectedBudgetCost = 0;
+            }
             return result;
         }
 
@@ -83,14 +98,13 @@ namespace TooLateToPanic
             var anchor = new PanicNotebookCheck("Uygun mobilyaları sabitle", "Dünyada tamamlanan ankrajlar", anchors, anchorTotal);
             var wall = new PanicNotebookCheck("Duvarları güçlendir", "En az bir kademe güçlendirme", wallsDone, walls);
             var window = new PanicNotebookCheck("Kapı ve pencereleri güçlendir", "En az bir kademe güçlendirme", windowsDone, windows);
-            int fences = Committed(expedition, "fence", "fence_west", "fence_east", "fence_north");
             int drains = Committed(expedition, "drain", "drain_west", "drain_east");
             int trees = Committed(expedition, "plant", "plant_west1", "plant_west2", "plant_east");
             var pages = new PanicNotebookCheck[6][];
             pages[(int)PanicNotebookPage.Rooms] = new PanicNotebookCheck[0];
             pages[(int)PanicNotebookPage.Flood] = new[] {
                 new PanicNotebookCheck("Bahçe drenajını kur", "Batı ve doğu gerçek drenaj noktaları", drains, 2),
-                new PanicNotebookCheck("Sel çitlerini kur", "Batı, doğu ve kuzey bahçe noktaları", fences, 3), window, wall, water, food };
+                window, wall, water, food };
             pages[(int)PanicNotebookPage.Earthquake] = new[] { anchor, wall, water, food, firstAid, flashlight };
             pages[(int)PanicNotebookPage.Fire] = new[] {
                 new PanicNotebookCheck("Yangın söndürücüyü hazırla", "Yalnız yangın ekipmanı noktasında", expedition.IsWorkCommitted("fire", PanicItemActionRules.FireStationId) ? 1 : 0, 1),
@@ -112,8 +126,8 @@ namespace TooLateToPanic
             var requirements = new PanicMaterialRequirement[recipe.Count];
             for (int i = 0; i < recipe.Count; i++) requirements[i] = new PanicMaterialRequirement(recipe[i].Id, recipe[i].Required, expedition.Count(recipe[i].Id));
             bool timedJury = jury != null && jury.Active;
-            string note = timedJury ? jury.Hint : model.BagReady ? "Su ve gıda hazır. Evin önlemlerini tamamla; son uyarıda sığınağa yönel." :
-                "Bu dalga için çantaya " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda daha koy.";
+            string note = timedJury ? jury.Hint : model.TimeRemaining > 30 ? "Önlemleri tamamla. Son 30 saniyede çanta hazırlığı başlayacak." : model.BagReady ? "Su ve gıda hazır. Bodrumdaki sığınağa git." :
+                "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Temel ihtiyaçlar doğrudan çantana eklenir.";
             return new PanicNotebookSnapshot {
                 Phase = PhaseName(model.Phase), Disaster = DisasterName(model.Disaster), Wave = model.Wave,
                 Budget = model.InfiniteBudget ? "SINIRSIZ" : model.Budget.ToString("N0"), Damage = Mathf.Clamp(model.TotalDamage, 0, 100),

@@ -1,6 +1,6 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Güncel izometrik tasarım:** [GDD v2.0 / Home V4.5](../TooLateToPanic/Documentation/GDD.md) ve [son teslim](../TooLateToPanic/Documentation/HOME-V4.5-DELIVERY-2026-10-17.md). Banyo tek girişli ayrı odadır; kapısı güney duvarına taşınmıştır. Kapılar oyuncudan uzağa açılır; açılma/kapanmada karakter aradaysa bekler. Yarı kapanmış kapı E ile tekrar açılınca aynı yönde geri çekilir. Ön girişteki eşyalar geçişten geriye alınmıştır. Aktif geliştirme yalnız izometriktir; FPS geliştirmesi durdurulmuştur. Fareyle eşya taşıma ve ikonlu eksik malzeme adetleri güncel etkileşimlerdir. Fiziksel merdiven korkulukları korunur. Aşağıdaki Home V2 metni tarihsel temel kuralları korur; güncel değişiklikler bağlantıdaki proje dokümanında tutulur.
+**Güncel tasarım:** [GDD v2.3 / Home V4.12](../TooLateToPanic/Documentation/GDD.md) ve [son teslim](../TooLateToPanic/Documentation/HOME-V4.12-DELIVERY-2026-10-17.md). Önlem aşaması izometrik; son30saniyede FPS çanta hazırlığı otomatik açılır. Her dalgada1su+1gıda, yüzde75ve üzeri hasarda kayıp. Erzak/yapı malzemesi aşamaları ayrıdır; çit inşası yoktur. Aynı aktif Model/Expedition/controller kullanılır; bağımsız eski FPS kaynakları ve kayıtları korunur. Aşağıdaki Home V2 metni tarihsel tabandır; güncel kurallar bağlantıdaki proje belgesindedir.
 
 **Sürüm 1.3 · 16 Ekim 2026 · Home V2**
 

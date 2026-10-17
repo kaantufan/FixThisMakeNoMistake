@@ -94,15 +94,21 @@ namespace TooLateToPanic
         Font _bodyFont;
         int _timerWave = -1;
         PanicPhase _timerPhase = (PanicPhase)(-1);
+        bool _timerPrecautionStage;
         float _timerMaximum = 1f;
         PanicHudSupplyPreview _supplyPreviews;
         GUIStyle _fittedStyle;
         readonly List<Rect> _topLevelRegions = new List<Rect>(16);
 
         public string ThemeVersion { get { return "Home V4.7 / Polished supply HUD"; } }
+        bool CampaignPrecautionTimer { get { return World && World.Model != null && !World.JuryActive &&
+            !World.Model.IsJuryDemo && !World.Model.IsSimulation && !World.Model.IsTutorial &&
+            World.Model.Phase == PanicPhase.Preparing && World.Model.TimeRemaining > PanicHomeWorld.BagPreparationSeconds; } }
+        float PreparationTimerRemaining { get { return CampaignPrecautionTimer ?
+            Mathf.Max(0f, World.Model.TimeRemaining - PanicHomeWorld.BagPreparationSeconds) : World.Model.TimeRemaining; } }
         public bool TimerAlarmActive { get { return World && !World.JuryActive && World.Model != null && !World.Model.IsSimulation &&
             (World.Model.Phase == PanicPhase.Preparing || World.Model.Phase == PanicPhase.Tutorial) &&
-            World.Model.TimeRemaining <= 60f; } }
+            PreparationTimerRemaining <= 60f; } }
         public Rect LogicalCanvasBounds { get { return new Rect(0, 0, CanvasWidth, CanvasHeight); } }
         public Rect WaveCardBounds { get { return new Rect(24, 20, 430, 96); } }
         public Rect TimerCardBounds { get { return new Rect(610, 14, 380, 114); } }
@@ -323,7 +329,7 @@ namespace TooLateToPanic
             }
             else if (World.BagCameraOwnsView)
             {
-                DrawStatusStrip();
+                DrawFinalBagHud();
                 if (World.NotificationVisible) DrawToast(World.ShortNotice);
             }
             else if (World.JuryActive)
@@ -508,6 +514,7 @@ namespace TooLateToPanic
 
         void DrawStatusStrip()
         {
+            if (World.BagCameraOwnsView) { DrawFinalBagStatus(); return; }
             if (World.JuryActive) { DrawJuryStatusStrip(); return; }
             PanicModel model = World.Model;
             bool preparation = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
@@ -529,7 +536,7 @@ namespace TooLateToPanic
                 Frame(ticker, Night, Line, 1f); Region(ticker);
                 Fill(new Rect(25, 127, 82, 32), Petrol);
                 Label(new Rect(29, 128, 73, 27), "HEDEF", _caps);
-                Label(new Rect(119, 130, 321, 25), model.BagReady ? "Çanta hazır · Evi güvene al" : "Su ve gıdayı çantana koy", _tiny);
+                Label(new Rect(119, 130, 321, 25), CampaignPrecautionTimer ? "Ardından 30 sn çanta" : "Önlemleri tamamla · son 30 sn çanta", _tiny);
                 DrawKeycap(new Rect(1364, 128, 104, 30), "TAB", "ÇANTA", Line);
                 DrawKeycap(new Rect(1478, 128, 98, 30), "H", "YARDIM", Line);
             }
@@ -565,7 +572,7 @@ namespace TooLateToPanic
             }
             DrawControls(ContextControls());
             DrawApplicableAction();
-            if (TimerAlarmActive && !World.LootVisible && !World.IsMoving)
+            if (TimerAlarmActive && World.Model.TimeRemaining <= 60f && !World.LootVisible && !World.IsMoving)
             {
                 Rect check = new Rect(24, 190, 282, 178);
                 Frame(check, Night, new Color(Ember.r, Ember.g, Ember.b, .50f), 1f); Region(check);
@@ -747,7 +754,7 @@ namespace TooLateToPanic
             DrawDot(new Rect(827, 620, 9, 9), model.BagReady ? Sea : Brass);
             string readyHint = World.JuryActive ? "ÇANTA HAZIR · Kapat ve sıradaki önleme geç" : model.IsSimulation ? "ÇANTA HAZIR · Önlemini seç, afeti başlat" : "ÇANTA HAZIR · Sığınağa geçebilirsin";
             Label(new Rect(846, 607, 630, 30), model.BagReady ? readyHint :
-                "Her biri " + model.RequiredDays + " günlük su ve gıda gerekli", ColorText(_body, model.BagReady ? Sea : Brass));
+                "Temel ihtiyaç: 1 su + 1 gıda", ColorText(_body, model.BagReady ? Sea : Brass));
             SupplySlot selectedSlot = inventory != null && World.InventoryIndex >= 0 && World.InventoryIndex < inventory.Count ? inventory[World.InventoryIndex] : null;
             Label(new Rect(126, 643, 600, 22), "SEÇİLİ MALZEME", _tiny);
             Label(new Rect(126, 672, 600, 32), SlotName(selectedSlot), ColorText(_display, MainText));
@@ -755,7 +762,7 @@ namespace TooLateToPanic
             {
                 Rect info = new Rect(824,647,660,100);
                 Frame(info,Panel,Line,1f);
-                Label(new Rect(842,659,624,26), "İLK YARDIM SETİNİ EVDE HAZIR BUL", ColorText(_tiny,Brass));
+                Label(new Rect(842,659,624,26), "EKİPMANLAR İSTEĞE BAĞLI", ColorText(_tiny,Brass));
                 Label(new Rect(842,693,624,42), "Yığınları sürükleyerek birleştir. Farklı eşyaları\nyer değiştir; çantadan envantere geri al.",_wrap);
             }
             Rect packButton = new Rect(126, 762, 212, 44);
@@ -920,7 +927,7 @@ namespace TooLateToPanic
             Brush(new Rect(38, 419, 177, 30), Petrol);
             Label(new Rect(52, 418, 318, 32), "HIZLI HAZIRLIK", _body);
             Label(new Rect(44, 463, 336, 27), "E ile dolabı aç · Malzeme havuza eklenir", _small);
-            Label(new Rect(44, 497, 336, 27), "Tab ile çantaya su ve gıda koy", _small);
+            Label(new Rect(44, 497, 336, 27), "Son 30 sn · su ve gıdayı al", _small);
             Label(new Rect(44, 531, 336, 27), "Nesnenin önlemini seç · H kapat", ColorText(_tiny, Sea));
         }
 
@@ -1054,7 +1061,7 @@ namespace TooLateToPanic
             Label(new Rect(152, 262, 700, 74), World.JuryActive ? "KISA BİR MOLA" : "DURAKLATILDI", _timer);
             DrawWatch(new Rect(157, 379, 94, 112), Rust);
             Brush(new Rect(148, 509, 624, 51), Rust);
-            Label(new Rect(277, 346, 520, 176), FormatTime(World.Model.TimeRemaining), ColorText(_mega, Brass));
+            Label(new Rect(277, 346, 520, 176), FormatTime(PreparationTimerRemaining), ColorText(_mega, Brass));
             Frame(new Rect(161, 588, 236, 36), new Color(Petrol.r, Petrol.g, Petrol.b, .3f), Sea, 1f);
             Label(new Rect(174, 590, 210, 30), "II   OYUN DURDU", ColorText(_caps, Sea));
             Label(new Rect(161, 660, 600, 56), "Hazır olduğunda devam et.\nSüre, afet ve hazırlık burada bekliyor.", _wrap);
@@ -1436,15 +1443,17 @@ namespace TooLateToPanic
         {
             PanicModel model = World.Model;
             bool preparation = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
+            bool precautions = CampaignPrecautionTimer;
             bool timed = preparation || model.Phase == PanicPhase.Disaster || model.Phase == PanicPhase.Aftermath || model.Phase == PanicPhase.Inspection;
-            float value = preparation ? model.TimeRemaining : timed ? model.PhaseTime : 0f;
-            if (_timerWave != model.Wave || _timerPhase != model.Phase)
+            float value = preparation ? PreparationTimerRemaining : timed ? model.PhaseTime : 0f;
+            if (_timerWave != model.Wave || _timerPhase != model.Phase || _timerPrecautionStage != precautions)
             {
                 _timerWave = model.Wave;
                 _timerPhase = model.Phase;
+                _timerPrecautionStage = precautions;
                 _timerMaximum = Mathf.Max(1f, value);
             }
-            _timerMaximum = Mathf.Max(_timerMaximum, value);
+            _timerMaximum = precautions ? 120f : Mathf.Max(_timerMaximum, value);
             Color accent = TimerAlarmActive ? Ember : Sea;
             Rect timer = TimerCardBounds;
             if (TimerAlarmActive)
@@ -1457,7 +1466,7 @@ namespace TooLateToPanic
             DrawWatch(new Rect(630, 32, 45, 53), TimerAlarmActive ? Ember : Rust);
             string digits = timed ? FormatTime(value) : "--:--";
             Label(new Rect(687, 13, 187, 80), digits, ColorText(_timer, TimerAlarmActive ? Ember : MainText));
-            string phase = _paused ? "DURDU" : preparation && model.FreezePreparationTime ? "DONDU" : preparation ? "HAZIRLIK" : PhaseName(model.Phase);
+            string phase = _paused ? "DURDU" : preparation && model.FreezePreparationTime ? "DONDU" : precautions ? "GÜÇLENDİRME" : preparation ? "HAZIRLIK" : PhaseName(model.Phase);
             FittedLabel(new Rect(876, 35, 100, 25), phase, _tiny, accent, 12);
             Label(new Rect(876, 60, 100, 22), preparation ? TimerAlarmActive ? "SON 60 SN" : "KALAN SÜRE" : "DURUM", _tiny);
             Rect track = new Rect(635, 99, 330, 6);
@@ -1473,7 +1482,7 @@ namespace TooLateToPanic
                 Rect banner = new Rect(588, 140, 424, 44);
                 Frame(banner, new Color(.24f, .075f, .05f, .96f), new Color(Ember.r, Ember.g, Ember.b, .55f), 1f);
                 DrawWarning(new Rect(601, 151, 20, 20), Ember);
-                Label(new Rect(632, 144, 367, 35), model.IsSimulation ? "ÖNLEMİNİ BİTİR · AFETİ BAŞLAT" : "AZ KALDI · SIĞINAĞA YETİŞ!", ColorText(_center, MainText));
+                Label(new Rect(632, 144, 367, 35), precautions ? "GÜÇLENDİRMEYİ BİTİR · SONRA ÇANTA" : model.IsSimulation ? "ÖNLEMİNİ BİTİR · AFETİ BAŞLAT" : "AZ KALDI · SIĞINAĞA YETİŞ!", ColorText(_center, MainText));
                 Region(banner);
             }
         }

@@ -48,7 +48,7 @@ namespace TooLateToPanic
             {
                 foreach (var goal in snapshot.Goals)
                     if (goal.Id == "water_packed" && goal.State == PanicJuryGoalState.Complete)
-                    { observedJuryBag = true; PlayPresentationCue("jury_bag_ready"); break; }
+                    { observedJuryBag = true; PlayPresentationCue("objective_tick"); break; }
             }
         }
 

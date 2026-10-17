@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -30,7 +30,7 @@ namespace TooLateToPanic
         public RenderTexture WorkTexture { get; private set; }
         public Vector3 PlayerPosition { get { return player ? player.position : Vector3.zero; } }
         public bool PlayerControllerEnabled { get { return controller && controller.enabled; } }
-        public bool CanInteract { get { return player && FocusPosition(out Vector3 p) && Vector3.Distance(p, player.position) < 2.4f && (BagFirstPersonActive ? BagRayTarget() == focusId : InteractionPathClear(focusId,p)); } }
+        public bool CanInteract { get { return player && FocusPosition(out Vector3 p) && InteractionDistance(focusId) < 2.4f && (BagFirstPersonActive ? BagRayTarget() == focusId : InteractionPathClear(focusId,p)); } }
         public static readonly Vector3 BunkerPosition = new Vector3(-4.5f, -3.2f, 3.2f);
         public string EvidencePath { get; private set; }
 
@@ -46,6 +46,7 @@ namespace TooLateToPanic
         readonly List<GameObject> floorItems = new List<GameObject>();
         readonly Dictionary<int, Renderer[]> visibilityRenderers = new Dictionary<int, Renderer[]>();
         readonly List<string> focusCandidates = new List<string>();
+        readonly Dictionary<string, List<Collider>> wallInteractionColliders = new Dictionary<string, List<Collider>>();
         GameObject landscape, roof, workRig, handTool;
         Transform player, hero;
         CharacterController controller;
@@ -206,6 +207,8 @@ namespace TooLateToPanic
                         var pick = col.gameObject.AddComponent<HomePick>();
                         string side = lower.Contains("north") ? "north" : lower.Contains("west") ? "west" : lower.Contains("south") ? "south" : "east";
                         pick.Id = "wall_" + side + (level == 0 ? "" : level<0 ? "_basement" : "_upper"); pick.Kind = "item";
+                        if (!wallInteractionColliders.TryGetValue(pick.Id, out var segments)) wallInteractionColliders[pick.Id] = segments = new List<Collider>();
+                        segments.Add(col);
                     }
                 }
             }
@@ -273,20 +276,20 @@ namespace TooLateToPanic
 
         void BuildGarden()
         {
-            AddSite("plant_west1", "Ağaç sırası kur", "plant", new Vector3(-11, 0, 4));
-            AddSite("plant_west2", "Ağaç sırası kur", "plant", new Vector3(-13.3f, 0, -1.4f));
-            AddSite("plant_east", "Ağaç sırası kur", "plant", new Vector3(11, 0, 9));
+            // Clear strips: full mature crowns stay outside the house, beds and perimeter.
+            AddSite("plant_west1", "İç batı ağaç sırası", "plant", new Vector3(-10.8f, 0, 1));
+            AddSite("plant_west2", "Dış batı ağaç sırası", "plant", new Vector3(-13.6f, 0, 1));
+            AddSite("plant_east", "Kuzey ağaç sırası", "plant", new Vector3(0, 0, 12.3f));
             AddSite("drain_west", "Drenaj kanalı aç", "drain", new Vector3(-5, 0, -8.5f));
             AddSite("drain_east", "Drenaj kanalı aç", "drain", new Vector3(5, 0, -8.5f));
-            AddSite("fence_west", "Çit kur", "fence", new Vector3(-11, 0, -11));
-            AddSite("fence_east", "Çit kur", "fence", new Vector3(7.7f, 0, -11));
-            AddSite("fence_north", "Çit kur", "fence", new Vector3(0, 0, 10));
             AddSite("hose_station", "Yangın hortumu kur", "hose", new Vector3(10, 0, 3));
         }
 
         void AddSite(string id, string label, string action, Vector3 p)
         {
-            var ring = MakeLine(id, new[] { new Vector3(-.7f, .02f, -.5f), new Vector3(.7f, .02f, -.5f), new Vector3(.7f, .02f, .5f), new Vector3(-.7f, .02f, .5f) }, new Color(.51f, .63f, .52f), .025f);
+            Vector3 half = new Vector3(.7f, .02f, .5f);
+            if (action == "plant") half = PanicConstructionArt.TreeRowBounds(id == "plant_west1" ? 0 : id == "plant_west2" ? 1 : 2).extents;
+            var ring = MakeLine(id, new[] { new Vector3(-half.x, .02f, -half.z), new Vector3(half.x, .02f, -half.z), new Vector3(half.x, .02f, half.z), new Vector3(-half.x, .02f, half.z) }, new Color(.51f, .63f, .52f), .025f);
             ring.transform.position = p;
             gardenSites.Add(new GardenSite { id = id, label = label, action = action, p = p, marker = ring.gameObject });
         }
@@ -362,6 +365,7 @@ namespace TooLateToPanic
                 previousPhase = Model.Phase;
                 Debug.Log("HOME_PHASE " + Model.Phase + " wave=" + Model.Wave + " floor=" + ActiveFloor);
             }
+            TickPreparationStages();
             bool playable = (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial || Model.Phase == PanicPhase.Inspection) && JuryAllowsMovement;
             if (playable && !InputLocked && !CinematicActive && !LossAnnounced && !developerBlocksInput && !BagCameraTransitionActive && CancelFrame != Time.frameCount && !FullFlowScriptedInput)
             {
@@ -469,35 +473,117 @@ namespace TooLateToPanic
         void RefreshFocus(bool cycle)
         {
             if (BagFirstPersonActive) { RefreshBagRayFocus(); return; }
+            // Candidate membership uses the reachable surface, not a long wall's origin.
+            // A blocked selected object stays selected until it leaves range or Q/click changes it.
+            Physics.SyncTransforms();
             focusCandidates.Clear();
             foreach (var item in Model.Items)
-                if (item.Installed && PositionOf(item.Id, out var target) && (item.Kind == ItemKind.Roof || SameLevel(item.Position)) && Vector3.Distance(target, player.position) < (item.Kind == ItemKind.Wall ? 3.4f : 2.7f)) focusCandidates.Add(item.Id);
-            foreach (var s in Expedition.Sources) if (SameLevel(s.Position) && Vector3.Distance(s.Position, player.position) < 2.7f && !focusCandidates.Contains(s.Id)) focusCandidates.Add(s.Id);
-            foreach (var site in gardenSites) if (!site.done && Vector3.Distance(site.p, player.position) < 2.5f) focusCandidates.Add(site.id);
-            foreach(var pair in residenceTargets) if(pair.Value && SameLevel(ResidenceFocusPosition(pair.Value)) && Vector3.Distance(ResidenceFocusPosition(pair.Value),player.position)<2.5f) focusCandidates.Add(pair.Key);
-            if (!items.ContainsKey("bunker")&&Vector3.Distance(player.position, BunkerPosition) < 2) focusCandidates.Add("@bunker");
-            foreach (var supply in Expedition.WorldSupplies) if (supply.Count > 0 && supply.Floor == ActiveFloor && Vector3.Distance(supply.Position, player.position) < 2.4f) focusCandidates.Add(supply.Id);
-            focusCandidates.RemoveAll(id=>!PositionOf(id,out var p)||!InteractionPathClear(id,p));
-            focusCandidates.Sort((a, b) => FocusScore(a).CompareTo(FocusScore(b)));
-            if (cycle && focusCandidates.Count > 0) SetFocus(focusCandidates[(focusCandidates.IndexOf(focusId) + 1) % focusCandidates.Count]);
-            else if (!focusCandidates.Contains(focusId)) SetFocus(focusCandidates.Count > 0 ? focusCandidates[0] : null);
+                if (item.Id != "bagstation" && item.Installed && (item.Kind == ItemKind.Roof || SameLevel(item.Position)) &&
+                    !(BagFinalStageActive && Expedition.Sources.Exists(source => source.Id == item.Id)) && InteractionDistance(item.Id) < 2.8f) focusCandidates.Add(item.Id);
+            if (!BagFinalStageActive) foreach (var source in Expedition.Sources)
+                if (SameLevel(source.Position) && InteractionDistance(source.Id) < 2.8f && !focusCandidates.Contains(source.Id)) focusCandidates.Add(source.Id);
+            if (!BagFinalStageActive) foreach (var site in gardenSites)
+                if (!site.done && InteractionDistance(site.id) < 2.8f) focusCandidates.Add(site.id);
+            foreach (var pair in residenceTargets)
+                if (pair.Value && SameLevel(ResidenceFocusPosition(pair.Value)) && InteractionDistance(pair.Key) < 2.8f && !focusCandidates.Contains(pair.Key)) focusCandidates.Add(pair.Key);
+            if (!items.ContainsKey("bunker") && InteractionDistance("@bunker") < 2.8f) focusCandidates.Add("@bunker");
+            if (BagFinalStageActive) foreach (var supply in Expedition.WorldSupplies)
+                if (supply.Count > 0 && supply.Floor == ActiveFloor && InteractionDistance(supply.Id) < 2.4f) focusCandidates.Add(supply.Id);
+            focusCandidates.Sort((a, b) => { int score = FocusScore(a).CompareTo(FocusScore(b)); return score != 0 ? score : string.CompareOrdinal(a, b); });
+            var available = focusCandidates.Where(id => PositionOf(id, out var point) && InteractionPathClear(id, point)).ToList();
+            if (cycle && available.Count > 0) SetFocus(available[(available.IndexOf(focusId) + 1) % available.Count]);
+            else if (!focusCandidates.Contains(focusId)) SetFocus(available.Count > 0 ? available[0] : null);
             UpdateContext();
         }
         bool SameLevel(Vector3 p) { return Mathf.Abs(p.y - (ActiveFloor * 3.2f)) < .9f; }
-        float DistanceTo(string id) { return PositionOf(id, out Vector3 p) ? Vector3.Distance(p, player.position) : 999; }
-        float FocusScore(string id){var data=Model.Items.Find(i=>i.Id==id);return DistanceTo(id)+(data!=null&&data.Kind==ItemKind.Roof?3:data!=null&&data.Kind==ItemKind.Wall?2:0)-(Expedition.Sources.Exists(s=>s.Id==id)?.25f:0);}
-        bool InteractionPathClear(string id,Vector3 p)
+        float DistanceTo(string id) { return InteractionDistance(id); }
+        float FocusScore(string id) { var data = Model.Items.Find(i => i.Id == id); return DistanceTo(id) + (data != null && data.Kind == ItemKind.Roof ? 3 : data != null && data.Kind == ItemKind.Wall ? .35f : 0); }
+
+        GameObject InteractionObject(string id)
         {
-            var targetItem = Model.Items.Find(i => i.Id == id);
-            float height = Expedition.FindWorldSupply(id) != null ? .07f : targetItem != null && targetItem.Kind == ItemKind.Window ? 1.65f : .8f;
-            Vector3 start=player.position+Vector3.up*.9f,end=p+Vector3.up*height;Vector3 delta=end-start;float distance=delta.magnitude;if(distance<.05f)return true;
-            var hits=Physics.RaycastAll(start,delta/distance,distance,~(1<<30),QueryTriggerInteraction.Ignore);Array.Sort(hits,(a,b)=>a.distance.CompareTo(b.distance));
-            foreach(var hit in hits)
+            if (string.IsNullOrEmpty(id)) return null;
+            if (id == "@bunker") id = "bunker";
+            if (worldSupplyObjects.TryGetValue(id, out var supply) && supply) return supply;
+            if (residenceTargets.TryGetValue(id, out var target) && target) return target;
+            if (sourceObjects.TryGetValue(id, out var source) && source) return source;
+            return items.TryGetValue(id, out var item) && item ? item : null;
+        }
+
+        public bool TryGetInteractionBounds(string id, out Bounds bounds)
+        {
+            bounds = new Bounds(); bool any = false;
+            if (string.IsNullOrEmpty(id)) return false;
+            if (wallInteractionColliders.TryGetValue(id, out var segments))
             {
-                if(hit.collider==controller||hit.collider.GetComponentInParent<ResidenceLootPick>()||hit.transform.IsChildOf(player))continue;
-                if(id=="@computer"&&residenceTargets.TryGetValue(id,out var device)&&device&&hit.transform==device.transform.parent)continue;
-                var pick=hit.collider.GetComponentInParent<HomePick>();
-                if(pick&&(pick.Id==id||id=="@bunker"&&pick.Id=="bunker"))return true;
+                foreach (var segment in segments) if (segment && segment.enabled && segment.gameObject.activeInHierarchy)
+                { if (!any) { bounds = segment.bounds; any = true; } else bounds.Encapsulate(segment.bounds); }
+                if (any) return true;
+            }
+            var root = InteractionObject(id);
+            if (root)
+            {
+                // The actual art bounds outline the loose object, not its generous pick trigger.
+                foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (!renderer || renderer is LineRenderer || !renderer.gameObject.activeInHierarchy) continue;
+                    if (!any) { bounds = renderer.bounds; any = true; } else bounds.Encapsulate(renderer.bounds);
+                }
+                if (any) return true;
+                foreach (var collision in root.GetComponentsInChildren<Collider>(true)) if (collision && collision.enabled && collision.gameObject.activeInHierarchy)
+                { if (!any) { bounds = collision.bounds; any = true; } else bounds.Encapsulate(collision.bounds); }
+                if (any) return true;
+            }
+            var site = gardenSites.Find(value => value.id == id);
+            if (site != null)
+            {
+                bounds = site.action == "plant" ? PanicConstructionArt.TreeRowBounds(TreeVariant(site)) : new Bounds(Vector3.zero, new Vector3(1.4f, .05f, 1));
+                bounds.center = site.p + Vector3.up * .025f; var size = bounds.size; size.y = .05f; bounds.size = size; return true;
+            }
+            if (PositionOf(id, out var position)) { bounds = new Bounds(position + Vector3.up * .8f, new Vector3(.3f, 1.6f, .3f)); return true; }
+            return false;
+        }
+
+        bool InteractionSurfacePoint(string id, Vector3 from, out Vector3 point)
+        {
+            point = Vector3.zero; float nearest = float.MaxValue; bool found = false;
+            IEnumerable<Collider> colliders = null;
+            if (id != null && wallInteractionColliders.TryGetValue(id, out var segments)) colliders = segments;
+            else { var root = InteractionObject(id); if (root) colliders = root.GetComponentsInChildren<Collider>(true); }
+            if (colliders != null) foreach (var collision in colliders)
+            {
+                if (!collision || !collision.enabled || !collision.gameObject.activeInHierarchy) continue;
+                Vector3 seat = collision.ClosestPoint(from); float distance = (seat - from).sqrMagnitude;
+                if (distance < nearest) { nearest = distance; point = seat; found = true; }
+            }
+            if (found) return true;
+            if (TryGetInteractionBounds(id, out var bounds)) { point = bounds.ClosestPoint(from); return true; }
+            return false;
+        }
+
+        public float InteractionDistance(string id)
+        { return player && InteractionSurfacePoint(id, player.position + Vector3.up * .9f, out var point) ? Vector3.Distance(point, player.position + Vector3.up * .9f) : 999f; }
+
+        bool InteractionPathClear(string id, Vector3 fallback)
+        {
+            if (!player) return false;
+            Physics.SyncTransforms();
+            Vector3 start = player.position + Vector3.up * .9f;
+            Vector3 end = InteractionSurfacePoint(id, start, out var surface) ? surface : fallback + Vector3.up * .8f;
+            // A frame's nearest lower/side edge can lie in the solid sill or jamb.
+            // Aim through the actual window opening center; retain the ordinary first-hit
+            // obstruction rule and nearest-surface reach distance for every target.
+            var targetItem = Model.Items.Find(item => item.Id == id);
+            if (targetItem != null && targetItem.Kind == ItemKind.Window && TryGetInteractionBounds(id, out var windowBounds))
+                end = windowBounds.center;
+            Vector3 delta = end - start; float distance = delta.magnitude; if (distance < .05f) return true;
+            var hits = Physics.RaycastAll(start, delta / distance, distance + .025f, ~(1 << 30), QueryTriggerInteraction.Ignore);
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            foreach (var hit in hits)
+            {
+                if (hit.collider == controller || hit.collider.GetComponentInParent<ResidenceLootPick>() || hit.transform.IsChildOf(player)) continue;
+                if (id == "@computer" && residenceTargets.TryGetValue(id, out var device) && device && hit.transform == device.transform.parent) continue;
+                var pick = hit.collider.GetComponentInParent<HomePick>();
+                if (pick && (pick.Id == id || id == "@bunker" && pick.Id == "bunker" || id == "bagstation" && pick.Id == "@bagstation")) return true;
                 return false;
             }
             return true;
@@ -532,7 +618,11 @@ namespace TooLateToPanic
             if (TryJuryInteract()) return;
             if (Expedition.FindWorldSupply(focusId) != null) { TakeWorldSupply(); return; }
             if (!CanInteract || WorkActive || IsMoving) { Model.Notify("Etkileşmek için hedefe yaklaş."); return; }
-            if (focusId == "@bunker" || Selected != null && Selected.Id == "bunker") { Model.EnterBunker(); return; }
+            if (focusId == "@bunker" || Selected != null && Selected.Id == "bunker")
+            {
+                if (!BagFinalStageActive) { Notice("Çanta hazırlığı son 30 saniyede başlar; önce evdeki önlemleri tamamla."); return; }
+                Model.EnterBunker(); return;
+            }
             var source = NearestSource;
             if (source != null)
             {
@@ -573,7 +663,7 @@ namespace TooLateToPanic
         public void ToggleAnchorSurface() { AnchorMode = AnchorMode == "wall" ? "floor" : "wall"; UpdateContext(); }
         public void QuickAction(int index)
         {
-            if(BagCameraOwnsView || Model.IsPaused || NotebookBlocksInput)return;
+            if(BagFinalStageActive || BagCameraOwnsView || Model.IsPaused || NotebookBlocksInput)return;
             if (!CanInteract || Model.Phase == PanicPhase.Inspection) { Model.Notify("Hazırlık sırasında nesneye yaklaş."); return; }
             if (focusId == PanicItemActionRules.FireStationId && index == 2) { BeginWork("fire", focusId); return; }
             var item = Selected; if (item == null) return;
@@ -598,14 +688,14 @@ namespace TooLateToPanic
 
         public void BeginWork(string action, string target)
         {
-            if(BagCameraOwnsView || Model.IsPaused || NotebookBlocksInput)return;
+            if(BagFinalStageActive || BagCameraOwnsView || Model.IsPaused || NotebookBlocksInput)return;
             if (Model.Phase != PanicPhase.Preparing && Model.Phase != PanicPhase.Tutorial) return;
-            if (!CanInteract) return;
-            if (!PositionOf(target, out var juryTaskPosition) || !SameLevel(juryTaskPosition) || Vector3.Distance(player.position, juryTaskPosition) > 2.7f || !InteractionPathClear(target, juryTaskPosition))
+            if (!PositionOf(target, out var juryTaskPosition) || !SameLevel(juryTaskPosition) || InteractionDistance(target) > 2.7f || !InteractionPathClear(target, juryTaskPosition))
             { Model.Notify("İş için hedefe açık yoldan yaklaş."); return; }
             if (WorkActive || IsMoving) return;
             if (!Expedition.CanBeginWork(action,target)) return;
             if (action == "plant" && !TreeRowClearOfActor(target)) { Model.Notify("Ağaç gövdesinin yerinden biraz uzaklaş, sonra kurulumu başlat."); return; }
+            SetFocus(target);
             workAction = action; workTarget = target; workAge = 0;
             Expedition.Work.Begin(action, target, Model.IsJuryDemo); InventoryOpen = false;
             if (PositionOf(target, out var taskPosition)) { var toward = Flat(taskPosition-player.position); if (toward.sqrMagnitude>.01f) { facingYaw=Mathf.Atan2(toward.x,toward.z)*Mathf.Rad2Deg; hero.rotation=Quaternion.Euler(0,facingYaw,0); } }
@@ -695,7 +785,7 @@ namespace TooLateToPanic
             CancelWork(); CancelMove();
             if (Model.Phase != PanicPhase.Title && Model.Phase != PanicPhase.GameOver) Model.ReturnToTitle();
             Model.StartRun(tutorial); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; focusId = null; InventoryOpen = false; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); effects.OnPhase(Model.Phase); QueueRadio(DisasterVoiceId());
-            if(!tutorial)BeginBagPreparation();
+            
         }
         public void FinishTutorial() { CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); QueueRadio(DisasterVoiceId()); }
         public void FinishInspection() { if (JuryActive) AdvanceJuryDemo(); else if (Model.IsSimulation) ReturnToMenu(); else Model.FinishInspection(); }
@@ -708,8 +798,22 @@ namespace TooLateToPanic
         void PickMouse()
         {
             if(BagFirstPersonActive){RefreshBagRayFocus();if(Expedition.FindWorldSupply(focusId)!=null)TakeWorldSupply();return;}
-            var hits = Physics.RaycastAll(View.ScreenPointToRay(Input.mousePosition), 150); Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-            foreach (var hit in hits) { if(!PlacementPickVisible(hit.collider))continue; var loot=hit.collider.GetComponentInParent<ResidenceLootPick>(); if(loot) { SelectLoot(loot.Index); TakeLoot(); return; } var p = hit.collider.GetComponentInParent<HomePick>(); if (p) { SetFocus(p.Id); if (p.Kind == "supply") TakeWorldSupply(); return; } }
+            Physics.SyncTransforms();
+            var hits = Physics.RaycastAll(View.ScreenPointToRay(Input.mousePosition), 150, ~((1 << 28) | (1 << 30)), QueryTriggerInteraction.Collide);
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            foreach (var hit in hits)
+            {
+                if (hit.collider == controller || hit.transform.IsChildOf(player) || !PlacementPickVisible(hit.collider)) continue;
+                var pick = hit.collider.GetComponentInParent<HomePick>();
+                if (pick)
+                {
+                    if (Expedition.FindWorldSupply(pick.Id) != null && !BagFinalStageActive || BagFinalStageActive && Expedition.Sources.Exists(source => source.Id == pick.Id)) return;
+                    if (PositionOf(pick.Id, out var position) && (SameLevel(position) || Model.Items.Exists(item => item.Id == pick.Id && item.Kind == ItemKind.Roof))) SetFocus(pick.Id);
+                    return;
+                }
+                // A visible physical obstacle owns this pixel; don't select through it.
+                return;
+            }
         }
         void BindHinge(GameObject root, string id, bool isDoor)
         {
@@ -742,7 +846,7 @@ namespace TooLateToPanic
                     if (t.name == "FrontHighWalls") t.gameObject.SetActive(true);
                 if (shown && cutawayInside && View) ApplyFacadeCutaway(floorVisuals[i], player.position, -8, 8, -6, 6, floor * 3.2f);
             }
-            if (roof) roof.SetActive(!cutawayInside && (Model.Disaster == DisasterType.Storm || Model.Phase != PanicPhase.Disaster && Model.Phase != PanicPhase.Aftermath));
+            if (roof) roof.SetActive(!cutawayInside);
             UpdateResidenceVisibility(cutawayInside);
             foreach (var go in floorItems)
             {
@@ -848,7 +952,7 @@ namespace TooLateToPanic
         {
             if(NotebookBlocksInput)return;
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}
-            if (!View || Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.GameOver || Model.Phase == PanicPhase.Success || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;
+            if (BagCameraOwnsView || !View || Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.GameOver || Model.Phase == PanicPhase.Success || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;
             DrawJuryWorldTarget();
             if (!string.IsNullOrEmpty(ShortAction)&&FocusPosition(out var p) && CanInteract) DrawMarker(p + Vector3.up * 1.9f, "E  " + ShortAction, 110);
             if (Model.Phase == PanicPhase.Inspection)

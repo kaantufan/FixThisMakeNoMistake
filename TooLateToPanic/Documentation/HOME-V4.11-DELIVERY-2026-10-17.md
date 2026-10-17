@@ -1,6 +1,4 @@
-﻿> GitHub uyarlaması: yerel Evidence/build yollarının yerine bu yayın klasöründeki özetler ve Release bağlantısı kullanılır. “Tam kaynak manifesti” sayısı/hash’i yerel build girdisini tarif eder; bağlantı yayımlanan seçili kaynak manifestini gösterir. Ayrıntılı yerel build dosya hashleri arşivde korunur.
-
-# Home V4.11 teslimi — 17 Ekim 2026
+﻿# Home V4.11 teslimi — 17 Ekim 2026
 
 Revizyon planının zorunlu1.1–5.3 maddeleri aktif oyuna uyarlandı. Kullanıcının son açıklamasıyla FPS yalnız afet çantası hazırlığına döndü: aynı oyuncu, controller, Model ve Expedition kullanılır; kamera mevcut konumdan1.1sn sinematikle geçer. G, oyuncuyu taşımadan aynı yerde izometrik önlemlere döndürür. Ayrı eski FPS projesi, build ve kayıtları korunur; yeni bir genel FPS kampanyası yapılmadı.
 
@@ -15,7 +13,7 @@ Revizyon planının zorunlu1.1–5.3 maddeleri aktif oyuna uyarlandı. Kullanıc
 | Atmosfer | Bodrumda ortam/güneş ışığı yumuşak biçimde kararır ve çıkışta geri gelir. Sığınak ikaz ışığı eklendi. Yeni kemerli3D şöminenin ocak ağzı odaya bakar; ateş/ışık yerel noktaya bağlıdır, söndürülmüş alev sonraki görünürlük güncellemesinde açılmaz. |
 | Arayüz | Esc duraklatması normal/kısa akış saatini gerçekten dondurur. Ana menü yatay gezinir; pause WASD/oklar ve Enter/KeypadEnter ile çalışır. Yangın tüpü metinleri netleştirildi. FPS'de nişangâh, eşya/etkileşim ve G ipucu görünür. |
 
-Orijinal rapor değiştirilmedi. [Madde madde kaynak/kabul haritası](Publications/v0.4.11/acceptance-map-prefinal.md), ön final kaynak incelemesidir; son adayın test kapanışı aşağıdaki r7 receipt ve manifestlerle yapılır.
+Orijinal rapor değiştirilmedi. [Madde madde kaynak/kabul haritası](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/report/acceptance-map.md), ön final kaynak incelemesidir; son adayın test kapanışı aşağıdaki r7 receipt ve manifestlerle yapılır.
 
 ## Assetler ve defter
 
@@ -31,9 +29,9 @@ Yeni eldivenli eklemli el/kol modeli FPS toplama/açma hareketini gösterir; esk
 
 Build: `Home-V4.11-r7-20261017` / Unity6000.0.73f1 / Built-In / Windows64 /0.4.11. Derleme0hata/0uyarı. r3 tam sanat bake'i üzerine yalnız kaynak/yerleşim/GUI düzeltmeleri mevcut bake ile derlendi.
 
-**156/156 PASS,0runtime hata, 34.24sn.** [Native receipt](Publications/v0.4.11/native-summary.json). Tüm kontroller aynı son DLL ile yeniden çalıştı:49gerçek Unity model/envanter işlemi,7mekanizma açılış/ters kapanış örneklemesi, gerçek FPS ışını/toplama, kamera/oyuncu konumu, controller duvar/garaj rotası, pause, HUD OnGUI olayları, çanta drag-drop ve defter kontrolleri. Garaj/üst katta4yön×2gerçek renderer kontrolü ve şömineyi söndürme/yakma dahildir.
+**156/156 PASS,0runtime hata, 34.24sn.** [Native receipt](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/manager/native-v7-b46fe7d3-0687-4edb-b5af-fdbf6988a43b/revision-smoke.json). Tüm kontroller aynı son DLL ile yeniden çalıştı:49gerçek Unity model/envanter işlemi,7mekanizma açılış/ters kapanış örneklemesi, gerçek FPS ışını/toplama, kamera/oyuncu konumu, controller duvar/garaj rotası, pause, HUD OnGUI olayları, çanta drag-drop ve defter kontrolleri. Garaj/üst katta4yön×2gerçek renderer kontrolü ve şömineyi söndürme/yakma dahildir.
 
-29native kare; ana boyut1600×900, ek defter960×540. Altı statik sayfa kendi dönüşü bittikten sonra yakalandı; dönüş karelerinin frame/progress bilgisi receipt içindedir. [Defter görsel incelemesi](Publications/v0.4.11/notebook-visual-review.md) aynı OverlayR2 kaynağını; [son şömine incelemesi](Publications/v0.4.11/asset-visual-review.md) r7 kare/DLL bağını açıklar.
+29native kare; ana boyut1600×900, ek defter960×540. Altı statik sayfa kendi dönüşü bittikten sonra yakalandı; dönüş karelerinin frame/progress bilgisi receipt içindedir. [Defter görsel incelemesi](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/notebook/NATIVE-V5-REVIEW.md) aynı OverlayR2 kaynağını; [son şömine incelemesi](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/assets/qc/NATIVE-V7-REVIEW.md) r7 kare/DLL bağını açıklar.
 
 Bu testler **10 açık konum fikstürü**, üretim API'leri, gerçek kare saatleri/ışın/collider ve gerçek OnGUI içinde sentetik olay kullanır. OS klavye/fare girdisi, insan keyif/okunurluk/dinleme kabulü, tam kampanya veya270+30sn insan süre kabulü değildir. Defterin normal hazırlıkta saat kilidi native'dir; aynı defterin kısa akışa özel ayrı saat fikstürü çalıştırılmadı. Önceki V4.9/V4.10 sayıları yeni DLL'ye eklenmedi. Uzun süreli bellek/soak kabulü bu batch'in iddiası değildir.
 
@@ -50,9 +48,9 @@ Bu testler **10 açık konum fikstürü**, üretim API'leri, gerçek kare saatle
 | C# kaynak kayması |96dosyada0 |
 | Gerçek skor kayıtları |4dosyanın önce/sonra hashleri aynı: True |
 
-[Tam kaynak manifesti](Publications/v0.4.11/source-sha256.json), [build manifesti](Publications/v0.4.11/local-build-receipt.json), [birleşik receipt](Publications/v0.4.11/local-build-receipt.json). Küçük C# kaynak snapshot'ı ve önceki başarısız denemelerin log/receiptleri korunur. Önceki açık V4.8 süreci dışarıdan kapanmış gözlendi; bu görev kapatmadı, kapanış nedeni bilinmiyor; dosya/kayıtları korunur. Önceki QA'nın V4.10 çalışması bağımsız tarihsel adaydır.
+[Tam kaynak manifesti](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/manager/final-full-source-manifest.json), [build manifesti](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/manager/final-build-manifest.json), [birleşik receipt](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/manager/FINAL-RECEIPT.json). Küçük C# kaynak snapshot'ı ve önceki başarısız denemelerin log/receiptleri korunur. Önceki açık V4.8 süreci dışarıdan kapanmış gözlendi; bu görev kapatmadı, kapanış nedeni bilinmiyor; dosya/kayıtları korunur. Önceki QA'nın V4.10 çalışması bağımsız tarihsel adaydır.
 
-Güncel [başlatıcı](../Play-TooLateToPanic.cmd), [ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.11), [LATEST](../LATEST-BUILD.json). Bu sürüm GitHub Release olarak yayımlanır.
+Güncel [başlatıcı](../Play-TooLateToPanic.cmd), [ZIP](../Builds/TooLateToPanic-Home-V4.11-20261017-portable.zip), [LATEST](../LATEST-BUILD.json). GitHub'a yeni yayın yapılmadı.
 
 
 Temizlik sınırı: yalnız bu görevde üretilen altı eski V4.11 aday build klasörünü silme komutu otomatik onay incelemesinde `blocked by policy` ile reddedildi; ayrıntılı neden dönmedi. Komutun arşivleme/silme adımları çalışmadı, alternatif silme denenmedi, klasörler korunuyor. Güncel r7/ZIP/başlatıcı teslimi bundan etkilenmez. Kayıt: `manager/own-candidate-cleanup-blocked.json`.

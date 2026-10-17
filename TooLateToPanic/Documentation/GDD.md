@@ -1,14 +1,22 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Sürüm 2.2 · 17 Ekim 2026 · Home V4.7**
+**Sürüm 2.3 · 17 Ekim 2026 · Home V4.12**
 
 Tema **Afete Hazırlık ve Önlem**. Tek oyunculu, tamamen çevrimdışı Windows oyunu. İki yaşanabilir katı, bodrumu, balkonu, banyosu, bitişik garajı, bahçesi ve bunkeri olan müstakil evde geçer. Dolaşımda karakteri izleyen, yönü sabit izometrik ortografik kamera; afet ve sonuç sahnelerinde gerçek sinematik kamera kullanılır. Teknik hedef Unity 6000.0.73f1, Built-In ve Windows'tur.
 
-Bu belge Home V4.7 tasarımını ve kaynakta bulunan akışları tanımlar. Derleme, kısa native kontrol, elle oynanış/işitme ve son görsel kabul ayrı kanıtlardır. Güncel kaynak/build/native kimliği LATEST-BUILD.json ve [Home V4.7 teslim kaydında](HOME-V4.7-DELIVERY-2026-10-17.md) bulunur. Önceki sürümlerin sonuçları tarihsel kayıttır ve yeni DLL kabulü yerine kullanılamaz. [Home V2 GDD](GDD-HOME-V2.md) tarihsel olarak korunur. [Home V4.3 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-INTERACTION-V43-20261016/CONTRACT.md) son etkileşim ve banyo kararını; [Home V4 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-HOME-V4-20261016/CONTRACT.md) temel sanat ve iş kapsamını belirler. Bağımsız FPS projesinin kendi sözleşmesi o sürümün farklarını tanımlar.
+Bu belge Home V4.12 tasarımını ve kaynakta bulunan akışları tanımlar. Derleme, kısa native kontrol, elle oynanış/işitme ve son görsel kabul ayrı kanıtlardır. Güncel kaynak/build/native kimliği LATEST-BUILD.json ve [Home V4.12 teslim kaydında](HOME-V4.12-DELIVERY-2026-10-17.md) bulunur. Önceki sürümlerin sonuçları tarihsel kayıttır ve yeni DLL kabulü yerine kullanılamaz. [Home V2 GDD](GDD-HOME-V2.md) tarihsel olarak korunur. [Home V4.3 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-INTERACTION-V43-20261016/CONTRACT.md) son etkileşim ve banyo kararını; [Home V4 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-HOME-V4-20261016/CONTRACT.md) temel sanat ve iş kapsamını belirler. Bağımsız FPS projesinin kendi sözleşmesi o sürümün farklarını tanımlar.
 
-## Home V4.7 güncel kararlar
+## Home V4.12 güncel kararlar
 
-Başlıkta HAZIRLIĞA BAŞLA sonlu stoklu270sn kısa hazırlık akışını, SERBEST OYUN normal kampanyayı açar. Kısa akışta hareket/su toplama/çantaya koyma/iki adımlı sabitleme, depremde çök–kapan–tutun alanı ve gerçek sonuç, ayrı sel drenajı/yüksek hedef ve yangın hazırlığı/dış toplanma alanı vardır. Başlangıç gıdası açıkça baseline'dır. Başarı uydurulmaz; tamam/eksik/atlandı ayrılır, skor yazılmaz. İlk180sn keyif ve toplam300sn üst sınır tasarım hedefidir; insan kabulü ayrı yapılır. Zincirleme afetler ertelenmiştir. Bu akış saati menüde de ilerler; normal kampanya hazırlık duraklatması değişmez.
+Hazırlık izometrik önlemlerle başlar. Son30saniyede aynı oyuncu/controller konumundan1.1sn kamera geçişiyle FPS çanta aşaması otomatik açılır. Öncesinde çanta erzakları gizlidir; son aşamada yapı malzemesi toplanmaz, dolaplar kapalı kalır ve önlem işleri başlatılmaz. Yalnız açıkta duran erzaklar ve geçiş kapıları kullanılır. G ile önceki aşamaya dönülmez. Çanta için her dalgada1su+1gıda yeterli; alınan temel birim gerçek çantaya otomatik yerleşir, artanlar envantere gider. İsteğe bağlı destek ekipmanı zorunlu değildir.
+
+Toplam hasar yüzde75ve üzerindeyse kayıp. Çit inşası kaldırıldı; üç bölgede dörder olgun ağaçtan tam sıralar kurulur. Yakın duvar/pencere seçimi gerçek yüzey mesafesine bağlıdır, seçili hedef komşu nesne yüzünden kendiliğinden değişmez. Seçili nesne gerçek3D sınırlarıyla vurgulanır. İki etkileşimsiz ayaklı lamba kaldırıldı. Sığınak kapağı açılmadan oyuncu şafttan inmez; dış sinematik çekimlerde çatı ve gökyüzü görünür, iç planlarda kesit korunur. FPS HUD süre,1/1temel ihtiyaçlar, gerçek en yakın hedef ve etkileşim bilgisini ayrı kartlarda gösterir.
+
+Kısa akış ilk olarak önlem/sabitlemeyi, hazırlık süresinin son30saniyesinde çantayı ister. Tek zorunlu sabitleme korunur; diğer geçerli önlemler bu süre içinde isteğe bağlıdır. Yapı malzemeleri dolaplarda sonlu, tek seferliktir. Yanlış kapsam işlemi önceki hedefin eksik kartını bırakmaz. Eski “çanta hazır, şimdi sabitle” konuşması yeni sıraya uymadığı için kısa onay efektiyle değiştirilir; yeni sağlayıcı işi yapılmaz.
+
+## Home V4.7 tarihsel tabanı
+
+Başlıkta HAZIRLIĞA BAŞLA sonlu stoklu270sn kısa hazırlık akışını, SERBEST OYUN normal kampanyayı açar. Kısa akışta hareket/iki vidalı sabitleme/son30saniyede su toplama, depremde çök–kapan–tutun alanı ve gerçek sonuç, ayrı sel drenajı/yüksek hedef ve yangın hazırlığı/dış toplanma alanı vardır. Başlangıç gıdası açıkça baseline'dır. Başarı uydurulmaz; tamam/eksik/atlandı ayrılır, skor yazılmaz. İlk180sn keyif ve toplam300sn üst sınır tasarım hedefidir; insan kabulü ayrı yapılır. Zincirleme afetler ertelenmiştir. Esc duraklatması ve defter her iki akışın saatini durdurur.
 
 SAHNEYİ ATLA/Enter gerçek model çözümünü bir kez bitirip kamera/karakteri iade eder. Bunker sinematiğinde HUD'nin saatleri birlikte kilitlemesi kaldırılmıştır. F2 Kaybetmeme gerçek afet/hasar/erzak tüketimini korur, kayıp yerine incelemeye geçer; bu dalga başarı/skor/ödül sayılmaz ve koşu sticky skor dışıdır.
 
@@ -19,8 +27,8 @@ Yarkın seçili modelleri ve12prop konstrüksiyon/malzeme/biçim geçişi, hafif
 1. Yaklaşan afet ve gerekli bunker erzağı öğrenilir.
 2. Evde ve bahçede dolaşılır; dolaplar açılır, malzemeler toplanır, envanter düzenlenir.
 3. Mevcut duvar, kapı, çatı ve pencereler güçlendirilir. Mobilyalar taşınır, döndürülür ve duvara veya zemine sabitlenir.
-4. Bahçede drenaj, sel çiti ve fidan; evde yangın söndürücü ve bahçede hortum hazırlanabilir.
-5. Son 60 saniyede çanta uyarısı gelir. Çanta hazırlama arayüzü zorunlu değildir; yeterli erzakla bunkera yetişmek zorunludur.
+4. Bahçede drenaj ve ağaç sıraları; evde yangın söndürücü ve bahçede hortum hazırlanabilir.
+5. Son60saniye uyarısından sonra, son30saniyede FPS çanta aşaması otomatik başlar.1su+1gıdayla bodrumdaki sığınağa girilir.
 6. Afet sırası, afet sonrası, başarı veya başarısızlık sunumu oynar.
 7. Başarıda bütçe ve puan verilir. Oyuncu en fazla 20 saniyelik hasar gezisinde evi inceler veya erken devam eder.
 8. Yeni dalgada hasar sıfırlanır; kalıcı önlemler ve eşya yerleşimi korunur. Su ve gıda tüketilir.
@@ -43,10 +51,10 @@ Tek oyuncu için mevcut CC0 humanoid ve animasyon kaynağı, iş ceketi, pantolo
 | --- | --- |
 | WASD / oklar | Kameraya göre hareket |
 | Shift | Koşu |
-| Space | Zıpla; etkin iş türüne göre dokun veya basılı tut |
+| Space | İş dışında zıpla |
 | E | Aç/kapat; bunker, bahçe işi veya ana etkileşim; radyo konuşması ertelendi |
-| Z / X | Açık kaynaktaki malzemeyi seç |
-| F | Seçili malzeme yığınını al; envanterde ilk yardım üret |
+| FPS E / F | Baktığın açık erzağı al; E geçiş kapısı veya sığınak içindir |
+| J | Gerçek verili hazırlık defterini aç/kapat |
 | Q | Yakındaki hedefler arasında geçiş |
 | T | Duvar / zemin ankrajı seçimi |
 | 1 | Sabitle veya sabitlemeyi kaldır |
@@ -57,7 +65,7 @@ Tek oyuncu için mevcut CC0 humanoid ve animasyon kaynağı, iş ceketi, pantolo
 | Taşırken Enter / Backspace | Geçerli konumu bırak / iptal |
 | Tab / B | Envanter ve afet çantası |
 | Envanterde oklar / Enter / Backspace | Seç / çantaya koy / geri |
-| İşte A-D / Enter / Space | Hedefle veya yön/basınç ayarla / aleti yerleştir / iş türüne göre uygula |
+| İşte sol tık | İki gerçek vidayı sırayla seç; her biri0.60sn otomatik takılır |
 | PageUp / PageDown | Kamera yakınlığı |
 | Escape | Duraklat/geri; etkin işte veya taşımada iptal |
 
@@ -65,35 +73,15 @@ HUD; kısa Türkçe etiketler, ince üst durum şeridi, ikonlu envanter/çanta v
 
 ## Toplama, envanter ve çanta
 
-Envanter **12 yuva**, afet çantası **8 yuva**. Sarf malzemeleri beşli yığınlanır; aletler tekli taşınır. Buzdolabı, mutfak dolabı, kitaplık, üst kat depoları, banyo dolabı, garaj alet kutusu ve bodrum kileri farklı kaynaklardır. E önce kapağı açar; içerik gerçek küçük 3D nesneler halinde kabın yanında görünür. Z/X ile seçilen yığının tamamı F ile alınır ve nesne ele doğru hareket eder. Aynı E kapağı kapatır; E toplama yapmaz. Malzeme bir mesaj satırından üretilmez.
+Envanter12, çanta8yuvadır. Yapı malzemeleri bu yuvaları kullanmayan sayısal havuzdadır. İzometrik önlem aşamasında dolabı ilk kez açmak sonlu malzemeleri havuza ekler; tekrar açmak yeni stok üretmez. Son30saniyede dolaplar kapanır; yalnız açıkta duran su, gıda ve isteğe bağlı hazır ekipman toplanabilir. İlk yardım hazır kittir; bandaj/antiseptik üretimi yoktur. Fener/radyo pil kurallarını korur.
 
-Açık ve erişilebilir kaynakta bağlam kararlı kalır; yakındaki başka nesneye kendiliğinden sıçramaz. Etkileşim mesafe ve gerçek collider görüş hattına bağlıdır. İçerik arayüzü yalnız kaynağın kalan gerçek stoklarını, büyük ikonlarını, Türkçe adlarını ve adetlerini gösterir. Vida, braket ve tahta ikonları birbirinden ayırt edilir. Tamamen tükenen kapta tek bir **BOŞ / Malzemeler alındı** durumu ve kapatma eylemi gösterilir; alınmış malzeme için hayali ikon veya yeni stok oluşturulmaz.
-
-`GatherAt(sourceId,index)` seçili yığını atomik olarak alır; boş/geçersiz yığın, kapalı kaynak veya dolu envanter malzeme kopyalayamaz. Taşınan dolabın toplama noktası da taşınır. Tab/B envanteri açar; oklar seçim, Enter çantaya koyma, F ilk yardım üretimi, Backspace geri işlemidir.
-
-İlk yardım seti bir dükkândan alınmaz: **2 bandaj + 1 antiseptik** ile üretilir. Fener ve radyo için pil gerekir. Battaniye diğer destek ekipmanıdır. Su ve gıda zorunlu hayatta kalma kaynaklarıdır; destek ekipmanı ek ödül sağlar. Yetersiz çantayla bunkera girmek engellenmez, ancak sonuçta koşu kaybedilir.
-
-| Dalga | Gerekli su ve gıda |
-| --- | --- |
-| 1–3 | Her birinden 1 günlük paket |
-| 4–6 | Her birinden 2 günlük paket |
-| 7+ | Her birinden 3 günlük paket |
-
-Bu, gerçek afet hazırlığı için sayısal tavsiye değil, oyun dengesi birimidir. Sarf kaynakları yeni dalgada yenilenir; benzersiz ekipmanların sonsuz kopyası üretilmez. Çantadaki su/gıda dalgada tüketilir; destek ekipmanları ve güçlendirmeler koşu boyunca kalıcıdır.
+Her dalgada1su+1gıda zorunludur ve afet sonunda tüketilir. İhtiyaç duyulan ilk birim toplamadan sonra gerçek çantaya, artan yığın gerçek envantere gider. Kapasite yetmezse işlem stok kopyalamadan atomik reddedilir. Tab/B ve sürükle-bırak/Enter ile gerçek yuvalar düzenlenebilir. Destek ekipmanları isteğe bağlıdır; çantanın yeterlilik koşulu yalnız temel su ve gıdadır.
 
 ## Aktif işler ve eşya mekanikleri
 
-Sabitleme, güçlendirme, sel koruması, yangın ekipmanı ve bahçe işleri yakın plan gerçek 3D düzenekle oynanır. Her işte dört bağlantı/adım tamamlanır; her adım **A/D ile hedefle → Enter ile aleti yerleştir** ile başlar. Uygulama girdisi üç aileye ayrılır:
+Sabitlemede iki vida fareyle seçilir; her biri0.60sn otomatik takılır. Diğer geçerli önlemler0.60sn dünya montajıdır. Duvar/pencere/çatı gerçek güçlendirme donanımı taşır. Yangın tüpü yalnız yangın ekipmanı noktasında hazırlanır. Eski A/D–Enter–Space Ratchet/Timing/Balance zorunluluğu yoktur.
 
-| İş ailesi | İşler | Enter sonrası uygulama |
-| --- | --- | --- |
-| Ratchet | Duvar/zemin ankrajı, yapı güçlendirme, sel çiti | Gösterilen A/D yönünü izleyerek üç dönüş yap; Space'e dokunarak bağlantıyı oturt |
-| Timing | Fidan, drenaj, sel bariyeri | Hareketli kuvvet ibresi yeşil aralıktayken Space'e dokun |
-| Balance | Yangın söndürücü, hortum | A/D ile basıncı yeşil aralıkta tutarken Space'i basılı tut |
-
-Adımlar işin parçasını adlandırır; alet dönüşü, vida ilerlemesi, kürek, sulama kabı, vana, basınç ibresi ve su/toz akışı gerçek girdiye göre hareket eder. Karakter uygun ayakta/diz çöken iş pozuna girer. E kaynak/ana etkileşimi başlatır; etkin mini oyun Enter ve işe özgü Space/A-D girdilerini kullanır. İş sırasında hazırlık saati devam eder. Backspace/Escape ile iptalde malzeme ve para tüketilmez; başarılı tamamlamada atomik olarak tüketilir ve aynı iş tekrar ücretlendirilmez.
-
-Duvar ankrajı mobilyanın arkasına; zemin ankrajı ayağına uygulanır. Duvar ankrajı için mobilya duvara yakın olmalıdır. Ankrajlı eşya taşınmadan önce sökülür. Bir kez alınmış ankraj ekipmanı yeniden kullanılır; yeniden sabitleme yine aktif iş gerektirir. Yapılar T0→T1→T2 ilerler; yeni duvar eklenmez. Her kademenin ve korumanın görünür donanımı bulunur.
+Maliyet/eksik bilgisi ve tamamlanma aynı MaterialCosts/WorkCost tarifini ve gerçek havuzu kullanır. İptal ücretsizdir; malzeme/bütçe yalnız tamamlamada bir kez tüketilir. Önce alınmış ankraj donanımı yeniden kullanılır. Son30saniyede başlayan çanta aşaması devam eden işi ücretsiz iptal eder ve yeni önlem işi başlatmaz. Fizik/controller/kapı/merdiven ve geçerli yerleşim kuralları korunur.
 
 ## Afetler ve hasar
 
@@ -104,9 +92,9 @@ Duvar ankrajı mobilyanın arkasına; zemin ankrajı ayağına uygulanır. Duvar
 | 7–9 | Yangın |
 | 10+ | Üç afet arasında kontrollü RNG; aynı afet en fazla iki kez üst üste |
 
-Depremde ankraj ve yapı kademesi; selde pencere/kapı bariyeri, drenaj ve çit; yangında yangın ekipmanı ilgili riski düşürür. Fidanın sel katkısı sınırlıdır; drenajın yerine geçmez. Ev büyüdüğünde yalnız eşya sayısı arttı diye koşunun otomatik kaybedilmemesi için toplam risk normalize edilir.
+Depremde ankraj ve yapı kademesi; selde pencere/kapı bariyeri ve drenaj; yangında yangın ekipmanı ilgili riski düşürür. Fidanın sel katkısı sınırlıdır; drenajın yerine geçmez. Ev büyüdüğünde yalnız eşya sayısı arttı diye koşunun otomatik kaybedilmemesi için toplam risk normalize edilir.
 
-**Toplam hasar %65'i aşarsa**, hazırlık süresinde bunkera girilmezse veya çanta yetersizse kayıp olur. Hasar bir sonraki dalgaya birikmez. Sonuçta toplam hasar, hangi parçaların katkı verdiği, eşya üzerindeki izler ve hasar belirteçleri görünür. Hasar gezisi hazırlık süresinden düşmez.
+**Toplam hasar %75 veya üzerindeyse**, hazırlık süresinde bunkera girilmezse veya çanta yetersizse kayıp olur. Hasar bir sonraki dalgaya birikmez. Sonuçta toplam hasar, hangi parçaların katkı verdiği, eşya üzerindeki izler ve hasar belirteçleri görünür. Hasar gezisi hazırlık süresinden düşmez.
 
 Afet sunumları gerçek fizik simülasyonu sertifikası taşımaz: deprem toz/çatlak/enkaz, sel hareketli su/yağmur/köpük/sürüklenen parçalar, yangın alev/duman/kıvılcım katmanlarıyla okunur. Oyun kaybı ve koruma hesabı görsel efektlerden bağımsız kurallarla hesaplanır.
 

@@ -154,14 +154,24 @@ MARK_FAULT = [(-10, 112), (62, 122), (98, 114), (140, 136), (178, 128), (266, 15
 MARK_SHIFT = (7, 8)
 
 
-def mark_hourglass(v):
-    return (f'<path d="M60 38H196A8 8 0 0 1 204 46V58A8 8 0 0 1 196 66H60A8 8 0 0 1 52 58V46A8 8 0 0 1 60 38Z'
-            f'M60 190H196A8 8 0 0 1 204 198V210A8 8 0 0 1 196 218H60A8 8 0 0 1 52 210V198A8 8 0 0 1 60 190Z'
-            f'M66 66H82V190H66Z M174 66H190V190H174Z" fill="{v["frame"]}"/>'
-            f'<path d="M94 70H162C162 108 138 122 132 128C138 134 162 148 162 186H94C94 148 118 134 124 128C118 122 94 108 94 70Z" fill="{v["glass"]}" stroke="{v["frame"]}" stroke-width="7" stroke-linejoin="round"/>'
-            f'<path d="M112 98H144C140 108 133 116 128 120C123 116 116 108 112 98Z" fill="{v["sand"]}"/>'
-            f'<rect x="124.5" y="120" width="7" height="44" fill="{v["sand"]}"/>'
-            f'<path d="M102 186C106 164 118 154 128 152C138 154 150 164 154 186Z" fill="{v["sand"]}"/>')
+MARK_BODY = ("M58 44A6 6 0 0 1 64 38H192A6 6 0 0 1 198 44V59H186C186 95 148 113 138 128C148 143 186 161 186 197H198"
+             "V212A6 6 0 0 1 192 218H64A6 6 0 0 1 58 212V197H70C70 161 108 143 118 128C108 113 70 95 70 59H58Z")
+MARK_WINDOW = "M90 69H166C166 96 140 113 132 123V133C140 143 166 160 166 187H90C90 160 116 143 124 133V123C116 113 90 96 90 69Z"
+
+
+def mark_hourglass(v, uid):
+    """The same hourglass silhouette as the I in the wordmark, scaled to the tile."""
+    sand = (f'<path d="M104 100H152C146 109 136 116 128 120C120 116 110 109 104 100Z" fill="{v["sand"]}"/>'
+            f'<rect x="125.5" y="120" width="5" height="52" fill="{v["sand"]}"/>'
+            f'<path d="M94 187C100 169 118 161 128 160C138 161 156 169 162 187Z" fill="{v["sand"]}"/>')
+    if v.get("mono"):  # one colour: the glass is a cut-out so the silhouette still reads
+        return f'<path d="{MARK_BODY} {MARK_WINDOW}" fill-rule="evenodd" fill="{v["frame"]}"/>' + sand
+    return (f'<path d="{MARK_BODY}" transform="translate(6 7)" fill="{v["shadow"]}"/>'
+            f'<path d="{MARK_BODY}" fill="none" stroke="{v["frame"]}" stroke-width="8" stroke-linejoin="round"/>'
+            f'<path d="{MARK_BODY}" fill="url(#{uid}-face)"/>'
+            f'<path d="{MARK_WINDOW}" fill="{v["glass"]}" stroke="{v["frame"]}" stroke-width="3" stroke-linejoin="round"/>'
+            + sand +
+            f'<path d="M98 77C98 91 108 101 118 110" fill="none" stroke="{v["frame"]}" stroke-width="3" stroke-linecap="round" opacity=".45"/>')
 
 
 def build_mark(v):
@@ -169,7 +179,7 @@ def build_mark(v):
     up = [(-20, -20), (276, -20), (276, 150)] + list(reversed(MARK_FAULT)) + [(-20, 112)]
     dn = MARK_FAULT + [(276, 150), (276, 276), (-20, 276), (-20, 112)]
     sx, sy = v.get("shift", MARK_SHIFT)
-    hg = mark_hourglass(v)
+    hg = mark_hourglass(v, uid)
     tile = ""
     if v["tile"]:
         tile = (f'<rect x="8" y="8" width="240" height="240" rx="56" fill="url(#{uid}-tile)"/>'
@@ -185,6 +195,7 @@ def build_mark(v):
 <defs>
   <linearGradient id="{uid}-tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{v["tile"] or "none"}"/><stop offset="1" stop-color="{v["tile2"] or "none"}"/></linearGradient>
   <radialGradient id="{uid}-heat" cx=".5" cy="1" r=".75"><stop offset="0" stop-color="{RUST}" stop-opacity="{v["heat"]}"/><stop offset="1" stop-color="{RUST}" stop-opacity="0"/></radialGradient>
+  <linearGradient id="{uid}-face" x1="0" y1="38" x2="0" y2="218" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F7C35E"/><stop offset=".55" stop-color="{AMBER}"/><stop offset="1" stop-color="{RUST}"/></linearGradient>
   <filter id="{uid}-blur" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
   <clipPath id="{uid}-tileclip"><rect x="8" y="8" width="240" height="240" rx="56"/></clipPath>
   <clipPath id="{uid}-up"><polygon points="{pts(up)}"/></clipPath>
@@ -216,14 +227,14 @@ WORD_VARIANTS = {
                       badge=None, badge_edge=None, badge_text=CREAM, seismo=CREAM),
 }
 MARK_VARIANTS = {
-    "mark": dict(id="md", tile="#2E2A27", tile2=DEEP, heat=".55", frame=CREAM, glass="#141211", sand=AMBER,
+    "mark": dict(id="md", tile="#2E2A27", tile2=DEEP, heat=".55", frame=CREAM, glass="#141211", sand="#FFD27A", shadow="rgba(0,0,0,.5)",
                  glow=AMBER, crack=DEEP, glow_core="#FFE7B0"),
-    "mark-light": dict(id="ml", tile=CREAM, tile2="#E9E1D4", heat=".18", frame=INK, glass="#FBF6EE", sand="#E08A2E",
+    "mark-light": dict(id="ml", tile=CREAM, tile2="#E9E1D4", heat=".18", frame=INK, glass="#FBF6EE", sand="#E08A2E", shadow="rgba(41,38,37,.3)",
                        glow=AMBER, crack=INK, glow_core="#FFF3D6"),
     # 16-32 px: same silhouette without the fault, per small-size icon guidance
-    "mark-small": dict(id="mx", tile="#2E2A27", tile2=DEEP, heat=".55", frame=CREAM, glass="#141211", sand=AMBER,
+    "mark-small": dict(id="mx", tile="#2E2A27", tile2=DEEP, heat=".55", frame=CREAM, glass="#141211", sand="#FFD27A", shadow="rgba(0,0,0,.5)",
                        glow=None, crack=None, glow_core=None, shift=(0, 0)),
-    "mark-mono": dict(id="mm", tile=None, tile2=None, heat="0", frame=CREAM, glass="none", sand=CREAM,
+    "mark-mono": dict(id="mm", tile=None, tile2=None, heat="0", frame=CREAM, glass="none", sand=CREAM, mono=True,
                       glow=None, crack=None, glow_core=None),
 }
 

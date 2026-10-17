@@ -98,7 +98,7 @@ namespace TooLateToPanic
                 BeginResidenceSession();
                 SetResidenceCinematic("Disaster", "Afet başladı", 8f);
                 cinematicActorStart = player ? player.position : residenceReturnPosition;
-                cinematicHatchApproach = BunkerPosition + new Vector3(0f, .04f, -.56f);
+                cinematicHatchApproach = BunkerPosition + new Vector3(0f, .04f, -1.18f);
                 cinematicActorEnd = BunkerInteriorPosition + new Vector3(0f, .04f, -.42f);
                 CinematicShowsActor = true;
                 SetResidenceActorFlags(false, false, 0f);
@@ -430,8 +430,13 @@ namespace TooLateToPanic
             else if (age < 2.55f)
             {
                 CinematicShowsActor = true;
-                float t = SmoothResidence01((age - 1.35f) / 1.2f);
-                if (player) player.position = Vector3.Lerp(cinematicHatchApproach, cinematicHatchApproach + Vector3.down * 2.25f, t);
+                // First step into the already open shaft, then descend inside its collar.
+                // Never lower the actor through the concrete front lip or a closed lid.
+                SetBunkerDoorOpen(true);
+                Vector3 shaft = BunkerPosition + new Vector3(0, .04f, -.18f);
+                float ageAtHatch = age - 1.35f;
+                if (player) player.position = ageAtHatch < .30f ? Vector3.Lerp(cinematicHatchApproach, shaft, SmoothResidence01(ageAtHatch / .30f)) :
+                    Vector3.Lerp(shaft, shaft + Vector3.down * 2.25f, SmoothResidence01((ageAtHatch - .30f) / .90f));
                 SetResidenceActorFlags(true, true, 0f);
             }
             else

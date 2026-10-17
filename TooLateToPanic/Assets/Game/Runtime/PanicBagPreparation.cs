@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -14,11 +14,36 @@ namespace TooLateToPanic
         Camera bagHandsCamera;
         Light bagHandsFill;
         GameObject bagHands;
-        GUIStyle bagText, bagTitle;
+        
         public bool BagFirstPersonActive { get { return bagViewMode == BagViewMode.FirstPerson; } }
         public bool BagCameraTransitionActive { get { return bagViewMode == BagViewMode.Entering || bagViewMode == BagViewMode.Leaving; } }
         public bool BagCameraOwnsView { get { return bagViewMode != BagViewMode.Isometric; } }
-        public bool BagStagePhase { get { return Model != null && (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial) && (!JuryActive || JurySnapshot != null && (JurySnapshot.Stage == PanicJuryStage.Onboarding || JurySnapshot.Stage == PanicJuryStage.Preparation)); } }
+        public const float BagPreparationSeconds = 30f;
+        public bool BagFinalStageActive { get { return Model != null && !Model.IsSimulation &&
+            (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial) && Model.TimeRemaining <= BagPreparationSeconds &&
+            (!JuryActive || JurySnapshot != null && JurySnapshot.Stage == PanicJuryStage.Preparation); } }
+        public bool BagStagePhase { get { return BagFinalStageActive; } }
+
+        // Called after the real clock and phase transition, before any world action.
+        public void TickPreparationStages()
+        {
+            if (!BagFinalStageActive || BagCameraOwnsView || Model.IsPaused || NotebookBlocksInput || InputLocked || CinematicActive || LossAnnounced ||
+                hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame)) return;
+            CancelWork(); CancelMove(); InventoryOpen = false;
+            if (hud) hud.BeginFinalBagStage();
+            foreach (var source in Expedition.Sources)
+            {
+                source.Open = false;
+                if (hinges.TryGetValue(source.Id, out var hinge)) hinge.open = false;
+                if (sourceObjects.TryGetValue(source.Id, out var sourceRoot) && sourceRoot)
+                    PanicCuratedAssetArt.SyncVisualState(sourceRoot, false, false, false, 10f);
+                if (items.TryGetValue(source.Id, out var itemRoot) && itemRoot)
+                    PanicCuratedAssetArt.SyncVisualState(itemRoot, false, false, false, 10f);
+            }
+            Expedition.ClearRequirements();
+            BeginBagPreparation(); RefreshPreparationVisibility();
+            Model.Notify(JuryActive ? "Son 30 saniye · suyunu al, işaretli güvenli alana geç." : "Son 30 saniye · bir su ve bir gıda al, bodrumdaki sığınağa gir.");
+        }
         public Vector3 BagTransitionActorPosition { get { return bagTransitionActor; } }
         public float BagCameraTransitionProgress { get { return Mathf.Clamp01(bagViewAge / 1.1f); } }
 
@@ -59,7 +84,7 @@ namespace TooLateToPanic
 
         public bool FinishBagPreparation()
         {
-            if (!BagFirstPersonActive || InventoryOpen || NotebookBlocksInput || Model.IsPaused) return false;
+            if (BagFinalStageActive || !BagFirstPersonActive || InventoryOpen || NotebookBlocksInput || Model.IsPaused) return false;
             bagTransitionActor = PlayerPosition;
             bagShotFrom = View.transform.position; bagRotationFrom = View.transform.rotation;
             bagShotTo = PlayerPosition + bagIsoOffset; bagRotationTo = bagIsoRotation;
@@ -89,7 +114,7 @@ namespace TooLateToPanic
         {
             if (BagCameraOwnsView && !BagStagePhase) { ResetBagPreparation(); return; }
             if (!BagFirstPersonActive || FullFlowScriptedInput) return;
-            if (Input.GetKeyDown(KeyCode.G) && !InventoryOpen && !InputLocked && !hud.NotebookModalBlocked) { FinishBagPreparation(); return; }
+            
             if (InputLocked || InventoryOpen || WorkActive || IsMoving || NotebookBlocksInput || hud.NotebookModalBlocked || !Application.isFocused) return;
             if (Cursor.lockState != CursorLockMode.Locked) return;
             StepBagLook(new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")));
@@ -145,14 +170,15 @@ namespace TooLateToPanic
         void InteractBagStage()
         {
             if (Model.IsPaused || NotebookBlocksInput || InventoryOpen || InputLocked) return;
+            if (TryJuryInteract()) return;
             RefreshBagRayFocus();
             if (Expedition.FindWorldSupply(focusId) != null) { TakeWorldSupply(); return; }
             if (!CanInteract) return;
             if (focusId == "@bagstation") { hud.OpenPhysicalBag(); return; }
-            if (NearestSource != null) { ToggleContainer(); return; }
+            if (focusId == "@bunker" || focusId == "bunker") { Model.EnterBunker(); return; }
             if (focusId != null && hinges.TryGetValue(focusId,out var hinge) && hinge.directionalDoor) { bagOpenAge=0;ToggleDoor();return; }
             if (focusId == "@garage") { garageOpen=!garageOpen;bagOpenAge=0;effects.Play("garage",.45f);return; }
-            Notice("Bu aşamada çantana erzak topla. G ile önlemlere dön.");
+            Notice("Açıktaki su ve gıdayı al; ardından bodrumdaki sığınağa gir.");
         }
 
         void UpdateBagCursor()
@@ -185,34 +211,19 @@ namespace TooLateToPanic
             {
                 if (hit.collider == controller || hit.transform.IsChildOf(player)) continue;
                 var pick = hit.collider.GetComponentInParent<HomePick>();
-                if (pick && PositionOf(pick.Id, out var p) && Mathf.Abs(p.y - PlayerPosition.y) < 2.2f) return pick.Id;
+                if (pick && PositionOf(pick.Id, out var p) && Mathf.Abs(p.y - PlayerPosition.y) < 2.2f)
+                {
+                    bool supply = Expedition.FindWorldSupply(pick.Id) != null;
+                    bool door = hinges.TryGetValue(pick.Id, out var h) && h.directionalDoor;
+                    if (supply || door || pick.Id == "@bagstation" || pick.Id == "@garage" || pick.Id == "@bunker" || pick.Id == "bunker") return pick.Id;
+                }
                 // The first real wall/object stops the ray. There is no through-wall search.
                 return null;
             }
             return null;
         }
 
-        void DrawBagPreparationOverlay()
-        {
-            if (!BagCameraOwnsView || !View || Model.IsPaused || NotebookBlocksInput || hud.DeveloperMenuOpen) return;
-            if (bagText == null)
-            {
-                bagText = new GUIStyle(GUI.skin.label) { fontSize = 17, alignment = TextAnchor.MiddleCenter, wordWrap = true };
-                bagText.normal.textColor = new Color(.96f,.94f,.88f);
-                bagTitle = new GUIStyle(bagText) { fontSize = 25, fontStyle = FontStyle.Bold };
-            }
-            if (BagCameraTransitionActive)
-            {
-                var strip = new Rect(0, Screen.height * .70f, Screen.width, 90);
-                GUI.Box(strip, GUIContent.none);
-                GUI.Label(strip, bagViewMode == BagViewMode.Entering ? "AFET ÇANTASINI HAZIRLA" : "ÖNLEMLERE DEVAM ET", bagTitle);
-                return;
-            }
-            if (InventoryOpen || InputLocked || Model.IsPaused || NotebookBlocksInput || hud.DeveloperMenuOpen) return;
-            GUI.Label(new Rect(Screen.width*.5f-14,Screen.height*.5f-14,28,28), "·", bagTitle);
-            if (!string.IsNullOrEmpty(FocusLabel)) GUI.Label(new Rect(Screen.width*.5f-220,Screen.height*.5f+30,440,55), FocusLabel + "\n" + ContextHint, bagText);
-            GUI.Box(new Rect(Screen.width*.5f-290,Screen.height-65,580,50), GUIContent.none);
-            GUI.Label(new Rect(Screen.width*.5f-280,Screen.height-63,560,46), "E / F  Al veya aç     Tab  Çantayı düzenle     G  Hazırlığı bitir", bagText);
-        }
+        // The scaled HUD owns all FPS text and controls; world draws no duplicate panels.
+        void DrawBagPreparationOverlay() { }
     }
 }

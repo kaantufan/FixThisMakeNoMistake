@@ -77,10 +77,26 @@ namespace TooLateToPanic
             PanicWorldSupply supply = FindWorldSupply(id);
             if (supply == null || supply.Taken || !IsSupply(supply.ItemId)) return Fail("Bu eşya alınamıyor.");
             int amount = supply.Count;
-            if (!TryAddPartial(Inventory, supply.ItemId, amount)) return Fail("Envanter dolu; eşya yerinde kaldı.");
+            // Essential supplies use actual bag slots first. Preflight both containers
+            // before publishing, so rejected collection cannot consume finite world stock.
+            var candidateInventory = CloneSlots(Inventory);
+            var candidateBag = CloneSlots(Bag);
+            int packed = supply.ItemId == "water" || supply.ItemId == "food"
+                ? Mathf.Min(amount, Mathf.Max(0, PanicModel.RequiredSupplyPerWave - CountSlots(Bag, supply.ItemId))) : 0;
+            string reason;
+            if (packed > 0 && (!TryAddPartial(candidateBag, supply.ItemId, packed) || !ValidBag(candidateBag, out reason)))
+            { candidateBag = CloneSlots(Bag); packed = 0; }
+            int loose = amount - packed;
+            if (loose > 0 && !TryAddPartial(candidateInventory, supply.ItemId, loose))
+                return Fail("Envanter dolu; eşya yerinde kaldı.");
+            PublishSlots(Inventory, candidateInventory);
+            PublishSlots(Bag, candidateBag);
+            Model.PackedWater = CountSlots(Bag, "water");
+            Model.PackedFood = CountSlots(Bag, "food");
             supply.Count = 0;
             if (Model.IsJuryDemo && supply.ItemId == "water") JuryWaterGatheredCount += amount;
-            Message = DisplayName(supply.ItemId) + " ×" + amount + " alındı.";
+            Message = packed > 0 ? DisplayName(supply.ItemId) + " ×" + packed + " çantaya kondu." +
+                (loose > 0 ? " Kalan " + loose + " envanterde." : string.Empty) : DisplayName(supply.ItemId) + " ×" + amount + " alındı.";
             NotifyModel(); return true;
         }
         string AutoCollectMaterials(LootSource source)
@@ -90,7 +106,12 @@ namespace TooLateToPanic
             var rewards = new List<SupplySlot>();
             foreach (var slot in source.Contents)
                 if (HasStock(slot) && IsConstructionMaterial(slot.Id))
-                    rewards.Add(new SupplySlot(slot.Id, lootRandom.Next(Mathf.Max(1,slot.Count-1),slot.Count+2)));
+                {
+                    // The authored three row packages cover the three garden regions.
+                    // Their optional RNG bonus must never remove a required package.
+                    int minimum = slot.Id == "seedling" ? slot.Count : Mathf.Max(1, slot.Count - 1);
+                    rewards.Add(new SupplySlot(slot.Id, lootRandom.Next(minimum, slot.Count + 2)));
+                }
             source.AutoLooted = true;
             var labels = new List<string>();
             foreach (var reward in rewards)

@@ -245,8 +245,9 @@ namespace TooLateToPanic
             var palette=new[]{s.Material("Mature bark",new Color(.27f,.20f,.13f),.13f),s.Material("Canopy deep green",new Color(.20f,.31f,.16f),.12f),s.Material("Canopy sun green",new Color(.33f,.42f,.22f),.10f),s.Material("Mulched tree belt",new Color(.25f,.225f,.16f),.08f)};
             var seats=TreeTrunkSeats(variant);
             var mulch=new Geo();
-            if(variant==2)mulch.Box(new Vector3(0,.014f,0),new Vector3(7.55f,.025f,.72f),3);
-            else mulch.Box(new Vector3(0,.014f,0),new Vector3(.72f,.025f,7.55f),3);
+            float length = 2 * TreeRowHalfSpan(variant) + 1.25f;
+            if(variant==2)mulch.Box(new Vector3(0,.014f,0),new Vector3(length,.025f,.72f),3);
+            else mulch.Box(new Vector3(0,.014f,0),new Vector3(.72f,.025f,length),3);
             s.AddPart(root.transform,"Continuous_mulch_region",mulch,palette,new Vector3(0,-.045f,0));
             for(int i=0;i<seats.Length;i++)
             {
@@ -274,13 +275,16 @@ namespace TooLateToPanic
         public static Vector3[] TreeTrunkSeats(int regionVariant)
         {
             int variant=((regionVariant%3)+3)%3;var result=new Vector3[4];
-            for(int i=0;i<4;i++){float along=-3.15f+i*2.1f;result[i]=variant==2?new Vector3(along,0,(i%2==0?-.06f:.06f)):new Vector3((i%2==0?-.06f:.06f),0,along);}
+            float half = TreeRowHalfSpan(variant);
+            for(int i=0;i<4;i++){float along=-half+i*(half*2/3);result[i]=variant==2?new Vector3(along,0,(i%2==0?-.06f:.06f)):new Vector3((i%2==0?-.06f:.06f),0,along);}
             return result;
         }
+        public static float TreeRowHalfSpan(int regionVariant) { return ((regionVariant % 3) + 3) % 3 == 2 ? 6.3f : 4.3f; }
         public static Bounds TreeRowBounds(int regionVariant)
         {
             int variant=((regionVariant%3)+3)%3;
-            return new Bounds(new Vector3(0,2.10f,0),variant==2?new Vector3(8.70f,4.30f,2.50f):new Vector3(2.50f,4.30f,8.70f));
+            float length = TreeRowHalfSpan(variant) * 2 + 2.5f;
+            return new Bounds(new Vector3(0,2.10f,0),variant==2?new Vector3(length,4.30f,2.50f):new Vector3(2.50f,4.30f,length));
         }
 
         /// <summary>Grounded wall station, front -Z, back +Z. No fire/model readiness is mutated.</summary>

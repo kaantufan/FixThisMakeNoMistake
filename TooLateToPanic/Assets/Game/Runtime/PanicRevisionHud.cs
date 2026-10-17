@@ -108,7 +108,7 @@ namespace TooLateToPanic
 
         void DrawMaterialPool()
         {
-            if (World.Expedition==null) return;
+            if (World.Expedition==null || World.BagCameraOwnsView) return;
             Rect panel=new Rect(460,126,624,38);
             Frame(panel,Night,Line,1f);Region(panel);
             // The primary three counters stay on the HUD; all seven are visible in the inventory.
@@ -122,6 +122,7 @@ namespace TooLateToPanic
         }
         void DrawInventoryMaterialPool()
         {
+            if (World.BagFinalStageActive) return;
             Rect box=new Rect(114,704,650,46);Frame(box,Night,Line,1f);Mark(box);
             string[] labels=new string[PanicExpedition.MaterialIds.Length];
             for(int i=0;i<labels.Length;i++)

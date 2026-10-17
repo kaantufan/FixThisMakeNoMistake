@@ -106,8 +106,8 @@ namespace TooLateToPanic
         readonly PanicExpedition expedition;
         readonly List<PanicJuryDisasterOutcome> outcomes = new List<PanicJuryDisasterOutcome>(3);
         readonly Dictionary<string, PanicJuryGoalState> goals = new Dictionary<string, PanicJuryGoalState>();
-        readonly string[] goalIds = { "move", "water_gathered", "water_packed", "anchor", "quake_cover", "quake_observed", "flood_drain", "flood_refuge", "fire_ready", "fire_exit" };
-        readonly string[] goalLabels = { "İlk adımlar", "Suyu al", "Suyu çantaya koy", "Bir eşyayı sabitle", "Çök–kapan–tutun alanı", "Önlemin sonucunu gör", "Drenajı tamamla", "Üst kattaki güvenli noktaya çık", "Yangın söndürücüyü hazırla", "Dışarıdaki toplanma alanına çık" };
+        readonly string[] goalIds = { "move", "anchor", "water_gathered", "water_packed", "quake_cover", "quake_observed", "flood_drain", "flood_refuge", "fire_ready", "fire_exit" };
+        readonly string[] goalLabels = { "İlk adımlar", "Bir eşyayı sabitle", "Suyu al", "Suyu çantaya koy", "Çök–kapan–tutun alanı", "Önlemin sonucunu gör", "Drenajı tamamla", "Üst kattaki güvenli noktaya çık", "Yangın söndürücüyü hazırla", "Dışarıdaki toplanma alanına çık" };
         Vector3 startPosition, lastActorPosition;
         float elapsed, stageAge, stageDuration;
         bool running, dirty = true, quakeCaptured, floodCaptured, fireCaptured, quakePresented;
@@ -117,6 +117,7 @@ namespace TooLateToPanic
         public bool IsRunning { get { return running && Model.IsJuryDemo; } }
         public float ElapsedSeconds { get { return elapsed; } }
         public float StageRemainingSeconds { get { return Mathf.Max(0, stageDuration - stageAge); } }
+        public bool BagFinalStageActive { get { return IsRunning && Stage == PanicJuryStage.Preparation && StageRemainingSeconds <= 30f; } }
         public IReadOnlyList<PanicJuryDisasterOutcome> Outcomes { get { return outcomes.AsReadOnly(); } }
         public PanicJurySnapshot Snapshot { get { if (dirty || cached == null) { cached = new PanicJurySnapshot(this); dirty = false; } return cached; } }
         public bool CanAdvance { get { return Stage == PanicJuryStage.EarthquakeResult || Stage == PanicJuryStage.Inspection || Stage == PanicJuryStage.Result; } }
@@ -169,7 +170,7 @@ namespace TooLateToPanic
         public bool TryReachShelter(PanicJuryShelter kind, Vector3 actorPosition, bool grounded)
         {
             if (!IsRunning || Model.IsPaused || !grounded || !Finite(actorPosition)) return false;
-            if (kind == PanicJuryShelter.QuakeCover && Stage == PanicJuryStage.Preparation && PreparationReady && At(actorPosition, QuakeCoverPosition, 1.25f, .6f))
+            if (kind == PanicJuryShelter.QuakeCover && BagFinalStageActive && PreparationReady && At(actorPosition, QuakeCoverPosition, 1.25f, .6f))
             {
                 SetComplete("quake_cover"); BeginEarthquake(); return true;
             }
@@ -325,7 +326,7 @@ namespace TooLateToPanic
                 Stage == PanicJuryStage.Earthquake ? PanicPhase.Disaster :
                 Stage == PanicJuryStage.EarthquakeResult || Stage == PanicJuryStage.Inspection ? PanicPhase.Aftermath : PanicPhase.Success;
             DisasterType disaster = Stage <= PanicJuryStage.EarthquakeResult ? DisasterType.Earthquake : Stage == PanicJuryStage.Flood ? DisasterType.Flood : DisasterType.Fire;
-            string scope = Stage == PanicJuryStage.Preparation ? "anchor" : Stage == PanicJuryStage.Flood ? "drain" : Stage == PanicJuryStage.Fire ? "fire" : string.Empty;
+            string scope = Stage == PanicJuryStage.Preparation && !BagFinalStageActive ? "prepare" : Stage == PanicJuryStage.Flood ? "drain" : Stage == PanicJuryStage.Fire ? "fire" : string.Empty;
             Model.SetJuryPresentation(phase, disaster, StageRemainingSeconds, announce ? Hint : null, scope);
         }
 
@@ -375,7 +376,7 @@ namespace TooLateToPanic
                 switch (Stage)
                 {
                     case PanicJuryStage.Onboarding: return "Bir önlemle başla";
-                    case PanicJuryStage.Preparation: return !Done("water_gathered") ? "Tezgâhtaki suyu al" : !Done("water_packed") ? "Suyu çantana koy" : !Done("anchor") ? "Bir eşyayı sabitle" : "Güvenli noktaya geç";
+                    case PanicJuryStage.Preparation: return !BagFinalStageActive ? ActualAnchoredHero() ? "Önlemini tamamladın" : "Bir eşyayı sabitle" : !Done("water_packed") ? "Çantanı hazırla" : "Güvenli noktaya geç";
                     case PanicJuryStage.Earthquake: return "Önlemin farkı";
                     case PanicJuryStage.EarthquakeResult: return "Deprem sonucu";
                     case PanicJuryStage.Flood: return Done("flood_drain") ? "Merdivenden üst kata çık" : "Suya karşı önlem al";
@@ -390,12 +391,13 @@ namespace TooLateToPanic
         {
             get
             {
-                if (Stage == PanicJuryStage.Onboarding) return "WASD / oklarla yürü. 1 gıda çantada hazır; suyu sen alacaksın.";
+                if (Stage == PanicJuryStage.Onboarding) return "WASD / oklarla yürü. Önce eşyaları sabitle; son 30 saniyede çantanı hazırla.";
                 if (Stage == PanicJuryStage.Preparation)
                 {
-                    if (!Done("water_gathered")) return "Mutfak tezgâhındaki suya yaklaş · E ile al.";
-                    if (!Done("water_packed")) return "Tab envanter · suyu seç · Enter çantaya koy.";
-                    if (!Done("anchor")) return "G ile önlemlere dön · buzdolabı ya da kitaplığı seç · 1 ile vidaları tak.";
+                    if (!BagFinalStageActive) return !ActualAnchoredHero() ?
+                        "Buzdolabı ya da kitaplığı seç · 1 ile vidaları tak. Çanta son 30 saniyede hazırlanır." :
+                        "Önlemin hazır. Çanta aşaması son 30 saniyede başlayacak; evde gezinebilirsin.";
+                    if (!Done("water_packed")) return "Son 30 saniye · mutfak tezgâhındaki suya yaklaş · E veya F ile al; gereken su çantana yerleşir.";
                     return "İşaretli alana yaklaş · E ile çök–kapan–tutun. Sarsıntıda koşma.";
                 }
                 if (Stage == PanicJuryStage.Earthquake) return Done("quake_cover") ? "Sarsıntı sürüyor. Seçtiğin eşyanın bağlantısına bak." : "Hazırlık süresi bitti. Eksikler sonuçta gösterilecek; tamamlanmış sayılmadı.";
@@ -416,7 +418,7 @@ namespace TooLateToPanic
         {
             get
             {
-                if (Stage == PanicJuryStage.Preparation && PreparationReady) return PanicJuryShelter.QuakeCover;
+                if (BagFinalStageActive && PreparationReady) return PanicJuryShelter.QuakeCover;
                 if (Stage == PanicJuryStage.Flood && Done("flood_drain")) return PanicJuryShelter.FloodHighGround;
                 if (Stage == PanicJuryStage.Fire && Done("fire_ready")) return PanicJuryShelter.FireAssembly;
                 return PanicJuryShelter.None;
@@ -427,8 +429,8 @@ namespace TooLateToPanic
             get
             {
                 if (ShelterKind != PanicJuryShelter.None) return "@jury_" + ShelterKind;
-                if (Stage == PanicJuryStage.Onboarding) return "supply_water_kitchen";
-                if (Stage == PanicJuryStage.Preparation) return Done("water_packed") ? ClosestAnchorCandidate() : "supply_water_kitchen";
+                if (Stage == PanicJuryStage.Onboarding) return ClosestAnchorCandidate();
+                if (Stage == PanicJuryStage.Preparation) return !BagFinalStageActive ? ActualAnchoredHero() ? string.Empty : ClosestAnchorCandidate() : !Done("water_packed") ? "supply_water_kitchen" : string.Empty;
                 if (Stage == PanicJuryStage.Flood) return "drain_east";
                 if (Stage == PanicJuryStage.Fire) return PanicItemActionRules.FireStationId;
                 return string.Empty;

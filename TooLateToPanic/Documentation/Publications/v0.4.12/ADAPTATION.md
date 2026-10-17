@@ -1,0 +1,9 @@
+# Home V4.12 publication
+
+The source and assets are an immutable snapshot taken after the V4.12 build. Some source files have since changed; source-vs-build.json records every observed mismatch. The existing V4.12 ZIP and its native acceptance do not certify those later changes. Only public README links, credits links and publication metadata are adapted. The local workspace, active Unity/player, saves and legacy FPS project are unchanged. Existing licenses and historical publications are preserved.
+
+Preparation starts with isometric precautions, then switches automatically to the first-person bag stage for the final 30 seconds. G does not return to precautions. One water and one food suffice per wave; damage of 75 percent or more loses. Source selection includes the six explicit runtime shader keeper materials and all referenced generated dependencies.
+
+The existing r2 ZIP was not rebuilt. Its 204 native model/API/frame/render observations use 15 position fixtures and explicit clock/setup fixtures. They do not establish human enjoyment, full campaign acceptance, or OS input acceptance. Later partial OS follow-up and incomplete full normal round are documented separately in the playtest report and LATEST metadata. Static publication checks are not a new Unity import/build or native acceptance run.
+
+Local Evidence directories and Builds are excluded from Git. This publication includes selected source hashes, compiled source hashes, local build file hashes, the original package receipt and a native summary. Historical local-only links in older documents remain historical references. Current download links point to the GitHub Release. Prior audio, asset and notebook provenance remains in the v0.4.11 publication; no new license or provider expenditure is introduced.

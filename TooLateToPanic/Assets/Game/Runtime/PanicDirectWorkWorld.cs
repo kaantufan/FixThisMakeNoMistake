@@ -17,6 +17,25 @@ namespace TooLateToPanic
         public bool HasConstructionPreview { get { return constructionPreview; } }
         public int InstalledTreeRows { get { return gardenSites.Count(s => s.action == "plant" && s.done); } }
         public float CharacterPlaybackRate { get { return animator ? animator.speed : 0; } }
+        public bool TreeRowWorldBounds(string id, out Bounds bounds)
+        {
+            bounds = new Bounds(); var site = gardenSites.Find(value => value.id == id && value.action == "plant");
+            if (site == null) return false;
+            if (site.built)
+            {
+                bool any = false;
+                foreach (var renderer in site.built.GetComponentsInChildren<Renderer>(true))
+                { if (!any) { bounds = renderer.bounds; any = true; } else bounds.Encapsulate(renderer.bounds); }
+                if (any) return true;
+            }
+            bounds = PanicConstructionArt.TreeRowBounds(TreeVariant(site)); bounds.center += site.p; return true;
+        }
+        public Vector3[] TreeRowWorldTrunks(string id)
+        {
+            var site = gardenSites.Find(value => value.id == id && value.action == "plant");
+            if (site == null) return new Vector3[0];
+            return PanicConstructionArt.TreeTrunkSeats(TreeVariant(site)).Select(seat => site.p + seat).ToArray();
+        }
         public int InstalledMeasureRenderers(string id)
         { return hardware.TryGetValue(id, out var holder) && holder ? holder.GetComponentsInChildren<Renderer>(true).Length : 0; }
 

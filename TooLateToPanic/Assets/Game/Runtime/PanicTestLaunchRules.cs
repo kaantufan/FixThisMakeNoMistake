@@ -13,7 +13,7 @@ namespace TooLateToPanic
             "--doors-stairs-smoke", "--interaction-smoke", "--door-jam-smoke", "--developer-smoke",
             "--hud-concept-smoke", "--jury-smoke", "--fullflow-smoke", "--direct-actions-smoke",
             "--interaction-audit", "--direct-matrix-audit", "--e2e-mechanics-audit", "--e2e-physics-audit",
-            "--e2e-visual-atlas", "--e2e-story-audio-audit", "--e2e-system-audit", "--visual-text-smoke", "--audio-smoke", "--revision-smoke"
+            "--e2e-visual-atlas", "--e2e-story-audio-audit", "--e2e-system-audit", "--visual-text-smoke", "--audio-smoke", "--revision-smoke", "--revision412-smoke"
         };
         public static bool Validate(string[] args, Func<string,bool> fileExists, out string reason)
         {

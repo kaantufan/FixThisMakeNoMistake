@@ -23,7 +23,7 @@ namespace TooLateToPanic
             Warp(PanicJuryDemo.SpawnPosition); SyncVisuals(true);
             if (effects) effects.OnPhase(Model.Phase);
             UpdateContext();
-            BeginBagPreparation();
+            RefreshPreparationVisibility();
         }
 
         /// <summary>Advance the short flow only while the shared pause/notebook clock gate is open.</summary>

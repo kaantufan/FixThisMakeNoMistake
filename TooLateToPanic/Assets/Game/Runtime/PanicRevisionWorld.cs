@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -75,6 +75,8 @@ namespace TooLateToPanic
             if (shelterBeacon) shelterBeacon.intensity = warn ? .6f + Mathf.PingPong(residenceTime * 2f, 1.1f) : .08f;
         }
 
+        public void RefreshPreparationVisibility() { UpdateWorldSupplies(); }
+
         void UpdateWorldSupplies()
         {
             foreach (var supply in Expedition.WorldSupplies)
@@ -97,7 +99,7 @@ namespace TooLateToPanic
                     worldSupplyObjects[supply.Id] = root;
                 }
                 root.transform.position = supply.Position;
-                bool visible = !inside || BagCameraOwnsView || supply.Floor == ActiveFloor;
+                bool visible = BagFinalStageActive && (!inside || BagCameraOwnsView || supply.Floor == ActiveFloor);
                 root.SetActive(visible);
             }
         }
@@ -133,7 +135,7 @@ namespace TooLateToPanic
             if(BagFirstPersonActive) RefreshBagRayFocus();
             var supply = Expedition.FindWorldSupply(focusId);
             if (supply == null || supply.Count <= 0) { Notice("Erzakları evdeki eşyalardan al. Malzemeler dolap açıldığında eklenir."); return false; }
-            if (!BagFirstPersonActive) { Notice("Afet çantasından hazırlığa başla."); return false; }
+            if (!BagFinalStageActive || !BagFirstPersonActive) { Notice("Çanta erzakları son 30 saniyede açılır."); return false; }
             if (Model.IsPaused || InputLocked || NotebookBlocksInput || WorkActive || IsMoving || InventoryOpen || !CanInteract || supply.Floor != ActiveFloor) return false;
             string id = supply.ItemId; int count = supply.Count; Vector3 start = supply.Position;
             if (!Expedition.TryCollectWorldSupply(supply.Id)) { Notice("Envanterde yer yok"); effects.Play("reject", .25f); return false; }
@@ -203,7 +205,8 @@ namespace TooLateToPanic
             RenderSettings.ambientEquatorColor = Color.Lerp(new Color(.26f, .29f, .34f), new Color(.025f, .029f, .04f), basementBlend);
             RenderSettings.ambientGroundColor = Color.Lerp(new Color(.12f, .135f, .16f), new Color(.018f, .02f, .028f), basementBlend);
             if (revisionSun) revisionSun.intensity = Mathf.Lerp(.75f, .035f, basementBlend);
-            if (View && !CinematicActive) View.clearFlags = basementBlend > .2f ? CameraClearFlags.SolidColor : CameraClearFlags.Skybox;
+            if (View) View.clearFlags = ResidenceCinematicExteriorView ? CameraClearFlags.Skybox :
+                basementBlend > .2f ? CameraClearFlags.SolidColor : CameraClearFlags.Skybox;
             if (View) View.backgroundColor = Color.Lerp(new Color(.09f, .13f, .17f), new Color(.009f, .012f, .02f), basementBlend);
         }
 

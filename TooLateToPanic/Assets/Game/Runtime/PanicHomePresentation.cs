@@ -285,7 +285,7 @@ namespace TooLateToPanic
             presentationAnchored.Clear();
             if (Model != null) foreach (var item in Model.Items) presentationAnchored[item.Id] = item.Anchored;
             if (presentationAudio) presentationAudio.ResetRun();
-            if (interactionOutline) interactionOutline.gameObject.SetActive(false);
+            ClearInteractionOutline();
         }
 
         void OnDisable()

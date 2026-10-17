@@ -1,6 +1,11 @@
-﻿> Güncel V4.11 ses/provenans açıklaması: [uyarlama kaydı](Publications/v0.4.11/ADAPTATION.md). Yedi eski konuşma kaydı arşivdedir; güncel konuşma olayları yazı + dialogue_blip kullanır. Aşağıdaki eski sürüm notları tarihsel kayıttır.
+> Public provenance and current audio policy: [V4.11 adaptation](Publications/v0.4.11/ADAPTATION.md), [V4.12 publication](Publications/v0.4.12/ADAPTATION.md). Older version notes below are historical.
 
 # Too Late to Panic! — asset kaynakları
+
+## Home V4.12 — 17 Ekim 2026
+
+Mevcut olgun ağaç meshleri yeni tam sıra yerleşimine uyarlandı; model/materyal/lisans kaynağı değişmedi. İki dekoratif ayaklı lamba sahneden kaldırıldı; kaynak ve provenans arşivde korunur. FPS HUD mevcut yerel font/ikonlar ve gerçek Model/Expedition verileriyle düzenlendi. Yeni model/kaplama/ses sağlayıcısı, kredi, ödeme veya lisans değişikliği yoktur. Eski kısa akış “çanta hazır, şimdi sabitle” cümlesi yeni sıraya uymadığından bu tetiklemede mevcut onay efekti kullanılır; klip kaynakta korunur.
+
 
 ## Home V4.11 güncel kaynaklar — 17 Ekim 2026
 

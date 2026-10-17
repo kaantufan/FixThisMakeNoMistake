@@ -1,4 +1,4 @@
-﻿# V4.11 asset durumu
+# V4.11 asset durumu
 
 Bu teslim için çözümsüz zorunlu asset eksiği yok.
 

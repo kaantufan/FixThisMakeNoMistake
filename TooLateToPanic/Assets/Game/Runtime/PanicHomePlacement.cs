@@ -102,7 +102,7 @@ namespace TooLateToPanic
             foreach (var c in ghost.GetComponentsInChildren<Collider>(true)) { c.enabled = false; Destroy(c); }
             foreach (var renderer in ghost.GetComponentsInChildren<Renderer>(true))
             { renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false; }
-            moveOutline = MakeLine("Placement footprint", FootprintCorners(item), new Color(.98f, .36f, .25f), .04f);
+            // The selected ghost silhouette is drawn by UpdateInteractionOutline.
             PlacementMessage = "Fareyi oyun alanına getir.";
             UpdatePlacementPreview(item);
             Model.Notify("Fare: yerleştir · Sol tık: bırak · Teker/R: döndür · Sağ tık/Esc: iptal");
@@ -200,11 +200,7 @@ namespace TooLateToPanic
                     renderer.SetPropertyBlock(block);
                 }
             }
-            if (moveOutline)
-            {
-                moveOutline.transform.SetPositionAndRotation(moveCandidate + Vector3.up * .065f, Quaternion.Euler(0, moveRotation, 0));
-                moveOutline.startColor = moveOutline.endColor = color;
-            }
+            // No ground footprint: preserve the actual ghost silhouette only.
         }
 
         public void CancelMove()

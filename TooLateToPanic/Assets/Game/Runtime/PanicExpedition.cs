@@ -35,7 +35,7 @@ namespace TooLateToPanic
         public PanicMaterialCost(string id, int required) { Id = id; Required = Mathf.Max(0, required); }
     }
 
-    /// <summary>A read-only snapshot of a recipe against the current loose inventory.</summary>
+    /// <summary>A recipe snapshot against numeric construction stock or loose bag supplies.</summary>
     public readonly struct PanicMaterialRequirement
     {
         public readonly string Id;
@@ -126,7 +126,7 @@ namespace TooLateToPanic
             Message = "Dolaplardan yapı malzemesi, odalardan erzak topla.";
         }
 
-        /// <summary>Finite demo fixture, labelled as prepared stock. Water still requires genuine pickup and packing.</summary>
+        /// <summary>Finite prepared stock plus ordinary one-shot material containers. Water requires genuine pickup.</summary>
         public bool ResetForJuryDemo()
         {
             if (Model == null || !Model.IsJuryDemo) return false;
@@ -139,16 +139,8 @@ namespace TooLateToPanic
             Model.WaterStock = Model.FoodStock = Model.PackedWater = 0;
             Model.PackedFood = 1;
             SetBagCount("food", 1);
-            sourceBlueprints.Clear();
-            for (int i = 0; i < Sources.Count; i++)
-            {
-                Sources[i].Contents.Clear();
-                Sources[i].Open = false;
-                Sources[i].AutoLooted = true;
-                sourceBlueprints[Sources[i].Id] = CloneSlots(Sources[i].Contents);
-            }
             PrepareShortFlowSupplies();
-            Message = "Başlangıç: 1 gıda çantada. Yapı malzemeleri havuzda; su mutfak tezgâhında.";
+            Message = "Başlangıç: 1 gıda çantada. Hazır yapı malzemeleri havuzda; dolaplarda fazlası var. Suyu son 30 saniyede al.";
             NotifyModel();
             return true;
         }
@@ -235,7 +227,7 @@ namespace TooLateToPanic
             return Fail("Hazır ilk yardım setini evde bul ve çantaya koy.");
         }
 
-        /// <summary>Counts loose inventory only; packed items are tracked by Bag and PanicModel.</summary>
+        /// <summary>Counts numeric construction stock or loose supplies; packed supplies live in Bag.</summary>
         public int Count(string itemId)
         {
             if (IsConstructionMaterial(itemId)) return MaterialCount(itemId);
@@ -255,8 +247,8 @@ namespace TooLateToPanic
         /// <summary>Validates a new work attempt without spending stock or budget.</summary>
         public bool CanBeginWork(string action, string targetId)
         {
-            if (Model != null && !Model.CanBeginJuryWork(action, targetId)) return Fail("İşaretli hedefe yönel.");
             ClearRequirements();
+            if (Model != null && !Model.CanBeginJuryWork(action, targetId)) return Fail("Bu aşamada işaretli önlemi tamamla.");
             if (!CanPrepare()) return Fail("Hazırlık işi yalnızca hazırlıkta yapılır.");
             if (Work != null && Work.Active) return Fail("Önce etkin işi bitir veya iptal et.");
             PanicItem item;
@@ -326,6 +318,7 @@ namespace TooLateToPanic
         {
             item = FindItem(targetId);
             resultMessage = string.Empty;
+            if (action == "fence") return Fail("Çit inşası kaldırıldı.");
             if (!PanicItemActionRules.Allows(action, item, targetId)) return Fail("Bu hazırlık işi bu hedefe uygulanmaz.");
             if (string.IsNullOrEmpty(targetId)) return Fail("İş hedefi belirtilmedi.");
             if (IsFixedGardenSite(action) && committedWork.Contains(action + "|" + targetId))
@@ -656,7 +649,8 @@ namespace TooLateToPanic
             return Fail(string.Join(" · ", missing.ToArray()));
         }
 
-        private void ClearRequirements()
+        /// <summary>Clears only shortage presentation when the world's preparation stage changes.</summary>
+        public void ClearRequirements()
         {
             requirementAction = string.Empty;
             requirementTargetId = string.Empty;

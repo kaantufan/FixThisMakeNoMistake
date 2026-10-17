@@ -84,7 +84,8 @@ namespace TooLateToPanic
         private const int SupportCost = 100;
         private const int MaxPackedDays = 3;
         private const int SupportMask = 15;
-        private const float DamageLossLimit = 65f;
+        public const float DamageLossLimit = 75f;
+        public const int RequiredSupplyPerWave = 1;
         private const int ScoreTableSchema = 1;
 
         /// <summary>
@@ -151,8 +152,10 @@ namespace TooLateToPanic
 
         public bool BagReady
         {
-            get { return PackedWater >= RequiredDays && PackedFood >= RequiredDays; }
+            get { return PackedWater >= RequiredSupplyPerWave && PackedFood >= RequiredSupplyPerWave; }
         }
+
+        public static bool DamageCausesLoss(float damage) { return damage >= DamageLossLimit; }
 
         public PanicDeveloperOptions Developer { get; private set; }
         public bool InfiniteBudget { get { return Developer != null && Developer.InfiniteBudget; } }
@@ -257,7 +260,7 @@ namespace TooLateToPanic
                     if (!prepWarningShown && before > 60f && TimeRemaining <= 60f)
                     {
                         prepWarningShown = true;
-                        Message = IsSimulation ? "Son 60 saniye: hazırlık süresi bitmeden önlemlerini tamamla." : "Son 60 saniye: afet çantanı kontrol et ve bodrumdaki sığınağa yetiş.";
+                        Message = IsSimulation ? "Son 60 saniye: hazırlık süresi bitmeden önlemlerini tamamla." : "Son 60 saniye: önlemlerini tamamla. Son 30 saniyede çanta hazırlığı başlayacak.";
                     }
 
                     if (TimeRemaining <= 0f)
@@ -573,7 +576,7 @@ namespace TooLateToPanic
             Phase = PanicPhase.Preparing;
             TimeRemaining = PhaseTime = 100f;
             MarkRunCheatedIfOptionsEnabled();
-            Message = "Çantanda 1 gıda var; suyu bulup yerleştir.";
+            Message = "Önce evini hazırla. Son 30 saniyede suyu al; çantanda 1 gıda hazır.";
             return true;
         }
 
@@ -602,9 +605,11 @@ namespace TooLateToPanic
         internal bool CanBeginJuryWork(string action, string targetId)
         {
             if (!IsJuryDemo) return true;
-            if (JuryActionScope == "anchor")
-                return (action == "anchorwall" || action == "anchorfloor") &&
-                    (targetId == "bookshelf" || targetId == "fridge");
+            if (JuryActionScope == "prepare")
+                // Optional valid precautions share the real target/recipe validator.
+                // The short flow still requires only one hero anchor; no extra goal/time.
+                return action == "anchorwall" || action == "anchorfloor" || action == "upgrade" ||
+                    action == "flood" || action == "plant" || action == "drain" || action == "hose" || action == "fire";
             if (JuryActionScope == "drain")
                 return action == "drain" && (targetId == "drain_west" || targetId == "drain_east");
             return JuryActionScope == "fire" && action == "fire";
@@ -669,7 +674,7 @@ namespace TooLateToPanic
         {
             DeveloperNoLossUsedThisWave = DeveloperNoLoss;
             DeveloperNoLossReason = DeveloperNoLoss ? "Bu dalgada kaybetmeme modu kullanıldı." : string.Empty;
-            RequiredDays = Wave <= 3 ? 1 : (Wave <= 6 ? 2 : 3);
+            RequiredDays = RequiredSupplyPerWave;
             LastWaveScore = 0;
             LastReward = 0;
             FailureReason = string.Empty;
@@ -680,7 +685,7 @@ namespace TooLateToPanic
             awardApplied = false;
             bagWasReadyForWave = false;
             SelectDisasterForWave();
-            TimeRemaining = PreparationSeconds(Wave);
+            TimeRemaining = PreparationSeconds();
             PhaseTime = TimeRemaining;
         }
 
@@ -792,7 +797,7 @@ namespace TooLateToPanic
             bagWasReadyForWave = BagReady;
             FailureReason = BuildFailureReason(bagWasReadyForWave, PackedWater, PackedFood);
             ConsumeWaveSupplies();
-            pendingSuccess = bagWasReadyForWave && TotalDamage <= DamageLossLimit;
+            pendingSuccess = bagWasReadyForWave && !DamageCausesLoss(TotalDamage);
             Phase = PanicPhase.Aftermath;
             PhaseTime = 4f;
             Message = BuildDamageSummary();
@@ -978,8 +983,8 @@ namespace TooLateToPanic
 
         private void ConsumeWaveSupplies()
         {
-            PackedWater = Mathf.Max(0, PackedWater - RequiredDays);
-            PackedFood = Mathf.Max(0, PackedFood - RequiredDays);
+            PackedWater = Mathf.Max(0, PackedWater - RequiredSupplyPerWave);
+            PackedFood = Mathf.Max(0, PackedFood - RequiredSupplyPerWave);
         }
 
         private string BuildFailureReason(bool bagWasReady, int packedWaterAtEntry, int packedFoodAtEntry)
@@ -987,13 +992,13 @@ namespace TooLateToPanic
             List<string> causes = new List<string>();
             if (!bagWasReady)
             {
-                int waterMissing = Mathf.Max(0, RequiredDays - packedWaterAtEntry);
-                int foodMissing = Mathf.Max(0, RequiredDays - packedFoodAtEntry);
-                causes.Add("Çanta yetersiz: gereken " + (RequiredDays * 24) + " saat; " +
-                    "" + waterMissing + " günlük su ve " + foodMissing + " günlük gıda eksik.");
+                int waterMissing = Mathf.Max(0, RequiredSupplyPerWave - packedWaterAtEntry);
+                int foodMissing = Mathf.Max(0, RequiredSupplyPerWave - packedFoodAtEntry);
+                causes.Add("Çanta yetersiz: bu dalga için 1 su ve 1 gıda gerekli; " +
+                    waterMissing + " su ve " + foodMissing + " gıda eksik.");
             }
-            if (TotalDamage > DamageLossLimit)
-                causes.Add("Toplam hasar " + FormatPercent(TotalDamage) + " ile %65 sınırını aştı.");
+            if (DamageCausesLoss(TotalDamage))
+                causes.Add("Toplam hasar " + FormatPercent(TotalDamage) + ". %75 ve üzeri hasarda ev kaybedilir.");
             return causes.Count == 0 ? string.Empty : string.Join(" ", causes.ToArray());
         }
 
@@ -1299,8 +1304,7 @@ namespace TooLateToPanic
 
         private string BuildWaveBrief()
         {
-            return "Wave " + Wave + " · " + DisasterName(Disaster) + " · gereken çanta: " +
-                (RequiredDays * 24) + " saat (" + RequiredDays + " günlük su + gıda).";
+            return "Dalga " + Wave + " · " + DisasterName(Disaster) + " · Çantaya 1 su ve 1 gıda koy. Diğer ekipmanlar isteğe bağlı.";
         }
 
         private void ClearWaveDamage()
@@ -1393,9 +1397,10 @@ namespace TooLateToPanic
                 item.Kind == ItemKind.Roof || item.Kind == ItemKind.Window);
         }
 
-        private static float PreparationSeconds(int wave)
+        private static float PreparationSeconds()
         {
-            return wave <= 3 ? 300f : wave <= 6 ? 270f : 240f;
+            // Every campaign wave has 120 seconds for precautions, then 30 for the bag.
+            return 150f;
         }
 
         private static bool IsValidSupportIndex(int index)
