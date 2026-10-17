@@ -12,7 +12,11 @@ namespace TooLateToPanic
         public string ItemId { get; private set; }
         public int Count { get; internal set; }
         public int InitialCount { get; private set; }
-        public Vector3 Position { get; set; }
+        Vector3 seatPositionV5;
+        public Vector3 SeatOffsetV5 { get; internal set; }
+        // Setter stores the real support seat. The small run-owned offset is read once,
+        // so repeated AlignSupplySupport calls cannot accumulate random position drift.
+        public Vector3 Position { get { return seatPositionV5 + SeatOffsetV5; } set { seatPositionV5 = value; } }
         public int Floor { get; private set; }
         public bool Taken { get { return Count <= 0; } }
         internal PanicWorldSupply(string id, string item, int count, Vector3 position, int floor)
@@ -24,6 +28,7 @@ namespace TooLateToPanic
         readonly Dictionary<string, int> materials = new Dictionary<string, int>(StringComparer.Ordinal);
         readonly List<PanicWorldSupply> worldSupplies = new List<PanicWorldSupply>();
         System.Random lootRandom;
+        public int LastWorldSupplyCollectedCountV5 { get; private set; }
         public static readonly string[] MaterialIds = { "screws", "bracket", "plank", "sandbag", "seedling", "hose", "extinguisher" };
         public IReadOnlyDictionary<string, int> Materials { get { return new ReadOnlyDictionary<string, int>(materials); } }
         public IReadOnlyList<PanicWorldSupply> WorldSupplies { get { return worldSupplies.AsReadOnly(); } }
@@ -45,6 +50,7 @@ namespace TooLateToPanic
         void ResetRevisionStock()
         {
             materials.Clear();
+            LastWorldSupplyCollectedCountV5 = 0;
             lootRandom = new System.Random(Guid.NewGuid().GetHashCode());
             worldSupplies.Clear();
             // Positions are authored visible prop centers, not floor-projected container positions.
@@ -60,6 +66,10 @@ namespace TooLateToPanic
             Supply("supply_food_basement", "food",2,new Vector3(-4.35f,-2.15f,4),-1);
             Supply("supply_water_upper", "water",2,new Vector3(3.6f,4.3f,-2.5f),1);
             Supply("supply_food_upper", "food",2,new Vector3(-4.6f,4.1f,3.8f),1);
+            Supply("supply_water_pantry_v5", "water",2,new Vector3(6.3f,1.05f,-5.4f),0);
+            Supply("supply_food_pantry_v5", "food",2,new Vector3(7.42f,1.05f,-4.15f),0);
+            Supply("supply_battery_child_v5", "battery",1,new Vector3(-6.9f,3.81f,-3.8f),1);
+            Supply("supply_firstaid_basement_v5", "firstaid",1,new Vector3(4,-2.391f,-3.8f),-1);
         }
         void Supply(string id,string item,int count,Vector3 position,int floor)
         { worldSupplies.Add(new PanicWorldSupply(id,item,count,position,floor)); }
@@ -67,12 +77,11 @@ namespace TooLateToPanic
         {
             foreach (var supply in worldSupplies) supply.Count = supply.Id == "supply_water_kitchen" ? 1 : 0;
         }
-        void RefillRenewableWorldSupplies()
-        { foreach (var supply in worldSupplies) if (IsRenewable(supply.ItemId)) supply.Count = supply.InitialCount; }
         public PanicWorldSupply FindWorldSupply(string id)
         { return worldSupplies.Find(s => s.Id == id); }
         public bool TryCollectWorldSupply(string id)
         {
+            LastWorldSupplyCollectedCountV5 = 0;
             if (!CanPrepare()) return Fail("Erzakları hazırlıkta toplayabilirsin.");
             PanicWorldSupply supply = FindWorldSupply(id);
             if (supply == null || supply.Taken || !IsSupply(supply.ItemId)) return Fail("Bu eşya alınamıyor.");
@@ -86,31 +95,34 @@ namespace TooLateToPanic
             string reason;
             if (packed > 0 && (!TryAddPartial(candidateBag, supply.ItemId, packed) || !ValidBag(candidateBag, out reason)))
             { candidateBag = CloneSlots(Bag); packed = 0; }
-            int loose = amount - packed;
+            int loose = Mathf.Min(amount - packed, AvailableSupplyCapacityV5(candidateInventory, supply.ItemId));
+            amount = packed + loose;
+            if (amount <= 0) return Fail("Envanter dolu; eşya yerinde kaldı.");
             if (loose > 0 && !TryAddPartial(candidateInventory, supply.ItemId, loose))
                 return Fail("Envanter dolu; eşya yerinde kaldı.");
             PublishSlots(Inventory, candidateInventory);
             PublishSlots(Bag, candidateBag);
             Model.PackedWater = CountSlots(Bag, "water");
             Model.PackedFood = CountSlots(Bag, "food");
-            supply.Count = 0;
+            Model.PackedSupportMask = SupportMask(Bag);
+            Model.SupportOwnedMask = SupportMask(Bag) | SupportMask(Inventory);
+            supply.Count -= amount;
+            LastWorldSupplyCollectedCountV5 = amount;
             if (Model.IsJuryDemo && supply.ItemId == "water") JuryWaterGatheredCount += amount;
             Message = packed > 0 ? DisplayName(supply.ItemId) + " ×" + packed + " çantaya kondu." +
                 (loose > 0 ? " Kalan " + loose + " envanterde." : string.Empty) : DisplayName(supply.ItemId) + " ×" + amount + " alındı.";
+            if (supply.Count > 0) Message += " Kalan " + supply.Count + " yerinde.";
             NotifyModel(); return true;
         }
         string AutoCollectMaterials(LootSource source)
         {
             if (source.AutoLooted) return "Açıldı · Buradaki malzemeleri aldın.";
-            // Roll and validate the entire reward before committing once. Reopening never rolls again.
+            // The wave snapshot already owns the roll. Reopening cannot reroll or duplicate it.
             var rewards = new List<SupplySlot>();
             foreach (var slot in source.Contents)
                 if (HasStock(slot) && IsConstructionMaterial(slot.Id))
                 {
-                    // The authored three row packages cover the three garden regions.
-                    // Their optional RNG bonus must never remove a required package.
-                    int minimum = slot.Id == "seedling" ? slot.Count : Mathf.Max(1, slot.Count - 1);
-                    rewards.Add(new SupplySlot(slot.Id, lootRandom.Next(minimum, slot.Count + 2)));
+                    rewards.Add(new SupplySlot(slot.Id, slot.Count));
                 }
             source.AutoLooted = true;
             var labels = new List<string>();
@@ -118,6 +130,14 @@ namespace TooLateToPanic
             { AddMaterial(reward.Id,reward.Count); labels.Add("+"+reward.Count+" "+DisplayName(reward.Id)); }
             source.Contents.Clear();
             return labels.Count == 0 ? "Açıldı · Boş." : string.Join(" · ",labels.ToArray());
+        }
+
+        static int AvailableSupplyCapacityV5(List<SupplySlot> slots, string id)
+        {
+            int limit = StackLimitFor(id), capacity = 0;
+            foreach (var slot in slots)
+                capacity += !HasStock(slot) ? limit : slot.Id == id ? Mathf.Max(0, limit - slot.Count) : 0;
+            return capacity;
         }
 
         /// <summary>Preflight all partial stacks before mutating; no capacity means zero changes.</summary>

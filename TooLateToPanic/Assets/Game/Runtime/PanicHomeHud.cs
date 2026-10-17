@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -102,7 +102,7 @@ namespace TooLateToPanic
         GUIStyle _fittedStyle;
         readonly List<Rect> _topLevelRegions = new List<Rect>(16);
 
-        public string ThemeVersion { get { return "Home V4.7 / Polished supply HUD"; } }
+        public string ThemeVersion { get { return "V5 / Compact live HUD"; } }
         bool CampaignPrecautionTimer { get { return World && World.Model != null && !World.JuryActive &&
             !World.Model.IsJuryDemo && !World.Model.IsSimulation && !World.Model.IsTutorial &&
             World.Model.Phase == PanicPhase.Preparing && World.Model.TimeRemaining > PanicHomeWorld.BagPreparationSeconds; } }
@@ -112,13 +112,13 @@ namespace TooLateToPanic
             (World.Model.Phase == PanicPhase.Preparing || World.Model.Phase == PanicPhase.Tutorial) &&
             PreparationTimerRemaining <= 60f; } }
         public Rect LogicalCanvasBounds { get { return new Rect(0, 0, CanvasWidth, CanvasHeight); } }
-        public Rect WaveCardBounds { get { return new Rect(24, 20, 430, 96); } }
-        public Rect TimerCardBounds { get { return new Rect(610, 14, 380, 114); } }
-        public Rect ResourceCardBounds { get { return new Rect(1100, 20, 476, 96); } }
+        public Rect WaveCardBounds { get { return new Rect(24, 20, 332, 62); } }
+        public Rect TimerCardBounds { get { return new Rect(660, 20, 182, 62); } }
+        public Rect ResourceCardBounds { get { return new Rect(1372, 20, 204, 62); } }
         public Rect RequirementCardBounds { get { int n = World && World.Expedition != null ?
             Mathf.Min(3, World.Expedition.CurrentRequirements.Count) : 0;
-            return new Rect(1100, 170, 476, 104 + n * 82 +
-                (World && World.Expedition != null && (World.Expedition.RequirementBudgetMissing > 0 || !string.IsNullOrEmpty(World.Expedition.FloorWallRequirementLabelV414)) ? 52 : 0)); } }
+            return new Rect(1220, 106, 356, 46 + n * 29 +
+                (World && World.Expedition != null && World.Expedition.RequirementBudgetMissing > 0 ? 30 : 0)); } }
         public float CanvasScale { get { return _scale; } }
         public Vector2 CanvasOffset { get { return _offset; } }
         public int SupplyPreviewCount { get { return _supplyPreviews == null ? 0 : _supplyPreviews.CachedPreviewCount; } }
@@ -136,7 +136,7 @@ namespace TooLateToPanic
         float _developerNoticeUntil;
 
         public bool DeveloperMenuOpen { get { return _developerMenuOpen; } }
-        public bool DeveloperInputBlockedThisFrame { get { return _developerTransitionFrame == Time.frameCount; } }
+        public bool DeveloperInputBlockedThisFrame { get { return _developerTransitionFrame == Time.frameCount || compactControlsInputFrameV5 == Time.frameCount; } }
 
         /// <summary>World calls this before ticking/input. HUD calls the same idempotent path.</summary>
         public void ProcessDeveloperHotkeys()
@@ -144,6 +144,7 @@ namespace TooLateToPanic
             if (!World || World.Model == null || _developerHotkeyFrame == Time.frameCount) return;
             _developerHotkeyFrame = Time.frameCount;
             SynchronizeHudPhase();
+            ProcessCompactControlsInputV5();
             if (ProcessFreeplayOnboardingHotkeysV414()) return;
             if (_developerMenuOpen && !string.IsNullOrEmpty(DeveloperUnavailableReason()))
                 SetDeveloperMenuOpen(false);
@@ -346,7 +347,7 @@ namespace TooLateToPanic
             else if (World.JuryActive)
             {
                 DrawStatusStrip();
-                DrawJuryPanel();
+                DrawCompactJuryPanelV5();
             }
             else if (World.Model.Phase == PanicPhase.GameOver || World.Model.Phase == PanicPhase.Success)
             {
@@ -367,7 +368,8 @@ namespace TooLateToPanic
                 if (World.NotificationVisible) DrawToast(World.ShortNotice);
             }
 
-            if (!FreeplayOnboardingOpenV414) DrawPresentationSubtitle();
+            DrawCompactControlsV5();
+            if (!FreeplayOnboardingOpenV414 && !World.IntroStoryActiveV414) DrawPresentationSubtitle();
             if (World.Model.CheatedRun) DrawCheatedRunIndicator();
             if (!FreeplayOnboardingOpenV414 && !_developerMenuOpen && !string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)
             {
@@ -531,31 +533,7 @@ namespace TooLateToPanic
         void DrawStatusStrip()
         {
             if (World.BagCameraOwnsView) { DrawFinalBagStatus(); return; }
-            if (World.JuryActive) { DrawJuryStatusStrip(); return; }
-            PanicModel model = World.Model;
-            bool preparation = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
-            Color accent = model.Phase == PanicPhase.Disaster ? Ember : Rust;
-            Rect wave = WaveCardBounds;
-            Frame(wave, Night, Line, 1f); Region(wave);
-            DrawRing(new Rect(37, 31, 72, 72), 1f, accent, 3f);
-            Label(new Rect(37, 29, 72, 72), model.Wave.ToString("00"), ColorText(_center, MainText));
-            Label(new Rect(126, 27, 290, 22), "DALGA  /  " + PhaseName(model.Phase), _tiny);
-            DrawDisasterSymbol(new Rect(126, 57, 30, 30), model.Disaster, accent);
-            Label(new Rect(168, 49, 260, 42), DisasterName(model.Disaster), _display);
-            Label(new Rect(126, 91, 303, 18), DisasterHint(model.Disaster), ColorText(_tiny, Brass));
-
-            DrawTimerCard();
-            DrawResourceCard();
-            if (preparation && !World.WorkActive && !World.InventoryOpen)
-            {
-                Rect ticker = new Rect(24, 126, 430, 34);
-                Frame(ticker, Night, Line, 1f); Region(ticker);
-                Fill(new Rect(25, 127, 82, 32), Petrol);
-                Label(new Rect(29, 128, 73, 27), "HEDEF", _caps);
-                Label(new Rect(119, 130, 321, 25), CampaignPrecautionTimer ? "Ardından 45 sn çanta" : "Önlemleri tamamla · son 45 sn çanta", _tiny);
-                DrawKeycap(new Rect(1364, 128, 104, 30), "TAB", "ÇANTA", Line);
-                DrawKeycap(new Rect(1478, 128, 98, 30), "H", "YARDIM", Line);
-            }
+            DrawCompactStatusV5();
         }
 
         void DrawStatusIcon(Rect rect, string id, int count)
@@ -577,57 +555,20 @@ namespace TooLateToPanic
         void DrawContext()
         {
             if (!World.IsMoving && World.LootVisible && World.OpenSource != null) DrawLootStrip();
-            // The projected E marker already identifies nearby actions. Reserve a fixed card for placement feedback.
+            DrawCompactTargetV5();
             if (World.IsMoving && !string.IsNullOrEmpty(World.PlacementMessage))
             {
                 Rect context = new Rect(404, 780, 792, 43);
                 Color accent = World.PlacementValid ? Sea : Brass;
                 Frame(context, Night, accent, 1f); Region(context);
-                DrawDot(new Rect(context.x + 16, context.y + 18, 7, 7), accent);
-                FittedLabel(new Rect(context.x + 36, context.y + 3, context.width - 48, 36), World.PlacementMessage, _center, MainText, 14);
+                FittedLabel(new Rect(context.x + 16, context.y + 3, context.width - 32, 36), World.PlacementMessage, _center, MainText, 14);
             }
-            DrawControls(ContextControls());
             DrawApplicableAction();
-            if (TimerAlarmActive && World.Model.TimeRemaining <= 60f && !World.LootVisible && !World.IsMoving)
-            {
-                Rect check = new Rect(24, 190, 282, 178);
-                Frame(check, Night, new Color(Ember.r, Ember.g, Ember.b, .50f), 1f); Region(check);
-                Label(new Rect(42, 204, 242, 27), "SIĞINAĞA HAZIR MISIN?", ColorText(_body, Brass));
-                DrawBagCheck(new Rect(42, 246, 242, 38), "water", "SU", World.Model.PackedWater, World.Model.RequiredDays);
-                DrawBagCheck(new Rect(42, 293, 242, 38), "food", "GIDA", World.Model.PackedFood, World.Model.RequiredDays);
-                DrawHazardStripe(new Rect(42, 348, 242, 4), Ember);
-            }
         }
 
         void DrawRequirements()
         {
-            PanicExpedition expedition = World.Expedition;
-            IReadOnlyList<PanicMaterialRequirement> requirements = expedition.CurrentRequirements;
-            int count = Mathf.Min(3, requirements.Count);
-            Rect panel = RequirementCardBounds;
-            Frame(panel, Night, new Color(Brass.r, Brass.g, Brass.b, .55f), 1f);
-            Region(panel);
-            Brush(new Rect(panel.x + 14, panel.y + 17, panel.width - 28, 36), Rust);
-            Label(new Rect(panel.x + 28, panel.y + 18, panel.width - 54, 32), RequirementTitleV414(expedition), _body);
-            Label(new Rect(panel.x + 110, panel.y + 61, 137, 20), "MALZEME", _tiny);
-            Label(new Rect(panel.x + 250, panel.y + 61, 58, 20), "VAR", ColorText(_caps, Muted));
-            Label(new Rect(panel.x + 310, panel.y + 61, 64, 20), "GEREK", ColorText(_caps, Muted));
-            Label(new Rect(panel.x + 378, panel.y + 61, 78, 20), "EKSİK", ColorText(_caps, Brass));
-            for (int i = 0; i < count; i++)
-            {
-                PanicMaterialRequirement requirement = requirements[i];
-                Rect row = new Rect(panel.x + 12, panel.y + 88 + i * 82, panel.width - 24, 74);
-                DrawRequirementRow(row, requirement);
-            }
-            if (expedition.RequirementBudgetMissing > 0 || !string.IsNullOrEmpty(expedition.FloorWallRequirementLabelV414))
-            {
-                float y = panel.y + 90 + count * 82;
-                Fill(new Rect(panel.x + 20, y, panel.width - 40, 1), Line);
-                Label(new Rect(panel.x + 26, y + 12, 196, 30), "BÜTÇE  ·  $", ColorText(_body, Brass));
-                Label(new Rect(panel.x + 250, y + 12, 58, 30), expedition.RequirementBudgetOwned.ToString(), _center);
-                Label(new Rect(panel.x + 310, y + 12, 64, 30), expedition.RequirementBudgetCost.ToString(), _center);
-                Label(new Rect(panel.x + 378, y + 12, 78, 30), expedition.RequirementBudgetMissing.ToString(), ColorText(_center, Brass));
-            }
+            DrawCompactRequirementsV5();
         }
 
         void DrawInventoryRequirements()
@@ -897,28 +838,18 @@ namespace TooLateToPanic
             if (World.Model.Phase != PanicPhase.Preparing && World.Model.Phase != PanicPhase.Tutorial) return;
             PanicItem item = World.Selected;
             if (item == null || !World.CanInteract) return;
-            if (DrawFloorWallUpgradePreviewV414(item)) return;
             bool release = PanicItemActionRules.CanReleaseAnchor(item);
             int shortcut = release ? 1 : World.Expedition.PrimaryShortcutV414(item);
             if (shortcut == 0 || !World.Model.CanBeginJuryWork(release ? "anchorwall" : World.Expedition.PrimaryActionV414(item), item.Id)) return;
-            Rect panel = new Rect(1100, 170, 476, 126);
-            Frame(panel, Night, Line, 1f); Region(panel);
-            FittedLabel(new Rect(1118, 178, 438, 29), item.Label, _small, SoftText, 14);
-            Button(new Rect(1118, 218, 438, 58), (release ? "ÇÖZ" : World.Expedition.PrimaryLabelV414(item)) + " · " + shortcut, true, Brass, () => World.QuickAction(shortcut));
+            Rect action = new Rect(930, 806, 206, 31);
+            Frame(action, Night, Brass, 1); Mark(action);
+            FittedLabel(new Rect(action.x + 8, action.y + 2, action.width - 16, action.height - 4), shortcut + " · " + (release ? "ÇÖZ" : World.Expedition.PrimaryLabelV414(item)), _tiny, Brass, 12);
+            if (MousePressed(action)) World.QuickAction(shortcut);
         }
 
         void DrawControls(string[][] controls)
         {
-            float width = controls.Length > 7 ? 155f : controls.Length > 5 ? 168f : 176f;
-            const float gap = 8f;
-            float total = controls.Length * width + Mathf.Max(0, controls.Length - 1) * gap;
-            float x = (CanvasWidth - total) * .5f;
-            for (int i = 0; i < controls.Length; i++)
-            {
-                string[] pair = controls[i];
-                Rect key = new Rect(x + i * (width + gap), 836, width, 40);
-                DrawKeycap(key, pair[0], pair[1], i == 0 ? Sea : Line);
-            }
+            // V5 keeps one optional corner guide; work/inventory keep their own contextual actions.
         }
 
         string[][] ContextControls()
@@ -965,11 +896,9 @@ namespace TooLateToPanic
         void DrawToast(string message)
         {
             if (string.IsNullOrEmpty(message)) return;
-            float x = World.Model.IsSimulation ? 24 : World.Model.Phase == PanicPhase.Inspection ? 568 : 460;
-            Rect toast = new Rect(x, World.LootVisible ? 546 : 684, 680, 52);
+            Rect toast = new Rect(460, World.LootVisible ? 548 : 736, 680, 42);
             Frame(toast, Night, Line, 1f); Region(toast);
-            Fill(new Rect(toast.x + 1, toast.y + 9, 3, toast.height - 18), Brass);
-            FittedLabel(new Rect(toast.x + 21, toast.y + 8, toast.width - 42, 36), message, _small, SoftText, 14);
+            FittedLabel(new Rect(toast.x + 14, toast.y + 4, toast.width - 28, 34), message, _small, SoftText, 14);
         }
 
         void DrawLossReveal()
@@ -990,18 +919,16 @@ namespace TooLateToPanic
         void DrawCinematic()
         {
             float appear = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(World.CinematicProgress * 5f));
-            float band = Mathf.Lerp(90f, 132f, appear);
-            Fill(new Rect(0, 0, CanvasWidth, band), new Color(.035f, .03f, .025f, .97f));
-            Fill(new Rect(0, CanvasHeight - band - 18, CanvasWidth, band + 18), new Color(.035f, .03f, .025f, .97f));
-            DrawDot(new Rect(64, 53, 9, 9), Ember);
-            Label(new Rect(88, 42, 900, 31), "TOO LATE TO PANIC!  /  " + DisasterName(World.Model.Disaster), _tiny);
-            string title = string.IsNullOrEmpty(World.CinematicTitle) ? "KURTARMA" : World.IntroStoryActiveV414 ? World.CinematicTitle : Clip(World.CinematicTitle, 70);
-            Brush(new Rect(72, CanvasHeight - 116, 24, 68), Rust);
-            Label(new Rect(116, CanvasHeight - 120, 1394, 80), title, World.IntroStoryActiveV414 ? _story : _title);
-            DrawBar(new Rect(78, CanvasHeight - 29, 1444, 4), World.CinematicProgress, Brass);
+            float band = Mathf.Lerp(62f, 84f, appear);
+            Fill(new Rect(0, 0, CanvasWidth, band), new Color(.035f, .03f, .025f, .94f));
+            Fill(new Rect(0, CanvasHeight - 150, CanvasWidth, 150), new Color(.035f, .03f, .025f, .94f));
+            Label(new Rect(32, 25, 900, 27), "TOO LATE TO PANIC!  ·  " + DisasterName(World.Model.Disaster), _tiny);
+            string title = string.IsNullOrEmpty(World.CinematicTitle) ? "Afetin ardından" : World.CinematicTitle;
+            Label(new Rect(410, CanvasHeight - 135, 1140, 96), title, _story);
+            DrawBar(new Rect(410, CanvasHeight - 25, 1140, 3), World.CinematicProgress, Brass);
             Region(new Rect(0, 0, CanvasWidth, band));
-            Region(new Rect(0, CanvasHeight - band - 18, CanvasWidth, band + 18));
-            Button(new Rect(1250, 38, 282, 52), "SAHNEYİ ATLA · ENTER", false, Brass, World.SkipResidenceCinematic);
+            Region(new Rect(0, CanvasHeight - 150, CanvasWidth, 150));
+            Button(new Rect(1282, 18, 286, 40), "ATLA · ENTER", false, Brass, World.SkipResidenceCinematic);
             if (!DeveloperInputBlockedThisFrame && World.CancelFrame != Time.frameCount && Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter))
             { World.SkipResidenceCinematic(); Event.current.Use(); }
         }
@@ -1009,7 +936,7 @@ namespace TooLateToPanic
         void DrawInspection()
         {
             BuildInspectionList();
-            Rect panel = new Rect(24, 636, 504, 174);
+            Rect panel = new Rect(24, 606, 392, 118);
             Frame(panel, Night, Line, 1f); Region(panel);
             int total = Mathf.Max(1, _inspectionItems.Count);
             int step = Mathf.Clamp(_inspectionStep, 0, total - 1);
@@ -1019,11 +946,11 @@ namespace TooLateToPanic
                 int targetFloor = Mathf.Clamp(Mathf.FloorToInt((_inspectionItems[step].Position.y + .65f) / 3.2f), -1, 1);
                 if (targetFloor != World.ActiveFloor) target += targetFloor > World.ActiveFloor ? " · ÜST KAT" : " · ALT KAT";
             }
-            Brush(new Rect(39, 651, 246, 33), Rust);
-            Label(new Rect(54, 648, 450, 39), "HASAR GEZİSİ  " + Mathf.Min(step + 1, total) + "/" + total, _body);
-            Label(new Rect(45, 700, 460, 32), target, _display);
-            Label(new Rect(45, 751, 232, 25), "TOPLAM HASAR", _tiny);
-            Label(new Rect(293, 740, 208, 45), World.Model.TotalDamage.ToString("0.#") + "%", ColorText(_right, World.Model.TotalDamage >= 50f ? Brass : Sea));
+            Brush(new Rect(36, 618, 190, 27), Rust);
+            Label(new Rect(44, 618, 352, 28), "HASAR GEZİSİ  " + Mathf.Min(step + 1, total) + "/" + total, _body);
+            FittedLabel(new Rect(38, 652, 364, 27), target, _body, MainText, 18);
+            Label(new Rect(38, 687, 220, 24), "TOPLAM HASAR", _tiny);
+            Label(new Rect(266, 681, 136, 32), World.Model.TotalDamage.ToString("0.#") + "%", ColorText(_right, World.Model.TotalDamage >= 50f ? Brass : Sea));
             DrawControls(ContextControls());
             HandleInspectionEvent();
         }

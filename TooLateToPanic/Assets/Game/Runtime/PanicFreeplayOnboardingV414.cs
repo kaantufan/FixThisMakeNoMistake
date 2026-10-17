@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -252,7 +252,7 @@ namespace TooLateToPanic
             FreeplayGuideLegendV414(new Rect(572, 534, 462, 42), "E · Etkileşim   Q · Hedef değiştir", 2);
             FreeplayGuideLegendV414(new Rect(104, 582, 452, 42), "Sol Shift · Koş  /  Space · Zıpla", 1);
             FreeplayGuideLegendV414(new Rect(572, 582, 462, 42), "F · Erzak al (son 45 sn)", 2);
-            FreeplayGuideLegendV414(new Rect(104, 630, 930, 42), "Tab · Envanter/çanta     J · Defter     Esc · Duraklat / iptal", 3);
+            FreeplayGuideLegendV414(new Rect(104, 630, 930, 42), "Tab · Çanta     J · Defter     F1 · Küçük tuş rehberi     Esc · Duraklat", 3);
             Label(new Rect(104, 681, 930, 28), "1 · Sabitle    3 · Kat duvarlarını güçlendir    Space · İşte vur", _freeplayGuideMutedV414);
             Label(new Rect(104, 718, 930, 32), "Fare: hedef seç · FPS'te fareyle bak, E/F ile erzak al.", _freeplayGuideMutedV414);
 
@@ -261,7 +261,7 @@ namespace TooLateToPanic
             FreeplayGuideStepV414(new Rect(1096, 364, 412, 158), 2, "Son 45 sn · Çanta",
                 "Kamera otomatik FPS olur.\nE/F ile 1 su + 1 gıda al.");
             FreeplayGuideStepV414(new Rect(1096, 536, 412, 158), 3, "Süre dolmadan · Sığınak",
-                "Merdivenden bodruma in.\nKapağa yaklaş; E ile içeri gir.");
+                "Selde üst kat panik odasına çık.\nDiğer afetlerde bodruma in; E ile gir.");
             Label(new Rect(1100, 714, 408, 34), "Rehber açıkken süre durur.", _freeplayGuideMutedV414);
 
             Button(new Rect(76, 782, 1448, 58), "Anladım, başla · Enter", true, new Color32(255, 211, 138, 255), () => ConfirmFreeplayOnboardingV414());

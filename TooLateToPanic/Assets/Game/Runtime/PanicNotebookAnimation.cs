@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace TooLateToPanic
 {
@@ -7,8 +7,8 @@ namespace TooLateToPanic
     /// <summary>Deterministic, allocation-free animation state. No coroutine, scene or gameplay writes.</summary>
     public sealed class PanicNotebookAnimation
     {
-        public const float OpenSeconds = .32f;
-        public const float TurnSeconds = .74f;
+        public const float OpenSeconds = .36f;
+        public const float TurnSeconds = .62f;
         public bool TargetOpen { get; private set; }
         public float Openness { get; private set; }
         public bool Visible { get { return Openness > 0f || TargetOpen; } }

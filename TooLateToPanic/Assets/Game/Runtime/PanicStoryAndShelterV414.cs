@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -7,9 +7,17 @@ namespace TooLateToPanic
     {
         public bool IntroStoryActiveV414 { get { return CinematicActive && CinematicKind == "Opening"; } }
         public int IntroStoryResolutionCountV414 { get; private set; }
-        public string IntroStoryTextV414 { get { return residenceCinematicAge < 3 ? "Vadidere'de sıradan bir sonbahar sabahı. Ailen güvenli bir yere gitti; evin hazırlığı sana kaldı." :
-            residenceCinematicAge < 6 ? "Radyo yaklaşan tehlikeyi haber veriyor. Eşyaları sabitle, tesisatı güvene al ve evini güçlendir." :
-            "Önlem almak için iki dakikan var. Son otuz saniyede su ve gıdanı topla, çantanı al ve bodrum sığınağına yetiş."; } }
+        public string IntroStoryTextV414
+        {
+            get
+            {
+                if (residenceCinematicAge < 4) return "Vadidere'de afet uyarısı var. Ailen güvenli bir yerde; evin hazırlığı sana kaldı.";
+                if (residenceCinematicAge < 8) return "Önce " + PanicModel.NormalPrecautionSeconds.ToString("0") + " saniye önlem: E ile malzeme topla, Q ile hedef değiştir. Eşyaları sabitle, duvarları ve tesisatı güvene al.";
+                if (residenceCinematicAge < 12) return "Son " + PanicModel.NormalBagSeconds.ToString("0") + " saniyede kamera göz hizasına geçer. E / F ile bir su ve bir gıda al; gerekli ilk erzak doğrudan çantana gider.";
+                return UsesUpperPanicRoomV5 ? "Sel yükselmeden üst kat panik odasına çık. İşaretli yere yaklaş ve E ile korun; dalgadan sonra evini inceleyip hazırlığa devam et." :
+                    "Süre dolmadan bodrum sığınağına in. Kapağa yaklaş ve E ile gir. Sel dalgalarında ise üst kat panik odasına çık; her dalgadan sonra evini incele.";
+            }
+        }
         public string BunkerSequenceStageV414 { get; private set; } = "idle";
         public bool BunkerBagReleasedV414 { get; private set; }
         public int BunkerSequenceResolutionCountV414 { get; private set; }
@@ -43,7 +51,7 @@ namespace TooLateToPanic
         {
             if (Model == null || Model.IsSimulation || Model.IsTutorial) return;
             BeginResidenceSession();
-            SetResidenceCinematic("Opening", "Hazırlık için hâlâ zaman var", 9f);
+            SetResidenceCinematic("Opening", "Evin için hazırlık zamanı", 16f);
             CinematicShowsActor = false;
         }
 
@@ -63,34 +71,39 @@ namespace TooLateToPanic
 
         bool StoryShotV414(out Vector3 camera, out Vector3 target, out float fov)
         {
-            camera = target = Vector3.zero; fov = 48f;
+            camera = target = Vector3.zero; fov = 48;
             if (!IntroStoryActiveV414) return false;
             float age = residenceCinematicAge;
-            if (age < 3)
+            if (age < 4)
             {
-                camera = Vector3.Lerp(new Vector3(25, 17, -28), new Vector3(21, 14, -24), SmoothResidence01(age / 3));
-                target = new Vector3(-1, 2, 0);
+                float t = SmoothResidence01(age / 4);
+                camera = Vector3.Lerp(new Vector3(25, 17, -28), new Vector3(21, 14, -24), t);
+                target = new Vector3(-1, 2, 0); fov = 51;
             }
-            else if (age < 6)
+            else if (age < 8)
             {
-                camera = Vector3.Lerp(new Vector3(-12, 10, -13), new Vector3(-10, 8, -11), SmoothResidence01((age - 3) / 3));
+                float t = SmoothResidence01((age - 4) / 4);
+                camera = Vector3.Lerp(new Vector3(-12, 10, -13), new Vector3(-10, 8, -11), t);
                 target = new Vector3(-2, .7f, .2f); fov = 56;
+            }
+            else if (age < 12)
+            {
+                Vector3 bag = Model.Items.Find(i => i.Id == "bagstation")?.Position ?? new Vector3(1.55f, 0, -2.3f);
+                camera = bag + Vector3.Lerp(new Vector3(-1.3f, 1.4f, -1.8f), new Vector3(-.8f, 1.15f, -1.3f), SmoothResidence01((age - 8) / 4));
+                target = bag + Vector3.up * .35f; fov = 51;
             }
             else
             {
-                Vector3 bag = Model.Items.Find(i => i.Id == "bagstation")?.Position ?? new Vector3(1.55f, 0, -2.3f);
-                camera = Vector3.Lerp(bag + new Vector3(-1.3f, 1.4f, -1.8f), bag + new Vector3(-.8f, 1.15f, -1.3f), SmoothResidence01((age - 6) / 3));
-                target = bag + Vector3.up * .35f; fov = 51;
+                Vector3 shelter = ActiveShelterPositionV5;
+                camera = shelter + Vector3.Lerp(new Vector3(2.7f, 2.2f, -3.4f), new Vector3(2.4f, 1.8f, -2.9f), SmoothResidence01((age - 12) / 4));
+                target = shelter + Vector3.up * .55f; fov = 54;
             }
             return true;
         }
 
         void EnterPresentationSafeBunkerV414()
         {
-            if (!controller || !controller.isGrounded) { Model.Notify("Sığınağa girmek için kapak yanında yere bas."); return; }
-            if (!BuildBunkerApproachRouteV414(PlayerPosition, BunkerPosition + new Vector3(0, .04f, -1.18f)))
-            { Model.Notify("Kapak önüne açık yoldan yaklaş; sığınak girişini boş bırak."); return; }
-            Model.EnterBunker();
+            TryEnterActiveShelterV5();
         }
 
         void BeginBunkerSequenceV414()
@@ -216,7 +229,7 @@ namespace TooLateToPanic
         bool ApplyCinematicCharacterPoseV414()
         {
             if (!CinematicActive) return false;
-            if (CinematicKind == "Disaster" && !Model.IsSimulation)
+            if (CinematicKind == "Disaster" && !Model.IsSimulation && ShelterReachedForPresentationV5 && !UpperShelterPresentationV5)
             {
                 if (residenceCinematicAge >= 1f && residenceCinematicAge < 1.65f) PanicCharacterArt.SetTaskPose(hero.gameObject, animator, "gather", .5f);
                 else if (residenceCinematicAge >= 1.65f && residenceCinematicAge < 2.5f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "throw", Mathf.Clamp01((residenceCinematicAge - 1.65f) / .85f));

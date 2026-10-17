@@ -71,7 +71,7 @@ namespace TooLateToPanic
     /// Pure run state and rules for Too Late to Panic. World placement, proximity,
     /// interaction timing and presentation are owned by PanicWorld/PanicHud.
     /// </summary>
-    public sealed class PanicModel
+    public sealed partial class PanicModel
     {
         private const int StartingBudget = 1000;
         private const int WaterCost = 50;
@@ -269,7 +269,7 @@ namespace TooLateToPanic
 
                     if (TimeRemaining <= 0f)
                     {
-                        FailRun(IsSimulation ? "Hazırlık süresi doldu; önlemlerini zamanında tamamlayamadın." : "Hazırlık süresi doldu; bodrumdaki sığınağa zamanında ulaşamadın.");
+                        FailRun(IsSimulation ? "Hazırlık süresi doldu; önlemlerini zamanında tamamlayamadın." : "Hazırlık süresi doldu; " + RequiredShelterDestinationV5 + " zamanında ulaşamadın.");
                         transitions++;
                         continue;
                     }
@@ -455,18 +455,9 @@ namespace TooLateToPanic
 
         public bool EnterBunker()
         {
-            if (IsJuryDemo) { Notify("İşaretli güvenli alanı kullan."); return false; }
-            if (Phase != PanicPhase.Preparing && Phase != PanicPhase.Tutorial)
-                return RefuseBool("Bunkera yalnızca hazırlık aşamasında girilebilir.");
-
-            TimeRemaining = 0f;
-            PhaseTime = 8f;
-            Phase = PanicPhase.Disaster;
-            waveResolved = false;
-            pendingSuccess = false;
-            awardApplied = false;
-            Message = DisasterName(Disaster) + " başladı. Hazırlık ve alınan önlemler değerlendiriliyor.";
-            return true;
+            // Compatibility entry used by existing simulation/controller code. Physical
+            // destination validation remains World-owned; new callers use the typed API.
+            return TryEnterShelterV5(RequiredShelterV5);
         }
 
         public bool InspectSimulationDamage()
@@ -622,6 +613,7 @@ namespace TooLateToPanic
         private void ResetRunState(bool tutorial)
         {
             UtilitySafety.Reset();
+            ResetSystemsV5();
             IsJuryDemo = false;
             IsSimulation = false;
             SimulationComplete = false;
@@ -677,6 +669,7 @@ namespace TooLateToPanic
 
         private void BeginWave()
         {
+            BeginWaveSystemsV5();
             DeveloperNoLossUsedThisWave = DeveloperNoLoss;
             DeveloperNoLossReason = DeveloperNoLoss ? "Bu dalgada kaybetmeme modu kullanıldı." : string.Empty;
             RequiredDays = RequiredSupplyPerWave;
@@ -909,6 +902,7 @@ namespace TooLateToPanic
                 for (int i = 0; i < Items.Count; i++) normalizedTotal += Items[i].Contribution;
             }
             TotalDamage = normalizedTotal;
+            ApplySecondaryDamageV5();
         }
 
         private static float BaseRisk(PanicItem item, DisasterType disaster)
@@ -996,6 +990,8 @@ namespace TooLateToPanic
         private string BuildFailureReason(bool bagWasReady, int packedWaterAtEntry, int packedFoodAtEntry)
         {
             List<string> causes = new List<string>();
+            if (!IsSimulation && !IsJuryDemo && !ReachedShelterV5)
+                causes.Add(RequiredShelterDestinationV5 + " zamanında ulaşılamadı.");
             if (!bagWasReady)
             {
                 int waterMissing = Mathf.Max(0, RequiredSupplyPerWave - packedWaterAtEntry);
@@ -1013,6 +1009,7 @@ namespace TooLateToPanic
             List<PanicItem> top = TopDamageSources(3);
             StringBuilder summary = new StringBuilder();
             summary.Append("Toplam hasar: ").Append(FormatPercent(TotalDamage)).Append('.');
+            if (!string.IsNullOrEmpty(SecondaryEventSummaryV5)) summary.Append(" ").Append(SecondaryEventSummaryV5);
             if (top.Count > 0)
             {
                 summary.Append(" En büyük kaynaklar: ");
@@ -1110,7 +1107,7 @@ namespace TooLateToPanic
                 LatchDeveloperNoLoss(reason);
                 // Continue through the existing 8s disaster and real damage/supply
                 // resolution. No automatic bag completion or damage immunity.
-                EnterBunker();
+                BeginUnshelteredDisasterV5();
                 Message = "Geliştirici koruması: " + reason +
                     " Afet yine uygulanıyor; çanta ve hasar değişmez, bu geçişe ödül verilmez.";
                 return;

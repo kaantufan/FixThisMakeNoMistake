@@ -85,6 +85,7 @@ namespace TooLateToPanic
             bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
             bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
             if (Array.IndexOf(args, "--overhaul414-smoke") >= 0) Application.runInBackground = true;
+            if (Array.IndexOf(args, "--v5-smoke") >= 0) Application.runInBackground = true;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
             if (fullFlowSmoke)
@@ -154,6 +155,7 @@ namespace TooLateToPanic
             InitRevisionWorld();
             InitExperienceFeedbackV414();
             InitOverhaulV414();
+            InitRevisionV5();
             previousPhase = Model.Phase; previousWave = Model.Wave;
             if (smoke) gameObject.AddComponent<PanicHomeSmoke>();
             if (Array.IndexOf(args, "--residence-smoke") >= 0) { Application.runInBackground=true; gameObject.AddComponent<PanicResidenceSmoke>(); }
@@ -171,6 +173,7 @@ namespace TooLateToPanic
 
         public GameObject CreateVisual(string id)
         {
+            if (id != null && id.StartsWith("v5_", StringComparison.Ordinal)) return PanicV5FurnitureArt.Create(id, true);
             if (ResidenceIds.Contains(id)) { var cached=Resources.Load<GameObject>("ResidenceArt/"+id); return NormalizeFixtureRoot(cached ? Instantiate(cached) : PanicResidenceArt.Create(id), id); }
             bool home = new[] { "window", "door", "fridge", "cabinet", "tree", "drain", "fence", "hose", "toolbox", "medicinecabinet", "kitchencabinet", "locker", "supplycrate", "stairs", "workbench", "generator" }.Contains(id);
             var prefab = Resources.Load<GameObject>((home ? "HomeArt/" : "Art/") + id);
@@ -253,7 +256,7 @@ namespace TooLateToPanic
                     go = CreateVisual(item.Id=="desk_upper"?"desk":item.ArtId); go.name = item.Id; go.transform.position = item.Position; go.transform.rotation = Quaternion.Euler(0, item.Rotation, 0);
                     var tag = go.AddComponent<HomePick>(); tag.Id = item.Id; tag.Kind = "item";
                     if (item.Kind == ItemKind.Door) BindHinge(go, item.Id, true);
-                    else { AddBoundsCollider(go);BindHinge(go,item.Id,false); }
+                    else { if(item.ArtId=="bed")AddBedCollisionV5(go);else AddBoundsCollider(go);BindHinge(go,item.Id,false); }
                 }
                 items[item.Id] = go; visualKeys[item.Id] = ""; floorItems.Add(go);
             }
@@ -262,9 +265,9 @@ namespace TooLateToPanic
                 GameObject go;
                 if (!items.TryGetValue(source.Id, out go))
                 {
-                    go = CreateVisual(source.ArtId); go.name = source.Id; go.transform.position = source.Position;
+                    go = CreateVisual(source.ArtId); go.name = source.Id; go.transform.position = source.Position;go.transform.rotation=Quaternion.Euler(0,source.Rotation,0);
                     if(source.Id=="bath_cabinet"){go.transform.position=source.Position+Vector3.up*1.08f;go.transform.rotation=Quaternion.Euler(0,270,0);}
-                    AddBoundsCollider(go); floorItems.Add(go);
+                    if(!source.ArtId.StartsWith("v5_",StringComparison.Ordinal))AddBoundsCollider(go); floorItems.Add(go);
                 }
                 var pick = go.GetComponent<HomePick>(); if (!pick) pick = go.AddComponent<HomePick>(); pick.Id = source.Id; pick.Kind = "source";
                 sourceObjects[source.Id] = go; BindHinge(go, source.Id, false);
@@ -395,6 +398,7 @@ namespace TooLateToPanic
             UpdateCameraOrbitInput(hud && hud.PointerOverUi);
             AnimateHinges(dt); SyncVisuals(false); ApplyDirectVisibility(); FollowCamera(dt); ApplyFloorVisibility();
             AnimateCuratedFixtures(dt);
+            AnimateV5Furniture();
             UpdateJuryMarker();
             gatherPoseTime = Mathf.Max(0, gatherPoseTime - dt);
             TickHouseAudio();
@@ -618,6 +622,7 @@ namespace TooLateToPanic
         }
         void UpdateContext()
         {
+            if (UpdateShelterContextV5()) return;
             if (UpdateUtilityContextV414()) return;
             UpdateResidenceContext();
         }
@@ -632,8 +637,9 @@ namespace TooLateToPanic
             if (focusId == "@bunker" || Selected != null && Selected.Id == "bunker")
             {
                 if (!BagFinalStageActive) { Notice("Çanta hazırlığı son 45 saniyede başlar; önce evdeki önlemleri tamamla."); return; }
-                EnterPresentationSafeBunkerV414(); return;
+                TryEnterActiveShelterV5(); return;
             }
+            if (focusId == "@panicroom") { TryEnterActiveShelterV5(); return; }
             var source = NearestSource;
             if (source != null)
             {
@@ -643,7 +649,7 @@ namespace TooLateToPanic
             if(focusId=="@radio") { ToggleRadio(); return; }
             if(focusId=="@fireplace") { ToggleHearth(); return; }
             if(focusId=="@computer") { ToggleComputer(); return; }
-            if(focusId=="@garage") { garageOpen=!garageOpen; effects.Play("garage",.45f); UpdateContext(); return; }
+            if(focusId=="@garage") { if(Model.UtilitySafety.PowerOff){Notice("Ana şalter kapalı; garajın iç kapısını kullan.");return;}garageOpen=!garageOpen; effects.Play("garage",.45f); UpdateContext(); return; }
             if (focusId == PanicItemActionRules.FireStationId) { BeginWork("fire", focusId); return; }
             if(focusId!=null&&focusId.StartsWith("@")&&hinges.ContainsKey(focusId)){ToggleDoor();UpdateContext();return;}
             var site = gardenSites.Find(s => s.id == focusId);
@@ -835,6 +841,7 @@ namespace TooLateToPanic
         }
         void BindHinge(GameObject root, string id, bool isDoor)
         {
+            if(root.GetComponent<PanicV5FurnitureRig>())return;
             if (!isDoor && PanicCuratedAssetArt.HasAnimatedMechanism(root)) return;
             var leaf = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "DoorLeaf" || t.name == "Lid");
             if (!leaf) { if (isDoor) AddBoundsCollider(root); return; }
@@ -855,14 +862,15 @@ namespace TooLateToPanic
         }
         void ApplyFloorVisibility()
         {
-            bool cutawayInside = (IntroStoryActiveV414 && residenceCinematicAge >= 3f) || inside && !ResidenceCinematicExteriorView && !BagCameraOwnsView;
+            int viewFloor=CinematicViewFloorV5;Vector3 viewFocus=CinematicViewFocusV5;
+            bool cutawayInside = (IntroStoryActiveV414 && residenceCinematicAge >= 4f) || inside && !ResidenceCinematicExteriorView && !BagCameraOwnsView;
             for (int i = 0; i < floorVisuals.Count; i++)
             {
-                int floor=i-1; bool shown = !cutawayInside || floor == ActiveFloor;
+                int floor=i-1; bool shown = !cutawayInside || floor == viewFloor;
                 SetResidenceRenderersVisible(floorVisuals[i], shown);
                 foreach (var t in floorVisuals[i].GetComponentsInChildren<Transform>(true))
                     if (t.name == "FrontHighWalls") t.gameObject.SetActive(true);
-                if (shown && cutawayInside && View) ApplyFacadeCutaway(floorVisuals[i], player.position, -8, 8, -6, 6, floor * 3.2f);
+                if (shown && cutawayInside && View) ApplyFacadeCutaway(floorVisuals[i], viewFocus, -8, 8, -6, 6, floor * 3.2f);
             }
             if (roof) roof.SetActive(!cutawayInside);
             UpdateResidenceVisibility(cutawayInside);
@@ -871,11 +879,11 @@ namespace TooLateToPanic
                 if (!go || go.name == movingId) continue;
                 int itemFloor = Mathf.Clamp(Mathf.FloorToInt((go.transform.position.y + .15f) / 3.2f), -1, 1);
                 bool stair = go.transform.parent && go.transform.parent.name.StartsWith("Stair flight ", StringComparison.Ordinal);
-                bool shown = !cutawayInside || itemFloor == ActiveFloor || stair && itemFloor + 1 == ActiveFloor;
+                bool shown = !cutawayInside || itemFloor == viewFloor || stair && itemFloor + 1 == viewFloor;
                 var data = Model.Items.Find(x => x.Id == go.name);
                 if (shown && cutawayInside && data != null && data.Kind == ItemKind.Window && View)
                 {
-                    Vector3 cameraSide = View.transform.position - player.position;
+                    Vector3 cameraSide = View.transform.position - viewFocus;
                     if (cameraSide.x < -.1f && data.Position.x < -7.6f || cameraSide.x > .1f && data.Position.x > 7.6f || cameraSide.z > .1f && data.Position.z > 5.6f || cameraSide.z < -.1f && data.Position.z < -5.6f) shown = false;
                 }
                 go.SetActive(go == hearthFlame ? hearthEnabled : data == null || data.Installed);
@@ -920,6 +928,7 @@ namespace TooLateToPanic
                 RebuildHardware(item, go);
             }
             ApplyComputerPower();
+            ApplyMainsPowerV5();
         }
         void RebuildHardware(PanicItem item, GameObject go)
         {
@@ -973,8 +982,7 @@ namespace TooLateToPanic
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}
             if (BagCameraOwnsView || !View || Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.GameOver || Model.Phase == PanicPhase.Success || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;
             DrawJuryWorldTarget();
-            DrawUtilityLabelsV414();
-            if (!string.IsNullOrEmpty(ShortAction)&&FocusPosition(out var p) && CanInteract) DrawMarker(p + Vector3.up * 1.9f, "E  " + ShortAction, 110);
+            // V5 compact HUD owns the single contextual E hint; no duplicate floating card.
             if (Model.Phase == PanicPhase.Inspection)
             {
                 foreach (var item in Model.Items.Where(i => i.Contribution > .1f && SameLevel(i.Position)).OrderByDescending(i => i.Contribution).Take(3))

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -42,7 +42,7 @@ namespace TooLateToPanic
         bool residenceSavedSupplyDisplayActive;
         bool residenceSkipInProgress;
         int residenceShotIndex = -1;
-        bool ResidenceCinematicExteriorView { get { return CinematicActive && (CinematicKind == "Aftermath" || CinematicKind == "DamageFailure" || CinematicKind == "Opening" && residenceCinematicAge < 3f || CinematicKind == "Disaster" && (Model.IsSimulation || residenceCinematicAge >= 4.7f) || CinematicKind == "Deadline" && residenceCinematicAge >= 2.15f && residenceCinematicAge < 4.15f); } }
+        bool ResidenceCinematicExteriorView { get { return CinematicActive && (CinematicKind == "Aftermath" || CinematicKind == "DamageFailure" || CinematicKind == "Opening" && residenceCinematicAge < 4f || CinematicKind == "Disaster" && (Model.IsSimulation || residenceCinematicAge >= 4.7f)); } }
 
         /// <summary>Skip presentation through the same model transitions; never invent an outcome.</summary>
         public void SkipResidenceCinematic()
@@ -103,7 +103,17 @@ namespace TooLateToPanic
                 cinematicActorEnd = BunkerInteriorPosition + new Vector3(0f, .04f, -.42f);
                 CinematicShowsActor = true;
                 SetResidenceActorFlags(false, false, 0f);
-                if (!Model.IsSimulation) BeginBunkerSequenceV414();
+                if (!Model.IsSimulation && ShelterReachedForPresentationV5)
+                {
+                    if (UpperShelterPresentationV5) BeginUpperShelterPresentationV5();
+                    else BeginBunkerSequenceV414();
+                }
+                else if (!Model.IsSimulation)
+                {
+                    CleanupBunkerBagV414();
+                    BunkerSequenceStageV414 = "exposed_actual_position";
+                    CinematicTitle = "Sığınağa ulaşamadın. Afet seni bulunduğun yerde yakaladı.";
+                }
                 if (effects) effects.StartCinematicWeather();
                 if (Model.IsSimulation) { CinematicShowsActor=false;SetBunkerDoorOpen(false); }
                 return;
@@ -114,8 +124,8 @@ namespace TooLateToPanic
                 BeginResidenceSession();
                 SetResidenceCinematic("Aftermath", "Hasar gezisi", 4f);
                 CinematicShowsActor = false;
-                if (player && residenceCinematicSession && !Model.IsSimulation)
-                    SetResidencePlayerPosition(BunkerInteriorPosition + new Vector3(0f, .04f, -.42f));
+                if (player && residenceCinematicSession && !Model.IsSimulation && ShelterReachedForPresentationV5)
+                    SetResidencePlayerPosition(ShelterWaitPositionV5);
                 SetBunkerDoorOpen(false);
                 return;
             }
@@ -123,9 +133,10 @@ namespace TooLateToPanic
             if (to == PanicPhase.Success)
             {
                 BeginResidenceSession();
-                SetResidenceCinematic("Success", "Güvenli sığınak", 3f);
-                SetResidenceBunkerCutaway(true);
-                PositionActorInBunker();
+                SetResidenceCinematic("Success", ActiveShelterLabelV5 + " · Dalga atlatıldı", 3f);
+                if (ShelterReachedForPresentationV5 && !UpperShelterPresentationV5)
+                { SetResidenceBunkerCutaway(true); PositionActorInBunker(); }
+                else if (player && UpperShelterPresentationV5) SetResidencePlayerPosition(ShelterWaitPositionV5);
                 CinematicShowsActor = true;
                 SetResidenceActorFlags(false, false, 0f);
                 SetBunkerDoorOpen(false);
@@ -242,28 +253,43 @@ namespace TooLateToPanic
         bool ApplyResidenceCinematicCamera(float dt)
         {
             if (!View || !CinematicActive) return false;
-
-            Vector3 destination;
-            Vector3 target;
-            float fov = 47f;
+            Vector3 destination, target;
+            float fov;
             GetResidenceCinematicShot(out destination, out target, out fov);
-
-            int shot = CinematicKind == "Disaster" ? (residenceCinematicAge < 1.65f ? 0 : residenceCinematicAge < 4.7f ? 1 : residenceCinematicAge < (Model.Disaster == DisasterType.Earthquake ? 6.65f : 6.2f) ? 2 : 3) :
-                CinematicKind == "Aftermath" ? (residenceCinematicAge < 2.15f ? 4 : 5) : CinematicKind == "Opening" ? (residenceCinematicAge < 3 ? 6 : residenceCinematicAge < 6 ? 7 : 8) : 9;
-            if (shot != residenceShotIndex) { residenceShotIndex = shot; residenceCameraCutPending = true; }
-
+            int shot = CinematicKind == "Disaster" ? (residenceCinematicAge < 1.65f ? 0 : residenceCinematicAge < 4.7f ? 1 : residenceCinematicAge < 6.2f ? 2 : 3) :
+                CinematicKind == "Aftermath" ? (residenceCinematicAge < 2.15f ? 4 : 5) : CinematicKind == "Opening" ? (residenceCinematicAge < 4 ? 6 : residenceCinematicAge < 8 ? 7 : residenceCinematicAge < 12 ? 8 : 9) : 10;
+            bool cut = residenceCameraCutPending;
+            if (shot != residenceShotIndex)
+            {
+                residenceShotIndex = shot;
+                residenceShotBlendStartV5 = View.transform.position;
+                residenceShotBlendRotationV5 = View.transform.rotation;
+                residenceShotBlendAgeV5 = 0;
+                residenceCameraVelocity = Vector3.zero;
+            }
             View.orthographic = false;
-            View.fieldOfView = fov;
-            bool cut=residenceCameraCutPending;
-            if(cut){View.transform.position=destination;residenceCameraVelocity=Vector3.zero;residenceCameraCutPending=false;}
-            else View.transform.position = Vector3.SmoothDamp(View.transform.position, destination,
-                ref residenceCameraVelocity, .18f, 150f, Mathf.Max(.001f, dt));
+            View.fieldOfView = cut ? fov : Mathf.Lerp(View.fieldOfView, fov, 1 - Mathf.Exp(-7 * Mathf.Max(.001f, dt)));
+            if (cut)
+            {
+                View.transform.position = destination;
+                residenceCameraVelocity = Vector3.zero;
+                residenceCameraCutPending = false;
+                residenceShotBlendAgeV5 = 1;
+            }
+            else
+            {
+                residenceShotBlendAgeV5 += Mathf.Max(0, dt);
+                float blend = SmoothResidence01(residenceShotBlendAgeV5 / .42f);
+                if (blend < 1) View.transform.position = Vector3.Lerp(residenceShotBlendStartV5, destination, blend);
+                else View.transform.position = Vector3.SmoothDamp(View.transform.position, destination, ref residenceCameraVelocity, .17f, 150, Mathf.Max(.001f, dt));
+            }
             Vector3 look = target - View.transform.position;
             if (look.sqrMagnitude > .001f)
             {
                 Quaternion rotation = Quaternion.LookRotation(look, Vector3.up);
-                View.transform.rotation = cut ? rotation : Quaternion.Slerp(View.transform.rotation, rotation,
-                    1f - Mathf.Exp(-12f * dt));
+                if (cut) View.transform.rotation = rotation;
+                else if (residenceShotBlendAgeV5 < .42f) View.transform.rotation = Quaternion.Slerp(residenceShotBlendRotationV5, rotation, SmoothResidence01(residenceShotBlendAgeV5 / .42f));
+                else View.transform.rotation = Quaternion.Slerp(View.transform.rotation, rotation, 1 - Mathf.Exp(-10 * dt));
             }
             return true;
         }
@@ -272,6 +298,7 @@ namespace TooLateToPanic
         {
             if (TryQuakeReadabilityShotV414(out camera, out target, out fov)) return;
             if (StoryShotV414(out camera, out target, out fov)) return;
+            if (TryShelterShotV5(out camera, out target, out fov)) return;
             float age = residenceCinematicAge;
             fov = 47f;
             if (CinematicKind == "Disaster")
@@ -426,41 +453,41 @@ namespace TooLateToPanic
         void TickResidenceDisasterActor()
         {
             if (Model.IsSimulation) { CinematicShowsActor = false; SetResidenceActorFlags(false, false, 0); return; }
-            TickBunkerSequenceV414();
+            TickShelterPresentationV5();
         }
 
         void BeginResidenceFailureScene(string kind)
         {
-            if (kind == "Deadline")
+            SetBunkerDoorOpen(false);
+            CleanupBunkerBagV414();
+            if (kind == "Deadline" || kind == "BagFailure" && !ShelterReachedForPresentationV5)
             {
-                SetBunkerDoorOpen(false);
-                Vector3 outside = BunkerPosition + new Vector3(0f, .04f, -2.05f);
-                if (player) player.position = outside;
-                FaceResidenceActor(BunkerPosition - outside);
+                // Failed arrival is not a second chance to enter. Keep the actual place/floor.
+                SetResidencePlayerPosition(residenceReturnPosition);
+                if (player) player.rotation = residenceReturnRotation;
                 CinematicShowsActor = true;
-                SetResidenceActorFlags(true, true, 0f);
+                BunkerSequenceStageV414 = "failed_actual_position";
+                CinematicTitle = kind == "Deadline" ? "Süre doldu. Sığınağa ulaşamadan afet başladı." : "Çantan eksik. Afeti bulunduğun yerde karşılamak zorunda kaldın.";
+                SetResidenceActorFlags(true, false, 0);
                 if (effects) effects.StartCinematicWeather();
                 return;
             }
-
-            if (kind == "BagFailure")
+            if (kind == "BagFailure" && ShelterReachedForPresentationV5)
             {
-                SetResidenceBunkerCutaway(true);
-                PrepareEmptyBunkerCrate();
-                PositionActorInBunker();
-                CinematicShowsActor = true;
-                SetResidenceActorFlags(true, true, 0f);
-                if (residenceFailureLampObject)
+                if (!UpperShelterPresentationV5)
                 {
-                    var light = residenceFailureLampObject.GetComponent<Light>();
-                    if (light) { light.color = new Color(1f, .16f, .09f); light.intensity = 3.1f; }
+                    SetResidenceBunkerCutaway(true);
+                    PrepareEmptyBunkerCrate();
+                    PositionActorInBunker();
                 }
+                else SetResidencePlayerPosition(ShelterWaitPositionV5);
+                CinematicShowsActor = true;
+                SetResidenceActorFlags(true, false, 0);
+                CinematicTitle = ActiveShelterLabelV5 + " · Erzakın yetmedi.";
                 return;
             }
-
-            SetBunkerDoorOpen(false);
             CinematicShowsActor = false;
-            SetResidenceActorFlags(false, false, 0f);
+            SetResidenceActorFlags(false, false, 0);
             if (effects) effects.StartCinematicWeather();
         }
 

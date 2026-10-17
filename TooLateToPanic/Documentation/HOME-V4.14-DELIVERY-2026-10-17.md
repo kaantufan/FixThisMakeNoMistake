@@ -1,4 +1,4 @@
-> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.14-r8), [source/build comparison](Publications/v0.4.14-r8/source-vs-build.json). Local-only historical evidence links remain local references.
+> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.14-r8), [source/build comparison](Publications/Snapshots/20261017T212502Z/source-vs-build.json). Local-only historical evidence links remain local references.
 
 # Home V4.14-r8 — 17 Ekim 2026 teslimi
 

@@ -177,10 +177,10 @@ namespace TooLateToPanic
             if (Expedition.FindWorldSupply(focusId) != null) { TakeWorldSupply(); return; }
             if (!CanInteract) return;
             if (focusId == "@bagstation") { hud.OpenPhysicalBag(); return; }
-            if (focusId == "@bunker" || focusId == "bunker") { EnterPresentationSafeBunkerV414(); return; }
+            if (focusId == "@bunker" || focusId == "bunker" || focusId=="@panicroom") { TryEnterActiveShelterV5(); return; }
             if (focusId != null && hinges.TryGetValue(focusId,out var hinge) && hinge.directionalDoor) { bagOpenAge=0;ToggleDoor();return; }
-            if (focusId == "@garage") { garageOpen=!garageOpen;bagOpenAge=0;effects.Play("garage",.45f);return; }
-            Notice("Açıktaki su ve gıdayı al; ardından bodrumdaki sığınağa gir.");
+            if (focusId == "@garage") { if(Model.UtilitySafety.PowerOff){Notice("Ana şalter kapalı; garajın iç kapısını kullan.");return;}garageOpen=!garageOpen;bagOpenAge=0;effects.Play("garage",.45f);return; }
+            Notice("Açıktaki su ve gıdayı al; ardından "+Model.RequiredShelterDestinationV5+" git.");
         }
 
         void UpdateBagCursor()
@@ -217,7 +217,7 @@ namespace TooLateToPanic
                 {
                     bool supply = Expedition.FindWorldSupply(pick.Id) != null;
                     bool door = hinges.TryGetValue(pick.Id, out var h) && h.directionalDoor;
-                    if (supply || door || pick.Id == "@bagstation" || pick.Id == "@garage" || pick.Id == "@bunker" || pick.Id == "bunker") return pick.Id;
+                    if (supply || door || pick.Id == "@bagstation" || pick.Id == "@garage" || pick.Id == "@bunker" || pick.Id == "bunker" || pick.Id == "@panicroom") return pick.Id;
                 }
                 // The first real wall/object stops the ray. There is no through-wall search.
                 return null;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -10,11 +10,11 @@ namespace TooLateToPanic
     [DefaultExecutionOrder(-800)]
     public sealed class PanicNotebookOverlay : MonoBehaviour
     {
-        static readonly Color Ink = new Color32(47, 62, 70, 255);
-        static readonly Color Green = new Color32(88, 111, 87, 255);
-        static readonly Color Paper = new Color32(247, 249, 246, 255);
-        static readonly Color PaperBack = new Color32(233, 237, 226, 255);
-        static readonly Color Yellow = new Color32(233, 215, 88, 255);
+        static readonly Color Ink = new Color32(58, 69, 68, 255);
+        static readonly Color Green = new Color32(79, 115, 101, 255);
+        static readonly Color Paper = new Color32(253, 248, 232, 255);
+        static readonly Color PaperBack = new Color32(237, 229, 207, 255);
+        static readonly Color Yellow = new Color32(239, 205, 126, 255);
         static readonly Color Olive = new Color32(135, 154, 120, 255);
         static readonly Color Alarm = new Color32(188, 71, 73, 255);
         static readonly Color Rule = new Color(47 / 255f, 62 / 255f, 70 / 255f, .13f);
@@ -35,6 +35,7 @@ namespace TooLateToPanic
         Vector2 offset;
         bool compact;
         Matrix4x4 canvasMatrix;
+        Texture2D spiralTextureV5;
 
         public PanicNotebookAnimation Animation { get { return animationState; } }
         public PanicNotebookSnapshot Snapshot { get { return snapshot; } }
@@ -51,7 +52,7 @@ namespace TooLateToPanic
         float CanvasHeight { get { return compact ? 1100 : 900; } }
         Rect Book { get { return compact ? new Rect(24, 170, 590, 820) : new Rect(114, 146, 1080, 650); } }
         float PageWidth { get { return compact ? Book.width : Book.width * .5f; } }
-        Rect LauncherRect { get { return new Rect(CanvasWidth - 212, CanvasHeight - 114, 188, 54); } }
+        Rect LauncherRect { get { return new Rect(CanvasWidth - 168, CanvasHeight - 62, 144, 38); } }
         Rect CloseRect { get { return new Rect(Book.x + Book.width - 208, Book.y - 59, 208, 42); } }
         Rect MotionRect { get { return new Rect(Book.x, Book.y + Book.height + 19, 240, 36); } }
         Rect InventoryRect { get { return new Rect(28, Book.height - 92, PageWidth - 56, 47); } }
@@ -72,6 +73,7 @@ namespace TooLateToPanic
         }
         void Update() { ProcessInput(); }
         void OnDisable() { ForceClosed(); pointerOwned = false; }
+        void OnDestroy() { if (spiralTextureV5) Destroy(spiralTextureV5); }
 
         /// <summary>Call at the start of World.Update before clocks, and before HUD.Update shortcuts. Idempotent per frame.</summary>
         public void ProcessInput()
@@ -223,7 +225,7 @@ namespace TooLateToPanic
             {
                 if (!visible)
                 {
-                    DrawButton(LauncherRect, "DEFTER  ·  J", Green, Paper, true);
+                    DrawButton(LauncherRect, "J  ·  DEFTER", Green, Paper, true);
                     return;
                 }
                 if (snapshot == null) RefreshSnapshot();
@@ -235,11 +237,12 @@ namespace TooLateToPanic
                 if (compact && snapshot != null) Label(new Rect(Book.x, 91, Book.width, 62), snapshot.Disaster + "  ·  " + snapshot.Clock + "     BÜTÇE  " + snapshot.Budget + "\nHASAR  %" + snapshot.Damage.ToString("0") + "     ÇANTA  " + snapshot.BagUsed + "/" + snapshot.BagCapacity, smallStyle, Paper);
                 Matrix4x4 oldBookMatrix = GUI.matrix;
                 GUI.matrix = canvasMatrix * Matrix4x4.TRS(new Vector3(Book.x, Book.y + 16 * (1 - ease), 0), Quaternion.identity, Vector3.one);
-                // Bound paper, page stack, spine, graph paper and ring binding retain the branch's authored palette.
+                // V5 warm paper, cloth cover, punched holes and actual curved wire binding.
+                DrawBookCoverV5();
                 for (int i = 3; i > 0; i--) Frame(new Rect(i * 3, i * 4, Book.width, Book.height), PaperBack, new Color(.15f, .2f, .18f, .38f));
                 Frame(new Rect(0, 0, Book.width, Book.height), Paper, Ink);
                 PaperGrid(new Rect(0, 0, Book.width, Book.height));
-                if (!compact) { Fill(new Rect(PageWidth - 4, 0, 8, Book.height), new Color(.15f, .19f, .17f, .12f)); DrawRightPage(snapshot); }
+                if (!compact) { Fill(new Rect(PageWidth - 1, 34, 1, Book.height - 62), new Color(.32f, .40f, .35f, .18f)); DrawRightPage(snapshot); }
                 DrawLeftPage(animationState.Turning ? animationState.ToPage : animationState.CurrentPage, snapshot);
                 if (animationState.Turning && Event.current.type == EventType.Repaint) DrawTurningLeaf();
                 DrawSpiral();
@@ -468,16 +471,85 @@ namespace TooLateToPanic
         }
         void DrawSpiral()
         {
-            float p = animationState.Turning ? animationState.TurnProgress : 0;
-            float alpha = animationState.Turning ? 1 - Mathf.Sin(p * Mathf.PI) : 1;
-            Color color = new Color(Ink.r, Ink.g, Ink.b, Mathf.Clamp01(alpha));
-            for (int i = 0; i < 10; i++)
+            EnsureSpiralTextureV5();
+            int count = compact ? 12 : 22;
+            float spacing = (Book.width - 70) / (count - 1);
+            Color dark = new Color(.22f, .25f, .24f, 1);
+            for (int i = 0; i < count; i++)
             {
-                float x = 30 + i * (PageWidth - 60) / 9;
-                Frame(new Rect(x - 5, -10, 11, 25), new Color(.64f, .70f, .65f, alpha), color);
-                Fill(new Rect(x - 2, -6, 5, 17), new Color(Paper.r, Paper.g, Paper.b, alpha));
+                float x = 35 + i * spacing;
+                // Recessed holes and their soft paper lip anchor every coil to the page.
+                RoundPaperV5(new Rect(x - 7, 7, 14, 10), new Color(.20f, .25f, .22f, .12f), 5);
+                RoundPaperV5(new Rect(x - 4, 8, 8, 6), dark, 3);
+                RoundPaperV5(new Rect(x - 6, 17, 13, 3), new Color(1, 1, 1, .65f), 2);
+                GUI.DrawTexture(new Rect(x - 13, -19, 30, 42), spiralTextureV5, ScaleMode.StretchToFill, true);
             }
         }
+        void EnsureSpiralTextureV5()
+        {
+            if (spiralTextureV5) return;
+            const int width = 72, height = 104;
+            var pixels = new Color[width * height];
+            for (int wire = 0; wire < 2; wire++)
+            {
+                Vector2 previous = Vector2.zero;
+                for (int step = 0; step <= 24; step++)
+                {
+                    float angle = (-145 + step * (290f / 24)) * Mathf.Deg2Rad;
+                    Vector2 point = new Vector2(29 + wire * 9 + Mathf.Cos(angle) * 15.5f, 45 + Mathf.Sin(angle) * 35);
+                    if (step > 0)
+                    {
+                        SpiralStrokeV5(pixels, width, height, previous + new Vector2(4, 7), point + new Vector2(4, 7), 8.5f, new Color(0, 0, 0, .18f));
+                        SpiralStrokeV5(pixels, width, height, previous, point, 8, new Color(.22f, .25f, .24f, 1));
+                        SpiralStrokeV5(pixels, width, height, previous + new Vector2(-.7f, -.7f), point + new Vector2(-.7f, -.7f), 5.7f, new Color(.68f, .57f, .39f, 1));
+                        if (step > 11 && step < 21) SpiralStrokeV5(pixels, width, height, previous + new Vector2(-1.7f, -1.7f), point + new Vector2(-1.7f, -1.7f), 1.8f, new Color(.98f, .89f, .65f, 1));
+                    }
+                    previous = point;
+                }
+            }
+            spiralTextureV5 = new Texture2D(width, height, TextureFormat.RGBA32, false) { name = "V5 notebook double wire binding", hideFlags = HideFlags.HideAndDontSave, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+            spiralTextureV5.SetPixels(pixels); spiralTextureV5.Apply(false, true);
+        }
+        static void SpiralStrokeV5(Color[] pixels, int width, int height, Vector2 a, Vector2 b, float thickness, Color color)
+        {
+            float radius = thickness * .5f;
+            int minX = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.x, b.x) - radius - 1));
+            int maxX = Mathf.Min(width - 1, Mathf.CeilToInt(Mathf.Max(a.x, b.x) + radius + 1));
+            int minY = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.y, b.y) - radius - 1));
+            int maxY = Mathf.Min(height - 1, Mathf.CeilToInt(Mathf.Max(a.y, b.y) + radius + 1));
+            Vector2 line = b - a;
+            for (int y = minY; y <= maxY; y++) for (int x = minX; x <= maxX; x++)
+            {
+                Vector2 p = new Vector2(x + .5f, y + .5f);
+                float t = Mathf.Clamp01(Vector2.Dot(p - a, line) / Mathf.Max(.0001f, line.sqrMagnitude));
+                float alpha = color.a * Mathf.Clamp01(radius + .6f - Vector2.Distance(p, a + line * t));
+                if (alpha <= 0) continue;
+                int index = (height - y - 1) * width + x;
+                Color old = pixels[index]; float combined = alpha + old.a * (1 - alpha);
+                pixels[index] = new Color((color.r * alpha + old.r * old.a * (1 - alpha)) / combined, (color.g * alpha + old.g * old.a * (1 - alpha)) / combined, (color.b * alpha + old.b * old.a * (1 - alpha)) / combined, combined);
+            }
+        }
+        static void RoundPaperV5(Rect rect, Color color, float radius)
+        {
+            Color previous = GUI.color;
+            GUI.color = Color.white;
+            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, color * previous, 0, radius);
+            GUI.color = previous;
+        }
+
+        void DrawBookCoverV5()
+        {
+            RoundPaperV5(new Rect(-5, 7, Book.width + 26, Book.height + 25), new Color(0, 0, 0, .22f), 12);
+            RoundPaperV5(new Rect(-13, -13, Book.width + 29, Book.height + 29), Green, 12);
+            RoundPaperV5(new Rect(-9, -9, Book.width + 21, Book.height + 21), new Color(.34f, .49f, .42f, 1), 10);
+            // Short cloth stitches and a warm fabric bookmark give the cover a kept-at-home feel.
+            for (float x = 9; x < Book.width - 8; x += 16)
+                Fill(new Rect(x, Book.height + 8, 7, 1), new Color(.86f, .87f, .71f, .55f));
+            Fill(new Rect(Book.width - 68, Book.height - 3, 24, 33), new Color(.78f, .47f, .31f, 1));
+            Line(new Vector2(Book.width - 67, Book.height + 30), new Vector2(Book.width - 56, Book.height + 22), Green, 2);
+            Line(new Vector2(Book.width - 56, Book.height + 22), new Vector2(Book.width - 44, Book.height + 30), Green, 2);
+        }
+
         void DrawHazard(Rect rect, PanicNotebookPage page)
         {
             Vector2 c = rect.center; float s = Mathf.Min(rect.width, rect.height) * .8f;
@@ -562,8 +634,18 @@ namespace TooLateToPanic
         { Line(new Vector2(rect.x, rect.y + rect.height * .5f), new Vector2(rect.x + rect.width * .4f, rect.yMax), color, 3); Line(new Vector2(rect.x + rect.width * .4f, rect.yMax), new Vector2(rect.xMax, rect.y), color, 3); }
         static void PaperGrid(Rect rect)
         {
-            for (float x = rect.x; x < rect.xMax; x += 23) Fill(new Rect(x, rect.y, 1, rect.height), new Color(Rule.r, Rule.g, Rule.b, .045f));
-            for (float y = rect.y; y < rect.yMax; y += 23) Fill(new Rect(rect.x, y, rect.width, 1), new Color(Rule.r, Rule.g, Rule.b, .045f));
+            // Fine ruled stock with a faint red margin, sparse fibres and a bound top shadow.
+            for (float y = rect.y + 28; y < rect.yMax; y += 23)
+                Fill(new Rect(rect.x + 12, y, rect.width - 24, 1), new Color(.35f, .48f, .48f, .075f));
+            Fill(new Rect(rect.x + 20, rect.y + 18, 1, rect.height - 36), new Color(.78f, .37f, .34f, .18f));
+            for (int i = 0; i < 64; i++)
+            {
+                float x = rect.x + 12 + ((i * 137) % 997) / 997f * (rect.width - 24);
+                float y = rect.y + 22 + ((i * 193) % 991) / 991f * (rect.height - 40);
+                Fill(new Rect(x, y, i % 3 == 0 ? 2 : 1, 1), new Color(.43f, .35f, .21f, .06f));
+            }
+            for (int i = 0; i < 8; i++)
+                Fill(new Rect(rect.x, rect.y + i * 2, rect.width, 2), new Color(.28f, .22f, .13f, .025f * (1 - i / 8f)));
         }
     }
 }

@@ -23,7 +23,7 @@ namespace TooLateToPanic
             new DoorSeat("door_pantry","Kiler",6.4f,0,-2.8f),
             new DoorSeat("door_parent","Ebeveyn odası",UpperWestPartition,3.2f,3.9f,90),
             new DoorSeat("door_child","Çocuk odası",UpperWestPartition,3.2f,-3.2f,90),
-            new DoorSeat("door_study","Çalışma odası",UpperEastPartition,3.2f,-2.6f,90),
+            new DoorSeat("door_study","Panik odası",UpperEastPartition,3.2f,-2.6f,90),
             new DoorSeat("bathroom_door","Banyo",UpperEastPartition,3.2f,4.6f,90),
             new DoorSeat("door_balcony","Balkon",0,3.2f,-6),
             new DoorSeat("door_garage_inner","Garaj iç kapısı",8.1f,0,2.2f,90)};
@@ -47,7 +47,7 @@ namespace TooLateToPanic
             Move(model,"bed",new Vector3(-5.4f,3.2f,3.85f),0,"Ebeveyn yatağı");
             Move(model,"up_cabinet",new Vector3(-7.45f,3.2f,2.2f),270,"Ebeveyn dolabı");
             Move(model,"desk_upper",new Vector3(5.25f,3.2f,-4.9f),0,"Çalışma masası");
-            Move(model,"up_bookshelf",new Vector3(7.35f,3.2f,-.25f),270,"Çalışma kitaplığı");
+            Move(model,"up_bookshelf",new Vector3(7.35f,3.2f,-.25f),90,"Panik odası kitaplığı");
             // Reuse eight existing risk IDs. Every visible window now has exactly one Model target.
             Move(model,"window_west_north",new Vector3(-4,0,-5.82f),180,"Salon güney penceresi");
             Move(model,"window_west_upper_north",new Vector3(4,3.2f,-5.82f),180,"Çalışma odası güney penceresi");

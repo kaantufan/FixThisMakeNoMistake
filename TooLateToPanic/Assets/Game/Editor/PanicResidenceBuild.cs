@@ -18,7 +18,7 @@ namespace TooLateToPanic
         const string HomeArt = "Assets/Game/Resources/HomeArt";
         const string ResidenceArt = "Assets/Game/Resources/ResidenceArt";
         const string ScenePath = "Assets/Game/Scenes/TooLateToPanicResidence.unity";
-        const string Version = "0.4.14";
+        const string Version = "0.5.0";
 
         // Every explicit Create case in the residence r1 package; no default/fallback IDs.
         static readonly string[] ResidenceIds =
@@ -31,7 +31,7 @@ namespace TooLateToPanic
             "laundrybasket", "pendantlamp", "bunkerhatch", "bookshelf", "table", "tvstand", "toolbox", "cabinet", "kitchencabinet", "locker", "bagstation", "medicinecabinet", "supplycrate"
         };
 
-        [MenuItem("Too Late to Panic/Build Home V4.14")]
+        [MenuItem("Too Late to Panic/Build Home V5")]
         public static void Build()
         {
             try
@@ -88,12 +88,12 @@ namespace TooLateToPanic
                 }
 
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-                new GameObject("Too Late to Panic — Home V4.14").AddComponent<PanicHomeWorld>();
+                new GameObject("Too Late to Panic — Home V5").AddComponent<PanicHomeWorld>();
                 EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), ScenePath);
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
                 AssetDatabase.SaveAssets();
                 var project = Directory.GetParent(Application.dataPath).FullName;
-                var outputDir = Path.Combine(project, "Builds", "Home-V4.14-20261017");
+                var outputDir = Path.Combine(project, "Builds", "Home-V5-20261018");
                 var buildArgs = Environment.GetCommandLineArgs();
                 int auditOutput = Array.IndexOf(buildArgs, "-panicBuildDirectory");
                 if (auditOutput >= 0)

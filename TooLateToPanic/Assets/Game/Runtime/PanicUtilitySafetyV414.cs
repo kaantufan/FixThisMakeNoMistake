@@ -66,9 +66,9 @@ namespace TooLateToPanic
         { return action == "poweroff" ? complete ? "ELEKTRİK KESİK" : "ELEKTRİK AÇIK" : complete ? "VANA KAPALI" : "VANA AÇIK"; }
         public static string Effect(string action)
         {
-            return action == "gasoff" ? "Gaz kaynaklı ikincil deprem ve yangın hasarını azaltır." :
-                action == "wateroff" ? "Sel sırasında ev içi tesisat sızıntısının ek hasarını azaltır." :
-                "Sel ve yangında elektrik kaynaklı ikincil eşya hasarını azaltır.";
+            return action == "gasoff" ? "Gaz alevlenmesi riskini önler; deprem ve yangında eşya hasarını azaltır." :
+                action == "wateroff" ? "Tesisat sızıntısı riskini önler; selde eşya hasarını azaltır." :
+                "Ev elektriğini ve kısa devre riskini keser; sel ve yangında eşya hasarını azaltır.";
         }
     }
 }

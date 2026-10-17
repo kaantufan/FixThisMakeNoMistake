@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TooLateToPanic
 {
-    // Cosmetic traffic and response life uses true Model phases. Never writes Model, input, camera or physics.
+    // Traffic/response follows actual Model phases. V5 adds kinematic response collision; no Model/input/camera mutation.
     public sealed class PanicStreetLifeV414:MonoBehaviour
     {
         sealed class Walker
@@ -11,13 +11,13 @@ namespace TooLateToPanic
         sealed class Car
         {public GameObject Root;public float Offset,Speed;public Vector3 Previous;public PanicStreetLifeArtV414.VehicleModelFront ModelFront;}
         sealed class Response
-        {public Car Car;public Walker Crew;public float Delay,Destination;public Transform[] Wheels;public Renderer[] Beacons;}
+        {public Car Car;public Walker Crew;public float Delay,Destination;public PanicV5VehicleRig Rig;}
         readonly List<Walker> civilians=new List<Walker>(2);
         readonly List<Car> traffic=new List<Car>(2),parked=new List<Car>(2);
         readonly List<Response> response=new List<Response>(4);
         readonly List<ParticleSystem> residualSmoke=new List<ParticleSystem>(2);
         readonly GameObject[] wrecks=new GameObject[2];
-        readonly MaterialPropertyBlock beaconProperties=new MaterialPropertyBlock();
+        GameObject zodiac,zodiacCrew;PanicV5VehicleRig zodiacRig;Animator zodiacAnimator;float zodiacSpeed;
         GameObject streetRoot,responseRoot;
         PanicHomeWorld world;
         PanicPhase lastPhase;
@@ -29,10 +29,12 @@ namespace TooLateToPanic
         public bool ResponseActive {get{return responseRoot&&responseRoot.activeInHierarchy&&response.Count>0;}}
         public int CivilianCount {get{int count=0;foreach(var w in civilians)if(Visible(w.Root))count++;return count;}}
         public int MovingCivilianCount {get{int count=0;foreach(var w in civilians)if(Visible(w.Root)&&w.Speed>.01f)count++;return count;}}
-        public int ResponseVehicleCount {get{int count=0;foreach(var r in response)if(Visible(r.Car.Root))count++;return count;}}
+        public int ResponseVehicleCount {get{int count=Visible(zodiac)?1:0;foreach(var r in response)if(Visible(r.Car.Root))count++;return count;}}
         public int VehicleCount {get{int count=ResponseVehicleCount;foreach(var c in traffic)if(Visible(c.Root))count++;foreach(var c in parked)if(Visible(c.Root))count++;foreach(var go in wrecks)if(Visible(go))count++;return count;}}
-        public int MovingVehicleCount {get{int count=0;foreach(var c in traffic)if(Visible(c.Root)&&c.Speed>.01f)count++;foreach(var r in response)if(Visible(r.Car.Root)&&r.Car.Speed>.01f)count++;return count;}}
-        public int ResponderCount {get{int count=0;foreach(var r in response)if(r.Crew!=null&&Visible(r.Crew.Root))count++;return count;}}
+        public int MovingVehicleCount {get{int count=Visible(zodiac)&&zodiacSpeed>.01f?1:0;foreach(var c in traffic)if(Visible(c.Root)&&c.Speed>.01f)count++;foreach(var r in response)if(Visible(r.Car.Root)&&r.Car.Speed>.01f)count++;return count;}}
+        public int ResponderCount {get{int count=Visible(zodiacCrew)?1:0;foreach(var r in response)if(r.Crew!=null&&Visible(r.Crew.Root))count++;return count;}}
+        public bool ResponseBoatActive {get{return Visible(zodiac);}}
+        public GameObject ZodiacRoot {get{return zodiac;}}
         static bool Visible(GameObject root){return root&&root.activeInHierarchy;}
 
         public void Bind(PanicHomeWorld owner)
@@ -52,7 +54,7 @@ namespace TooLateToPanic
         public void ResetRun()
         {
             clock=responseClock=hazardClock=0;eventCount=0;HasObservedDisaster=false;phaseLatch=responsePending=false;
-            if(responseRoot){responseRoot.SetActive(false);Destroy(responseRoot);}responseRoot=null;response.Clear();
+            if(responseRoot){responseRoot.SetActive(false);Destroy(responseRoot);}responseRoot=null;response.Clear();zodiac=zodiacCrew=null;zodiacRig=null;zodiacAnimator=null;zodiacSpeed=0;
             for(int i=0;i<wrecks.Length;i++)if(wrecks[i]){wrecks[i].SetActive(false);Destroy(wrecks[i]);wrecks[i]=null;}
             residualSmoke.Clear();foreach(var c in traffic){c.Speed=0;if(c.Root)c.Root.SetActive(false);}
             foreach(var c in parked)if(c.Root)c.Root.SetActive(false);
@@ -103,6 +105,7 @@ namespace TooLateToPanic
         }
         void FreezeMotion()
         {
+            zodiacSpeed=0;if(zodiacAnimator)zodiacAnimator.speed=0;
             foreach(var c in traffic)c.Speed=0;
             foreach(var w in civilians){w.Speed=0;if(w.Animator)w.Animator.speed=0;}
             foreach(var r in response){r.Car.Speed=0;if(r.Crew!=null){r.Crew.Speed=0;if(r.Crew.Animator)r.Crew.Animator.speed=0;}}
@@ -120,19 +123,18 @@ namespace TooLateToPanic
         void CreateResponse()
         {
             if(responseRoot){responseRoot.SetActive(false);Destroy(responseRoot);}response.Clear();
+            zodiac=zodiacCrew=null;zodiacRig=null;zodiacAnimator=null;zodiacSpeed=0;
             responseRoot=new GameObject("V414 active emergency response "+LastObservedDisaster);responseRoot.transform.SetParent(streetRoot.transform,false);responseClock=0;
             for(int i=0;i<4;i++)
             {
                 var kind=(PanicStreetLifeArtV414.Service)i;var vehicle=PanicStreetLifeArtV414.EmergencyVehicle(kind);vehicle.transform.SetParent(responseRoot.transform,false);
                 var car=new Car{Root=vehicle,ModelFront=PanicStreetLifeArtV414.EmergencyModelFront};var crew=PanicStreetLifeArtV414.Responder(kind,i);Walker walker=null;
                 if(crew){crew.transform.SetParent(responseRoot.transform,false);crew.SetActive(false);float x=-11+i*7.5f;walker=new Walker{Root=crew,Animator=crew.GetComponentInChildren<Animator>(),A=new Vector3(x-1.6f,.085f,-23.75f),B=new Vector3(x+2.0f,.085f,-24.7f),Offset=i*.8f};}
-                var wheels=new List<Transform>();var beacons=new List<Renderer>();
-                foreach(var node in vehicle.GetComponentsInChildren<Transform>())if(node.name=="Response wheel")wheels.Add(node);
-                foreach(var renderer in vehicle.GetComponentsInChildren<Renderer>())if(renderer.transform.parent&&(renderer.transform.parent.name=="BeaconBlue"||renderer.transform.parent.name=="BeaconRed"))beacons.Add(renderer);
-                response.Add(new Response{Car=car,Crew=walker,Delay=i*1.6f,Destination=-11+i*7.5f,Wheels=wheels.ToArray(),Beacons=beacons.ToArray()});
+                response.Add(new Response{Car=car,Crew=walker,Delay=i*1.6f,Destination=-11+i*7.5f,Rig=vehicle.GetComponent<PanicV5VehicleRig>()});
                 vehicle.AddComponent<PanicVehicleAudio>().Bind(world,new[]{"siren_police","siren_ambulance","siren_fire","siren_rescue"}[i]);
                 vehicle.transform.SetPositionAndRotation(new Vector3(38+i*8,.035f,-21.3f),PanicStreetLifeArtV414.VehicleHeading(Vector3.left,car.ModelFront));car.Previous=vehicle.transform.position;
             }
+            if(LastObservedDisaster==DisasterType.Flood)CreateFloodZodiac();
         }
         void AnimateResponse(float dt)
         {
@@ -142,11 +144,31 @@ namespace TooLateToPanic
                 var r=response[i];float elapsed=Mathf.Max(0,responseClock-r.Delay),start=38+i*8;
                 float x=Mathf.MoveTowards(start,r.Destination,elapsed*5.2f),distance=Mathf.Abs(x-r.Destination);
                 r.Car.Root.transform.position=new Vector3(x,.035f,-21.3f);r.Car.Speed=dt>.00001f?Vector3.Distance(r.Car.Root.transform.position,r.Car.Previous)/dt:0;r.Car.Previous=r.Car.Root.transform.position;
-                foreach(var wheel in r.Wheels)wheel.Rotate(Vector3.right,r.Car.Speed*dt*160,Space.Self);
-                for(int b=0;b<r.Beacons.Length;b++)
-                {var renderer=r.Beacons[b];float flash=Mathf.Repeat(responseClock*2.5f+b*.5f+i*.17f,1)<.42f?1:.08f;Color color=renderer.transform.parent.name=="BeaconBlue"?new Color(.045f,.2f,1):new Color(1,.08f,.025f);beaconProperties.Clear();beaconProperties.SetColor("_EmissionColor",color*(flash*3));beaconProperties.SetColor("_Color",color*(.35f+.65f*flash));renderer.SetPropertyBlock(beaconProperties);}
+                if(r.Rig)
+                {
+                    r.Rig.Sample(r.Car.Speed,dt,responseClock,false);
+                    float open=distance<.1f?Mathf.Clamp01((elapsed-(start-r.Destination)/5.2f)*1.8f):0;
+                    r.Rig.SetDoorsOpen(open);
+                }
                 if(r.Crew!=null){r.Crew.Root.SetActive(distance<.1f);if(distance<.1f)MoveWalker(r.Crew,responseClock,.9f,dt);}
             }
+            if(zodiac)
+            {
+                float travel=Mathf.Min(7f,Mathf.Max(0,responseClock-2f)*.85f);
+                zodiacSpeed=travel<7f&&responseClock>2f?.85f:0;
+                float z=1f+travel;
+                float x=(PanicExteriorArt.CreekLeft+PanicExteriorArt.CreekRight)*.5f+Mathf.Sin(z*.13f)*.18f;
+                zodiac.transform.SetPositionAndRotation(new Vector3(x,PanicV5VehicleRig.FloodSurface(responseClock),z),Quaternion.Euler(Mathf.Sin(responseClock*1.5f)*.65f,0,Mathf.Sin(responseClock*1.7f)*.9f));
+                if(zodiacRig)zodiacRig.Sample(zodiacSpeed,dt,responseClock,false);
+                if(zodiacAnimator){zodiacAnimator.speed=1;zodiacAnimator.SetFloat("Speed",0);zodiacAnimator.SetBool("Airborne",false);zodiacAnimator.SetBool("Working",false);}
+            }
+        }
+        void CreateFloodZodiac()
+        {
+            zodiac=PanicV5ResponseArt.CreateZodiac();zodiac.transform.SetParent(responseRoot.transform,false);zodiacRig=zodiac.GetComponent<PanicV5VehicleRig>();
+            zodiac.transform.position=new Vector3((PanicExteriorArt.CreekLeft+PanicExteriorArt.CreekRight)*.5f,-.08f,1);
+            zodiacCrew=PanicV5ResponseArt.CreateResponder(PanicStreetLifeArtV414.Service.Rescue,18);
+            if(zodiacCrew){zodiacCrew.transform.SetParent(zodiac.transform,false);zodiacCrew.transform.localPosition=new Vector3(-.30f,.205f,-.55f);zodiacCrew.transform.localRotation=Quaternion.identity;zodiacAnimator=zodiacCrew.GetComponentInChildren<Animator>();}
         }
         void CreateAffectedCar(DisasterType type)
         {

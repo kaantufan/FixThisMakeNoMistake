@@ -40,7 +40,7 @@ namespace TooLateToPanic
         void ConfigureResidenceModel()
         {
             // V4.14 room graph uses one canonical set of door/item coordinates.
-            Model.Items.RemoveAll(i=>i.Id=="door_inner_upper");
+            Model.Items.RemoveAll(i=>i.Id=="door_inner_upper"||i.Id=="window_north_upper_east");
             var loungeSofa=Model.Items.Find(i=>i.Id=="sofa"); if(loungeSofa!=null)loungeSofa.ArtId="sofa_indigo";
             var bunker=Model.Items.Find(i=>i.Id=="bunker");if(bunker!=null){bunker.ArtId="bunkerhatch";bunker.Position=BunkerPosition;}
             var bag=Model.Items.Find(i=>i.Id=="bagstation");if(bag!=null){bag.Label="Afet çantası";bag.Position=PanicHouseLayoutV414.BagPosition;bag.Size=new Vector3(.48f,.62f,.32f);}
@@ -118,17 +118,17 @@ namespace TooLateToPanic
             AddDecor("decor_wc_toilet","toilet",new Vector3(2.9f,.035f,-5.52f),180);
             AddDecor("decor_wc_sink","sink",new Vector3(4.05f,.035f,-5.52f),180);
             AddDecor("decor_pantry_back","storagerack",new Vector3(6.3f,0,-5.4f),180);
-            AddDecor("decor_pantry_side","storagerack",new Vector3(7.42f,0,-4.15f),270);
+            AddDecor("decor_pantry_side","storagerack",new Vector3(7.42f,0,-4.15f),90);
             AddDecor("decor_lounge_armchair","armchair",new Vector3(-6.45f,0,-1.75f),45);
             AddDecor("decor_lounge_side","sidetable",new Vector3(-6.5f,0,2.8f));
             AddDecor("decor_dining_table","table",new Vector3(5.0f,0,2.6f));
-            AddDecor("decor_dining_chair_a","chair",new Vector3(5.0f,0,1.55f));
+            AddDecor("decor_dining_chair_a","chair",new Vector3(5.0f,0,1.55f),180);
             AddDecor("decor_dining_chair_b","chair",new Vector3(6.15f,0,2.6f),90);
             AddDecor("decor_child_books","books",new Vector3(-2.94f,4.21f,.26f),90,false);
             AddDecor("decor_child_cabinet","cabinet",new Vector3(-3.15f,3.2f,-.3f),90);
             AddDecor("decor_parent_sidetable","sidetable",new Vector3(-6.9f,3.2f,4.05f));
             AddDecor("decor_child_sidetable","sidetable",new Vector3(-6.9f,3.2f,-3.8f));
-            AddDecor("decor_basement_spare_crates","supplycrate",new Vector3(-6.7f,-3.2f,-1.6f));
+            AddDecor("decor_basement_spare_crates","supplycrate",new Vector3(-6.7f,-3.2f,-1.6f),270);
             AddDecor("decor_basement_seat","chair",new Vector3(5.8f,-3.2f,-3.65f),90);
             AddDecor("@fireplace","fireplace",new Vector3(-7.5f,0,.3f),-90);
             AddDecor("decor_radio_table","sidetable",new Vector3(-3.0f,0,4.95f));
@@ -136,13 +136,13 @@ namespace TooLateToPanic
             AddDecor("@garage","garagedoor",new Vector3(11.7f,0,0));
             garageLeaf=residenceTargets["@garage"].GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="DoorLeaf"||t.name=="GarageDoor");if(garageLeaf)garageLeafClosed=garageLeaf.localPosition;
             AddDecor("decor_car","car",new Vector3(11.8f,0,3.5f));
-            AddDecor("decor_toolwall","toolwall",new Vector3(14.9f,0,4.9f),270);
+            AddDecor("decor_toolwall","toolwall",new Vector3(14.9f,0,4.9f),90);
             AddDecor("decor_bicycle","bicycle",new Vector3(8.8f,0,4.4f),90);
-            AddDecor("decor_garage_shelf","storagerack",new Vector3(14.6f,0,2.2f),270);
+            AddDecor("decor_garage_shelf","storagerack",new Vector3(14.6f,0,2.2f),90);
             AddDecor("@laundry","washingmachine",new Vector3(6.7f,-3.2f,4.6f));
             BindHinge(residenceTargets["@laundry"],"@laundry",false);
             AddDecor("decor_basement_heater","waterheater",new Vector3(6.7f,-3.2f,2.4f));
-            AddDecor("decor_basement_shelf","storagerack",new Vector3(-6.6f,-3.2f,-3.7f));
+            AddDecor("decor_basement_shelf","storagerack",new Vector3(-6.6f,-3.2f,-3.7f),180);
             AddDecor("decor_basement_bench","desk",new Vector3(4,-3.2f,-3.8f));
             // Keep a full turning/egress strip behind the front door, on both sides.
             AddDecor("decor_entry_shoes","shoe_rack",new Vector3(1.25f,0,-4.4f));
@@ -181,6 +181,9 @@ namespace TooLateToPanic
         Vector3 ResidenceFocusPosition(GameObject target){var p=target.transform.position;p.y=Mathf.Round(p.y/3.2f)*3.2f;return p;}
         void AddDecor(string id,string art,Vector3 p,float rotation=0,bool collide=true)
         {
+            // V5 storage props are real finite sources. BuildObjects already created their art/collision.
+            if(sourceObjects.TryGetValue(id,out var sourceVisual)&&sourceVisual)
+            {sourceVisual.transform.SetPositionAndRotation(p,Quaternion.Euler(0,rotation,0));var source=Expedition.Sources.Find(s=>s.Id==id);if(source!=null){source.Position=p;source.Rotation=rotation;}return;}
             var go=CreateVisual(art);go.name=id;go.transform.position=p;go.transform.rotation=Quaternion.Euler(0,rotation,0);floorItems.Add(go);
             if(collide){if(id=="@garage"){var door=go.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="GarageDoor");if(door)AddBoundsCollider(door.gameObject);}else AddBoundsCollider(go);residenceObstacles.AddRange(go.GetComponents<Collider>());}
             if(id.StartsWith("@")){residenceTargets[id]=go;var pick=go.AddComponent<HomePick>();pick.Id=id;pick.Kind="decor";}
@@ -188,12 +191,12 @@ namespace TooLateToPanic
         bool InResidence(Vector3 p){return Mathf.Abs(p.x)<8.05f&&Mathf.Abs(p.z)<6.05f||p.y>2&&p.x>-5.6f&&p.x<1.6f&&p.z<-5.9f&&p.z>-9.1f||p.x>8.1f&&p.x<15.3f&&p.z>-.1f&&p.z<6.3f;}
         void UpdateResidenceVisibility(bool cutawayInside)
         {
-            if(residenceBalcony)SetResidenceRenderersVisible(residenceBalcony,!cutawayInside||ActiveFloor>=1);
+            if(residenceBalcony)SetResidenceRenderersVisible(residenceBalcony,!cutawayInside||CinematicViewFloorV5>=1);
             if(residenceGarage)
             {
-                bool shown=!cutawayInside||ActiveFloor==0;
+                bool shown=!cutawayInside||CinematicViewFloorV5==0;
                 SetResidenceRenderersVisible(residenceGarage,shown);
-                if(shown && cutawayInside) ApplyFacadeCutaway(residenceGarage,player.position,8.1f,15.3f,0,6.3f,0);
+                if(shown && cutawayInside) ApplyFacadeCutaway(residenceGarage,CinematicViewFocusV5,8.1f,15.3f,0,6.3f,0);
                 if(cutawayInside) foreach(var r in residenceGarage.GetComponentsInChildren<Renderer>(true)) if(HasParentNamed(r.transform,"Roof",residenceGarage.transform))r.enabled=false;
             }
         }
@@ -239,8 +242,18 @@ namespace TooLateToPanic
             }
         }
         void ToggleHearth(){hearthEnabled=!hearthEnabled;effects.Play("ignite",hearthEnabled?.38f:.16f);if(hearthFlame)hearthFlame.SetActive(hearthEnabled);if(hearthLight)hearthLight.enabled=hearthEnabled;}
-        void ToggleComputer(){computerEnabled=!computerEnabled;effects.Play("computer",.3f);ApplyComputerPower();UpdateContext();}
-        void ApplyComputerPower(){if(!residenceTargets.TryGetValue("@computer",out var pc)||!pc)return;var b=new MaterialPropertyBlock();foreach(var r in pc.GetComponentsInChildren<Renderer>()){var m=r.sharedMaterial;if(!m||!m.HasProperty("_EmissionColor")||!(m.name.Contains("_Screen")||m.name.Contains("_Glow")))continue;r.GetPropertyBlock(b);b.SetColor("_EmissionColor",computerEnabled?m.GetColor("_EmissionColor"):Color.black);r.SetPropertyBlock(b);}}
+        void ToggleComputer(){if(Model.UtilitySafety.PowerOff){Notice("Ana şalter kapalı; evde elektrik yok.");return;}computerEnabled=!computerEnabled;effects.Play("computer",.3f);ApplyComputerPower();UpdateContext();}
+        void ApplyComputerPower()
+        {
+            if(!residenceTargets.TryGetValue("@computer",out var pc)||!pc)return;
+            bool on=computerEnabled&&!Model.UtilitySafety.PowerOff;var b=new MaterialPropertyBlock();
+            foreach(var r in pc.GetComponentsInChildren<Renderer>())
+            {
+                var m=r.sharedMaterial;if(!m||!m.HasProperty("_EmissionColor")||!(m.name.Contains("_Screen")||m.name.Contains("_Glow")))continue;
+                r.GetPropertyBlock(b);b.SetColor("_EmissionColor",on?m.GetColor("_EmissionColor"):Color.black);
+                if(m.HasProperty("_Color"))b.SetColor("_Color",on?m.color:new Color(.018f,.025f,.029f));r.SetPropertyBlock(b);b.Clear();
+            }
+        }
         void Notice(string text){ShortNotice=text;noticeAge=2.2f;}
         public void ToggleRadio(){RadioEnabled=false;radioVoice.Stop();radioNoise.Stop();RadioHeadline="";Notice("Radyo daha sonra");UpdateContext();}
         string DisasterVoiceId(){return Model.Disaster==DisasterType.Earthquake?"earthquake":Model.Disaster==DisasterType.Flood?"flood":"fire";}

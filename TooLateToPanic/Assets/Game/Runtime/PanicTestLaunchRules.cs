@@ -9,6 +9,7 @@ namespace TooLateToPanic
     public static class PanicTestLaunchRules
     {
         public static readonly string[] Drivers = {
+            "--v5-smoke",
             "--quake414-smoke", "--wave50-smoke", "--overhaul414-smoke", "--home-smoke", "--residence-smoke", "--refinement-smoke", "--bathroom-smoke",
             "--doors-stairs-smoke", "--interaction-smoke", "--door-jam-smoke", "--developer-smoke",
             "--hud-concept-smoke", "--jury-smoke", "--fullflow-smoke", "--direct-actions-smoke",

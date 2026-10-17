@@ -44,71 +44,11 @@ namespace TooLateToPanic
             }
             return root;
         }
+        // V5 replaces the former response proxy shapes with detailed authored service assets.
         public static GameObject EmergencyVehicle(Service service)
-        {
-            PanicHomeArt.EnsurePalette();var root=new GameObject("V414 "+service+" response vehicle");
-            var owned=root.AddComponent<PanicStreetOwnedArtV414>();var b=new B();
-            bool truck=service==Service.Fire||service==Service.Rescue;
-            float length=truck?5.5f:service==Service.Ambulance?4.85f:4.35f;
-            M body=service==Service.Fire?M.Red:service==Service.Rescue?M.SafetyAmber:M.Linen;
-            b.Box(new Vector3(0,.47f,0),new Vector3(1.92f,.36f,length),M.Charcoal,.08f);
-            b.Box(new Vector3(0,.85f,0),new Vector3(1.89f,.65f,length-.18f),body,.065f);
-            // Cab at+Z; raised response body and a separate windshield define a real vehicle silhouette.
-            b.Box(new Vector3(0,1.40f,length*.27f),new Vector3(1.72f,.65f,1.5f),body,.04f);
-            b.Box(new Vector3(0,1.49f,length*.27f+.76f),new Vector3(1.50f,.40f,.035f),M.Glass,.018f);
-            b.Box(new Vector3(0,1.18f,length*.5f-.05f),new Vector3(1.75f,.22f,.08f),body,.025f);
-            for(int side=-1;side<=1;side+=2)
-            {
-                b.Box(new Vector3(side*.873f,1.46f,length*.27f),new Vector3(.027f,.42f,1.18f),M.Glass,.01f);
-                b.Box(new Vector3(side*.976f,.96f,.08f),new Vector3(.025f,.20f,length-.35f),service==Service.Police?M.Slate:service==Service.Ambulance?M.Red:M.Linen,.004f);
-                b.Box(new Vector3(side*.91f,1.01f,length*.13f),new Vector3(.025f,.035f,.24f),M.Steel,.007f);
-                b.Beam(new Vector3(side*.92f,1.40f,length*.38f),new Vector3(side*1.10f,1.40f,length*.38f),.035f,M.Charcoal);
-                b.Box(new Vector3(side*1.11f,1.43f,length*.38f),new Vector3(.08f,.17f,.14f),M.Charcoal,.01f);
-            }
-            b.Box(new Vector3(0,.53f,length*.5f),new Vector3(1.99f,.17f,.13f),M.Steel,.025f);
-            b.Box(new Vector3(0,.51f,-length*.5f),new Vector3(1.99f,.17f,.13f),M.Steel,.025f);
-            b.Box(new Vector3(0,.78f,length*.5f+.015f),new Vector3(.88f,.22f,.025f),M.Charcoal,.008f);
-            for(int side=-1;side<=1;side+=2)
-            {b.Box(new Vector3(side*.70f,.89f,length*.5f+.025f),new Vector3(.34f,.18f,.045f),M.WarmWindow,.018f);b.Box(new Vector3(side*.76f,.85f,-length*.5f-.025f),new Vector3(.20f,.29f,.035f),M.Red,.01f);}
-            if(service==Service.Ambulance)
-            {
-                b.Box(new Vector3(0,1.46f,-.68f),new Vector3(1.94f,1.05f,2.70f),M.Linen,.045f);
-                for(int side=-1;side<=1;side+=2)
-                {b.Box(new Vector3(side*.986f,1.43f,-.55f),new Vector3(.02f,.16f,.66f),M.Red,.004f);b.Box(new Vector3(side*.99f,1.43f,-.55f),new Vector3(.024f,.64f,.16f),M.Red,.004f);}
-            }
-            else if(service==Service.Fire)
-            {
-                b.Box(new Vector3(0,1.32f,-.70f),new Vector3(1.90f,.85f,2.9f),M.Red,.03f);
-                for(int side=-1;side<=1;side+=2)for(int bay=0;bay<3;bay++)
-                {float z=-1.65f+bay*.82f;b.Box(new Vector3(side*.968f,1.28f,z),new Vector3(.023f,.62f,.70f),M.Steel,.009f);for(int slat=0;slat<6;slat++)b.Box(new Vector3(side*.984f,1.02f+slat*.10f,z),new Vector3(.012f,.014f,.64f),M.Charcoal,.002f);}
-                for(int side=-1;side<=1;side+=2)b.Beam(new Vector3(side*.34f,1.85f,-2.1f),new Vector3(side*.34f,1.85f,1.1f),.06f,M.Steel);
-                for(int i=0;i<11;i++)b.Beam(new Vector3(-.34f,1.85f,-2.1f+i*.31f),new Vector3(.34f,1.85f,-2.1f+i*.31f),.04f,M.Steel);
-            }
-            else if(service==Service.Rescue)
-            {b.Box(new Vector3(0,1.18f,-1.0f),new Vector3(1.8f,.60f,2.5f),M.SafetyAmber,.025f);b.Box(new Vector3(0,1.52f,-1),new Vector3(1.70f,.08f,2.3f),M.Charcoal,.01f);for(int i=0;i<3;i++)b.Box(new Vector3(-.5f+i*.5f,1.65f,-1),new Vector3(.42f,.22f,.75f),M.Olive,.025f);}
-            b.Attach(root,"ResponseBodyCabMirrorsCompartments");
-            foreach(int side in new[]{-1,1})foreach(float z in new[]{-length*.30f,length*.30f})
-            {
-                var wheel=new GameObject("Response wheel");wheel.transform.SetParent(root.transform,false);wheel.transform.localPosition=new Vector3(side*.99f,.36f,z);var wb=new B();
-                wb.Cylinder(Vector3.zero,.34f,.20f,M.Black,20,Quaternion.Euler(0,0,90));wb.Cylinder(new Vector3(side*.025f,0,0),.19f,.215f,M.Steel,16,Quaternion.Euler(0,0,90));wb.Attach(wheel,"TyreHub");
-            }
-            for(int i=0;i<2;i++)
-            {
-                var beacon=new GameObject(i==0?"BeaconBlue":"BeaconRed");beacon.transform.SetParent(root.transform,false);beacon.transform.localPosition=new Vector3(i==0?-.40f:.40f,truck?1.94f:1.86f,length*.27f);
-                var lb=new B();lb.Box(Vector3.zero,new Vector3(.55f,.13f,.30f),M.Linen,.025f);lb.Attach(beacon,"ResponseLightbar");
-                Color c=i==0?new Color(.045f,.20f,1):new Color(1,.08f,.025f);var mat=new Material(Shader.Find("Standard")){name="V414 response beacon "+i,color=c};mat.EnableKeyword("_EMISSION");mat.SetColor("_EmissionColor",c*2);owned.Owned.Add(mat);
-                foreach(var renderer in beacon.GetComponentsInChildren<Renderer>())renderer.sharedMaterial=mat;
-            }
-            OwnCombinedMeshes(root,owned);return root;
-        }
+        { return PanicV5ResponseArt.CreateVehicle(service); }
         public static GameObject Responder(Service service,int variant)
-        {
-            var root=PanicExteriorArt.CreatePedestrianVisual(variant+12);if(!root)return null;root.name="V414 "+service+" responder";
-            var owner=root.GetComponent<PanicExteriorOwnedArt>();Color color=service==Service.Police?new Color(.12f,.19f,.31f):service==Service.Fire?new Color(.49f,.26f,.10f):service==Service.Rescue?new Color(.77f,.35f,.08f):new Color(.76f,.77f,.65f);
-            foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
-            {var materials=renderer.sharedMaterials;for(int i=0;i<materials.Length;i++)if(materials[i]&&materials[i].name.Contains("Neighbour canvas")){var clone=new Material(materials[i]){name="V414 response uniform "+service,color=color};owner.Materials.Add(clone);materials[i]=clone;}renderer.sharedMaterials=materials;}
-            return root;
-        }
+        { return PanicV5ResponseArt.CreateResponder(service,variant); }
         public static GameObject Wreck(DisasterType type)
         {
             var root=CivilianCar(2);root.name="V414 "+type+" affected parked car";PanicHomeArt.EnsurePalette();var b=new B();

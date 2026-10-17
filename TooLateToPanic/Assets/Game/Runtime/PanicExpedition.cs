@@ -22,6 +22,7 @@ namespace TooLateToPanic
         public string ArtId;
         public Vector3 Position;
         public int Floor;
+        public float Rotation;
         public bool Open;
         public bool AutoLooted;
         public List<SupplySlot> Contents;
@@ -128,6 +129,7 @@ namespace TooLateToPanic
             for (int i = 0; i < Sources.Count; i++)
                 sourceBlueprints[Sources[i].Id] = CloneSlots(Sources[i].Contents);
             Work = new PanicWorkSession();
+            ResetWaveLootV5();
             Message = "Dolaplardan yapı malzemesi, odalardan erzak topla.";
         }
 
@@ -173,14 +175,24 @@ namespace TooLateToPanic
             NotifyModel();
         }
 
-        /// <summary>Refills only renewable consumables after a successfully completed wave.</summary>
+        /// <summary>Restocks finite household loot exactly once for each newly begun wave.</summary>
         public void OnNewWave()
         {
-            if (Model != null && Model.IsJuryDemo) return;
+            if (Model == null || Model.IsJuryDemo || Model.Wave <= StockedWaveV5 ||
+                (Model.Phase != PanicPhase.Preparing && Model.Phase != PanicPhase.Tutorial)) return;
             SyncConsumedBagSupplies();
-            RefillRenewableWorldSupplies();
-            Message = "Yeni dalga başladı. Odalardaki su, gıda ve piller yenilendi.";
+            RestockWaveLootV5();
+            Message = "Yeni dalga · odalardaki erzak ve yapı malzemeleri yeniden dağıtıldı.";
             NotifyModel();
+        }
+
+        /// <summary>World validates the actual active shelter's floor, path and distance first.</summary>
+        public bool EnterShelter()
+        {
+            if (Model == null) return false;
+            bool entered = Model.TryEnterShelterV5(Model.RequiredShelterV5);
+            Message = Model.Message;
+            return entered;
         }
 
         public bool ToggleSource(string id)
@@ -480,8 +492,21 @@ namespace TooLateToPanic
                 Source("up_bookshelf", "Üst kat kitaplığı", "bookshelf",new Vector3(-6,3.2f,-3.8f),1,Stack("bracket",1),Stack("screws",2)),
                 Source("bath_cabinet", "Banyo dolabı", "medicinecabinet",new Vector3(PanicHouseLayoutV414.UpperEastPartition+.24f,3.2f,2.5f),1,Stack("screws",2)),
                 Source("garage_tools", "Garaj alet kutusu", "toolbox",new Vector3(14,0,5),0,Stack("screws",4),Stack("bracket",3),Stack("extinguisher",1)),
-                Source("basement_pantry", "Bodrum deposu", "supplycrate",new Vector3(-5,-3.2f,4),-1,Stack("sandbag",4),Stack("plank",4),Stack("seedling",3),Stack("hose",1),Stack("extinguisher",1))
+                Source("basement_pantry", "Bodrum deposu", "supplycrate",new Vector3(-5,-3.2f,4),-1,Stack("sandbag",4),Stack("plank",4),Stack("seedling",3),Stack("hose",1),Stack("extinguisher",1)),
+                SourceV5("decor_pantry_back", "Kiler büyük rafı", "storagerack",new Vector3(6.3f,0,-5.4f),0,180,Stack("plank",3),Stack("sandbag",2)),
+                SourceV5("decor_pantry_side", "Kiler küçük rafı", "storagerack",new Vector3(7.42f,0,-4.15f),0,270,Stack("screws",3),Stack("bracket",2)),
+                SourceV5("decor_child_cabinet", "Çocuk odası dolabı", "cabinet",new Vector3(-3.15f,3.2f,-.3f),1,90,Stack("screws",2),Stack("plank",2)),
+                SourceV5("decor_garage_shelf", "Garaj malzeme rafı", "storagerack",new Vector3(14.6f,0,2.2f),0,270,Stack("plank",3),Stack("bracket",2)),
+                SourceV5("decor_basement_shelf", "Bodrum rafı", "storagerack",new Vector3(-6.6f,-3.2f,-3.7f),-1,0,Stack("sandbag",2),Stack("plank",2)),
+                SourceV5("decor_basement_spare_crates", "Bodrum yedek sandığı", "supplycrate",new Vector3(-6.7f,-3.2f,-1.6f),-1,0,Stack("screws",3),Stack("hose",1))
             };
+        }
+
+        private static LootSource SourceV5(string id, string label, string artId, Vector3 position, int floor, float rotation, params SupplySlot[] items)
+        {
+            LootSource source = Source(id, label, artId, position, floor, items);
+            source.Rotation = rotation;
+            return source;
         }
 
         private static LootSource Source(string id, string label, string artId, Vector3 position, int floor, params SupplySlot[] items)

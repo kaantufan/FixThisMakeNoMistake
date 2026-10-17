@@ -56,6 +56,7 @@ namespace TooLateToPanic
             var pantry=Expedition.Sources.Find(s=>s.Id=="basement_pantry");
             if(pantry!=null)pantry.Position=new Vector3(-6.5f,-3.2f,3.8f);
             PanicHouseLayoutV414.ConfigureSources(Expedition, Model);
+            ConfigureV5SourceArt();
         }
 
         void ResetRevisionWorld()
@@ -95,8 +96,7 @@ namespace TooLateToPanic
                     visual.transform.SetParent(root.transform, false); MakeCosmeticOnly(visual);
                     // A stable, bounded trigger owns picking; cosmetic gather motion cannot move it.
                     var pick = root.AddComponent<HomePick>(); pick.Id = supply.Id; pick.Kind = "supply";
-                    var hit = root.AddComponent<BoxCollider>();
-                    hit.center = new Vector3(0, .12f, 0); hit.size = new Vector3(.28f, .30f, .28f); hit.isTrigger = true;
+                    ConfigurePickupColliderV5(root,visual);
                     worldSupplyObjects[supply.Id] = root;
                 }
                 root.transform.position = supply.Position;
@@ -120,14 +120,18 @@ namespace TooLateToPanic
                 case "supply_battery_upper":support="desk_upper";local=new Vector3(.60f,.809f,-.31f);break;
                 case "supply_radio_upper":support="desk_upper";local=new Vector3(-1.30f,.025f,-.1f);break;
                 case "supply_water_upper":support="desk_upper";local=new Vector3(-1.05f,.025f,.6f);break;
-                case "supply_blanket_bed":support="bed";local=new Vector3(-.38f,.755f,-.55f);break;
-                case "supply_food_upper":support="bed";local=new Vector3(.35f,.755f,-.65f);break;
+                case "supply_blanket_bed":support="bed";local=new Vector3(-.38f,.80f,-.55f);break;
+                case "supply_food_upper":support="bed";local=new Vector3(.35f,.80f,-.65f);break;
+                case "supply_water_pantry_v5":support="decor_pantry_back";local=new Vector3(-.38f,.92f,-.08f);break;
+                case "supply_food_pantry_v5":support="decor_pantry_side";local=new Vector3(0,1.14f,-.06f);break;
+                case "supply_battery_child_v5":support="decor_child_sidetable";local=new Vector3(0,.61f,0);break;
+                case "supply_firstaid_basement_v5":support="decor_basement_bench";local=new Vector3(0,.809f,0);break;
                 case "supply_water_basement":support="decor_basement_bench";local=new Vector3(-.40f,.809f,-.20f);break;
                 case "supply_food_basement":support="decor_basement_bench";local=new Vector3(.38f,.809f,-.20f);break;
             }
             if(support==null)return;
             GameObject go;
-            if(!items.TryGetValue(support,out go))go=floorItems.Find(g=>g&&g.name==support);
+            if(!items.TryGetValue(support,out go)&&!sourceObjects.TryGetValue(support,out go))go=floorItems.Find(g=>g&&g.name==support);
             if(go)supply.Position=go.transform.TransformPoint(local);
         }
 
@@ -140,6 +144,7 @@ namespace TooLateToPanic
             if (Model.IsPaused || InputLocked || NotebookBlocksInput || WorkActive || IsMoving || InventoryOpen || !CanInteract || supply.Floor != ActiveFloor) return false;
             string id = supply.ItemId; int count = supply.Count; Vector3 start = supply.Position;
             if (!Expedition.TryCollectWorldSupply(supply.Id)) { Notice("Envanterde yer yok"); effects.Play("reject", .25f); return false; }
+            count=Expedition.LastWorldSupplyCollectedCountV5;
             ClearPickupFocus(); GatherItemId = id; GatherCount = count; GatherFeedback = .5f; gatherPoseTime = .48f;
             lastNotice = Model.Message; BeginPickupPresentation(id, start, 0);
             effects.Play(PanicAudioBank.Pickup(id), .35f); BeginBagHandCue();

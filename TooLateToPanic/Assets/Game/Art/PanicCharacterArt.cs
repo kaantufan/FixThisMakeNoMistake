@@ -94,14 +94,14 @@ namespace TooLateToPanic
             new GameObject(Tag).transform.SetParent(model, false);
             var art = new Batch(model);
             // Civilian palette references the actual defter BaseColor; no incompatible UV texture transfer.
-            Material jacket = Mat("Resident muted pine jacket", new Color(.18f,.29f,.27f), .12f);
-            Material seams = Mat("Resident jacket subtle seams", new Color(.15f,.24f,.225f), .11f);
+            Material jacket = Mat("Resident V5 indigo civilian jacket", new Color(.19f,.29f,.43f), .12f);
+            Material seams = Mat("Resident V5 jacket quiet denim seams", new Color(.13f,.20f,.31f), .11f);
             Material trousers = Mat("Resident charcoal trousers", new Color(.135f,.145f,.17f), .09f);
             Material olive = trousers;
             Material rust = Mat("Resident warm brown casual shoes", new Color(.24f,.18f,.135f), .16f);
             Material leather = Mat("Resident dark brown sole", new Color(.12f,.105f,.095f), .14f);
             Material metal = Mat("Resident small muted fastener", new Color(.26f,.28f,.27f), .20f,.2f);
-            Material shirt = Mat("Resident light grey T shirt", new Color(.79f,.82f,.81f), .07f);
+            Material shirt = Mat("Resident V5 ochre knit collar", new Color(.58f,.39f,.18f), .07f);
             Material skin = Mat("Resident uncovered warm face and hands", new Color(.67f,.47f,.36f), .20f);
             Material hair = Mat("Resident short dark hair and beard", new Color(.065f,.055f,.048f), .10f);
             Material eyes = Mat("Resident dark eyes", new Color(.055f,.043f,.033f), .20f);
@@ -142,14 +142,16 @@ namespace TooLateToPanic
             art.Rings("collar", chest, shirt, centre,
                 new[] { nck.y - .052f, nck.y + .015f }, new[] { .103f, .082f }, new[] { .097f, .079f });
             float front = centre.z + torsoDepth + .008f;
-            float shirtBottom=h.y+.075f,shirtTop=nck.y-.055f,shirtHeight=Mathf.Max(.22f,shirtTop-shirtBottom);
-            art.Box("plain light T shirt visible in open jacket",chest,shirt,new Vector3(centre.x,(shirtBottom+shirtTop)*.5f,front+.012f),new Vector3(halfWidth*.70f,shirtHeight,.018f));
+            // V5: a continuous jacket replaces the old flat pale T-shirt box. That rectangle was
+            // the reported white chest plate; there is no new chest sign, panel or hidden mesh.
+            float seamBottom=h.y+.11f,seamTop=nck.y-.08f;
+            art.Box("quiet jacket centre seam",chest,seams,new Vector3(centre.x,(seamBottom+seamTop)*.5f,front+.006f),new Vector3(.009f,seamTop-seamBottom,.006f));
             for(int side=-1;side<=1;side+=2)
             {
-                art.Box("simple open jacket edge",chest,jacket,new Vector3(centre.x+side*halfWidth*.405f,(shirtBottom+shirtTop)*.5f,front+.025f),new Vector3(.032f,shirtHeight+.015f,.022f),Quaternion.Euler(0,0,-side*3));
+                art.Box("soft jacket collar lapel",chest,jacket,new Vector3(centre.x+side*.073f,nck.y-.078f,front-.017f),new Vector3(.10f,.11f,.019f),Quaternion.Euler(0,0,-side*24));
+                art.Box("small angled civilian chest seam",chest,seams,new Vector3(centre.x+side*.132f,seamTop-.19f,front-.008f),new Vector3(.09f,.008f,.008f),Quaternion.Euler(0,0,side*5));
                 art.Box("quiet jacket welt pocket",hips,seams,new Vector3(centre.x+side*halfWidth*.56f,h.y+.015f,centre.z+torsoDepth*.96f),new Vector3(.095f,.015f,.012f));
             }
-
             // A closed pelvis garment covers the hip articulation underneath the jacket hem.
             art.Rings("trouser seat", hips, trousers, centre,
                 new[] { h.y - .19f, h.y - .11f, h.y + .045f },

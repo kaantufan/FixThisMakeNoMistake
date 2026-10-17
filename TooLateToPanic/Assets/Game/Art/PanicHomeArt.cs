@@ -108,8 +108,17 @@ namespace TooLateToPanic
                 Place(root, tree, treeSeats[i], i * 71);
             }
             // Neighbor houses are complete silhouettes with pitched roofs, recessed windows and yards.
+            int neighbourIndex=0;
             foreach(var site in PanicExteriorArt.NeighbourSites)
-                Neighbour(b,site.Position,site.Width,site.Depth,site.Height,site.Yaw,site.Pale);
+            {
+                // Separate visual roots let every house react around its own foundation.
+                // Scenery has no physics; streets, stream, trees and utility poles stay still.
+                var house=new GameObject("V5 Neighbour house "+neighbourIndex++);
+                house.transform.SetParent(root.transform,false);house.transform.localPosition=site.Position;
+                var facade=new Builder();
+                Neighbour(facade,Vector3.zero,site.Width,site.Depth,site.Height,site.Yaw,site.Pale);
+                facade.Attach(house,"neighbour_facade");
+            }
             ExteriorStreetDetails(b);
             var stream=PanicExteriorArt.CreateStream();stream.transform.SetParent(root.transform,false);
             // Utility poles and wires ground the scene in an inhabited street.
@@ -321,7 +330,8 @@ namespace TooLateToPanic
                 b.Box(new Vector3(0,.97f,zs-.05f),new Vector3(2.1f,.07f,.08f),M.Walnut,.018f);
             }
             b.Attach(deck,"floor_finish");
-            WallWithWindows(north,"north",false,6,-8,8,new[]{-4f,4f},0,WallHeight);
+            // The upper east opening belonged to the bathroom: V5 makes it a solid wall.
+            WallWithWindows(north,"north",false,6,-8,8,floor==1?new[]{-4f}:new[]{-4f,4f},0,WallHeight);
             WallWithWindows(west,"west",true,-8,-6,6,new[]{-3f},0,WallHeight);
             // South openings: living-room window below, study window above, retained front/balcony door.
             float window=floor==0?-4:4;
