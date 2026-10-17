@@ -1,3 +1,5 @@
+> Latest source documentation snapshot: [20261017T170431Z](TooLateToPanic/Documentation/Publications/Snapshots/20261017T170431Z/snapshot-receipt.json). Documentation and draft declarations are updated; the playable release below is unchanged. No form was submitted.
+
 > Source-only update: this snapshot advances beyond the recorded playable package. No new build, native test, release, tag or upload is performed. Existing package acceptance does not certify these later source changes.
 
 # Too Late to Panic! — Home V4.13 /0.4.13

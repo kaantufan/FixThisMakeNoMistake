@@ -1,3 +1,5 @@
+> Source documentation snapshot. The promoted playable package at this snapshot is [Home V4.13 /0.4.13](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.13). This push changes documentation only; draft labels and team-confirmation fields remain authoritative. Local Evidence links refer to the original development archive. No form submission, new build/native/OS test or playable release is performed. Historical version-specific observations remain as originally recorded.
+
 # Too Late to Panic! — Dış araştırma, best practice karşılaştırması ve objektif eleştiri
 
 **Tarih:** 17 Ekim 2026 · **Kapsam:** yalnız aktif izometrik oyun (Home V4.12–V4.14 kaynakları, LATEST = V4.13) · **Tür:** araştırma ve değerlendirme. Kod, build veya kayıt değiştirilmedi.
@@ -42,7 +44,7 @@ Md. 7.3: Final sunumları jüri önünde yapılıyor. Yani oyunun **sunum anınd
 
 | Kural | Durum | Risk |
 |---|---|---|
-| 5.2 / 6.5: public repo + **tam commit kimliği**; 3.7: oynanabilir sürüm ile kaynak uyumlu | `LATEST-BUILD.json` → `publishedToGitHub: false` (V4.13). Builds'te V4.14-r3 de var. Son doğrulanmış yayın V4.5 (`7b30510e…`). Evidence'ta autopush kontrol kayıtları var ama son teslim edilecek ZIP ↔ commit eşleşmesini gösteren bir kayıt göremedim. | **Yüksek.** Teslimde verilecek commit, ZIP'in derlendiği kaynakla birebir eşleşmeli. |
+| 5.2 / 6.5: public repo + **tam commit kimliği**; 3.7: oynanabilir sürüm ile kaynak uyumlu | **Düzeltme (17 Ekim 19:50):** İlk sürümdeki “yayımlanmadı” yargısı eskimiş `LATEST-BUILD.json` alanına dayanıyordu. GitHub'da `v0.4.13` release'i var: tag commit'i `b551edfc…`, ZIP digest'i yerel ZIP ile aynı, kaynak–build farkı 0. Asıl risk başka: otomatik yayın `main`'e her 10 dakikada build'den ileride kaynak snapshot'ları itiyor. Forma `main` HEAD'i yazılırsa md. 3.7 ihlal edilir. | **Orta.** Forma yalnız teslim edilen release tag'inin commit'i yazılmalı. Ayrıntı: `TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md` §1. |
 | 4.2 / 4.4: AI kullanımı araç + amaç + yer olarak beyan edilir; eksik/yanlış beyan diskalifiye | Kod ve belgelerin büyük kısmı AI ajanlarıyla üretildi; Meshy AI karakter kaynağı, ElevenLabs konuşma/SFX var. Proje içinde **tek, konsolide bir AI beyanı belgesi bulamadım**; parçalar ASSET-CREDITS ve kanıt klasörlerine dağılmış. | **Yüksek.** Formda eksiksiz yazılmazsa en iyi oyun bile elenir (md. 10.1). |
 | 3.4 / 3.6: her hazır kaynak beyan edilir; yeniden dağıtımı kısıtlı ham asset public repoya konmaz | ASSET-CREDITS kendisi “Korunan Meshy kaynakları ve yeni bunker için kamuya yeniden dağıtım lisansı ayrıca doğrulanmış değildir” diyor. | **Orta–yüksek.** Lisansı doğrulanamayan dosya repoya girmemeli ya da kaldırılmalı. |
 | 5.3 / A.1: bağlantı hesapsız açılmalı | ZIP 178 MB. GitHub Release asset uygundur. Çıkış yapılmış tarayıcıda denenmeli. | Düşük, ama test edilmeli. |
@@ -224,8 +226,8 @@ Kısa akış ilk 180 saniyede bir tam döngü hedefliyor. Doğru hedef, ama öl�
 
 ### 8.1 Mutlaka (puandan önce: uygunluk)
 
-1. Public repoyu son ZIP'in derlendiği kaynakla eşitle; teslim formuna **tam commit SHA** yaz; çıkış yapılmış tarayıcıda indirme testini yap.
-2. Tek bir **AI beyanı** yaz: ajan tabanlı kod/belge üretimi, Meshy (karakter kaynağı), ElevenLabs (7 konuşma + 3 SFX). Her biri araç / amaç / oyundaki yer olarak.
+1. Teslim formuna `main` HEAD'i değil, teslim edilen ZIP'in **release tag commit'ini** yaz (bugün: `v0.4.13` → `b551edfc…`); çıkış yapılmış tarayıcıda indirme testini yap.
+2. Tek bir **AI beyanı** yaz: ajan tabanlı kod/belge üretimi, Antigravity (Yarkın), ElevenLabs (konuşma, efekt, müzik), Meshy (yalnız V4.14+). Her biri araç / amaç / oyundaki yer olarak. Taslak: `TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md`.
 3. Asset beyanı: Quaternius CC0, OFL fontlar, Yarkın kaynakları, Meshy. Lisansı doğrulanamayan ham dosyaları public repodan çıkar (md. 3.6).
 
 ### 8.2 Yüksek değer / düşük–orta maliyet (tema ve oynanabilirlik)
