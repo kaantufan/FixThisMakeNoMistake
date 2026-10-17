@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -167,6 +167,8 @@ namespace TooLateToPanic
 
         public GameObject CreateVisual(string id)
         {
+            if ((id == "bunkerhatch" || id == "bunker") && PanicCuratedAssetArt.TryCreateFixture(id, out var curatedHatch))
+                return NormalizeFixtureRoot(curatedHatch, id);
             if (ResidenceIds.Contains(id)) { var cached=Resources.Load<GameObject>("ResidenceArt/"+id); return NormalizeFixtureRoot(cached ? Instantiate(cached) : PanicResidenceArt.Create(id), id); }
             bool home = new[] { "window", "door", "fridge", "cabinet", "tree", "drain", "fence", "hose", "toolbox", "medicinecabinet", "kitchencabinet", "locker", "supplycrate", "stairs", "workbench", "generator" }.Contains(id);
             var prefab = Resources.Load<GameObject>((home ? "HomeArt/" : "Art/") + id);
@@ -866,6 +868,7 @@ namespace TooLateToPanic
             foreach (var mf in meshes)
             {
                 if (!mf.sharedMesh) continue;
+                if (mf.name.Contains("WellShaft_Deep") || mf.name.Contains("WellPortal_Disc")) continue;
                 var mb = mf.sharedMesh.bounds;
                 for (int mask = 0; mask < 8; mask++)
                 {
@@ -873,7 +876,20 @@ namespace TooLateToPanic
                     v = go.transform.InverseTransformPoint(mf.transform.TransformPoint(v)); if (!any) { b = new Bounds(v, Vector3.zero); any = true; } else b.Encapsulate(v);
                 }
             }
-            if (any) { var col = go.AddComponent<BoxCollider>(); col.center = b.center; col.size = b.size; }
+            if (any)
+            {
+                var col = go.AddComponent<BoxCollider>();
+                if (go.name == "bunker")
+                {
+                    col.center = new Vector3(0f, .19f, 0f);
+                    col.size = new Vector3(1.48f, .38f, 1.46f);
+                }
+                else
+                {
+                    col.center = b.center;
+                    col.size = b.size;
+                }
+            }
         }
         LineRenderer MakeLine(string name, Vector3[] points, Color color, float width)
         {

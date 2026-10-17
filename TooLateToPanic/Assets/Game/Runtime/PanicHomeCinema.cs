@@ -38,6 +38,7 @@ namespace TooLateToPanic
         Vector3 residenceCameraVelocity;
         GameObject residenceFailureCrate;
         GameObject residenceFailureLampObject;
+        GameObject residenceCutsceneThrownBag;
         Transform residenceSavedSupplyDisplay;
         bool residenceSavedSupplyDisplayActive;
         bool residenceSkipInProgress;
@@ -98,13 +99,14 @@ namespace TooLateToPanic
                 BeginResidenceSession();
                 SetResidenceCinematic("Disaster", "Afet başladı", 8f);
                 cinematicActorStart = player ? player.position : residenceReturnPosition;
-                cinematicHatchApproach = BunkerPosition + new Vector3(0f, .04f, -.56f);
+                cinematicHatchApproach = BunkerPosition + new Vector3(0f, .04f, -.88f);
                 cinematicActorEnd = BunkerInteriorPosition + new Vector3(0f, .04f, -.42f);
                 CinematicShowsActor = true;
                 SetResidenceActorFlags(false, false, 0f);
                 SetBunkerDoorOpen(true);
                 if (effects) effects.StartCinematicWeather();
                 if (Model.IsSimulation) { CinematicShowsActor=false;SetBunkerDoorOpen(false); }
+                else EnsureCutsceneThrownBag();
                 return;
             }
 
@@ -415,27 +417,116 @@ namespace TooLateToPanic
             }
         }
 
+        void EnsureCutsceneThrownBag()
+        {
+            if (residenceCutsceneThrownBag) Destroy(residenceCutsceneThrownBag);
+            residenceCutsceneThrownBag = PanicCuratedAssetArt.CreateEmergencyBackpack();
+            if (residenceCutsceneThrownBag)
+            {
+                residenceCutsceneThrownBag.name = "BunkerCutscene_ThrownBag";
+                residenceCutsceneThrownBag.transform.localScale *= 0.86f;
+            }
+        }
+
+        static void ApplyWellDepthDarkening(GameObject target, float worldY)
+        {
+            if (!target) return;
+            // Collar mouth is at BunkerPosition.y + 0.34f; darken exponentially below the collar into the abyss.
+            float depthBelowRim = Mathf.Max(0f, (BunkerPosition.y + 0.28f) - worldY);
+            float brightness = Mathf.Exp(-depthBelowRim * 3.2f);
+            var block = new MaterialPropertyBlock();
+            foreach (var r in target.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!r || !r.sharedMaterial || !r.sharedMaterial.HasProperty("_Color")) continue;
+                r.GetPropertyBlock(block);
+                Color baseCol = r.sharedMaterial.color;
+                block.SetColor("_Color", new Color(baseCol.r * brightness, baseCol.g * brightness, baseCol.b * brightness, baseCol.a));
+                r.SetPropertyBlock(block);
+            }
+        }
+
         void TickResidenceDisasterActor()
         {
             if(Model.IsSimulation){CinematicShowsActor=false;SetResidenceActorFlags(false,false,0);return;}
             float age = residenceCinematicAge;
-            if (age < 1.35f)
+            Vector3 wellCenterMouth = BunkerPosition + new Vector3(0f, .38f, 0f);
+            Vector3 wellDeepTarget = BunkerPosition + new Vector3(0f, -1.75f, 0f);
+
+            // Stage 1 (0.00s .. 1.05s): Approach the front steps of the bunker hatch and open the heavy lid
+            if (age < 1.05f)
             {
                 CinematicShowsActor = true;
-                float t = SmoothResidence01(age / 1.35f);
+                float t = SmoothResidence01(age / 1.05f);
                 if (player) player.position = Vector3.Lerp(cinematicActorStart, cinematicHatchApproach, t);
                 FaceResidenceActor(BunkerPosition - (player ? player.position : cinematicHatchApproach));
-                SetResidenceActorFlags(false, false, .82f);
+                bool grabbingHatch = age >= 0.45f;
+                if (grabbingHatch) gatherPoseTime = 0.25f;
+                SetResidenceActorFlags(grabbingHatch, grabbingHatch, grabbingHatch ? 0.15f : 0.85f);
+
+                if (residenceCutsceneThrownBag && player)
+                {
+                    residenceCutsceneThrownBag.SetActive(true);
+                    Vector3 forward = Flat(BunkerPosition - player.position).normalized;
+                    if (forward.sqrMagnitude < .001f) forward = Vector3.forward;
+                    Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+                    residenceCutsceneThrownBag.transform.position = player.position + Vector3.up * 0.88f + forward * 0.28f + right * 0.16f;
+                    residenceCutsceneThrownBag.transform.rotation = Quaternion.LookRotation(forward, Vector3.up) * Quaternion.Euler(14f, 0f, -12f);
+                    ApplyWellDepthDarkening(residenceCutsceneThrownBag, residenceCutsceneThrownBag.transform.position.y);
+                }
             }
+            // Stage 2 (1.05s .. 1.72s): Throw the emergency backpack on a ballistic arc into the dark well shaft
+            else if (age < 1.72f)
+            {
+                CinematicShowsActor = true;
+                if (player) player.position = cinematicHatchApproach;
+                FaceResidenceActor(BunkerPosition - cinematicHatchApproach);
+                float u = Mathf.Clamp01((age - 1.05f) / 0.67f);
+                gatherPoseTime = u < 0.45f ? 0.22f : 0f;
+                SetResidenceActorFlags(false, u < 0.38f, 0f);
+
+                if (residenceCutsceneThrownBag)
+                {
+                    Vector3 bagStart = cinematicHatchApproach + new Vector3(0.10f, 0.96f, 0.26f);
+                    Vector3 bagEnd = BunkerPosition + new Vector3(0f, -1.65f, 0f);
+                    Vector3 bagPos = Vector3.Lerp(bagStart, bagEnd, u);
+                    // Parabolic arc clearing the raised bunker collar rim before plunging down the dark shaft
+                    bagPos.y += 4f * u * (1f - u) * 0.62f;
+                    residenceCutsceneThrownBag.transform.position = bagPos;
+                    residenceCutsceneThrownBag.transform.rotation = Quaternion.Euler(u * 290f, 18f, -u * 65f);
+                    ApplyWellDepthDarkening(residenceCutsceneThrownBag, bagPos.y);
+                    residenceCutsceneThrownBag.SetActive(bagPos.y > BunkerPosition.y - 1.50f);
+                }
+            }
+            // Stage 3 (1.72s .. 2.55s): Crouch briefly and jump along a parabolic trajectory into the dark circular well
             else if (age < 2.55f)
             {
                 CinematicShowsActor = true;
-                float t = SmoothResidence01((age - 1.35f) / 1.2f);
-                if (player) player.position = Vector3.Lerp(cinematicHatchApproach, cinematicHatchApproach + Vector3.down * 2.25f, t);
-                SetResidenceActorFlags(true, true, 0f);
+                if (residenceCutsceneThrownBag) residenceCutsceneThrownBag.SetActive(false);
+                float jumpPhase = Mathf.Clamp01((age - 1.72f) / 0.83f);
+                if (jumpPhase < 0.16f)
+                {
+                    // Pre-jump crouch on the bunker step
+                    float c = jumpPhase / 0.16f;
+                    if (player) player.position = cinematicHatchApproach + Vector3.down * (0.08f * Mathf.Sin(c * Mathf.PI));
+                    FaceResidenceActor(BunkerPosition - cinematicHatchApproach);
+                    SetResidenceActorFlags(true, false, 0f);
+                }
+                else
+                {
+                    // Parabolic leap over the collar rim and vertical plunge down into the dark well shaft
+                    float j = (jumpPhase - 0.16f) / 0.84f;
+                    Vector3 horizontal = Vector3.Lerp(cinematicHatchApproach, new Vector3(wellCenterMouth.x, cinematicHatchApproach.y, wellCenterMouth.z), Mathf.Clamp01(j * 1.45f));
+                    float baseY = Mathf.Lerp(cinematicHatchApproach.y, wellDeepTarget.y, j * j);
+                    float arcY = 4f * j * (1f - j) * 0.58f;
+                    if (player) player.position = new Vector3(horizontal.x, baseY + arcY, horizontal.z);
+                    FaceResidenceActor(BunkerPosition - cinematicHatchApproach);
+                    SetResidenceActorFlags(j > 0.65f, false, 0f);
+                    if (animator) animator.SetBool("Airborne", true);
+                }
             }
             else
             {
+                if (residenceCutsceneThrownBag) { Destroy(residenceCutsceneThrownBag); residenceCutsceneThrownBag = null; }
                 if (player) player.position = cinematicActorEnd;
                 CinematicShowsActor = false;
                 SetResidenceActorFlags(false, false, 0f);
@@ -576,8 +667,10 @@ namespace TooLateToPanic
                 residenceSavedSupplyDisplay.gameObject.SetActive(residenceSavedSupplyDisplayActive);
             if (residenceFailureCrate) Destroy(residenceFailureCrate);
             if (residenceFailureLampObject) Destroy(residenceFailureLampObject);
+            if (residenceCutsceneThrownBag) Destroy(residenceCutsceneThrownBag);
             residenceFailureCrate = null;
             residenceFailureLampObject = null;
+            residenceCutsceneThrownBag = null;
             residenceSavedSupplyDisplay = null;
 
             if (residenceCinematicSession)

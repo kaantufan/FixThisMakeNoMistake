@@ -75,3 +75,4 @@ Tüm 32 model **İzometrik "Toy-Box" ölçek hiyerarşisi** ve **Chunky/Heroic s
 | 30 | **FFP3 Toz Maskesi** | `PF_DustMask` | `SM_DustMask.fbx` | `T_Icon_DustMask.png` | `MedicalAndHygiene` | 1.55x | 1,500 | Evet | Hayır | `None` |
 | 31 | **Kırık Cam Tehlikesi** | `PF_ShatteredGlass` | `SM_ShatteredGlass.fbx` | `T_Icon_ShatteredGlass.png` | `EnvironmentalHazard`| 1.15x | 106 | Hayır | Çevresel Hasar | `None` |
 | 32 | **Dökülmüş Moloz Yığını** | `PF_RubblePile` | `SM_RubblePile.fbx` | `T_Icon_RubblePile.png` | `EnvironmentalHazard`| 1.10x | 2,012 | Hayır | Çevresel Hasar | `CorridorBlockage` |
+| 33 | **Bunker Kapısı / Kapağı (Ağır Sığınak Kapağı)** | `PF_BunkerHatch` | `SM_BunkerHatch.fbx` | `T_Icon_BunkerHatch.png` | `HouseholdFixture` | 1.00x | 6,420 | Hayır | **Menteşeli Ağır Kapak + Kilit Çarkı + Karanlık Kuyu (`HatchLid_Hinge`, `LockWheel_Pivot`, `HydraulicPiston_Pivot`, `WellPortal_Disc`, `WellShaft_Deep`)** | `None` (Güvenli Sığınak Girişi) |

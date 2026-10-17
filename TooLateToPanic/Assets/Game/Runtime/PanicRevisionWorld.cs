@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -214,7 +214,7 @@ namespace TooLateToPanic
                 if (!pair.Value) continue;
                 var source = Expedition.Sources.Find(s => s.Id == pair.Key);
                 var item = Model.Items.Find(i => i.Id == pair.Key);
-                bool open = source != null ? source.Open : hinges.TryGetValue(pair.Key, out var hinge) && hinge.open;
+                bool open = source != null ? source.Open : pair.Key == "bunker" ? bunkerDoorOpen : hinges.TryGetValue(pair.Key, out var hinge) && hinge.open;
                 PanicCuratedAssetArt.SyncVisualState(pair.Value, open, item != null && (item.FloodProtected || item.FireProtected), item != null && item.Anchored, dt);
             }
             foreach (var pair in sourceObjects)

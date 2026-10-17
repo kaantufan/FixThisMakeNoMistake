@@ -65,6 +65,9 @@ namespace TooLateToPanic
         {
             if (string.IsNullOrEmpty(assetName) || float.IsNaN(longestDimension) ||
                 float.IsInfinity(longestDimension) || longestDimension <= 0) return null;
+            if (string.Equals(assetName, "bunkerhatch", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(assetName, "bunker", StringComparison.OrdinalIgnoreCase))
+                assetName = "BunkerHatch";
             if (!Models.TryGetValue(assetName, out var prefab))
             {
                 // Sanitized upstream prefabs retain mechanical pivots and the exact Visual paths
@@ -86,7 +89,11 @@ namespace TooLateToPanic
             foreach (var a in model.GetComponentsInChildren<Animator>(true)) { a.enabled = false; Remove(a); }
             foreach (var a in model.GetComponentsInChildren<Animation>(true)) { a.enabled = false; Remove(a); }
             foreach (var r in model.GetComponentsInChildren<Renderer>(true))
-            { r.shadowCastingMode = ShadowCastingMode.On; r.receiveShadows = true; }
+            {
+                bool isPortalOrShaft = r.name.Contains("WellPortal_Disc") || r.name.Contains("WellShaft_Deep");
+                r.shadowCastingMode = isPortalOrShaft ? ShadowCastingMode.Off : ShadowCastingMode.On;
+                r.receiveShadows = !isPortalOrShaft;
+            }
             if (!TryGetLocalBounds(root.transform, out var bounds)) { Remove(root); return null; }
             float longest = Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z));
             if (longest <= .00001f) { Remove(root); return null; }
@@ -99,7 +106,7 @@ namespace TooLateToPanic
             {
                 var motion = root.AddComponent<PanicCuratedMechanism>();
                 motion.SampleRoot = model; motion.OpenClip = open; motion.CloseClip = close;
-                motion.Container = assetName == "Refrigerator" || assetName == "FireCabinet";
+                motion.Container = assetName == "Refrigerator" || assetName == "FireCabinet" || assetName == "BunkerHatch";
                 motion.AssetName = assetName;
             }
             // The new branch geometry already carries authored identifying detail. The old
@@ -151,6 +158,7 @@ namespace TooLateToPanic
                 case "breakerbox": asset="BreakerBox"; size=.75f; break;
                 case "airconditioner": asset="AirConditioner"; size=1.1f; break;
                 case "firecabinet": asset="FireCabinet"; size=.9f; break;
+                case "bunker": case "bunkerhatch": asset="BunkerHatch"; size=1.68f; break;
                 default: visual=null; return false;
             }
             visual=CreateDisplay(asset,size);
@@ -394,6 +402,9 @@ namespace TooLateToPanic
             foreach (var filter in root.GetComponentsInChildren<MeshFilter>(true))
             {
                 if (!filter.sharedMesh) continue;
+                // Subterranean well shaft extends below the floor collar (y < 0); exclude it from
+                // above-ground fitting bounds so the hatch collar rests flush on the floor plane.
+                if (filter.name.Contains("WellShaft_Deep") || filter.name.Contains("WellPortal_Disc")) continue;
                 Bounds b = filter.sharedMesh.bounds;
                 for (int i = 0; i < 8; i++)
                 {

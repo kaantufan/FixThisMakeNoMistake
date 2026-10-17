@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -16,7 +16,7 @@ namespace TooLateToPanic
         Transform bunkerLeaf,garageLeaf; Vector3 garageLeafClosed; float residenceTime,radioClock,noticeAge,rescueAge,jumpCooldown;
         Quaternion bunkerClosed;
         AudioSource radioVoice,radioNoise,rotorAudio; Light helicopterSearch,hearthLight;
-        bool hearthEnabled=true,computerEnabled=true,garageOpen,minuteVoice;
+        bool hearthEnabled=true,computerEnabled=true,garageOpen,minuteVoice,bunkerDoorOpen;
         string lastNotice,queuedVoice,radioClipId;
         int radioSequence;
         public LootSource OpenSource { get { var s=NearestSource; return s!=null&&s.Open&&CanInteract&&!InventoryOpen&&!WorkActive&&!IsMoving ? s:null; } }
@@ -146,7 +146,7 @@ namespace TooLateToPanic
             }
             foreach(var spot in new[]{new Vector3(-5,0,4.8f),new Vector3(3.7f,0,4.9f),new Vector3(-5,3.2f,-3.8f)})AddDecor("decor_books_"+spot,"books",spot+Vector3.up*.04f,0,false);
             AddDecor("decor_wallart","wallart",new Vector3(-2.7f,1.5f,5.78f),0,false);
-            if(items.TryGetValue("bunker",out var bunker)){bunkerLeaf=bunker.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="DoorLeaf");if(bunkerLeaf)bunkerClosed=bunkerLeaf.localRotation;}
+            if(items.TryGetValue("bunker",out var bunker)){bunkerLeaf=bunker.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="HatchLid_Hinge"||t.name=="DoorLeaf");if(bunkerLeaf)bunkerClosed=bunkerLeaf.localRotation;}
         }
         Vector3 ResidenceFocusPosition(GameObject target){var p=target.transform.position;p.y=Mathf.Round(p.y/3.2f)*3.2f;return p;}
         void AddDecor(string id,string art,Vector3 p,float rotation=0,bool collide=true)
@@ -236,7 +236,16 @@ namespace TooLateToPanic
             if(aftermath)Destroy(aftermath);aftermath=null;if(helicopter)Destroy(helicopter);helicopter=null;if(rotorAudio)Destroy(rotorAudio);rotorAudio=null;radioVoice?.Stop();SetBunkerDoorOpen(false);
             foreach(var h in hinges.Values){h.open=false;h.closeBlocked=h.motionBlocked=false;}garageOpen=false;
         }
-        void SetBunkerDoorOpen(bool open){if(bunkerLeaf)bunkerLeaf.localRotation=bunkerClosed*Quaternion.Euler(open?-105:0,0,0);}
+        void SetBunkerDoorOpen(bool open)
+        {
+            bunkerDoorOpen = open;
+            if (items.TryGetValue("bunker", out var bunkerGo) && PanicCuratedAssetArt.HasAnimatedMechanism(bunkerGo))
+            {
+                if (!open) PanicCuratedAssetArt.SyncVisualState(bunkerGo, false, false, false, 10f);
+                return;
+            }
+            if (bunkerLeaf) bunkerLeaf.localRotation = bunkerClosed * Quaternion.Euler(open ? -105 : 0, 0, 0);
+        }
         void StartRescue()
         {
             if(!helicopter){helicopter=PanicAtmosphereArt.CreateHelicopter();rotorAudio=helicopter.AddComponent<AudioSource>();rotorAudio.playOnAwake=false;rotorAudio.loop=true;rotorAudio.spatialBlend=.85f;rotorAudio.minDistance=10;rotorAudio.maxDistance=100;rotorAudio.volume=0;helicopterSearch=new GameObject("Rescue search beam").AddComponent<Light>();helicopterSearch.transform.SetParent(helicopter.transform,false);helicopterSearch.transform.localPosition=new Vector3(0,.7f,1);helicopterSearch.transform.localRotation=Quaternion.Euler(80,0,0);helicopterSearch.type=LightType.Spot;helicopterSearch.range=24;helicopterSearch.spotAngle=34;helicopterSearch.intensity=2.6f;helicopterSearch.color=new Color(.9f,.95f,1);}
