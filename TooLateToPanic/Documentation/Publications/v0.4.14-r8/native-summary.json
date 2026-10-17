@@ -1,0 +1,541 @@
+{
+  "startedUtc": "2026-10-17T18:19:54.4517205Z",
+  "finishedUtc": "2026-10-17T18:19:56.1915299Z",
+  "error": "",
+  "dllSha256": "4740C599AB0CBEC9EC1FA7D01DFCB8E61308A1F71CA888F15C9869FE89BDA16A",
+  "evidence": "Native first-use guide, modal input/pause and three-resolution framebuffer captures. Retained R7 gameplay regression is separate; OS round is root-owned.",
+  "scope": "Onboarding only; full mechanics NOT_RUN on this DLL",
+  "complete": true,
+  "passed": true,
+  "osInput": false,
+  "humanAcceptance": false,
+  "seconds": 1.7401814460754395,
+  "setupWarps": 0,
+  "startGameCalls": 3,
+  "simulationStarts": 0,
+  "explicitTimerFixtures": 0,
+  "directControllerProbeFrames": 0,
+  "workApiSamples": 0,
+  "modelFixtureTicks": 0,
+  "runPoseFixtures": 0,
+  "bagLookApiSamples": 0,
+  "menuActionCalls": 4,
+  "shortFlowStarts": 1,
+  "onboardingIntroSkips": 1,
+  "rows": [
+    {
+      "id": "launch.fresh-guid",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "",
+      "frame": 1
+    },
+    {
+      "id": "launch.flag-registered",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "",
+      "frame": 1
+    },
+    {
+      "id": "launch.score-isolated",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "",
+      "frame": 1
+    },
+    {
+      "id": "controller.original-dimensions",
+      "status": "PASS",
+      "layer": "NATIVE_PHYSICS",
+      "detail": "No collision tolerance relaxation.",
+      "frame": 1
+    },
+    {
+      "id": "onboarding.open-seam",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Required seam FreeplayOnboardingOpenV414; missing is FAIL.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.seen-seam",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Required seam FreeplayOnboardingSeenV414; missing is FAIL.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.once-seam",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Required seam FreeplayOnboardingResolutionCountV414; missing is FAIL.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.primary-label-seam",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Required seam PrimaryPlayLabelV414; missing is FAIL.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.input-owner-seam",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Required seam FreeplayOnboardingInputBlockedV414; missing is FAIL.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.production-actions-present",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Real title Enter/selected action and real ANLADIM BAŞLA acknowledgement must expose shared production actions; no QA-only state mutation shim.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.freeplay-default-title",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Fresh actual title choice0 and real primary label; keyboard OS Enter remains root-owned.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.opening-frame-does-not-auto-ack",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Real production confirm rejects the title opening frame, preventing title Enter/click from instantly consuming the explanation.",
+      "frame": 2
+    },
+    {
+      "id": "onboarding.first-free-is-normal165",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Normal120+45 run; default action must not enter short flow.",
+      "frame": 3
+    },
+    {
+      "id": "onboarding.first-free-modal-owns-pause",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Model pause and world input lock must remain owned by guide through the next phase synchronization.",
+      "frame": 3
+    },
+    {
+      "id": "onboarding.guide-initial1600",
+      "status": "PASS",
+      "layer": "NATIVE_RENDER_STATE",
+      "detail": "Root launches visible1600x900; smaller surfaces are captured on this same paused guide.",
+      "frame": 3
+    },
+    {
+      "id": "capture.file.00-first-freeplay-controls-guide",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\native-v8-cf5cfd57-4012-40d7-8661-3a8d3e1c903d\\00-first-freeplay-controls-guide.png",
+      "frame": 6
+    },
+    {
+      "id": "onboarding.resolution.1280x720",
+      "status": "PASS",
+      "layer": "NATIVE_RENDER_STATE",
+      "detail": "Actual window resolution; no image resampling or QA camera.",
+      "frame": 8
+    },
+    {
+      "id": "onboarding.same-paused-guide.1280x720",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Same unacknowledged guide/clock/actor/cinematic across actual surface resize.",
+      "frame": 8
+    },
+    {
+      "id": "capture.file.00-first-freeplay-controls-guide-1280x720",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\native-v8-cf5cfd57-4012-40d7-8661-3a8d3e1c903d\\00-first-freeplay-controls-guide-1280x720.png",
+      "frame": 11
+    },
+    {
+      "id": "onboarding.actual-png-size.1280x720",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "Actual ScreenCapture PNG IHDR dimensions.",
+      "frame": 11
+    },
+    {
+      "id": "onboarding.resolution.960x540",
+      "status": "PASS",
+      "layer": "NATIVE_RENDER_STATE",
+      "detail": "Actual window resolution; no image resampling or QA camera.",
+      "frame": 13
+    },
+    {
+      "id": "onboarding.same-paused-guide.960x540",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Same unacknowledged guide/clock/actor/cinematic across actual surface resize.",
+      "frame": 13
+    },
+    {
+      "id": "capture.file.00-first-freeplay-controls-guide-960x540",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\native-v8-cf5cfd57-4012-40d7-8661-3a8d3e1c903d\\00-first-freeplay-controls-guide-960x540.png",
+      "frame": 15
+    },
+    {
+      "id": "onboarding.actual-png-size.960x540",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "Actual ScreenCapture PNG IHDR dimensions.",
+      "frame": 15
+    },
+    {
+      "id": "onboarding.resolution.1600x900",
+      "status": "PASS",
+      "layer": "NATIVE_RENDER_STATE",
+      "detail": "Actual window resolution; no image resampling or QA camera.",
+      "frame": 17
+    },
+    {
+      "id": "onboarding.same-paused-guide.1600x900",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Same unacknowledged guide/clock/actor/cinematic across actual surface resize.",
+      "frame": 17
+    },
+    {
+      "id": "capture.file.00-first-freeplay-controls-guide-1600x900-restored",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\native-v8-cf5cfd57-4012-40d7-8661-3a8d3e1c903d\\00-first-freeplay-controls-guide-1600x900-restored.png",
+      "frame": 20
+    },
+    {
+      "id": "onboarding.actual-png-size.1600x900",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "Actual ScreenCapture PNG IHDR dimensions.",
+      "frame": 20
+    },
+    {
+      "id": "onboarding.real-frame-clock-input-cinema-freeze",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Real.6s frame wait; clock alone is insufficient because intro could also freeze165. No movement adapter or direct clock call used.",
+      "frame": 57
+    },
+    {
+      "id": "onboarding.production-key-dispatch-blocked",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Production HandleKey E/F/Space/Tab/B/F2/1/3 cannot mutate/open other modes. API dispatch is not OS WASD acceptance; source Update pause gate and later root OS remain separate.",
+      "frame": 65
+    },
+    {
+      "id": "onboarding.unacknowledged-menu-cleanup",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Real menu return releases guide-owned modal/pause/lock; unacknowledged first-use state remains unseen.",
+      "frame": 67
+    },
+    {
+      "id": "onboarding.unacknowledged-free-reopens",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Second explicitly counted start must still teach an unacknowledged first free session.",
+      "frame": 68
+    },
+    {
+      "id": "onboarding.ack-consumes-world-frame",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Real same-frame input owner remains blocked after confirmation; OS Enter/key-up swallowing is separate root evidence.",
+      "frame": 68
+    },
+    {
+      "id": "onboarding.ack-resolves-once",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Two real production confirm calls; only first resolves. This is the same action as visible ANLADIM BAŞLA/Enter, not a synthetic key event.",
+      "frame": 69
+    },
+    {
+      "id": "onboarding.ack-releases-owned-pause",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Normal clock remains165 before gameplay; guide use is not cheating.",
+      "frame": 69
+    },
+    {
+      "id": "onboarding.actual-normal-clock-resumes",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Real normal frames after modal/intro release; no time assignment or Tick.",
+      "frame": 79
+    },
+    {
+      "id": "onboarding.only-first-free-this-session",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Fresh run after confirmed guide does not reopen it in this process session; no persistent save flag is written by QA.",
+      "frame": 81
+    },
+    {
+      "id": "onboarding.short-flow-keeps-own-mode",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "Actual separate short-flow UI action remains available and does not inherit freeplay modal/pause.",
+      "frame": 83
+    },
+    {
+      "id": "onboarding.final-title-cleanup",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "",
+      "frame": 84
+    },
+    {
+      "id": "capture.file.99-onboarding-only-final-title",
+      "status": "PASS",
+      "layer": "NATIVE_CAPTURE_FILE",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\native-v8-cf5cfd57-4012-40d7-8661-3a8d3e1c903d\\99-onboarding-only-final-title.png",
+      "frame": 93
+    },
+    {
+      "id": "scores.real-file-unchanged",
+      "status": "PASS",
+      "layer": "NATIVE_API_FRAME",
+      "detail": "",
+      "frame": 93
+    }
+  ],
+  "fixtures": [
+    {
+      "kind": "ONBOARDING_ACTUAL_MENU_ACTION",
+      "detail": "Invoke shared production selected-title action at untouched fresh choice0, same dispatch used by the title Enter path. No menu field/seen flag/timer/Model.Tick writes and no OS input.",
+      "frame": 2
+    },
+    {
+      "kind": "ONBOARDING_REAL_INTRO_SKIP",
+      "detail": "Production intro skip after guide acknowledgement only, so actual preparation clock resume can be observed without another9s wait. Existing Intro section still covers natural9s separately.",
+      "frame": 69
+    }
+  ],
+  "routes": [],
+  "frames": [
+    {
+      "label": "00-first-freeplay-controls-guide",
+      "phase": "Preparing",
+      "cinematic": "Opening",
+      "bunkerStage": "idle",
+      "characterMesh": "Eyebrows",
+      "focus": "",
+      "frame": 3,
+      "width": 1600,
+      "height": 900,
+      "visibleRoofs": 12,
+      "allRoofs": 12,
+      "activeSupplies": 0,
+      "bones": 65,
+      "popupCount": 0,
+      "remaining": 165.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": 11.0,
+        "y": 14.151999473571777,
+        "z": -16.809999465942383
+      },
+      "bag": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "bagVisible": false,
+      "bagReleased": false,
+      "fps": false,
+      "intro": true,
+      "controllerEnabled": false,
+      "onboarding": true,
+      "modelPaused": true,
+      "inputLocked": true
+    },
+    {
+      "label": "00-first-freeplay-controls-guide-1280x720",
+      "phase": "Preparing",
+      "cinematic": "Opening",
+      "bunkerStage": "idle",
+      "characterMesh": "Eyebrows",
+      "focus": "",
+      "frame": 8,
+      "width": 1280,
+      "height": 720,
+      "visibleRoofs": 12,
+      "allRoofs": 12,
+      "activeSupplies": 0,
+      "bones": 65,
+      "popupCount": 0,
+      "remaining": 165.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": 11.0,
+        "y": 14.151999473571777,
+        "z": -16.809999465942383
+      },
+      "bag": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "bagVisible": false,
+      "bagReleased": false,
+      "fps": false,
+      "intro": true,
+      "controllerEnabled": false,
+      "onboarding": true,
+      "modelPaused": true,
+      "inputLocked": true
+    },
+    {
+      "label": "00-first-freeplay-controls-guide-960x540",
+      "phase": "Preparing",
+      "cinematic": "Opening",
+      "bunkerStage": "idle",
+      "characterMesh": "Eyebrows",
+      "focus": "",
+      "frame": 13,
+      "width": 960,
+      "height": 540,
+      "visibleRoofs": 12,
+      "allRoofs": 12,
+      "activeSupplies": 0,
+      "bones": 65,
+      "popupCount": 0,
+      "remaining": 165.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": 11.0,
+        "y": 14.151999473571777,
+        "z": -16.809999465942383
+      },
+      "bag": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "bagVisible": false,
+      "bagReleased": false,
+      "fps": false,
+      "intro": true,
+      "controllerEnabled": false,
+      "onboarding": true,
+      "modelPaused": true,
+      "inputLocked": true
+    },
+    {
+      "label": "00-first-freeplay-controls-guide-1600x900-restored",
+      "phase": "Preparing",
+      "cinematic": "Opening",
+      "bunkerStage": "idle",
+      "characterMesh": "Eyebrows",
+      "focus": "",
+      "frame": 17,
+      "width": 1600,
+      "height": 900,
+      "visibleRoofs": 12,
+      "allRoofs": 12,
+      "activeSupplies": 0,
+      "bones": 65,
+      "popupCount": 0,
+      "remaining": 165.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": 11.0,
+        "y": 14.151999473571777,
+        "z": -16.809999465942383
+      },
+      "bag": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "bagVisible": false,
+      "bagReleased": false,
+      "fps": false,
+      "intro": true,
+      "controllerEnabled": false,
+      "onboarding": true,
+      "modelPaused": true,
+      "inputLocked": true
+    },
+    {
+      "label": "99-onboarding-only-final-title",
+      "phase": "Title",
+      "cinematic": "",
+      "bunkerStage": "idle",
+      "characterMesh": "Eyebrows",
+      "focus": "",
+      "frame": 91,
+      "width": 1600,
+      "height": 900,
+      "visibleRoofs": 0,
+      "allRoofs": 12,
+      "activeSupplies": 0,
+      "bones": 65,
+      "popupCount": 0,
+      "remaining": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 3.0999999046325684,
+        "y": 0.05000000074505806,
+        "z": -3.4000000953674316
+      },
+      "camera": {
+        "x": 11.0,
+        "y": 14.477557182312012,
+        "z": -17.866836547851562
+      },
+      "bag": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "bagVisible": false,
+      "bagReleased": false,
+      "fps": false,
+      "intro": false,
+      "controllerEnabled": true,
+      "onboarding": false,
+      "modelPaused": false,
+      "inputLocked": false
+    }
+  ],
+  "gaitSamples": [],
+  "vehicleDirections": [],
+  "sections": [
+    "launch",
+    "onboarding"
+  ],
+  "errors": []
+}
