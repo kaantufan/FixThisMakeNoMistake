@@ -7,11 +7,11 @@ namespace TooLateToPanic
     public sealed class PanicBackgroundMusic : MonoBehaviour
     {
         public static bool Enabled { get; set; } = true;
-        public static float Volume { get; set; } = .24f;
+        public static float Volume { get; set; } = .075f;
         public static PanicBackgroundMusic Instance { get; private set; }
         public string CurrentTrack { get; private set; }
         public bool IsAudible { get { return !paused && Enabled && (a && a.isPlaying || b && b.isPlaying); } }
-        public static readonly string[] TrackIds = { "preparation", "disaster" };
+        public static readonly string[] TrackIds = { "preparation", "disaster", "fps_tension" };
         readonly Dictionary<string,AudioClip> clips = new Dictionary<string,AudioClip>();
         AudioSource a,b,current,outgoing;
         PanicHomeWorld world;
@@ -35,6 +35,7 @@ namespace TooLateToPanic
         public static AudioClip LoadTrack(string id) { return Resources.Load<AudioClip>("Audio/Music/"+id); }
         string TrackForPhase()
         {
+            if(world.BagFirstPersonActive && world.BagFinalStageActive)return "fps_tension";
             if(world.Model.Phase==PanicPhase.Disaster)return "disaster";
             switch(world.Model.Phase)
             {
@@ -67,6 +68,8 @@ namespace TooLateToPanic
             fadeAge=Mathf.Min(FadeSeconds,fadeAge+Time.unscaledDeltaTime);
             float mix=Mathf.SmoothStep(0,1,fadeAge/FadeSeconds);
             float gain=Mathf.Clamp01(Volume)*(world.PresentationSpeechActive?.55f:1f);
+            if(CurrentTrack=="fps_tension")gain*=Mathf.Lerp(.85f,1.15f,world.FpsStressIntensityV414);
+            gain*=Mathf.Lerp(1,.35f,world.AudioShelterAmount);
             if(world.Model.Phase==PanicPhase.Disaster)gain*=.65f;
             if(world.Model.Phase==PanicPhase.GameOver)gain*=.75f;
             current.volume=gain*mix;

@@ -16,7 +16,7 @@ namespace TooLateToPanic
         const float HardCap = 295f;
         const BindingFlags Instance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         const BindingFlags Static = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-        static readonly string[] RequiredSections = { "launch", "intro", "character", "layout", "stairs", "outdoor", "ceiling", "work", "utilities", "feedback", "bag", "bunker", "hazards", "street", "models" };
+        static readonly string[] RequiredSections = { "launch", "onboarding", "intro", "character", "layout", "stairs", "outdoor", "ceiling", "work", "utilities", "feedback", "bag", "bunker", "hazards", "street", "models" };
         [Serializable] public sealed class Row { public string id, status, layer, detail; public int frame; }
         [Serializable] public sealed class Frame
         {
@@ -24,7 +24,7 @@ namespace TooLateToPanic
             public int frame, width, height, visibleRoofs, allRoofs, activeSupplies, bones, popupCount;
             public float remaining, lidAngle;
             public Vector3 actor, camera, bag;
-            public bool bagVisible, bagReleased, fps, intro, controllerEnabled;
+            public bool bagVisible, bagReleased, fps, intro, controllerEnabled, onboarding, modelPaused, inputLocked;
         }
         [Serializable] public sealed class Route
         {
@@ -56,6 +56,7 @@ namespace TooLateToPanic
             public bool complete, passed, osInput = false, humanAcceptance = false;
             public float seconds;
             public int setupWarps, startGameCalls, simulationStarts, explicitTimerFixtures, directControllerProbeFrames, workApiSamples, modelFixtureTicks, runPoseFixtures, bagLookApiSamples;
+            public int menuActionCalls, shortFlowStarts, onboardingIntroSkips;
             public List<Row> rows = new List<Row>(); public List<Fixture> fixtures = new List<Fixture>();
             public List<Route> routes = new List<Route>(); public List<Frame> frames = new List<Frame>();
             public List<GaitSample> gaitSamples = new List<GaitSample>();
@@ -221,12 +222,14 @@ namespace TooLateToPanic
                 visibleRoofs=roofs.Count(r=>r&&r.enabled&&r.gameObject.activeInHierarchy),characterMesh=skin&&skin.sharedMesh?skin.sharedMesh.name:"missing",bones=skin?skin.bones.Length:0,
                 activeSupplies=roots==null?-1:roots.Values.Count(g=>g&&g.activeInHierarchy),popupCount=Int(w,"GatherFeedbackCountV414"),intro=Bool(w,"IntroStoryActiveV414"),
                 bunkerStage=Text(w,"BunkerSequenceStageV414"),bag=bag?bag.transform.position:Vector3.zero,bagVisible=bag&&bag.GetComponentsInChildren<Renderer>(true).Any(r=>r.enabled&&r.gameObject.activeInHierarchy),
-                bagReleased=Bool(w,"BunkerBagReleasedV414"),fps=w.BagFirstPersonActive,controllerEnabled=controller.enabled,focus=Field<string>(w,"focusId")});
+                bagReleased=Bool(w,"BunkerBagReleasedV414"),fps=w.BagFirstPersonActive,controllerEnabled=controller.enabled,focus=Field<string>(w,"focusId"),
+                onboarding=Bool(hud,"FreeplayOnboardingOpenV414"),modelPaused=w.Model.IsPaused,inputLocked=w.InputLocked});
         }
         IEnumerator Run()
         {
             yield return Section("launch",Launch());
             while(!UnityEngine.Rendering.SplashScreen.isFinished)yield return null;
+            yield return Section("onboarding",Onboarding());
             yield return Section("intro",Intro());
             w.InputLocked=false;FixtureNote("CHARACTER_NORMAL_CLOCK", "InputLocked=false during actual character walk/jump; preparation clock runs and root LateUpdate samples real desiredVelocity. No locomotion bypass.");
             float characterClock=w.Model.TimeRemaining;yield return Section("character",Character());
@@ -276,6 +279,54 @@ namespace TooLateToPanic
             Check("intro.skip-resolves-once",count&&skip!=null&&!Bool(w,"IntroStoryActiveV414")&&Int(w,"IntroStoryResolutionCountV414")==before+1,"before="+before+" after="+Int(w,"IntroStoryResolutionCountV414"));
             Check("normal.120-plus-30",Mathf.Abs(w.Model.TimeRemaining-150f)<.25f&&Mathf.Abs(PanicHomeWorld.BagPreparationSeconds-30f)<.001f,"Initial model remaining="+w.Model.TimeRemaining+"; no accelerated elapsed-time claim.");
             Check("normal.starts-isometric",w.View.orthographic&&!w.BagCameraOwnsView&&!w.WorkActive);
+        }
+        void ActivateDefaultFreeplayForQa()
+        {
+            Call(hud,"ActivateSelectedTitleChoiceV414");report.menuActionCalls++;w.FullFlowScriptedInput=true;
+            if(w.Model.IsJuryDemo)report.shortFlowStarts++;
+            else if(!w.Model.IsSimulation&&(w.Model.Phase==PanicPhase.Preparing||w.Model.Phase==PanicPhase.Tutorial))report.startGameCalls++;
+        }
+        IEnumerator Onboarding()
+        {
+            bool seams=Require(hud,"FreeplayOnboardingOpenV414","onboarding.open-seam")&Require(hud,"FreeplayOnboardingSeenV414","onboarding.seen-seam")&
+                Require(hud,"FreeplayOnboardingResolutionCountV414","onboarding.once-seam")&Require(hud,"PrimaryPlayLabelV414","onboarding.primary-label-seam")&Require(hud,"FreeplayOnboardingInputBlockedV414","onboarding.input-owner-seam");
+            bool actions=hud.GetType().GetMethod("ActivateSelectedTitleChoiceV414",Instance)!=null&&hud.GetType().GetMethod("ConfirmFreeplayOnboardingV414",Instance)!=null;
+            Check("onboarding.production-actions-present",actions,"Real title Enter/selected action and real ANLADIM BAŞLA acknowledgement must expose shared production actions; no QA-only state mutation shim.");
+            if(!seams||!actions)yield break;
+            Check("onboarding.freeplay-default-title",w.Model.Phase==PanicPhase.Title&&Field<int>(hud,"_menuChoice")==0&&Text(hud,"PrimaryPlayLabelV414")=="SERBEST OYNA"&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Fresh actual title choice0 and real primary label; keyboard OS Enter remains root-owned.");
+            FixtureNote("ONBOARDING_ACTUAL_MENU_ACTION","Invoke shared production selected-title action at untouched fresh choice0, same dispatch used by the title Enter path. No menu field/seen flag/timer/Model.Tick writes and no OS input.");
+            ActivateDefaultFreeplayForQa();object openingConfirm=Call(hud,"ConfirmFreeplayOnboardingV414");
+            Check("onboarding.opening-frame-does-not-auto-ack",openingConfirm is bool openingAccepted&&!openingAccepted&&Bool(hud,"FreeplayOnboardingOpenV414")&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Real production confirm rejects the title opening frame, preventing title Enter/click from instantly consuming the explanation.");
+            yield return null;
+            Check("onboarding.first-free-is-normal150",w.Model.Phase==PanicPhase.Preparing&&!w.JuryActive&&!w.Model.IsSimulation&&Mathf.Abs(w.Model.TimeRemaining-150)<.005f&&Mathf.Abs(PanicHomeWorld.BagPreparationSeconds-30)<.001f,"Normal120+30 run; default action must not enter short flow.");
+            Check("onboarding.first-free-modal-owns-pause",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked,"Model pause and world input lock must remain owned by guide through the next phase synchronization.");
+            float clock=w.Model.TimeRemaining,cinemaAge=Field<float>(w,"residenceCinematicAge");Vector3 actor=w.PlayerPosition;int budget=w.Model.Budget;string stock=Stock();
+            int resolutions=Int(hud,"FreeplayOnboardingResolutionCountV414");
+            yield return Shot("00-first-freeplay-controls-guide");yield return Wait(.6f);
+            Check("onboarding.real-frame-clock-input-cinema-freeze",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&Mathf.Abs(w.Model.TimeRemaining-clock)<.005f&&Vector3.Distance(actor,w.PlayerPosition)<.005f&&Mathf.Abs(Field<float>(w,"residenceCinematicAge")-cinemaAge)<.005f,
+                "Real.6s frame wait; clock alone is insufficient because intro could also freeze150. No movement adapter or direct clock call used.");
+            foreach(var key in new[]{KeyCode.E,KeyCode.F,KeyCode.Space,KeyCode.Tab,KeyCode.B,KeyCode.F2,KeyCode.Alpha1,KeyCode.Alpha3}){w.HandleKey(key);yield return null;}
+            Check("onboarding.production-key-dispatch-blocked",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&!w.InventoryOpen&&!w.WorkActive&&!w.IsMoving&&!hud.DeveloperMenuOpen&&!w.BagCameraOwnsView&&w.Model.Budget==budget&&Stock()==stock&&Vector3.Distance(actor,w.PlayerPosition)<.005f&&Int(hud,"FreeplayOnboardingResolutionCountV414")==resolutions,
+                "Production HandleKey E/F/Space/Tab/B/F2/1/3 cannot mutate/open other modes. API dispatch is not OS WASD acceptance; source Update pause gate and later root OS remain separate.");
+            w.ReturnToMenu();yield return null;yield return null;
+            Check("onboarding.unacknowledged-menu-cleanup",w.Model.Phase==PanicPhase.Title&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.InputLocked&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Real menu return releases guide-owned modal/pause/lock; unacknowledged first-use state remains unseen.");
+            ActivateDefaultFreeplayForQa();yield return null;
+            Check("onboarding.unacknowledged-free-reopens",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&!w.JuryActive&&Mathf.Abs(w.Model.TimeRemaining-150)<.005f,"Second explicitly counted start must still teach an unacknowledged first free session.");
+            int before=Int(hud,"FreeplayOnboardingResolutionCountV414");object first=Call(hud,"ConfirmFreeplayOnboardingV414"),second=Call(hud,"ConfirmFreeplayOnboardingV414");
+            Check("onboarding.ack-consumes-world-frame",Bool(hud,"FreeplayOnboardingInputBlockedV414")&&w.CancelFrame==Time.frameCount&&Int(w,"DiscreteInputFrame")==Time.frameCount,"Real same-frame input owner remains blocked after confirmation; OS Enter/key-up swallowing is separate root evidence.");
+            yield return null;
+            Check("onboarding.ack-resolves-once",first is bool accepted&&accepted&&second is bool duplicate&&!duplicate&&!Bool(hud,"FreeplayOnboardingOpenV414")&&Bool(hud,"FreeplayOnboardingSeenV414")&&Int(hud,"FreeplayOnboardingResolutionCountV414")==before+1,
+                "Two real production confirm calls; only first resolves. This is the same action as visible ANLADIM BAŞLA/Enter, not a synthetic key event.");
+            Check("onboarding.ack-releases-owned-pause",!w.Model.IsPaused&&!w.InputLocked&&Mathf.Abs(w.Model.TimeRemaining-150)<.25f&&!w.Model.CheatedRun&&!w.Model.DeveloperAnyEnabled,"Normal clock remains150 before gameplay; guide use is not cheating.");
+            if(Bool(w,"IntroStoryActiveV414")){w.SkipIntroStoryV414();report.onboardingIntroSkips++;FixtureNote("ONBOARDING_REAL_INTRO_SKIP","Production intro skip after guide acknowledgement only, so actual preparation clock resume can be observed without another9s wait. Existing Intro section still covers natural9s separately.");}
+            float resumed=w.Model.TimeRemaining;yield return Wait(.18f);
+            Check("onboarding.actual-normal-clock-resumes",!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.InputLocked&&controller.enabled&&w.Model.Phase==PanicPhase.Preparing&&w.Model.TimeRemaining<resumed-.05f,"Real normal frames after modal/intro release; no time assignment or Tick.");
+            w.ReturnToMenu();yield return null;ActivateDefaultFreeplayForQa();yield return null;
+            Check("onboarding.only-first-free-this-session",Bool(hud,"FreeplayOnboardingSeenV414")&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.JuryActive&&Mathf.Abs(w.Model.TimeRemaining-150)<.25f,"Fresh run after confirmed guide does not reopen it in this process session; no persistent save flag is written by QA.");
+            w.ReturnToMenu();yield return null;Call(hud,"ActivateTitleChoiceV414",1);report.menuActionCalls++;if(w.Model.IsJuryDemo)report.shortFlowStarts++;w.FullFlowScriptedInput=true;yield return null;
+            Check("onboarding.short-flow-keeps-own-mode",w.JuryActive&&w.Model.IsJuryDemo&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.InputLocked,"Actual separate short-flow UI action remains available and does not inherit freeplay modal/pause.");
+            w.ReturnToMenu();yield return null;
+            Check("onboarding.final-title-cleanup",w.Model.Phase==PanicPhase.Title&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.InputLocked&&!w.WorkActive&&!w.InventoryOpen&&!hud.DeveloperMenuOpen);
         }
         static Quaternion[] Pose(Transform[] bones){return bones.Select(t=>t?t.localRotation:Quaternion.identity).ToArray();}
         static int Changed(Quaternion[] a,Quaternion[] b){return a.Zip(b,(x,y)=>Quaternion.Angle(x,y)>.12f?1:0).Sum();}

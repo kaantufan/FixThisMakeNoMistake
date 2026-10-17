@@ -9,13 +9,22 @@ namespace TooLateToPanic
         float audioWave = -1;
         readonly System.Collections.Generic.Dictionary<string,float> heardDamage = new System.Collections.Generic.Dictionary<string,float>();
         float nextDamageSound;
-        string StepSurface()
+        PanicFootstepSurface footstepSurface;
+        public float AudioShelterAmount { get { return Vector3.Distance(PlayerPosition,BunkerInteriorPosition)<8 ? 1f : 0f; } }
+        public float AudioHelicopterDistance { get { return helicopter ? Vector3.Distance(PlayerPosition,helicopter.transform.position) : 1000f; } }
+        public bool AudioHatchOpen { get { return bunkerLeaf && Quaternion.Angle(bunkerLeaf.localRotation,bunkerClosed)>20; } }
+        public string CurrentFootstepSurface { get { return StepSurface(); } }
+        string StepSurface() { return FootstepSurfaceAt(PlayerPosition); }
+        public string FootstepSurfaceAt(Vector3 position)
         {
-            Vector3 p = PlayerPosition;
-            if (p.y < -1 || p.x > 9 && p.x < 17 && p.z > -.5f && p.z < 7) return "step_concrete";
-            if (!InResidence(p)) return "step_grass";
-            if (p.y > 2 && p.x > 2 && p.z > 1.8f || p.y < 2 && p.x > 2 && p.z > 2) return "step_tile";
-            return "step_wood";
+            if(footstepSurface==null)
+            {
+                footstepSurface=new PanicFootstepSurface();footstepSurface.Add(landscape);
+                foreach(var floor in floorVisuals)footstepSurface.Add(floor);
+                footstepSurface.Add(residenceGarage);footstepSurface.Add(residenceBalcony);footstepSurface.Add(residenceBathroom);
+            }
+            if(Vector3.Distance(position,BunkerInteriorPosition)<8)return "step_concrete";
+            return footstepSurface.Sample(position,InResidence(position)?"step_wood":"step_concrete");
         }
         string ContainerAudio(string id)
         {
@@ -56,7 +65,7 @@ namespace TooLateToPanic
             }
             if (audioWave != Model.Wave) { if(audioWave >= 0 && Model.Phase == PanicPhase.Preparing) effects.Play("objective_tick",.35f); audioWave=Model.Wave; }
             bool bunkerOpen = bunkerLeaf && Quaternion.Angle(bunkerLeaf.localRotation,bunkerClosed) > 20;
-            if (bunkerOpen != audioBunkerOpen) { audioBunkerOpen=bunkerOpen; effects.Play("door_metal",.45f); }
+            if (bunkerOpen != audioBunkerOpen) { audioBunkerOpen=bunkerOpen; effects.Play("bunker_hatch",.30f); }
             if (audioMessage != Model.Message)
             {
                 audioMessage=Model.Message;

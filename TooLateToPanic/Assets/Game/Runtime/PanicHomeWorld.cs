@@ -800,6 +800,7 @@ namespace TooLateToPanic
             if (Model.Phase != PanicPhase.Title && Model.Phase != PanicPhase.GameOver) Model.ReturnToTitle();
             Model.StartRun(tutorial); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; focusId = null; InventoryOpen = false; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); effects.OnPhase(Model.Phase); QueueRadio(DisasterVoiceId());
             ResetOverhaulRunV414(); BeginIntroStoryV414();
+            if (hud) hud.BeginFreeplayOnboardingV414();
         }
         public void FinishTutorial() { CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); QueueRadio(DisasterVoiceId()); }
         public void FinishInspection() { if (JuryActive) AdvanceJuryDemo(); else if (Model.IsSimulation) ReturnToMenu(); else Model.FinishInspection(); }

@@ -187,6 +187,7 @@ namespace TooLateToPanic
 
         void SetResidenceCinematic(string kind, string title, float duration)
         {
+            ResetQuakeReadabilityV414("new cinematic");
             residenceCameraCutPending = true;
             CinematicKind = kind;
             CinematicTitle = title;
@@ -247,7 +248,7 @@ namespace TooLateToPanic
             float fov = 47f;
             GetResidenceCinematicShot(out destination, out target, out fov);
 
-            int shot = CinematicKind == "Disaster" ? (residenceCinematicAge < 1.65f ? 0 : residenceCinematicAge < 4.7f ? 1 : residenceCinematicAge < 6.2f ? 2 : 3) :
+            int shot = CinematicKind == "Disaster" ? (residenceCinematicAge < 1.65f ? 0 : residenceCinematicAge < 4.7f ? 1 : residenceCinematicAge < (Model.Disaster == DisasterType.Earthquake ? 6.65f : 6.2f) ? 2 : 3) :
                 CinematicKind == "Aftermath" ? (residenceCinematicAge < 2.15f ? 4 : 5) : CinematicKind == "Opening" ? (residenceCinematicAge < 3 ? 6 : residenceCinematicAge < 6 ? 7 : 8) : 9;
             if (shot != residenceShotIndex) { residenceShotIndex = shot; residenceCameraCutPending = true; }
 
@@ -269,6 +270,7 @@ namespace TooLateToPanic
 
         void GetResidenceCinematicShot(out Vector3 camera, out Vector3 target, out float fov)
         {
+            if (TryQuakeReadabilityShotV414(out camera, out target, out fov)) return;
             if (StoryShotV414(out camera, out target, out fov)) return;
             float age = residenceCinematicAge;
             fov = 47f;
@@ -542,6 +544,7 @@ namespace TooLateToPanic
 
         void ResetResidenceCinematic()
         {
+            ResetQuakeReadabilityV414("cinematic reset");
             // Explicit cinematic exit only; ordinary locomotion never calls pose restoration.
             if (hero && residenceCinematicSession) PanicCharacterArt.ClearTaskPose(hero.gameObject);
             CleanupBunkerBagV414();

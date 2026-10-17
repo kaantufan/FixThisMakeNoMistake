@@ -2,6 +2,10 @@
 
 Bu not root'un README/credits/teslim matrisine alması içindir. Kaynak intakesi, yeni build'e bake edilmesi, native render/oynanış ve insan kabulü ayrı durumlardır. Bu worker Unity/player/native açmadı. Son native kabul ve güncel DLL/ZIP bağlantısını yalnız root LATEST/teslim kaydında doldurur.
 
+R5 kaynak eklemesi: kullanıcının ayrı ses sohbetindeki doğrudan yetkisiyle ElevenLabs üzerinde üretilmiş 14 efekt ve 2 müzik alındı. `Evidence/GamejamOrchestra/TLTP-AUDIO-REVISION-V414-20261017/PROVENANCE.md`, `audio-manifest.json` ve ham dosyalar kaynak/proses/hash kaydıdır; runtime provenance Resources/Licenses altında korunur. 5003 mevcut kredi kullanıldı, yeni ödeme yok. Önceki yerel nabız artık imported heartbeat'i kullanır; düşük nefes sentezi fallback olarak korunur. Bunlar CC0 diye yeniden etiketlenmez. Eski yerel ses açıklamaları tarihsel katmanı anlatır; yeni paketin native/insan dinleme kabulü son teslimde ayrı raporlanır.
+
+Deprem okunurluğu için yeni yerel sunum, gerçek mobilya mesh ve materyallerini geçici render kopyalarında kullanır. Yeni dış sağlayıcı asseti veya rig içermez; kaynak mesh lisansları aynen geçerlidir. Gerçek eşya/collider/Model yerleşimi ve normal UAL karakter Animator'ı korunur.
+
 ## Değişmez dış kaynak kimlikleri
 
 | Kaynak | Doğrulanan commit | Bu paketin gerçek intakesi |

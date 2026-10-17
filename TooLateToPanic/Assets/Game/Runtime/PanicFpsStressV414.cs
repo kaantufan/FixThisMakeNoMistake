@@ -96,15 +96,15 @@ namespace TooLateToPanic
         void OnDisable(){if(Owner)Owner.SuspendExperienceFeedbackV414();}
         void OnDestroy(){if(!ReferenceEquals(Owner,null))Owner.DisposeExperienceFeedbackV414();Owner=null;}
     }
-    /// <summary>Locally synthesized nonverbal breath and heartbeat; no clips/providers/voice imitation.</summary>
+    /// <summary>Imported heartbeat plus retained original nonverbal breath. Never spoken voice.</summary>
     public sealed class PanicStressAudioV414 : IDisposable
     {
-        GameObject root;AudioSource heart,breath;AudioClip heartClip,breathClip;
+        GameObject root;AudioSource heart,breath;AudioClip heartClip,breathClip;bool ownsHeart;
         public bool Playing { get { return heart&&heart.isPlaying||breath&&breath.isPlaying; } }
         public PanicStressAudioV414(Transform owner)
         {
             root=new GameObject("V414 local breath and heartbeat");root.transform.SetParent(owner,false);
-            heartClip=MakeHeart();breathClip=MakeBreath();heart=Source("Soft double heartbeat",heartClip);breath=Source("Soft nonverbal breath",breathClip);
+            heartClip=PanicAudioBank.Get("heartbeat");ownsHeart=!heartClip;if(ownsHeart)heartClip=MakeHeart();breathClip=MakeBreath();heart=Source("Soft double heartbeat",heartClip);breath=Source("Soft nonverbal breath",breathClip);
         }
         AudioSource Source(string name,AudioClip clip)
         {
@@ -113,8 +113,8 @@ namespace TooLateToPanic
         public void Tick(float urgency)
         {
             if(!heart||!breath)return;urgency=Mathf.Clamp01(urgency);
-            heart.volume=Mathf.Lerp(.035f,.10f,urgency);heart.pitch=Mathf.Lerp(.93f,1.50f,urgency);
-            breath.volume=Mathf.Lerp(.025f,.075f,urgency);breath.pitch=Mathf.Lerp(.90f,1.25f,urgency);
+            heart.volume=Mathf.Lerp(.055f,.13f,urgency);heart.pitch=Mathf.Lerp(.90f,1.25f,urgency);
+            breath.volume=Mathf.Lerp(.012f,.035f,urgency);breath.pitch=Mathf.Lerp(.90f,1.25f,urgency);
             if(!heart.isPlaying)heart.Play();if(!breath.isPlaying)breath.Play();
         }
         public void Stop(){if(heart)heart.Stop();if(breath)breath.Stop();}
@@ -142,6 +142,6 @@ namespace TooLateToPanic
             var clip=AudioClip.Create("V414_OriginalNonverbalBreath",data.Length,1,rate,false);clip.SetData(data,0);return clip;
         }
         public void Dispose()
-        {Stop();if(root)UnityEngine.Object.Destroy(root);if(heartClip)UnityEngine.Object.Destroy(heartClip);if(breathClip)UnityEngine.Object.Destroy(breathClip);root=null;heart=null;breath=null;heartClip=null;breathClip=null;}
+        {Stop();if(root)UnityEngine.Object.Destroy(root);if(ownsHeart&&heartClip)UnityEngine.Object.Destroy(heartClip);if(breathClip)UnityEngine.Object.Destroy(breathClip);root=null;heart=null;breath=null;heartClip=null;breathClip=null;}
     }
 }

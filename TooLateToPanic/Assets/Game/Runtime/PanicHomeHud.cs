@@ -49,7 +49,7 @@ namespace TooLateToPanic
         {
             get
             {
-                if (DeveloperMenuOpen || DeveloperInputBlockedThisFrame) return true;
+                if (FreeplayOnboardingInputBlockedV414 || DeveloperMenuOpen || DeveloperInputBlockedThisFrame) return true;
                 if (_uiRects.Count == 0 || _scale <= 0f) return false;
                 Vector2 mouse = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
                 Vector2 point = (mouse - _offset) / _scale;
@@ -144,6 +144,7 @@ namespace TooLateToPanic
             if (!World || World.Model == null || _developerHotkeyFrame == Time.frameCount) return;
             _developerHotkeyFrame = Time.frameCount;
             SynchronizeHudPhase();
+            if (ProcessFreeplayOnboardingHotkeysV414()) return;
             if (_developerMenuOpen && !string.IsNullOrEmpty(DeveloperUnavailableReason()))
                 SetDeveloperMenuOpen(false);
             if (_developerMenuOpen)
@@ -159,6 +160,7 @@ namespace TooLateToPanic
         public void SetDeveloperMenuOpen(bool value)
         {
             if (value == _developerMenuOpen) return;
+            if (value && FreeplayOnboardingInputBlockedV414) return;
             if (value)
             {
                 if (!World || World.Model == null) return;
@@ -210,6 +212,7 @@ namespace TooLateToPanic
         {
             PanicPhase phase = World.Model.Phase;
             if (phase == _lastPhase) return;
+            SynchronizeFreeplayOnboardingPhaseV414(phase);
             if (_developerMenuOpen) SetDeveloperMenuOpen(false);
             if (_paused) SetPaused(false);
             // World already blocks movement for cinema. InputLocked is only a pause/UI lock.
@@ -227,6 +230,7 @@ namespace TooLateToPanic
             if (!World || World.Model == null) return;
             _hudProcessedFrame = Time.frameCount;
             ProcessDeveloperHotkeys();
+            if (FreeplayOnboardingInputBlockedV414) return;
             World.ProcessNotebookInput();
             if (World.NotebookBlocksInput) return;
             if (!World.InventoryOpen) CancelInventoryDrag();
@@ -298,7 +302,11 @@ namespace TooLateToPanic
             GUI.color = Color.white;
             GUI.contentColor = Color.white;
 
-            if (_paused && !_developerMenuOpen)
+            if (FreeplayOnboardingOpenV414)
+            {
+                DrawFreeplayOnboardingV414();
+            }
+            else if (_paused && !_developerMenuOpen)
             {
                 DrawStatusStrip(); DrawPause();
             }
@@ -359,9 +367,9 @@ namespace TooLateToPanic
                 if (World.NotificationVisible) DrawToast(World.ShortNotice);
             }
 
-            DrawPresentationSubtitle();
+            if (!FreeplayOnboardingOpenV414) DrawPresentationSubtitle();
             if (World.Model.CheatedRun) DrawCheatedRunIndicator();
-            if (!_developerMenuOpen && !string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)
+            if (!FreeplayOnboardingOpenV414 && !_developerMenuOpen && !string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)
             {
                 Rect notice = new Rect(480, 132, 840, 30);
                 Frame(notice, Night, Brass, 1f);
@@ -467,13 +475,13 @@ namespace TooLateToPanic
                 Label(new Rect(128, 294, 680, 136), "TO PANIC!", _logo);
             }
             Label(new Rect(118, 453, 668, 32), "Panik için geç. Hazırlık için şimdi.", _body);
-            Label(new Rect(118, 492, 660, 26), "Evi güçlendir. Çantanı hazırla. Sığınağa yetiş.", _small);
+            Label(new Rect(118, 492, 660, 26), "Asıl oyun: Serbest Oyna · Evi hazırla, çantanı topla.", _small);
 
-            Button(new Rect(118, 540, 664, 60), "HAZIRLIĞA BAŞLA", _menuChoice == 0, Brass, StartJuryRun);
-            Button(new Rect(118, 612, 664, 60), "FELAKET SİMÜLASYONU OYNA", _menuChoice == 1, Sea, OpenSimulationSelector);
-            Button(new Rect(118, 684, 320, 52), "SERBEST OYUN", _menuChoice == 2, Sea, StartRun);
-            Button(new Rect(450, 684, 332, 52), "NASIL OYNANIR", _menuChoice == 3, Sea, StartTutorial);
-            Button(new Rect(118, 748, 320, 52), "ÇIKIŞ", _menuChoice == 4, Rust, () => Application.Quit());
+            Button(new Rect(118, 540, 664, 60), PrimaryPlayLabelV414, _menuChoice == 0, Brass, () => ActivateTitleChoiceV414(0));
+            Button(new Rect(118, 612, 664, 60), TitleChoiceLabelV414(1), _menuChoice == 1, Sea, () => ActivateTitleChoiceV414(1));
+            Button(new Rect(118, 684, 320, 52), TitleChoiceLabelV414(2), _menuChoice == 2, Sea, () => ActivateTitleChoiceV414(2));
+            Button(new Rect(450, 684, 332, 52), TitleChoiceLabelV414(3), _menuChoice == 3, Sea, () => ActivateTitleChoiceV414(3));
+            Button(new Rect(118, 748, 320, 52), TitleChoiceLabelV414(4), _menuChoice == 4, Rust, () => ActivateTitleChoiceV414(4));
             DrawKeycap(new Rect(464, 754, 150, 36), "OKLAR", "SEÇ", Line);
             DrawKeycap(new Rect(626, 754, 156, 36), "ENTER", "AÇ", Line);
 
@@ -515,11 +523,7 @@ namespace TooLateToPanic
             }
             else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
             {
-                if (_menuChoice == 0) StartJuryRun();
-                else if (_menuChoice == 1) OpenSimulationSelector();
-                else if (_menuChoice == 2) StartRun();
-                else if (_menuChoice == 3) StartTutorial();
-                else Application.Quit();
+                ActivateSelectedTitleChoiceV414();
                 e.Use();
             }
         }

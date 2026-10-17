@@ -259,6 +259,7 @@ namespace TooLateToPanic
         }
         void ResetResidenceLife()
         {
+            if (hud) hud.CancelFreeplayOnboardingV414();
             InventoryIndex=0;AnchorMode="wall";focusId=null;
             ResetDirectActions();
             ResetRevisionWorld();

@@ -11,7 +11,7 @@ namespace TooLateToPanic
         public int TitleChoice { get { return _menuChoice; } }
         public int PauseChoice { get { return _pauseChoice; } }
         public bool InventoryDragging { get { return _dragSlot >= 0; } }
-        public bool NotebookModalBlocked { get { return _paused || DeveloperMenuOpen || DeveloperInputBlockedThisFrame || _helpVisible || SimulationSelectorOpen; } }
+        public bool NotebookModalBlocked { get { return FreeplayOnboardingInputBlockedV414 || _paused || DeveloperMenuOpen || DeveloperInputBlockedThisFrame || _helpVisible || SimulationSelectorOpen; } }
 
         public void OpenPhysicalBag()
         {

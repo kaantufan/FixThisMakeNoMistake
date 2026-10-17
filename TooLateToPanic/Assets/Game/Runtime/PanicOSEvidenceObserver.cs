@@ -12,15 +12,16 @@ namespace TooLateToPanic
     {
         [Serializable] sealed class State
         {
-            public string utc, phase, stage, disaster, focus, hint, message, failure, inventory, bag;
-            public float seconds, dt, preparation, phaseTime, damage, juryElapsed;
+            public string utc, phase, stage, disaster, focus, hint, message, failure, inventory, bag, materialStock;
+            public float seconds, dt, preparation, phaseTime, damage, juryElapsed, cinematicProgress;
             public Vector3 actor, viewPosition, viewForward, viewEuler;
             public int frame, wave, budget, water, food, completedWaves, reward, workStep, workNext;
             public long score;
             public bool focused, controller, grounded, inputLocked, cinema, loss, inventoryOpen, workActive, moving, cheated, simulationComplete;
             public bool infiniteBudget, freeMaterials, freezeTime, noLoss, developerMenu, bagFirstPerson, bagTransition;
             public string[] keyDown, keyUp, goals;
-            public bool leftDown, rightDown, leftHeld, rightHeld;
+            public bool leftDown, rightDown, leftHeld, rightHeld, modelPaused, onboarding;
+            public int onboardingResolutions;
             public float workProgress;
         }
         [Serializable] sealed class Summary
@@ -81,6 +82,8 @@ namespace TooLateToPanic
                 workStep=work.CompletedSteps,workNext=work.NextClickTarget,workProgress=work.Progress,keyDown=down,keyUp=up,leftDown=left,rightDown=right,leftHeld=Input.GetMouseButton(0),rightHeld=Input.GetMouseButton(1),
                 bagFirstPerson=world.BagFirstPersonActive,bagTransition=world.BagCameraTransitionActive,
                 inventory=string.Join(";",world.Expedition.Inventory.Select(x=>x.Id+":"+x.Count)),bag=string.Join(";",world.Expedition.Bag.Select(x=>x.Id+":"+x.Count)),
+                materialStock=string.Join(";",PanicExpedition.MaterialIds.Select(x=>x+":"+world.Expedition.Count(x))),
+                modelPaused=m.IsPaused,onboarding=hud&&hud.FreeplayOnboardingOpenV414,onboardingResolutions=hud?hud.FreeplayOnboardingResolutionCountV414:0,cinematicProgress=world.CinematicProgress,
                 juryElapsed=world.JuryDemo==null?0:world.JuryDemo.ElapsedSeconds,
                 goals=world.JuryDemo==null?Array.Empty<string>():world.JurySnapshot.Goals.Select(x=>x.Id+"="+x.State).ToArray()};
             ledger.WriteLine(JsonUtility.ToJson(row));summary.samples++;summary.physicalKeyDownEvents+=down.Length;summary.mouseDownEvents+=(left?1:0)+(right?1:0);
