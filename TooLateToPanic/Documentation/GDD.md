@@ -1,6 +1,12 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Sürüm 2.7 · 18 Ekim 2026 · Home V5.3**
+**Sürüm 2.8 · 18 Ekim 2026 · Home V5.4**
+
+Güncel **Home V5.4-r3 /0.5.4**. FPS geçişi0,84sn tam siyah bekler; devam eden panik kararması ve sınırlı kamera salınımı/FOV hissi vardır. Duraklat menüsünde FPS hareketini azalt seçeneği bulunur. Eldivenin kesik gibi görünen üstü kapalı tek kabukla yenilendi; ince ahşap zeminin kendi gölge üretimi kapatıldı. Karanlık/açık banyo kapısı görüntüsünde zemin temiz; eski üçgen kusuru karşılaştırmada yeniden oluşmadığından gölge değişikliğinin kesin neden kabulü UNVERIFIED kalır.
+
+İlk dalga tek deprem; ikinci dalgadan itibaren dört afet havuzundan her koşuda RNG seçilir. Aynı dalgada iki veya üç farklı afet aynı anda gelebilir. Her biri kendi önlemleri ve gerçek hasarıyla değerlendirilir, erzak/ödül bir kez çözülür. Sel varsa üst panik odası kullanılır. Gerçek duruma bağlı küçük görev kartı ve sıradaki geçilebilir kapı/merdiven checkpoint'i oyuncuya önlem, su, gıda ve sığınak sırasında yol gösterir.120+45sn,75%kayıp ve KKTC · Güzelyurt · Kalkanlı hikâyesi korunur.
+
+[V5.4 teslimi](HOME-V5.4-DELIVERY-2026-10-18.md).
 
 Güncel hikâye KKTC · Güzelyurt · Kalkanlı'da geçer. Aile güvenli alanda, oyuncu aile evini hazırlar. Yer adı gerçektir; oyundaki kişiler ve afet olayları kurmacadır. Açılış, menü, defter ve kısa akış aynı katalogdan beslenir. Selde hazır çanta notu üst kat panik odasına yönlendirir. Önceki V5.2 mekanikleri korunur. Kesin yeni build/test kimliği [V5.3 teslimi](HOME-V5.3-KKTC-DELIVERY-2026-10-18.md) ve [LATEST](../LATEST-BUILD.json) içindedir.
 
@@ -182,3 +188,12 @@ Son kullanıcı kararı eski A/D–Enter–Space Ratchet/Timing/Balance zorunlul
 ## Home V5.3 —18Ekim2026
 
 Son kullanıcı düzeltmesiyle hikâye KKTC · Güzelyurt · Kalkanlı olarak uyarlandı. Yer gerçektir; kişiler ve afet olayları kurmacadır. Aile güvenli alanda, oyuncu aile evini hazırlar. Açılış16sn/dört4snçekim,120+45sn, dalgalarla artan V5.2 hasarı ve gerçek maliyet/fizik/skor kuralları korunur. Menü/sinematik/defter/kısa akış ortak katalog kullanır; selde hazır çanta defter notu üst panik odasını gösterir. Yeni konuşma/sağlayıcı işi yoktur. Güncel kimlik LATEST ve HOME-V5.3-KKTC-DELIVERY-2026-10-18.md'dir. Dar native hikâye/API/render kontrolü OS/insan/tüm kampanya kabulü değildir.
+
+
+## Home V5.4 —18Ekim2026
+
+Güncel **Home V5.4-r3 /0.5.4**. FPS geçişi0,84sn tam siyah bekler; devam eden panik kararması ve sınırlı kamera salınımı/FOV hissi vardır. Duraklat menüsünde FPS hareketini azalt seçeneği bulunur. Eldivenin kesik gibi görünen üstü kapalı tek kabukla yenilendi; ince ahşap zeminin kendi gölge üretimi kapatıldı. Karanlık/açık banyo kapısı görüntüsünde zemin temiz; eski üçgen kusuru karşılaştırmada yeniden oluşmadığından gölge değişikliğinin kesin neden kabulü UNVERIFIED kalır.
+
+İlk dalga tek deprem; ikinci dalgadan itibaren dört afet havuzundan her koşuda RNG seçilir. Aynı dalgada iki veya üç farklı afet aynı anda gelebilir. Her biri kendi önlemleri ve gerçek hasarıyla değerlendirilir, erzak/ödül bir kez çözülür. Sel varsa üst panik odası kullanılır. Gerçek duruma bağlı küçük görev kartı ve sıradaki geçilebilir kapı/merdiven checkpoint'i oyuncuya önlem, su, gıda ve sığınak sırasında yol gösterir.120+45sn,75%kayıp ve KKTC · Güzelyurt · Kalkanlı hikâyesi korunur.
+
+Güncel kanıt yalnız LATEST ve HOME-V5.4-DELIVERY-2026-10-18.md ile bağlıdır. Önceki tek tür/sabit ilk9dalga sözleşmesi normal kampanya için bu istekle güncellenir. Kaynak/native/OS/insan sınırları teslimde ayrıdır.

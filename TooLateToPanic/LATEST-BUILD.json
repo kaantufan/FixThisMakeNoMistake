@@ -1,26 +1,26 @@
 {
-  "version": "Home V5.3 /0.5.3 /r3",
+  "version": "Home V5.4 /0.5.4 /r3",
   "releaseStatus": "READY_FOR_USER_PLAYTEST",
   "requiresUserPlaytest": true,
   "scene": "Assets/Game/Scenes/TooLateToPanicResidence.unity",
-  "executable": "Builds/Home-V5.3-r3-20261018/TooLateToPanic.exe",
-  "portableZip": "Builds/TooLateToPanic-Home-V5.3-r3-20261018-portable.zip",
-  "portableZipSha256": "B79E33208FADD73B809AF94FAF2295AA6E5C977B1A1176AE255DB3B2637EA171",
-  "portableZipBytes": 219403628,
+  "executable": "Builds/Home-V5.4-r3-20261018/TooLateToPanic.exe",
+  "portableZip": "Builds/TooLateToPanic-Home-V5.4-r3-20261018-portable.zip",
+  "portableZipSha256": "25D721D8E0B19901BD0C092863DD52049638B402F4EB274DDC946D55DAA34111",
+  "portableZipBytes": 219430440,
   "portableMatchesNative": true,
-  "assemblyCSharpSha256": "FBA51C5B1C9A9D3C2818A347A6020534DDF728E5987393CB2A7166F263167E1E",
+  "assemblyCSharpSha256": "778A21CDE906BA6E94F39A907405B53599852891516E51BDA4499DFA55971B09",
   "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
   "buildErrors": 0,
   "buildWarnings": 0,
-  "buildUtc": "2026-10-17T22:42:38.4964990Z",
-  "promotedUtc": "2026-10-17T22:44:51.135902+00:00",
-  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-V53-20261018/manager/final-source-manifest-r3.json",
-  "sourceManifestSha256": "A05ADEC0D0E5471163657A138F49E08E4F1D2A0DA5916D5BC41BEFAAC2B4F0AF",
-  "buildManifest": "../Evidence/GamejamOrchestra/TLTP-V53-20261018/manager/final-build-manifest-r3.json",
-  "buildManifestSha256": "42B02FF2A452F1C61C37EE334D306B4EE19EE6E1D5173A4D3A3246150AEDEAD1",
-  "frozenCodeShaders": 150,
+  "buildUtc": "2026-10-17T23:13:54.3218500Z",
+  "promotedUtc": "2026-10-17T23:17:12.102893+00:00",
+  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-V54-20261018/manager/final-source-manifest-r3.json",
+  "sourceManifestSha256": "91F937B5BA2EBC73DC7F15BE6E07580F8B720F32A17A405ED0F5FDCB81746DA4",
+  "buildManifest": "../Evidence/GamejamOrchestra/TLTP-V54-20261018/manager/final-build-manifest-r3.json",
+  "buildManifestSha256": "3942826B88F0BB6E1D816D75D9E0A2BAA6E3E2889AAF388ADBE10D1881BBB0E1",
+  "frozenCodeShaders": 156,
   "codeShaderDrift": 0,
-  "sourceFiles": 40909,
+  "sourceFiles": 40924,
   "buildFiles": 156,
   "campaignTiming": {
     "precautionSeconds": 120,
@@ -45,19 +45,21 @@
   },
   "native": {
     "passed": true,
-    "seconds": 39.34349060058594,
-    "checks": 61,
+    "seconds": 28.580917358398438,
+    "checks": 88,
     "runtimeErrors": 0,
-    "captures": 14,
-    "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V53-20261018\\manager\\native-r3-40e3a9b9-3934-433d-97e8-0e25dc1a8d06",
-    "layer": "Native story/model API, natural opening timelines and live ScreenCapture. Explicit disaster/model fixtures. No OS input, listening, human or full campaign acceptance.",
+    "captures": 10,
+    "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V54-20261018\\manager\\native-r3-d960c439-3d4c-45b2-8e54-b72dc077b095",
+    "setupWarps": 1,
+    "timeMaskFixtures": 5,
+    "layer": "Native production API/model/physics/camera/effect and actual ScreenCapture. Explicit wave/mask/seed/stock/time/position fixtures. No OS input, listening, human comfort or full campaign acceptance.",
     "OSInput": false,
     "humanAcceptance": false
   },
   "realScoresUnchanged": true,
   "realScoreBefore": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
   "realScoreAfter": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
-  "delivery": "Documentation/HOME-V5.3-KKTC-DELIVERY-2026-10-18.md",
+  "delivery": "Documentation/HOME-V5.4-DELIVERY-2026-10-18.md",
   "assets": "Documentation/HOME-V5-ASSETS-2026-10-18.md",
   "newPayment": 0,
   "newProviderCredits": 0,
@@ -65,47 +67,37 @@
   "publishedToGitHub": true,
   "knownLimits": [
     "OS and human play/listening not run",
-    "Full campaign not run",
-    "Inherited normal disaster pool excludes Storm; it remains in simulation",
+    "Full campaign and every door/stair route not run",
+    "Original floor triangle symptom did not reproduce in dark/open-door A/B pair; causal shadow repair acceptance UNVERIFIED",
     "Small neck/collar shell seams remain a visual limitation"
   ],
   "retention": {
-    "processesStopped": 0,
-    "utc": "2026-10-17T22:44:53.1729479Z",
+    "historicalRejectedV4TargetsTouched": false,
+    "final": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r3-20261018",
+    "utc": "2026-10-17T23:17:24.4341909Z",
     "rows": [
       {
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.1-r2-20261018",
-        "status": "REMOVED_AFTER_FINAL_PASS",
-        "verifiedInsideBuilds": true
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.3-r3-20261018",
+        "status": "REMOVED_AFTER_FINAL_PASS"
       },
       {
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\TooLateToPanic-Home-V5.1-r2-20261018-portable.zip",
-        "status": "REMOVED_AFTER_FINAL_PASS",
-        "verifiedInsideBuilds": true
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\TooLateToPanic-Home-V5.3-r3-20261018-portable.zip",
+        "status": "REMOVED_AFTER_FINAL_PASS"
       },
       {
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.2-r1-20261018",
-        "status": "REMOVED_AFTER_FINAL_PASS",
-        "verifiedInsideBuilds": true
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r1-20261018",
+        "status": "REMOVED_AFTER_FINAL_PASS"
       },
       {
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\TooLateToPanic-Home-V5.2-r1-20261018-portable.zip",
-        "status": "REMOVED_AFTER_FINAL_PASS",
-        "verifiedInsideBuilds": true
-      },
-      {
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.3-r1-20261018",
-        "status": "REMOVED_AFTER_FINAL_PASS",
-        "verifiedInsideBuilds": true
-      },
-      {
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.3-r2-20261018",
-        "status": "REMOVED_AFTER_FINAL_PASS",
-        "verifiedInsideBuilds": true
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r2-20261018",
+        "status": "REMOVED_AFTER_FINAL_PASS"
       }
     ],
-    "final": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.3-r3-20261018",
-    "historicalRejectedV4TargetsTouched": false
+    "processesStopped": 0
   },
   "feedbackV51": {
     "bag": "Invisible carried eight-slot bag; all seven emergency types auto-pack under capacity and battery rules",
@@ -115,28 +107,28 @@
       "F3": "Unrewarded no-loss wave cinematic"
     },
     "handoffSeconds": 2,
-    "fullBlackSeconds": 0.58,
+    "fullBlackSeconds": 0.84,
     "clockHeldDuringHandoff": true,
     "gardenMarkers": "Outdoors only",
     "fireEquipment": "Wall-mounted",
     "primaryInteraction": "Projected above selected actual object"
   },
   "workers": [
-    "kktc_story_v53 staged narrative catalog",
-    "kktc_review_v53 read-only source/primary-source review",
-    "kktc_smoke_v53 staged bounded QA driver"
+    "fps_v54 staged FPS art/blackout/panic",
+    "guidance_v54 staged context guidance",
+    "compound_fx_v54 staged concurrent FX and critical model checks"
   ],
   "normalLaunch": {
-    "noInputOrTerminationSentToUserPlayer": true,
-    "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.3-r3-20261018\\TooLateToPanic.exe",
-    "log": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V53-20261018\\manager\\normal-player.log",
-    "readyLog": true,
     "running": true,
-    "OSInput": false,
-    "humanAcceptance": false,
-    "pid": 54036,
+    "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r3-20261018\\TooLateToPanic.exe",
     "status": "NORMAL_PROCESS_READY_LEFT_OPEN",
-    "utc": "2026-10-17T22:44:13.2805261Z"
+    "humanAcceptance": false,
+    "noInputOrTerminationSentToUserPlayer": true,
+    "OSInput": false,
+    "readyLog": true,
+    "pid": 34244,
+    "utc": "2026-10-17T23:17:19.6732756Z",
+    "log": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V54-20261018\\manager\\normal-player.log"
   },
   "waveDifficulty": {
     "damageMultiplier": {
@@ -185,11 +177,11 @@
   },
   "finalVerification": {
     "frozen": {
-      "files": 150,
+      "files": 156,
       "drift": []
     },
     "source": {
-      "files": 40909,
+      "files": 40924,
       "drift": []
     },
     "build": {
@@ -197,69 +189,55 @@
       "drift": []
     }
   },
-  "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.3-r3",
+  "compoundWaves": {
+    "firstWave": "single Earthquake",
+    "wave2OnwardPool": [
+      "Earthquake",
+      "Flood",
+      "Fire",
+      "Storm"
+    ],
+    "perRunRandomSeed": true,
+    "selection": "once at wave start;50%single/35%double/15%triple;no duplicate types",
+    "damage": "primary1 + secondary0.45 each, raw normalized household contributions before one proportional100 cap",
+    "lossPercent": 75,
+    "consumptionRewardResolution": "once per whole wave",
+    "shelterPriority": "any Flood -> upper panic room; otherwise basement",
+    "simulationTutorialShortFlow": "single hazard"
+  },
+  "fpsV54": {
+    "handoffSeconds": 2,
+    "fullBlackSeconds": 0.84,
+    "continuedVeil": true,
+    "rollPitchYawFovPanic": true,
+    "reducedMotion": "pause menu via keyboard or mouse",
+    "movementUsesNominalLook": true,
+    "selectionUsesDisplayedCamera": true,
+    "closedGloveShell": true,
+    "floorRepair": "thin wood floor finish self-shadow casting suppressed; receives actual room shadows",
+    "originalFloorTriangleCausalAcceptance": "UNVERIFIED: original symptom did not reproduce in dark/open-door legacy-vs-fixed pair; current tested pose clean"
+  },
+  "guidanceV54": {
+    "goals": "actual unfinished precaution/material -> needed water -> needed food -> actual shelter",
+    "routing": "collider/support grid, real step chain, actual door portals; sliced search",
+    "automaticGameplayMutation": false,
+    "maxExpandedPerSearch": 2600,
+    "maxSearchesPerBatch": 8,
+    "searchSliceTargetMs": 2,
+    "nativeHumanRouteAcceptance": "see exact native rows; no OS/human/full campaign acceptance"
+  },
+  "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.4-r3",
   "publication": {
-    "sourceSnapshotUtc": "2026-10-17T23:15:19.2563508Z",
-    "sourceManifest": "Documentation/Publications/Snapshots/20261017T231504Z/source-sha256.json",
-    "sourceVsBuildReport": "Documentation/Publications/Snapshots/20261017T231504Z/source-vs-build.json",
-    "selectedSourceFiles": 3941,
-    "compiledSourceMismatches": [
-      "Assets/Game/Art/PanicBagHandsArt.cs",
-      "Assets/Game/Art/PanicDisasterArt.cs",
-      "Assets/Game/Art/PanicStormArt.cs",
-      "Assets/Game/Editor/PanicResidenceBuild.cs",
-      "Assets/Game/Runtime/PanicBagHandoffV51.cs",
-      "Assets/Game/Runtime/PanicBagPreparation.cs",
-      "Assets/Game/Runtime/PanicCompactHudV5.cs",
-      "Assets/Game/Runtime/PanicExteriorWorld.cs",
-      "Assets/Game/Runtime/PanicFinalBagHud.cs",
-      "Assets/Game/Runtime/PanicFpsStressV414.cs",
-      "Assets/Game/Runtime/PanicHomeCinema.cs",
-      "Assets/Game/Runtime/PanicHomeEffects.cs",
-      "Assets/Game/Runtime/PanicHomeHud.cs",
-      "Assets/Game/Runtime/PanicHomeLife.cs",
-      "Assets/Game/Runtime/PanicHomePresentation.cs",
-      "Assets/Game/Runtime/PanicHomeWorld.cs",
-      "Assets/Game/Runtime/PanicModel.cs",
-      "Assets/Game/Runtime/PanicNotebookData.cs",
-      "Assets/Game/Runtime/PanicQuakeReadabilityV414.cs",
-      "Assets/Game/Runtime/PanicRevisionHud.cs",
-      "Assets/Game/Runtime/PanicRevisionWorldV5.cs",
-      "Assets/Game/Runtime/PanicShelterAndSecondaryV5.cs",
-      "Assets/Game/Runtime/PanicStreetLifeV414.cs",
-      "Assets/Game/Runtime/PanicTestLaunchRules.cs"
-    ],
-    "selectedBuildAssetMismatches": [
-      "Assets/Game/Art/PanicBagHandsArt.cs",
-      "Assets/Game/Art/PanicDisasterArt.cs",
-      "Assets/Game/Art/PanicStormArt.cs",
-      "Assets/Game/Editor/PanicResidenceBuild.cs",
-      "Assets/Game/Runtime/PanicBagHandoffV51.cs",
-      "Assets/Game/Runtime/PanicBagPreparation.cs",
-      "Assets/Game/Runtime/PanicCompactHudV5.cs",
-      "Assets/Game/Runtime/PanicExteriorWorld.cs",
-      "Assets/Game/Runtime/PanicFinalBagHud.cs",
-      "Assets/Game/Runtime/PanicFpsStressV414.cs",
-      "Assets/Game/Runtime/PanicHomeCinema.cs",
-      "Assets/Game/Runtime/PanicHomeEffects.cs",
-      "Assets/Game/Runtime/PanicHomeHud.cs",
-      "Assets/Game/Runtime/PanicHomeLife.cs",
-      "Assets/Game/Runtime/PanicHomePresentation.cs",
-      "Assets/Game/Runtime/PanicHomeWorld.cs",
-      "Assets/Game/Runtime/PanicModel.cs",
-      "Assets/Game/Runtime/PanicNotebookData.cs",
-      "Assets/Game/Runtime/PanicQuakeReadabilityV414.cs",
-      "Assets/Game/Runtime/PanicRevisionHud.cs",
-      "Assets/Game/Runtime/PanicRevisionWorldV5.cs",
-      "Assets/Game/Runtime/PanicShelterAndSecondaryV5.cs",
-      "Assets/Game/Runtime/PanicStreetLifeV414.cs",
-      "Assets/Game/Runtime/PanicTestLaunchRules.cs",
-      "Assets/Game/Scenes/TooLateToPanicResidence.unity"
-    ],
+    "sourceSnapshotUtc": "2026-10-17T23:25:21.7691195Z",
+    "sourceManifest": "Documentation/Publications/v0.5.4-r3/source-sha256.json",
+    "sourceVsBuildReport": "Documentation/Publications/v0.5.4-r3/source-vs-build.json",
+    "selectedSourceFiles": 3942,
+    "compiledSourceMismatches": [],
+    "selectedBuildAssetMismatches": [],
     "missingGuids": 0,
     "newBuildPerformed": false,
     "newNativeRunPerformed": false,
     "localEvidenceNotIncluded": true,
-    "existingReleaseUnchanged": true
+    "existingReleaseUnchanged": false
   }
 }

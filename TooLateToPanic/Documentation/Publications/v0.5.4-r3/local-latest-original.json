@@ -1,0 +1,229 @@
+{
+  "version": "Home V5.4 /0.5.4 /r3",
+  "releaseStatus": "READY_FOR_USER_PLAYTEST",
+  "requiresUserPlaytest": true,
+  "scene": "Assets/Game/Scenes/TooLateToPanicResidence.unity",
+  "executable": "Builds/Home-V5.4-r3-20261018/TooLateToPanic.exe",
+  "portableZip": "Builds/TooLateToPanic-Home-V5.4-r3-20261018-portable.zip",
+  "portableZipSha256": "25D721D8E0B19901BD0C092863DD52049638B402F4EB274DDC946D55DAA34111",
+  "portableZipBytes": 219430440,
+  "portableMatchesNative": true,
+  "assemblyCSharpSha256": "778A21CDE906BA6E94F39A907405B53599852891516E51BDA4499DFA55971B09",
+  "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
+  "buildErrors": 0,
+  "buildWarnings": 0,
+  "buildUtc": "2026-10-17T23:13:54.3218500Z",
+  "promotedUtc": "2026-10-17T23:17:12.102893+00:00",
+  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-V54-20261018/manager/final-source-manifest-r3.json",
+  "sourceManifestSha256": "91F937B5BA2EBC73DC7F15BE6E07580F8B720F32A17A405ED0F5FDCB81746DA4",
+  "buildManifest": "../Evidence/GamejamOrchestra/TLTP-V54-20261018/manager/final-build-manifest-r3.json",
+  "buildManifestSha256": "3942826B88F0BB6E1D816D75D9E0A2BAA6E3E2889AAF388ADBE10D1881BBB0E1",
+  "frozenCodeShaders": 156,
+  "codeShaderDrift": 0,
+  "sourceFiles": 40924,
+  "buildFiles": 156,
+  "campaignTiming": {
+    "precautionSeconds": 120,
+    "bagSeconds": 45,
+    "totalSeconds": 165
+  },
+  "waterRequired": 1,
+  "foodRequired": 1,
+  "lossPercent": 75,
+  "shelter": {
+    "physicalGate": "TryEnterActiveShelterV5",
+    "singleTruth": "Model.ReachedShelterV5",
+    "Other": "Basement shelter",
+    "Flood": "Upper physical panic room"
+  },
+  "loot": {
+    "constructionSources": 14,
+    "finite": true,
+    "looseSupplySeats": 16,
+    "perWaveRestock": "Once guarded by Model.Wave",
+    "rng": "Small finite quantity and same-floor distribution"
+  },
+  "native": {
+    "passed": true,
+    "seconds": 28.580917358398438,
+    "checks": 88,
+    "runtimeErrors": 0,
+    "captures": 10,
+    "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V54-20261018\\manager\\native-r3-d960c439-3d4c-45b2-8e54-b72dc077b095",
+    "setupWarps": 1,
+    "timeMaskFixtures": 5,
+    "layer": "Native production API/model/physics/camera/effect and actual ScreenCapture. Explicit wave/mask/seed/stock/time/position fixtures. No OS input, listening, human comfort or full campaign acceptance.",
+    "OSInput": false,
+    "humanAcceptance": false
+  },
+  "realScoresUnchanged": true,
+  "realScoreBefore": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+  "realScoreAfter": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+  "delivery": "Documentation/HOME-V5.4-DELIVERY-2026-10-18.md",
+  "assets": "Documentation/HOME-V5-ASSETS-2026-10-18.md",
+  "newPayment": 0,
+  "newProviderCredits": 0,
+  "legacyFpsProjectTouched": false,
+  "publishedToGitHub": false,
+  "knownLimits": [
+    "OS and human play/listening not run",
+    "Full campaign and every door/stair route not run",
+    "Original floor triangle symptom did not reproduce in dark/open-door A/B pair; causal shadow repair acceptance UNVERIFIED",
+    "Small neck/collar shell seams remain a visual limitation"
+  ],
+  "retention": {
+    "historicalRejectedV4TargetsTouched": false,
+    "final": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r3-20261018",
+    "utc": "2026-10-17T23:17:24.4341909Z",
+    "rows": [
+      {
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.3-r3-20261018",
+        "status": "REMOVED_AFTER_FINAL_PASS"
+      },
+      {
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\TooLateToPanic-Home-V5.3-r3-20261018-portable.zip",
+        "status": "REMOVED_AFTER_FINAL_PASS"
+      },
+      {
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r1-20261018",
+        "status": "REMOVED_AFTER_FINAL_PASS"
+      },
+      {
+        "verifiedInsideBuilds": true,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r2-20261018",
+        "status": "REMOVED_AFTER_FINAL_PASS"
+      }
+    ],
+    "processesStopped": 0
+  },
+  "feedbackV51": {
+    "bag": "Invisible carried eight-slot bag; all seven emergency types auto-pack under capacity and battery rules",
+    "keys": {
+      "F1": "Miniature keyboard toggle",
+      "F2": "Developer menu",
+      "F3": "Unrewarded no-loss wave cinematic"
+    },
+    "handoffSeconds": 2,
+    "fullBlackSeconds": 0.84,
+    "clockHeldDuringHandoff": true,
+    "gardenMarkers": "Outdoors only",
+    "fireEquipment": "Wall-mounted",
+    "primaryInteraction": "Projected above selected actual object"
+  },
+  "workers": [
+    "fps_v54 staged FPS art/blackout/panic",
+    "guidance_v54 staged context guidance",
+    "compound_fx_v54 staged concurrent FX and critical model checks"
+  ],
+  "normalLaunch": {
+    "running": true,
+    "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r3-20261018\\TooLateToPanic.exe",
+    "status": "NORMAL_PROCESS_READY_LEFT_OPEN",
+    "humanAcceptance": false,
+    "noInputOrTerminationSentToUserPlayer": true,
+    "OSInput": false,
+    "readyLog": true,
+    "pid": 34244,
+    "utc": "2026-10-17T23:17:19.6732756Z",
+    "log": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V54-20261018\\manager\\normal-player.log"
+  },
+  "waveDifficulty": {
+    "damageMultiplier": {
+      "1": 1,
+      "2": 1.08,
+      "5": 1.32,
+      "10": 1.72,
+      "20": 2.17,
+      "50": 3.52
+    },
+    "growth": "Absolute +0.08 multiplier per wave through10, then +0.045; not compounded",
+    "presentationRange": [
+      1,
+      1.65
+    ],
+    "firstWaveBaselinePreserved": true,
+    "damageRange": [
+      0,
+      100
+    ],
+    "allItemContributionsProportionallyCapped": true,
+    "mitigationRulesPreserved": true,
+    "secondaryRngRange": [
+      0,
+      2.8
+    ],
+    "simulationTutorialShortFlowScale": 1
+  },
+  "scoreEvidence": "Fresh process-isolated write target. Real before/after hashes are observations; active user player may independently write its scores.",
+  "story": {
+    "setting": "KKTC · Güzelyurt · Kalkanlı",
+    "premise": "Aile güvenli alanda; oyuncu aile evini hazırlar.",
+    "surfaces": [
+      "title",
+      "four opening captions",
+      "cinematic location/aftermath",
+      "notebook identity/personal note",
+      "short-flow onboarding/subtitle"
+    ],
+    "fictionalSetting": false,
+    "fictionalPeopleAndEvents": true,
+    "realEventForecastOrOfficialEndorsement": false,
+    "floodReadyNotebookDestination": "upper panic room",
+    "newSpeechProviderWork": false,
+    "catalog": "Assets/Game/Runtime/PanicKktcStoryV53.cs"
+  },
+  "finalVerification": {
+    "frozen": {
+      "files": 156,
+      "drift": []
+    },
+    "source": {
+      "files": 40924,
+      "drift": []
+    },
+    "build": {
+      "files": 156,
+      "drift": []
+    }
+  },
+  "compoundWaves": {
+    "firstWave": "single Earthquake",
+    "wave2OnwardPool": [
+      "Earthquake",
+      "Flood",
+      "Fire",
+      "Storm"
+    ],
+    "perRunRandomSeed": true,
+    "selection": "once at wave start;50%single/35%double/15%triple;no duplicate types",
+    "damage": "primary1 + secondary0.45 each, raw normalized household contributions before one proportional100 cap",
+    "lossPercent": 75,
+    "consumptionRewardResolution": "once per whole wave",
+    "shelterPriority": "any Flood -> upper panic room; otherwise basement",
+    "simulationTutorialShortFlow": "single hazard"
+  },
+  "fpsV54": {
+    "handoffSeconds": 2,
+    "fullBlackSeconds": 0.84,
+    "continuedVeil": true,
+    "rollPitchYawFovPanic": true,
+    "reducedMotion": "pause menu via keyboard or mouse",
+    "movementUsesNominalLook": true,
+    "selectionUsesDisplayedCamera": true,
+    "closedGloveShell": true,
+    "floorRepair": "thin wood floor finish self-shadow casting suppressed; receives actual room shadows",
+    "originalFloorTriangleCausalAcceptance": "UNVERIFIED: original symptom did not reproduce in dark/open-door legacy-vs-fixed pair; current tested pose clean"
+  },
+  "guidanceV54": {
+    "goals": "actual unfinished precaution/material -> needed water -> needed food -> actual shelter",
+    "routing": "collider/support grid, real step chain, actual door portals; sliced search",
+    "automaticGameplayMutation": false,
+    "maxExpandedPerSearch": 2600,
+    "maxSearchesPerBatch": 8,
+    "searchSliceTargetMs": 2,
+    "nativeHumanRouteAcceptance": "see exact native rows; no OS/human/full campaign acceptance"
+  }
+}

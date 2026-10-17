@@ -1,0 +1,15 @@
+# V5.4 kanıt kapsamı
+
+Native driver üretim API/model/fizik/kamera/FX ve canlı ScreenCapture kullanır; OS girdisi, insan konforu/işitme veya tam kampanya kabulü yoktur. Model helper'ının128dalgası açık düşük riskli fixture'dır; aynı evle128dalga insan oynanışı değildir.
+
+R1'de87/87kontrol geçti. Sahibin zemin görsel incelemesinde kamera ahşap yerine çoğunlukla banyo fayansını kapsıyordu. R2'de yalnız QAkonumu/bakış açısı (2.1,3.2,4.6), yaw90/pitch72 olarak değiştirildi; üretim kaynakları R1ile aynıdır. R1eski/fixedzemin kareleri ahşap kusurunun kabulü sayılmaz. Son görsel sonucu R2owner-pixel-review dosyası bağlar.
+
+Driver V5.3iskeletinden gelir. Ham rapordaki eski `activeClockAssignments`, `directWarpCalls`, `manualTickCalls`, `separateModelFixtures` alanları bu yeni sürümde izlenmiyor; sıfırları 'çağrı yapılmadı' kanıtı olarak kullanma. Ana driver doğrudan bir45sn saat fixture'ı, bir açık Warp/konum fixture'ı ve üç mask/wave fixture'ı kurar; `setupWarps` ve `timeFixtures` yeni sayaçları bunları bağlar (timeFixtures mask kurulumlarını da içerir). Model helper'ı ayrıca kendi yeni Model/Items/seed/memo/hazard fixture'larını kurar ve Model.Tick ile gerçek üretim geçişlerini çalıştırır. Bunlar NATIVE_MODEL_FIXTURE satırlarıdır. Normal StartGame/StartJuryDemo'nun kendi kurulumları da rota yürüyüşü sayılmaz.
+
+Su/gıda ilerlemesi gerçek sonlu Expedition.TryCollectWorldSupply API'sidir; bu test fiziksel dünya yakınlığı/OS pickup kabulü değildir. Canlı guideline rota/checkpoint durumu, gerçek kapı/merdiven colliderları ve üretim algoritması üzerinden okunur; tüm rotayı insanla yürümek sayılmaz. Siyaha geçiş kare RGBkontrolü ve49civarındaki gerçek draw frame'i, görünür kameranın gerçek roll/FOV aralığı ve doğal8+4s birleşik faz ayrı kanıtlardır.
+
+Zemin karşılaştırması: gerçek sahnedeki yalnız floor_finish/Walnut rendererlarının shadow casting'i eski durum On'a alınarak bir counterfactual kare kaydedilir, ardından üretim Offdurumu geri verilip fixedkare kaydedilir. Alınan oda gölgeleri ve colliderlar değişmez. Source-onlyanaliz kesin piksel nedeninin yerine geçmez; sahibi son iki kareyi inceler.
+
+R3 nihai aday: üretim kodu R1/R2ile aynı; yalnız smoke pozu pitch62, gerçek banyo kapısı açma ve elektrik kesilmiş durum fixture'ı eklendi.88/88 ilgili kontrol,28.58s,0runtime hata. Gerçek siyah kare maxRGB0;0.84s tam siyah aralığı;3s örnekte roll aralığı1.353derece/FOV1.020derece. Eski izlenmeyen sayaç alanları rapordan kaldırıldı. setupWarps1; timeFixtures5, bunun içinde bir saat, üç mask/dalga ve bir elektrik durumu fixture'ı vardır. Gerçek kullanıcı skor hash'i aynı.
+
+R3legacy/fixed banyo karelerinin ikisinde de ahşap temiz; özgün üçgen kusuru yeniden oluşmadı. Gölge bastırmanın kesin nedensel kabulü UNVERIFIED. Son piksel incelemesi owner-pixel-review-r3.json; gölge durum kontrolü NATIVE_RENDER_STATE olarak geçti. İşaret/kapı/merdiven rota snapshot'ı tüm güzergâhın fiziksel girişle yürünmüş kabulü değildir. guide.pause-hide satırı yalnız FPS stress gizlenmesini denetler; rehber gizlenmesi için ayrı native iddia değildir.128model dalgası, OS yürüyüşü ve insan konforu kabulü sayılmaz.

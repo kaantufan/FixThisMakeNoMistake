@@ -1,0 +1,23 @@
+{
+  "releaseStatus": "READY_FOR_USER_PLAYTEST",
+  "requiresUserPlaytest": true,
+  "native": {
+    "passed": true,
+    "seconds": 28.580917358398438,
+    "checks": 88,
+    "runtimeErrors": 0,
+    "captures": 10,
+    "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V54-20261018\\manager\\native-r3-d960c439-3d4c-45b2-8e54-b72dc077b095",
+    "setupWarps": 1,
+    "timeMaskFixtures": 5,
+    "layer": "Native production API/model/physics/camera/effect and actual ScreenCapture. Explicit wave/mask/seed/stock/time/position fixtures. No OS input, listening, human comfort or full campaign acceptance.",
+    "OSInput": false,
+    "humanAcceptance": false
+  },
+  "knownLimits": [
+    "OS and human play/listening not run",
+    "Full campaign and every door/stair route not run",
+    "Original floor triangle symptom did not reproduce in dark/open-door A/B pair; causal shadow repair acceptance UNVERIFIED",
+    "Small neck/collar shell seams remain a visual limitation"
+  ]
+}

@@ -1,0 +1,640 @@
+{
+  "utc": "2026-10-17T23:14:38.5425563Z",
+  "dllSha256": "778A21CDE906BA6E94F39A907405B53599852891516E51BDA4499DFA55971B09",
+  "error": "",
+  "evidence": "Native production API/model/physics/camera/effect and actual ScreenCapture. Explicit wave/mask/seed/stock/time/position fixtures. No OS input, listening, human comfort or full campaign acceptance.",
+  "captureLimit": "PNG presence and dimensions prove framebuffer capture only. Text fit, legibility and final visual acceptance require owner inspection of the captured pixels.",
+  "complete": true,
+  "passed": true,
+  "osInput": false,
+  "humanAcceptance": false,
+  "listening": false,
+  "seconds": 28.580917358398438,
+  "setupWarps": 1,
+  "timeFixtures": 5,
+  "productionStartGameCalls": 3,
+  "productionJuryStartCalls": 0,
+  "hazardAssignments": 6,
+  "checks": [
+    {
+      "id": "launch.score-isolation",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 18
+    },
+    {
+      "id": "launch.graphical",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 18
+    },
+    {
+      "id": "pause.reduced-motion-keyboard",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.compound.isolated-profile",
+      "status": "PASS",
+      "detail": "Model/API fixtures only. Each model gets a fresh score target below the root's isolated evidence directory.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.rng.wave1-single-earthquake",
+      "status": "PASS",
+      "detail": "Actual normal StartRun path.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.rng.wave2plus-four-type-pool",
+      "status": "PASS",
+      "detail": "128 real resolver/reward/next-wave transitions with one explicitly secured low-risk item and packed supplies; fixed RNG seed fixture. Storm is observed before wave10.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.rng.unique-valid-1to3-hazards",
+      "status": "PASS",
+      "detail": "Bit membership excludes duplicate types; fixed campaign observes singles, doubles and triples. Natural campaign state transitions, explicit low-risk inventory fixture.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.rng.stable-read-pause-and-same-wave-selection",
+      "status": "PASS",
+      "detail": "Labels/membership reads and paused Tick do not reroll; repeated same-wave selector yields identical mask/primary.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.rng.invalid-enum-membership-rejected",
+      "status": "PASS",
+      "detail": "No shift wrapping for invalid types.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.rng.actual-per-run-seeds-differ",
+      "status": "PASS",
+      "detail": "Observed private per-run seed state from eight actual starts; no claim about cryptographic security or statistical distribution.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.damage.raw-weighted-before-one-cap",
+      "status": "PASS",
+      "detail": "Explicit all-four, wave50, roof-heavy fixture with utilities isolated. Expected composition samples raw single helper, then weights primary1/secondary0.45 and applies one cap. Catches per-hazard premature100 caps.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.damage.contribution-sums-primary-restored",
+      "status": "PASS",
+      "detail": "Actual item and per-hazard contribution sums agree; temporary helper disaster selection cannot leak out.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.damage.real-mitigation-still-reduces-each-hazard",
+      "status": "PASS",
+      "detail": "Same IDs, stable damage seed, wave and mask; actual anchor/tier/flood/fire guards changed in explicit fixture. Below cap, preventing saturation from hiding mitigation.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.damage.secondary-rolls-once-per-wave-type",
+      "status": "PASS",
+      "detail": "Actual open-utility per-hazard memoized rolls evaluated twice; outcome points/membership remain unchanged.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.damage.deferred-raw-keeps-small-secondary-events",
+      "status": "PASS",
+      "detail": "Explicit memo cache fixture: four positive2-point events, each hazard raw>100. The small event must enter raw weighting before the unified cap, rather than vanish at the old per-hazard100 limit.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.damage.loss-boundary-stays75",
+      "status": "PASS",
+      "detail": "No loss-tolerance change.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.shelter.secondary-flood-requires-real-upper-admission",
+      "status": "PASS",
+      "detail": "Model admission boundary only; physical controller/floor/ray/path are root's separate world smoke.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.once.compound-resolves-and-consumes-once",
+      "status": "PASS",
+      "detail": "Two active hazards and repeated resolver calls still consume exactly one of each supply.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.once.compound-success-awards-once",
+      "status": "PASS",
+      "detail": "Normal production success path; repeated guarded award calls cannot multiply reward by hazard count.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.once.F3-compound-has-one-consumption-no-award",
+      "status": "PASS",
+      "detail": "Actual F3 action, explicit two-hazard inventory/mask fixture. Unsheltered status remains honest; protection does not fake entry or success.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.once.F3-protection-clears-next-wave",
+      "status": "PASS",
+      "detail": "One wave protection ends; sticky score exclusion remains.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.single.simulation.Earthquake",
+      "status": "PASS",
+      "detail": "Even an explicit stale all-four cache fixture cannot leak compound membership into a selected single simulation.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.single.simulation.Flood",
+      "status": "PASS",
+      "detail": "Even an explicit stale all-four cache fixture cannot leak compound membership into a selected single simulation.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.single.simulation.Fire",
+      "status": "PASS",
+      "detail": "Even an explicit stale all-four cache fixture cannot leak compound membership into a selected single simulation.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.single.simulation.Storm",
+      "status": "PASS",
+      "detail": "Even an explicit stale all-four cache fixture cannot leak compound membership into a selected single simulation.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.single.tutorial",
+      "status": "PASS",
+      "detail": "Actual tutorial start; stale cache fixture ignored.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "v5.4.single.short-flow",
+      "status": "PASS",
+      "detail": "Actual short-flow API selects one Flood vignette; no campaign compound mask leaks.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 18
+    },
+    {
+      "id": "resolution.1600x900",
+      "status": "PASS",
+      "detail": "Actual graphical framebuffer=1600x900",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 40
+    },
+    {
+      "id": "opening.started.Earthquake.1",
+      "status": "PASS",
+      "detail": "Production StartGame resets its own actor; smoke assigns only hazard, never clock/age/actor.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 42
+    },
+    {
+      "id": "guide.reachable.initial-precaution",
+      "status": "PASS",
+      "detail": "decor_pantry_side / Kiler küçük rafı · Ankraj braketi al · E / Kapıyı aç · E / nodes=725",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 59
+    },
+    {
+      "id": "guide.bounded.initial-precaution",
+      "status": "PASS",
+      "detail": "Plan CPU ms=20,1925; peak Update slice ms=10,7515",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 59
+    },
+    {
+      "id": "guide.checkpoint-finite.initial-precaution",
+      "status": "PASS",
+      "detail": "Checkpoint=(0.00, 0.05, -6.50); route points=22",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 59
+    },
+    {
+      "id": "guide.real-source-or-work",
+      "status": "PASS",
+      "detail": "Kiler küçük rafı · Ankraj braketi al · E",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 59
+    },
+    {
+      "id": "capture.guidance-precautions",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Actual first-wave unfinished precaution or finite material source.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 62
+    },
+    {
+      "id": "floor.scoped-shadow-repair",
+      "status": "PASS",
+      "detail": "renderers=6",
+      "layer": "NATIVE_RENDER_STATE",
+      "frame": 62
+    },
+    {
+      "id": "fps.full-black-interval-active",
+      "status": "PASS",
+      "detail": "age=0,3686385",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 84
+    },
+    {
+      "id": "fps.actual-opaque-black-frame",
+      "status": "PASS",
+      "detail": "Actual framebuffer max byte=0",
+      "layer": "NATIVE_FRAMEBUFFER_PIXELS",
+      "frame": 84
+    },
+    {
+      "id": "fps.handoff-real-clock-position-held",
+      "status": "PASS",
+      "detail": "clock delta=0; actor delta=0",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 180
+    },
+    {
+      "id": "fps.full-black-drawn-duration",
+      "status": "PASS",
+      "detail": "frames=49; seconds=0,84",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 180
+    },
+    {
+      "id": "fps.clock-resumed",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 195
+    },
+    {
+      "id": "guide.reachable.water",
+      "status": "PASS",
+      "detail": "supply_water_pantry_v5 / 1 su al · E / F / Kapıyı aç · E / nodes=601",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 204
+    },
+    {
+      "id": "guide.bounded.water",
+      "status": "PASS",
+      "detail": "Plan CPU ms=6,576; peak Update slice ms=0,8858",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 204
+    },
+    {
+      "id": "guide.checkpoint-finite.water",
+      "status": "PASS",
+      "detail": "Checkpoint=(0.00, 0.05, -6.50); route points=23",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 204
+    },
+    {
+      "id": "guide.live-water",
+      "status": "PASS",
+      "detail": "supply_water_pantry_v5",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 204
+    },
+    {
+      "id": "capture.fps-water-guide",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Continued panic veil + route checkpoint at actual missing water.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 207
+    },
+    {
+      "id": "fps.actual-dizzy-roll-fov",
+      "status": "PASS",
+      "detail": "roll range=1,353175; fov range=1,020035",
+      "layer": "NATIVE_CAMERA_FRAMES",
+      "frame": 388
+    },
+    {
+      "id": "fps.cosmetics-do-not-move-input-actor",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 388
+    },
+    {
+      "id": "fps.visible-veil",
+      "status": "PASS",
+      "detail": "opacity=0,6409785",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 388
+    },
+    {
+      "id": "gather.actual-finite-water",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 388
+    },
+    {
+      "id": "guide.reachable.food",
+      "status": "PASS",
+      "detail": "supply_food_pantry_v5 / 1 gıda al · E / F / Kapıyı aç · E / nodes=563",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 398
+    },
+    {
+      "id": "guide.bounded.food",
+      "status": "PASS",
+      "detail": "Plan CPU ms=5,6102; peak Update slice ms=0,6877",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 398
+    },
+    {
+      "id": "guide.checkpoint-finite.food",
+      "status": "PASS",
+      "detail": "Checkpoint=(0.00, 0.05, -6.50); route points=22",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 398
+    },
+    {
+      "id": "guide.water-completion-advances-food",
+      "status": "PASS",
+      "detail": "supply_food_pantry_v5",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 398
+    },
+    {
+      "id": "gather.actual-finite-food",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 398
+    },
+    {
+      "id": "guide.reachable.basement",
+      "status": "PASS",
+      "detail": "bunker / Bodrum sığınağına gir · E / Kapıyı aç · E / nodes=1769",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 426
+    },
+    {
+      "id": "guide.bounded.basement",
+      "status": "PASS",
+      "detail": "Plan CPU ms=22,1883; peak Update slice ms=1,2036",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 426
+    },
+    {
+      "id": "guide.checkpoint-finite.basement",
+      "status": "PASS",
+      "detail": "Checkpoint=(0.00, 0.05, -6.50); route points=52",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 426
+    },
+    {
+      "id": "guide.correct-basement",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 426
+    },
+    {
+      "id": "capture.fps-basement-route",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Actual ready bag targets basement via checkpoint chain.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 428
+    },
+    {
+      "id": "physics.grounded.1",
+      "status": "PASS",
+      "detail": "(2.10, 3.20, 4.60)",
+      "layer": "NATIVE_PHYSICS_FIXTURE",
+      "frame": 440
+    },
+    {
+      "id": "floor.dark-open-door-fixture",
+      "status": "PASS",
+      "detail": "Explicit utility state fixture, actual door toggle; actor=(2.10, 3.21, 4.60); camera=(2.10, 4.83, 4.60)",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 526
+    },
+    {
+      "id": "capture.upper-floor-legacy-self-shadow",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Counterfactual old micro-board shadow casting; same actor/camera, reduced motion, real floor.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 528
+    },
+    {
+      "id": "capture.upper-floor-fixed",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Repaired floor micro-board self-shadow; closed glove shells at downward pitch.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 530
+    },
+    {
+      "id": "floor.restored-fixed-state",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 530
+    },
+    {
+      "id": "fps.reduced-motion-steady",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 555
+    },
+    {
+      "id": "guide.reachable.flood-fire-upper",
+      "status": "PASS",
+      "detail": "@panicroom / Üst kat panik odasına gir · E / Açık yolu takip et / nodes=168",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 565
+    },
+    {
+      "id": "guide.bounded.flood-fire-upper",
+      "status": "PASS",
+      "detail": "Plan CPU ms=1,5057; peak Update slice ms=0,5676",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 565
+    },
+    {
+      "id": "guide.checkpoint-finite.flood-fire-upper",
+      "status": "PASS",
+      "detail": "Checkpoint=(2.00, 3.25, 1.50); route points=20",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 565
+    },
+    {
+      "id": "compound.secondary-flood-guides-upper",
+      "status": "PASS",
+      "detail": "@panicroom",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 565
+    },
+    {
+      "id": "capture.fps-upper-safe-route",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Flood secondary to Fire still routes to physical upper panic room.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 567
+    },
+    {
+      "id": "guide.pause-hide",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 574
+    },
+    {
+      "id": "resolution.960x540",
+      "status": "PASS",
+      "detail": "Actual graphical framebuffer=960x540",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 597
+    },
+    {
+      "id": "capture.fps-guide-960",
+      "status": "PASS",
+      "detail": "Captured=960x540; Actual narrow framebuffer, guidance and hands.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 598
+    },
+    {
+      "id": "resolution.1600x900",
+      "status": "PASS",
+      "detail": "Actual graphical framebuffer=1600x900",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 621
+    },
+    {
+      "id": "opening.started.Fire.2",
+      "status": "PASS",
+      "detail": "Production StartGame resets its own actor; smoke assigns only hazard, never clock/age/actor.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 623
+    },
+    {
+      "id": "compound.dev-cinema-start",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 631
+    },
+    {
+      "id": "compound.three-visuals-and-audio-slots",
+      "status": "PASS",
+      "detail": "visuals=3; audio=3",
+      "layer": "NATIVE_EFFECT_STATE",
+      "frame": 660
+    },
+    {
+      "id": "compound.all-active-types-present",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 660
+    },
+    {
+      "id": "capture.compound-quake-flood-fire",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Same natural8s disaster phase: quake/flood/fire, shared severity; actual unsheltered F3 camera.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 975
+    },
+    {
+      "id": "compound.once-supplies-no-dev-reward",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1348
+    },
+    {
+      "id": "compound.no-fake-shelter",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1348
+    },
+    {
+      "id": "opening.started.Storm.3",
+      "status": "PASS",
+      "detail": "Production StartGame resets its own actor; smoke assigns only hazard, never clock/age/actor.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1350
+    },
+    {
+      "id": "compound.storm-fire-start",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1358
+    },
+    {
+      "id": "compound.storm-fire-both-visible",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1682
+    },
+    {
+      "id": "capture.compound-storm-fire",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Both storm/fire play together in normal campaign mask, not simulation.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1685
+    },
+    {
+      "id": "finish.runtime-errors",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1691
+    },
+    {
+      "id": "scores.real-score-unchanged",
+      "status": "PASS",
+      "detail": "Before=62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C; after=62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+      "layer": "NATIVE_FILE_HASH",
+      "frame": 1691
+    },
+    {
+      "id": "scores.write-target-remains-isolated",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V54-20261018\\manager\\native-r3-d960c439-3d4c-45b2-8e54-b72dc077b095\\isolated-home-scores.json",
+      "layer": "NATIVE_FILE_PATH",
+      "frame": 1691
+    }
+  ],
+  "timelines": [],
+  "errors": [],
+  "producerEvidenceDescriptionOriginal": "Native production API/model/physics/camera/effect and actual ScreenCapture. Explicit wave/mask/seed/stock/time/position fixtures. No OS input, listening, human comfort or full campaign acceptance.",
+  "publicationScopeCorrection": "EVIDENCE-SCOPE.md"
+}
