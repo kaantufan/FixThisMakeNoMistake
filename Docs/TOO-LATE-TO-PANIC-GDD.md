@@ -1,6 +1,6 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Güncel tasarım:** [GDD v2.3 / Home V4.12](../TooLateToPanic/Documentation/GDD.md) ve [son teslim](../TooLateToPanic/Documentation/HOME-V4.12-DELIVERY-2026-10-17.md). Önlem aşaması izometrik; son30saniyede FPS çanta hazırlığı otomatik açılır. Her dalgada1su+1gıda, yüzde75ve üzeri hasarda kayıp. Erzak/yapı malzemesi aşamaları ayrıdır; çit inşası yoktur. Aynı aktif Model/Expedition/controller kullanılır; bağımsız eski FPS kaynakları ve kayıtları korunur. Aşağıdaki Home V2 metni tarihsel tabandır; güncel kurallar bağlantıdaki proje belgesindedir.
+**Güncel tasarım:** [GDD v2.4 / Home V5](../TooLateToPanic/Documentation/GDD.md) ve [V5 teslimi](../TooLateToPanic/Documentation/HOME-V5-DELIVERY-2026-10-18.md).120sn izometrik önlem, ardından45sn otomatik FPS çanta;1su+1gıda ve75% kayıp sınırı. Selde üst kat panik odası, diğer afetlerde bodrum kullanılır; yetişememe sahte giriş üretmez. Her dalgada gerçek sonlu loot hafif RNG ile yenilenir. Aynı aktif Model/Expedition/controller ve bağımsız eski FPS kaynak/kayıt koruması devam eder. Aşağıdaki Home V2 metni tarihsel tabandır; güncel kurallar bağlantıdaki proje belgesindedir.
 
 **Sürüm 1.3 · 16 Ekim 2026 · Home V2**
 

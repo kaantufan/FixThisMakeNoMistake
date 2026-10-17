@@ -1,6 +1,8 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Sürüm 2.3 · 17 Ekim 2026 · Home V4.12**
+**Sürüm 2.4 · 18 Ekim 2026 · Home V5**
+
+V5 öncelikli güncel kurallar:120sn izometrik önlem+45sn FPS çanta; selde üst kat panik odası, diğer afetlerde bodrum. Süreye yetişmemek gerçek konumda ayrı kayıptır; sığınmış gibi gösterilmez.14malzeme kaynağı/16açık erzak noktası her dalgada bir kez sonlu hafif RNG ile yenilenir. Tekrar dolap açmak loot üretmez. Ana elektrik şalteri ev devresini/ekranı/elektrikli garajı keser; açık tesisat afete göre tek küçük RNG ikincil hasara yol açabilir.1su+1gıda,75% kayıp, atomik maliyet ve ücretsiz iptal korunur. F1 küçük köşe tuş rehberi, J canlı verili spiral defterdir. V5 karakter/araç/meslek/raf/dolap sanatı ve pencere/deprem/oda kararları [teslimde](HOME-V5-DELIVERY-2026-10-18.md), kesin build/test kimliği [LATEST-BUILD.json](../LATEST-BUILD.json) içindedir. Aşağıdaki eski30sn ve yalnız-bodrum anlatımları tarihsel sürümlere aittir; bu paragraf güncel önceliktir.
 
 Tema **Afete Hazırlık ve Önlem**. Tek oyunculu, tamamen çevrimdışı Windows oyunu. İki yaşanabilir katı, bodrumu, balkonu, banyosu, bitişik garajı, bahçesi ve bunkeri olan müstakil evde geçer. Dolaşımda karakteri izleyen, yönü sabit izometrik ortografik kamera; afet ve sonuç sahnelerinde gerçek sinematik kamera kullanılır. Teknik hedef Unity 6000.0.73f1, Built-In ve Windows'tur.
 

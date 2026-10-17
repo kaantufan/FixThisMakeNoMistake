@@ -139,6 +139,7 @@ namespace TooLateToPanic
             int before=w.Expedition.Count("blanket");bool took=w.TakeWorldSupply();
             Check("blanket.actual-world-transaction",took&&w.Expedition.Count("blanket")>before&&blanket.Taken,"No collider disabling or through-wall targeting.");
             yield return Capture("05-blanket-pickup");
+            yield return Wait(.4f);Check("blanket.collected-world-visual-gone",!blanketRoot||!blanketRoot.activeInHierarchy,"Finite world object disappears after the bounded pickup flight.");
             yield return StartRun();w.Model.Disaster=DisasterType.Flood;
             yield return Place(new Vector3(-4.5f,-3.2f,1.4f));w.Model.TimeRemaining=44;report.timeFixtures++;yield return Wait(1.4f);
             Aim(PanicHomeWorld.BunkerPosition+Vector3.up*.35f);yield return Wait(.1f);w.SetFocus("bunker");
@@ -173,7 +174,7 @@ namespace TooLateToPanic
                 if(!rig.IsBoat)Photo("asset-vehicle-"+rig.ServiceId,rig.transform.position+new Vector3(5,3.8f,5),rig.transform.position+Vector3.up*1.1f,50);
             var responseRoot=Field<GameObject>(street,"responseRoot");int crewIndex=0;
             foreach(var actor in responseRoot.GetComponentsInChildren<Animator>())
-                Photo("asset-crew-"+crewIndex++,actor.transform.position+new Vector3(1.9f,1.5f,2.4f),actor.transform.position+Vector3.up*1.05f,46);
+                Photo("asset-crew-"+crewIndex++,actor.transform.position+new Vector3(2.2f,1.6f,-3.1f),actor.transform.position+Vector3.up*1.05f,46);
             Photo("10-zodiac",street.ZodiacRoot.transform.position+new Vector3(5,3,-5),street.ZodiacRoot.transform.position+Vector3.up*.4f,50);
             Screen.SetResolution(960,540,false);yield return Wait(.4f);yield return Capture("11-compact-960");
             Screen.SetResolution(1600,900,false);yield return Wait(.3f);

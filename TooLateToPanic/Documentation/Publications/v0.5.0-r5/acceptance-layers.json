@@ -1,0 +1,23 @@
+{
+  "releaseStatus": "READY_FOR_USER_PLAYTEST",
+  "requiresUserPlaytest": true,
+  "native": {
+    "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82",
+    "explicitTimeFixtures": 3,
+    "checks": 95,
+    "OSInput": false,
+    "runtimeErrors": 0,
+    "seconds": 59.42924880981445,
+    "setupWarps": 6,
+    "passed": true,
+    "captures": 26,
+    "layer": "Native API, real CharacterController/colliders, framebuffer and Camera.Render. Explicit warp/time/seed/model fixtures; no OS input, human play, listening or full campaign acceptance.",
+    "humanAcceptance": false
+  },
+  "knownLimits": [
+    "OS and human play/listening not run",
+    "Full campaign not run",
+    "Inherited normal disaster pool excludes Storm; it remains in simulation",
+    "Small neck/collar shell seams remain a visual limitation"
+  ]
+}

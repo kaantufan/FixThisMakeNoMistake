@@ -1,0 +1,94 @@
+{
+  "version": "Home V5 /0.5.0 /r5",
+  "releaseStatus": "READY_FOR_USER_PLAYTEST",
+  "requiresUserPlaytest": true,
+  "scene": "Assets/Game/Scenes/TooLateToPanicResidence.unity",
+  "executable": "Builds/Home-V5-r5-20261018/TooLateToPanic.exe",
+  "portableZip": "Builds/TooLateToPanic-Home-V5-r5-20261018-portable.zip",
+  "portableZipSha256": "D0C03FDB543D9E75C15E511A7786F1D69A39A79DAC3CBD46A928E2CDCE792C36",
+  "portableZipBytes": 219371265,
+  "portableMatchesNative": true,
+  "assemblyCSharpSha256": "D4BEAD82997A0E6AE2318A81D0D4A2E33BC2FD71EC93758195DA70558CEAD82D",
+  "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
+  "buildErrors": 0,
+  "buildWarnings": 0,
+  "buildUtc": "2026-10-17T21:37:45.3519254Z",
+  "promotedUtc": "2026-10-17T21:40:00.8250937Z",
+  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-V5-20261018/manager/final-source-manifest-r5.json",
+  "sourceManifestSha256": "1CAC9483F07007DA25472C9299837A26D1835B1B92AC66F1A04D579BEC74451F",
+  "buildManifest": "../Evidence/GamejamOrchestra/TLTP-V5-20261018/manager/final-build-manifest-r5.json",
+  "buildManifestSha256": "46914DE672996B4EA03592A79EC151BB90602B9A7DDBCBEF2296E231ED389329",
+  "frozenCodeShaders": 138,
+  "codeShaderDrift": 0,
+  "sourceFiles": 40879,
+  "buildFiles": 156,
+  "campaignTiming": {
+    "precautionSeconds": 120,
+    "bagSeconds": 45,
+    "totalSeconds": 165
+  },
+  "waterRequired": 1,
+  "foodRequired": 1,
+  "lossPercent": 75,
+  "shelter": {
+    "physicalGate": "TryEnterActiveShelterV5",
+    "singleTruth": "Model.ReachedShelterV5",
+    "Other": "Basement shelter",
+    "Flood": "Upper physical panic room"
+  },
+  "loot": {
+    "constructionSources": 14,
+    "finite": true,
+    "looseSupplySeats": 16,
+    "perWaveRestock": "Once guarded by Model.Wave",
+    "rng": "Small finite quantity and same-floor distribution"
+  },
+  "native": {
+    "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82",
+    "explicitTimeFixtures": 3,
+    "checks": 95,
+    "OSInput": false,
+    "runtimeErrors": 0,
+    "seconds": 59.42924880981445,
+    "setupWarps": 6,
+    "passed": true,
+    "captures": 26,
+    "layer": "Native API, real CharacterController/colliders, framebuffer and Camera.Render. Explicit warp/time/seed/model fixtures; no OS input, human play, listening or full campaign acceptance.",
+    "humanAcceptance": false
+  },
+  "realScoresUnchanged": true,
+  "realScoreBefore": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+  "realScoreAfter": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+  "delivery": "Documentation/HOME-V5-DELIVERY-2026-10-18.md",
+  "assets": "Documentation/HOME-V5-ASSETS-2026-10-18.md",
+  "newPayment": 0,
+  "newProviderCredits": 0,
+  "legacyFpsProjectTouched": false,
+  "publishedToGitHub": false,
+  "knownLimits": [
+    "OS and human play/listening not run",
+    "Full campaign not run",
+    "Inherited normal disaster pool excludes Storm; it remains in simulation",
+    "Small neck/collar shell seams remain a visual limitation"
+  ],
+  "retention": {
+    "userPlayer": "No input/termination sent; initial V414 PID absent by later observation",
+    "previousRejectedCleanup": "Protected historical targets not retried",
+    "taskCandidates": "Own V5 r1-r4 and r4 ZIP removed only after r5 pass; one V5 build and ZIP remain; historical rejected V4 targets untouched"
+  },
+  "forks": [
+    "01a14bb3-c820-7f00-9cda-fdd5a8e6092b",
+    "01a14bb3-caf8-71a2-9c0d-e0c24e34dda7",
+    "01a14bb3-d07a-79c0-9346-abf3764a37a0"
+  ],
+  "normalLaunch": {
+    "normalPid": 29716,
+    "alive": true,
+    "utc": "2026-10-17T21:40:26.1746325Z",
+    "exe": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5-r5-20261018\\TooLateToPanic.exe",
+    "normalReadyLog": true,
+    "dllSha256": "D4BEAD82997A0E6AE2318A81D0D4A2E33BC2FD71EC93758195DA70558CEAD82D",
+    "runtimeErrorMatches": 0,
+    "noTestFlags": true
+  }
+}

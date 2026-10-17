@@ -1,0 +1,681 @@
+{
+  "utc": "2026-10-17T21:37:58.7525358Z",
+  "dllSha256": "D4BEAD82997A0E6AE2318A81D0D4A2E33BC2FD71EC93758195DA70558CEAD82D",
+  "error": "",
+  "evidence": "Native API, real CharacterController/colliders, framebuffer and Camera.Render. Explicit warp/time/seed/model fixtures; no OS input, human play, listening or full campaign acceptance.",
+  "complete": true,
+  "passed": true,
+  "osInput": false,
+  "humanAcceptance": false,
+  "seconds": 59.42924880981445,
+  "setupWarps": 6,
+  "timeFixtures": 3,
+  "checks": [
+    {
+      "id": "launch.isolated",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "layout.bathroom-window-removed",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "layout.bathroom-physical-wall",
+      "status": "PASS",
+      "detail": "Collision_solid_north_end",
+      "layer": "NATIVE_PHYSICS_RAY",
+      "frame": 24
+    },
+    {
+      "id": "quake.seven-neighbour-roots",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "loot.fourteen-sources",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "loot.unique-real-storage.decor_pantry_back",
+      "status": "PASS",
+      "detail": "actual roots=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "loot.unique-real-storage.decor_pantry_side",
+      "status": "PASS",
+      "detail": "actual roots=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "loot.unique-real-storage.decor_child_cabinet",
+      "status": "PASS",
+      "detail": "actual roots=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "loot.unique-real-storage.decor_garage_shelf",
+      "status": "PASS",
+      "detail": "actual roots=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "loot.unique-real-storage.decor_basement_shelf",
+      "status": "PASS",
+      "detail": "actual roots=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "loot.unique-real-storage.decor_basement_spare_crates",
+      "status": "PASS",
+      "detail": "actual roots=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 24
+    },
+    {
+      "id": "v5.systems.isolated-profile",
+      "status": "PASS",
+      "detail": "Model/API fixtures only; no physical controller, OS input or human acceptance.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.loot.more-real-sources",
+      "status": "PASS",
+      "detail": "8 retained sources + 6 formerly decorative storage sources.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.loot.more-supply-seats",
+      "status": "PASS",
+      "detail": "12 retained seats + 4 extra finite seats; geometry acceptance belongs to root.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.loot.tree-row-minimum",
+      "status": "PASS",
+      "detail": "Three mature row packages remain present despite quantity RNG.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.loot.reopen-does-not-duplicate",
+      "status": "PASS",
+      "detail": "Repeated close/open uses the same consumed finite snapshot.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.loot.same-wave-idempotent",
+      "status": "PASS",
+      "detail": "Repeated callback in the same wave cannot refill an emptied source.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.loot.new-wave-restocks-materials",
+      "status": "PASS",
+      "detail": "Wave increment fixture; actual OnNewWave restores finite construction stock once.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.loot.new-wave-callback-once",
+      "status": "PASS",
+      "detail": "A second callback cannot roll a second inventory.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.blanket.model-collects",
+      "status": "PASS",
+      "detail": "Actual supply transaction and owned support mask; physical bed ray is a separate root check.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.blanket.packs-support",
+      "status": "PASS",
+      "detail": "The collected real blanket transfers into a real bag slot.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.supply.partial-stays-finite",
+      "status": "PASS",
+      "detail": "Explicit nearly-full inventory fixture: one actual unit moves, two remain.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.supply.full-capacity-atomic-reject",
+      "status": "PASS",
+      "detail": "No capacity changes neither the world stack nor actual inventory.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.supply.support-seat-does-not-drift",
+      "status": "PASS",
+      "detail": "Repeated support alignment retains one tiny snapshot offset.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.shelter.flood-requires-upper-room",
+      "status": "PASS",
+      "detail": "Disaster-selection fixture; wrong typed destination commits nothing.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.shelter.correct-entry-once",
+      "status": "PASS",
+      "detail": "Existing 8s production resolution begins exactly once; physical gate remains World-owned.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.shelter.timeout-no-false-arrival",
+      "status": "PASS",
+      "detail": "Timer fixture; failure cannot publish an arrival for the cinematic.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.shelter.no-loss-no-false-arrival",
+      "status": "PASS",
+      "detail": "Developer no-loss still applies the disaster without inventing shelter arrival.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.secondary.isolation-prevents-events",
+      "status": "PASS",
+      "detail": "All three real utility safety flags prevent their corresponding secondary event.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.secondary.real-small-event",
+      "status": "PASS",
+      "detail": "At most one 1.2..2.8 percentage-point event, using an explicit RNG-seed fixture.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.secondary.repeat-no-reroll-or-double-damage",
+      "status": "PASS",
+      "detail": "Repeated evaluation restores primary contributions and reapplies the same memoized event once.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.secondary.contributions-match-total",
+      "status": "PASS",
+      "detail": "Event changes actual item contributions and the normal result text.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "v5.rules.loss-boundary-retained",
+      "status": "PASS",
+      "detail": "75% loss and 120+45s source of truth retained.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 24
+    },
+    {
+      "id": "capture.00a-opening-context",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\00a-opening-context.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 156
+    },
+    {
+      "id": "capture.00b-opening-precautions",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\00b-opening-precautions.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 347
+    },
+    {
+      "id": "capture.00c-opening-bag",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\00c-opening-bag.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 598
+    },
+    {
+      "id": "capture.00d-opening-shelter",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\00d-opening-shelter.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 849
+    },
+    {
+      "id": "intro.position-and-clock-held",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 849
+    },
+    {
+      "id": "intro.natural-control-return",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1053
+    },
+    {
+      "id": "character.retained-humanoid",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1065
+    },
+    {
+      "id": "character.real-clips",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1065
+    },
+    {
+      "id": "physics.grounded.1",
+      "status": "PASS",
+      "detail": "(-3.10, 0.00, -3.90)",
+      "layer": "NATIVE_PHYSICS_SETUP",
+      "frame": 1075
+    },
+    {
+      "id": "capture.01-compact-hud",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\01-compact-hud.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1086
+    },
+    {
+      "id": "hud.controls-toggle",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1086
+    },
+    {
+      "id": "capture.02-controls",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\02-controls.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1098
+    },
+    {
+      "id": "notebook.opens",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1099
+    },
+    {
+      "id": "capture.03-notebook",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\03-notebook.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1141
+    },
+    {
+      "id": "power.bound-real-lamps",
+      "status": "PASS",
+      "detail": "lamps=8 emitters=6",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1171
+    },
+    {
+      "id": "power.all-domestic-lights-off",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1180
+    },
+    {
+      "id": "power.all-domestic-emission-off",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1180
+    },
+    {
+      "id": "capture.04-house-power-off",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\04-house-power-off.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1191
+    },
+    {
+      "id": "physics.grounded.2",
+      "status": "PASS",
+      "detail": "(-5.78, 3.20, 2.00)",
+      "layer": "NATIVE_PHYSICS_SETUP",
+      "frame": 1213
+    },
+    {
+      "id": "bag.real-firstperson-stage",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1298
+    },
+    {
+      "id": "blanket.actual-eye-ray",
+      "status": "PASS",
+      "detail": "ray=supply_blanket_bed supply=(-5.75, 4.00, 3.31) actor=(-5.78, 3.20, 2.00) hits=supply_blanket_bed@1,28;bed@1,65",
+      "layer": "NATIVE_PHYSICS_RAY",
+      "frame": 1341
+    },
+    {
+      "id": "blanket.actual-world-transaction",
+      "status": "PASS",
+      "detail": "No collider disabling or through-wall targeting.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1341
+    },
+    {
+      "id": "capture.05-blanket-pickup",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\05-blanket-pickup.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1353
+    },
+    {
+      "id": "blanket.collected-world-visual-gone",
+      "status": "PASS",
+      "detail": "Finite world object disappears after the bounded pickup flight.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1377
+    },
+    {
+      "id": "physics.grounded.3",
+      "status": "PASS",
+      "detail": "(-4.50, -3.20, 1.40)",
+      "layer": "NATIVE_PHYSICS_SETUP",
+      "frame": 1399
+    },
+    {
+      "id": "flood.reject-basement",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1489
+    },
+    {
+      "id": "physics.grounded.4",
+      "status": "PASS",
+      "detail": "(4.20, 3.20, -0.65)",
+      "layer": "NATIVE_PHYSICS_SETUP",
+      "frame": 1499
+    },
+    {
+      "id": "flood.real-sign-ray",
+      "status": "PASS",
+      "detail": "physical E target in upper room",
+      "layer": "NATIVE_PHYSICS_RAY",
+      "frame": 1512
+    },
+    {
+      "id": "flood.admit-upper-actual-position",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1512
+    },
+    {
+      "id": "flood.cutscene-stays-upstairs",
+      "status": "PASS",
+      "detail": "(4.20, 3.20, -0.65) stage=upper_room_wait",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1584
+    },
+    {
+      "id": "capture.06-flood-upper-room",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\06-flood-upper-room.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1596
+    },
+    {
+      "id": "physics.grounded.5",
+      "status": "PASS",
+      "detail": "(1.90, 0.00, -4.00)",
+      "layer": "NATIVE_PHYSICS_SETUP",
+      "frame": 1630
+    },
+    {
+      "id": "deadline.no-arrival",
+      "status": "PASS",
+      "detail": "kind=Deadline actual=(1.65, 0.00, -3.92)",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1726
+    },
+    {
+      "id": "capture.07-unreached-distinct-cutscene",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\07-unreached-distinct-cutscene.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1737
+    },
+    {
+      "id": "quake.neighbours-really-move",
+      "status": "PASS",
+      "detail": "moving=7 offset=0,08374687",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2056
+    },
+    {
+      "id": "capture.08-neighbour-quake",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\08-neighbour-quake.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 2067
+    },
+    {
+      "id": "quake.neighbours-restore",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2080
+    },
+    {
+      "id": "response.flood-zodiac",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2590
+    },
+    {
+      "id": "response.four-real-vehicles",
+      "status": "PASS",
+      "detail": "includes4 road vehicles+boat=5",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3428
+    },
+    {
+      "id": "response.distinct-real-crew",
+      "status": "PASS",
+      "detail": "responders=5",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3428
+    },
+    {
+      "id": "asset.rig.Rescue",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3428
+    },
+    {
+      "id": "asset.rig.Ambulance",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3428
+    },
+    {
+      "id": "asset.rig.Police",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3428
+    },
+    {
+      "id": "asset.rig.FloodZodiac",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3428
+    },
+    {
+      "id": "asset.rig.Fire",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3428
+    },
+    {
+      "id": "render.09-response-vehicles",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\09-response-vehicles.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-vehicle-Rescue",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-vehicle-Rescue.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-vehicle-Ambulance",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-vehicle-Ambulance.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-vehicle-Police",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-vehicle-Police.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-vehicle-Fire",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-vehicle-Fire.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-crew-0",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-crew-0.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-crew-1",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-crew-1.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-crew-2",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-crew-2.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-crew-3",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-crew-3.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.asset-crew-4",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\asset-crew-4.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "render.10-zodiac",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\10-zodiac.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3428
+    },
+    {
+      "id": "capture.11-compact-960",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\11-compact-960.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 3464
+    },
+    {
+      "id": "physics.grounded.6",
+      "status": "PASS",
+      "detail": "(4.90, 3.20, -1.50)",
+      "layer": "NATIVE_PHYSICS_SETUP",
+      "frame": 3505
+    },
+    {
+      "id": "capture.12-panic-room-hud",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\12-panic-room-hud.png",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 3516
+    },
+    {
+      "id": "render.13-main-character",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V5-20261018\\manager\\native-r5-7fa017a5-b669-459a-94b5-545070a1aa82\\13-main-character.png",
+      "layer": "NATIVE_CAMERA_RENDER",
+      "frame": 3516
+    },
+    {
+      "id": "finish.runtime-errors",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3516
+    },
+    {
+      "id": "scores.real-file-unchanged",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 3516
+    }
+  ],
+  "errors": []
+}

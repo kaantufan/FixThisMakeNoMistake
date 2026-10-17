@@ -1,5 +1,7 @@
 # Too Late to Panic! — ekip ve teslim düzeni
 
+18 Ekim V5, kullanıcının açık fork isteğiyle üç aynı-dizin sohbetinde üretildi: `01a14bb3-c820-7f00-9cda-fdd5a8e6092b` systems; `01a14bb3-caf8-71a2-9c0d-e0c24e34dda7` UI/cinema; `01a14bb3-d07a-79c0-9346-abf3764a37a0` sanat. Root dahil4 eşzamanlı sahiplik sınırı korundu; workerlar yalnız `TLTP-V5-20261018/staging/{systems,ui-cinema,assets}` altında yazdı. Yeni agent/fork çoğaltmadı. Root modelinin gerçek turn_context kaydı `gpt-6.1-sol/ultra`, fork görevleri de açık aynı model/effort ile yürüdü; Fast iddiası yoktur. SHA256 hedef eşlemesiyle entegrasyon, tek Unity sahibi ve izole native profiller kullanıldı. [Sözleşme](../Evidence/GamejamOrchestra/TLTP-V5-20261018/CONTRACT.md), [son teslim](../TooLateToPanic/Documentation/HOME-V5-DELIVERY-2026-10-18.md).
+
 Bu alan yalnız **Too Late to Panic!** içindir. Tema **Afete Hazırlık ve Önlem**; implementasyon ve asset üretimi kullanıcı tarafından onaylıdır. Hedef Unity **6000.0.73f1**, Built-In, çevrimdışı Windows oyunudur. Bu belge rol ve teslim sözleşmesidir; çalışan scheduler veya uygulamanın global model/system ayarı değildir.
 
 ## Aktif izometrik sürüm ve korunan FPS denemesi

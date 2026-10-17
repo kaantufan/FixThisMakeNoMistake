@@ -221,8 +221,8 @@ namespace TooLateToPanic
             if(!any||bounds.size.y<.08f)return;
             float width=bounds.size.x,height=bounds.size.y,x=bounds.center.x,y=bounds.min.y,z=bounds.max.z;
             art.HairCap(head,hair,bounds);
-            // Chin only: upper edge stays below28percent of measured head height. No cheek/moustache mask panels.
-            art.Box("narrow natural chin beard",head,hair,new Vector3(x,y+height*.19f,z-.009f),new Vector3(width*.42f,height*.15f,.014f));
+            // V5 native close-up exposed a projecting rectangular mouth block here.
+            // Keep the fitted hair cap; the retained weighted face remains clean-shaven.
         }
 
         /// <summary>Apply after Animator, every active work frame. Passing null/empty/idle/walk clears.</summary>
