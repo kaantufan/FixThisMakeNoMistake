@@ -451,16 +451,17 @@ namespace TooLateToPanic
             AimAt(PanicHomeWorld.BunkerPosition + Vector3.up * .14f); yield return null;
             w.HandleKey(KeyCode.E); yield return null;
             Check("fps.bunker-e-starts-disaster", w.Model.Phase == PanicPhase.Disaster && !w.BagCameraOwnsView, RaySummary());
-            float end = Time.realtimeSinceStartup + 4f; bool descent = false, lidSafe = true, exterior = false; int samples = 0;
+            float end = Time.realtimeSinceStartup + 4f; bool descent = false, lidSafe = true, lidRaised = true, exterior = false; int samples = 0;
             while (w.Model.Phase == PanicPhase.Disaster && Time.realtimeSinceStartup < end)
             {
                 float age = Field<float>("residenceCinematicAge");
                 if (w.CinematicActive && age >= 1.35f && age < 2.5f)
-                { descent = true; samples++; lidSafe &= LidAngle() > 90f; Observe("hatch-descent"); }
+                { descent = true; samples++; lidSafe &= LidAngle() > 90f; lidRaised &= LidCenterAboveHinge(); Observe("hatch-descent"); }
                 if (age >= 2.7f) { exterior = true; break; }
                 yield return null;
             }
             Check("bunker.lid-open-before-descent", descent && samples >= 2 && lidSafe, "actual post-AnimateHinges frame samples=" + samples);
+            Check("bunker.lid-raised-above-floor-before-descent", descent && samples >= 2 && lidRaised, "Authored panel center must be >0.45m above its north hinge throughout descent; unsigned angle alone misses downward rotation.");
             Check("roof.exterior.Earthquake", exterior && ExteriorRoofVisible(), RoofSummary());
             yield return Shot("08-disaster-exterior-roof");
         }
@@ -592,6 +593,11 @@ namespace TooLateToPanic
         { var hinges = (IDictionary)CallField("hinges"); return hinges.Contains(id) && (bool)hinges[id].GetType().GetField("open", Instance).GetValue(hinges[id]); }
         float LidAngle()
         { var leaf = Field<Transform>("bunkerLeaf"); return leaf ? Quaternion.Angle(Field<Quaternion>("bunkerClosed"), leaf.localRotation) : -1; }
+        bool LidCenterAboveHinge()
+        {
+            var leaf = Field<Transform>("bunkerLeaf");
+            return leaf && leaf.TransformPoint(new Vector3(0f, .02f, -.57f)).y > leaf.position.y + .45f;
+        }
         Renderer[] RoofRenderers()
         {
             var main = Field<GameObject>("roof"); var garage = Field<GameObject>("residenceGarage");

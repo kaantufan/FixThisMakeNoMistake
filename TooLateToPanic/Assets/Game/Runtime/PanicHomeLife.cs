@@ -238,8 +238,9 @@ namespace TooLateToPanic
         void SetBunkerDoorOpen(bool open)
         {
             // The general hinge animator is the same door owner as the cinematic.
-            if (hinges.TryGetValue("bunker", out var hatch)) { hatch.open = open; hatch.lid = true; hatch.openAngle = -105; }
-            if (bunkerLeaf) bunkerLeaf.localRotation = bunkerClosed * Quaternion.Euler(open ? -105 : 0, 0, 0);
+            // The leaf extends toward local -Z from its north hinge: positive X lifts it above the floor.
+            if (hinges.TryGetValue("bunker", out var hatch)) { hatch.open = open; hatch.lid = true; hatch.openAngle = 105; }
+            if (bunkerLeaf) bunkerLeaf.localRotation = bunkerClosed * Quaternion.Euler(open ? 105 : 0, 0, 0);
         }
         void StartRescue()
         {

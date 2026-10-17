@@ -1,4 +1,4 @@
-> **Windows Home V4.12:** [Download portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.12). Extract the ZIP and run the EXE beside its data folders. Git source checkouts do not contain Builds. Unity 6000.0.73f1 / Built-In.
+> **Windows Home V4.12-r4 /0.4.12:** [Download portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.12-r4). Extract the ZIP and run the EXE beside its data folders. Source checkouts do not contain Builds. Unity 6000.0.73f1 / Built-In.
 
 # Too Late to Panic!
 

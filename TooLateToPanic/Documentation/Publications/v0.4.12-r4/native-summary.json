@@ -1,0 +1,3861 @@
+{
+  "startedUtc": "2026-10-17T13:48:16.4375797Z",
+  "finishedUtc": "2026-10-17T13:48:40.7427286Z",
+  "error": "",
+  "evidence": "Native production APIs, explicit setup fixtures, actual frame waits, enabled colliders and rendered captures. No OS input or human acceptance.",
+  "complete": true,
+  "passed": true,
+  "seconds": 24.305572509765625,
+  "setupWarps": 15,
+  "startGameCalls": 1,
+  "simulationStartCalls": 3,
+  "manualWorkTickFrames": 266,
+  "modelFixtureTicks": 6,
+  "rows": [
+    {
+      "id": "launch.fresh-guid",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "launch.score-isolated",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "launch.driver-registered",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model412.campaign starts with 150 total preparation seconds",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.shorter campaign clock does not grant budget, supplies or cheat status",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.campaign pause preserves the full preparation clock without marking a cheat",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.119 elapsed campaign seconds leave one precaution second before final30",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.120 elapsed campaign seconds reach the unchanged final30 bag boundary",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.campaign retains the whole30 seconds for bag collection and shelter",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.150 elapsed campaign seconds still cause the real unsheltered timeout loss",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.campaign timeout preserves real budget, empty bag and zero rewards",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.campaign retry resets the same150 second preparation clock",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.developer freeze still holds the new campaign clock and marks the run",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.unfreezing reaches final30 after120 active seconds and keeps cheat status sticky",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 74,99 enters real disaster path",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 74,99 actual risk sum and failure reason",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 74,99 actual aftermath chooses survival/loss",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 75 enters real disaster path",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 75 actual risk sum and failure reason",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 75 actual aftermath chooses survival/loss",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 75,01 enters real disaster path",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 75,01 actual risk sum and failure reason",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.damage 75,01 actual aftermath chooses survival/loss",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 1 starts with 120 precaution seconds plus30 bag seconds",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 1 only needs one water and food, no support",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 1 missing water rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 1 missing food rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 4 starts with 120 precaution seconds plus30 bag seconds",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 4 only needs one water and food, no support",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 4 missing water rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 4 missing food rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 7 starts with 120 precaution seconds plus30 bag seconds",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 7 only needs one water and food, no support",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 7 missing water rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 7 missing food rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 10 starts with 120 precaution seconds plus30 bag seconds",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 10 only needs one water and food, no support",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 10 missing water rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 10 missing food rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 100 starts with 120 precaution seconds plus30 bag seconds",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 100 only needs one water and food, no support",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 100 missing water rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.wave 100 missing food rejects",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.finite water pickup packs one actual unit and keeps remainder loose",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.finite food pickup completes minimal bag without optional equipment",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.essential auto pack cannot duplicate depleted world stock",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.optional equipment remains loose until actually packed",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.insufficient remainder capacity rejects entire collection atomically",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.full real bag keeps collected essentials loose when inventory can hold them",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorwall recipe 0 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorwall recipe 0 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorwall recipe 0 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorwall recipe 0 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorfloor recipe 1 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorfloor recipe 1 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorfloor recipe 1 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.anchorfloor recipe 1 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 2 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 2 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 2 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 2 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 3 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 3 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 3 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.upgrade recipe 3 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.fire recipe 4 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.fire recipe 4 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.fire recipe 4 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.fire recipe 4 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.plant recipe 5 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.plant recipe 5 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.plant recipe 5 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.plant recipe 5 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.drain recipe 6 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.drain recipe 6 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.drain recipe 6 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.drain recipe 6 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.hose recipe 7 reads actual finite numeric pool without inventory slots",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.hose recipe 7 cancel is free",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.hose recipe 7 completion spends budget once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.hose recipe 7 spends exact material recipe once",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.removed fence API cannot spend or install",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.short flow starts",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.short guide selects anchor before water",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.short shortage reports the actual optional recipe",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.invalid phase action clears unrelated stale shortage",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.short optional upgrade uses retained finite container stock",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.ready bag and anchor cannot begin earthquake before final30",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.final30 clock permits shelter and closes construction",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.short earthquake consumes exactly one actual water and food",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.short flow 270 plus30 contract remains",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.128 finite resets always yield three to four actual tree-row packages",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.128 finite resets cannot reroll or refill tree-row packages on reopen or new wave",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "model412.128 finite resets can commit all three regional row recipes with actual costs",
+      "detail": "Mechanics-owned model fixture check; not an OS/world-route observation",
+      "pass": true
+    },
+    {
+      "id": "bag.basic-one-of-each",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "bag.basic-ready",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "bag.food-required",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "bag.water-required",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "materials.empty-pool-blocks",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "materials.requirement-count-authority",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "materials.numeric-preflight",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fence.model-rejected",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "damage.actual.74.99",
+      "detail": "calculated=74,99; reason=",
+      "pass": true
+    },
+    {
+      "id": "damage.result.74.99",
+      "detail": "phase=Inspection; calculated=74,99; reason=",
+      "pass": true
+    },
+    {
+      "id": "damage.actual.75.00",
+      "detail": "calculated=75; reason=Toplam hasar %75.0. %75 ve üzeri hasarda ev kaybedilir.",
+      "pass": true
+    },
+    {
+      "id": "damage.result.75.00",
+      "detail": "phase=GameOver; calculated=75; reason=Toplam hasar %75.0. %75 ve üzeri hasarda ev kaybedilir.",
+      "pass": true
+    },
+    {
+      "id": "damage.actual.75.01",
+      "detail": "calculated=75,01; reason=Toplam hasar %75.0. %75 ve üzeri hasarda ev kaybedilir.",
+      "pass": true
+    },
+    {
+      "id": "damage.result.75.01",
+      "detail": "phase=GameOver; calculated=75,01; reason=Toplam hasar %75.0. %75 ve üzeri hasarda ev kaybedilir.",
+      "pass": true
+    },
+    {
+      "id": "controller.contract",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.initial-isometric",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.early-manual-entry-rejected",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "visibility.building",
+      "detail": "roots=12; active=0; actual renderer/collider states in frames",
+      "pass": true
+    },
+    {
+      "id": "supplies.data-separation",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "supplies.building-cannot-collect",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "materials.real-container-loot",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "materials.no-reroll",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "work.real-preflight",
+      "detail": "Vidaların üzerine tıkla",
+      "pass": true
+    },
+    {
+      "id": "work.first-click",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "work.cancel-free",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "work.restart-real",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "work.second-click",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "work.exact-recipe",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "work.commit-once",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.stable.wall_north",
+      "detail": "focus=wall_north; actor=(-5.00, -0.01, 7.10)",
+      "pass": true
+    },
+    {
+      "id": "highlight.actual-mesh-pass.wall_north",
+      "detail": "visible mesh count=1; pass ready=True",
+      "pass": true
+    },
+    {
+      "id": "highlight.surface-scope.wall_north",
+      "detail": "wall must select only one authored mesh, never a floor parent",
+      "pass": true
+    },
+    {
+      "id": "highlight.wall-physical-extent",
+      "detail": "independent permanent segment candidates=9; actual wall volume=Center: (0.07, 1.60, 3.87), Extents: (8.07, 1.60, 2.27)",
+      "pass": true
+    },
+    {
+      "id": "selection.real-upgrade-begins.wall_north",
+      "detail": "Kuruluyor",
+      "pass": true
+    },
+    {
+      "id": "selection.upgrade-cancel-free.wall_north",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.upgrade-exact-recipe.wall_north",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.stable.window_spare",
+      "detail": "focus=window_spare; actor=(-5.00, -0.01, 7.10)",
+      "pass": true
+    },
+    {
+      "id": "highlight.actual-mesh-pass.window_spare",
+      "detail": "visible mesh count=5; pass ready=True",
+      "pass": true
+    },
+    {
+      "id": "highlight.surface-scope.window_spare",
+      "detail": "wall must select only one authored mesh, never a floor parent",
+      "pass": true
+    },
+    {
+      "id": "highlight.actual-renderers.window_spare",
+      "detail": "independently unioned actual renderer count=5; native measured=Center: (-4.00, 1.62, 5.77), Extents: (0.99, 0.73, 0.19); API=Center: (-4.00, 1.62, 5.77), Extents: (0.99, 0.73, 0.19)",
+      "pass": true
+    },
+    {
+      "id": "selection.window-real-obstacle-rejects",
+      "detail": "Actual enabled solid fixture blocks CanInteract/BeginWork without cost; diagnostic contains fresh hit hierarchy.",
+      "pass": true
+    },
+    {
+      "id": "selection.window-obstacle-removal-restores",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.real-upgrade-begins.window_spare",
+      "detail": "Kuruluyor",
+      "pass": true
+    },
+    {
+      "id": "selection.upgrade-cancel-free.window_spare",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.upgrade-exact-recipe.window_spare",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.south-wall-kept",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.adjacent-door-still-interacts",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "selection.return-to-wall",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "capture.03-selected-structure-bounds",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\03-selected-structure-bounds.png",
+      "pass": true
+    },
+    {
+      "id": "fence.no-sites",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.three-regions",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.actor-seat-reject-free",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.real-install-begins.plant_west1",
+      "detail": "Kuruluyor",
+      "pass": true
+    },
+    {
+      "id": "trees.four-solid-trunks.plant_west1",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.exact-transaction.plant_west1",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.controller-clear.plant_west1",
+      "detail": "independent enabled CapsuleCollider query overlap=0",
+      "pass": true
+    },
+    {
+      "id": "trees.row-extent.plant_west1",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.real-install-begins.plant_west2",
+      "detail": "Kuruluyor",
+      "pass": true
+    },
+    {
+      "id": "trees.four-solid-trunks.plant_west2",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.exact-transaction.plant_west2",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.controller-clear.plant_west2",
+      "detail": "independent enabled CapsuleCollider query overlap=0",
+      "pass": true
+    },
+    {
+      "id": "trees.row-extent.plant_west2",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.real-install-begins.plant_east",
+      "detail": "Kuruluyor",
+      "pass": true
+    },
+    {
+      "id": "trees.four-solid-trunks.plant_east",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.exact-transaction.plant_east",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.controller-clear.plant_east",
+      "detail": "independent enabled CapsuleCollider query overlap=0",
+      "pass": true
+    },
+    {
+      "id": "trees.row-extent.plant_east",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "trees.twelve-physical-trunks",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "capture.05-whole-tree-rows",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\05-whole-tree-rows.png",
+      "pass": true
+    },
+    {
+      "id": "floorlamp.fixed-or-removed",
+      "detail": "retained fixed decor count=0; visual shape requires capture review",
+      "pass": true
+    },
+    {
+      "id": "phase.31-seconds-building",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.paused-30-no-entry",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.30-automatic-transition",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.same-player-controller",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.final30-perspective",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.no-g-return",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.g-keeps-forced-stage",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "visibility.final30",
+      "detail": "roots=12; active=12; actual renderer/collider states in frames",
+      "pass": true
+    },
+    {
+      "id": "containers.closed-on-transition",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "capture.06-fps-clean-hud",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\06-fps-clean-hud.png",
+      "pass": true
+    },
+    {
+      "id": "fps.cabinet-e-rejected",
+      "detail": "fresh eye ray E and direct world ToggleContainer leave cabinet/materials unchanged",
+      "pass": true
+    },
+    {
+      "id": "fps.no-construction-work",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.begin-work-rejected",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.transit-door-e",
+      "detail": "fresh production center ray E",
+      "pass": true
+    },
+    {
+      "id": "fps.fresh-focus.supply_water_kitchen",
+      "detail": "actor=(4.10, 0.00, 3.10); focus=supply_water_kitchen; CanInteract=True; ray=supply_water_kitchen:supply_water_kitchen:1,266953;cabinet:cabinet:1,436574",
+      "pass": true
+    },
+    {
+      "id": "highlight.actual-mesh-pass.supply_water_kitchen",
+      "detail": "visible mesh count=1; pass ready=True",
+      "pass": true
+    },
+    {
+      "id": "highlight.surface-scope.supply_water_kitchen",
+      "detail": "wall must select only one authored mesh, never a floor parent",
+      "pass": true
+    },
+    {
+      "id": "highlight.actual-renderers.supply_water_kitchen",
+      "detail": "independently unioned actual renderer count=1; native measured=Center: (4.04, 1.17, 4.48), Extents: (0.06, 0.17, 0.06); API=Center: (4.04, 1.17, 4.48), Extents: (0.06, 0.17, 0.06)",
+      "pass": true
+    },
+    {
+      "id": "capture.fps-supply-bounds",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\fps-supply-bounds.png",
+      "pass": true
+    },
+    {
+      "id": "capture.fps-hud-1600",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\fps-hud-1600.png",
+      "pass": true
+    },
+    {
+      "id": "hud.regions-inside.fps-hud-1600",
+      "detail": "Native render 1600x900; logical1600x900 regions=(x:28.00, y:24.00, width:430.00, height:88.00);(x:650.00, y:24.00, width:300.00, height:88.00);(x:1144.00, y:24.00, width:428.00, height:88.00);(x:28.00, y:130.00, width:430.00, height:68.00);(x:530.00, y:490.00, width:540.00, height:74.00);(x:360.00, y:824.00, width:880.00, height:48.00)",
+      "pass": true
+    },
+    {
+      "id": "hud.regions-separate.fps-hud-1600",
+      "detail": "Top-level VisibleHudRegions only; pixel text readability requires capture review.",
+      "pass": true
+    },
+    {
+      "id": "capture.fps-hud-960",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\fps-hud-960.png",
+      "pass": true
+    },
+    {
+      "id": "hud.regions-inside.fps-hud-960",
+      "detail": "Native render 960x540; logical1600x900 regions=(x:28.00, y:24.00, width:430.00, height:88.00);(x:650.00, y:24.00, width:300.00, height:88.00);(x:1144.00, y:24.00, width:428.00, height:88.00);(x:28.00, y:130.00, width:430.00, height:68.00);(x:530.00, y:490.00, width:540.00, height:74.00);(x:360.00, y:824.00, width:880.00, height:48.00)",
+      "pass": true
+    },
+    {
+      "id": "hud.regions-separate.fps-hud-960",
+      "detail": "Top-level VisibleHudRegions only; pixel text readability requires capture review.",
+      "pass": true
+    },
+    {
+      "id": "fps.finite-pickup-autopack.supply_water_kitchen",
+      "detail": "actor=(4.10, 0.00, 3.10); focus=supply_water_kitchen; CanInteract=False; ray=cabinet:cabinet:1,436574",
+      "pass": true
+    },
+    {
+      "id": "fps.no-duplicate.supply_water_kitchen",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.fresh-focus.supply_food_kitchen",
+      "detail": "actor=(4.10, 0.00, 3.10); focus=supply_food_kitchen; CanInteract=True; ray=supply_food_kitchen:supply_food_kitchen:1,400789;cabinet:cabinet:1,587655",
+      "pass": true
+    },
+    {
+      "id": "fps.finite-pickup-autopack.supply_food_kitchen",
+      "detail": "actor=(4.10, 0.00, 3.10); focus=supply_food_kitchen; CanInteract=False; ray=cabinet:cabinet:1,587655",
+      "pass": true
+    },
+    {
+      "id": "fps.no-duplicate.supply_food_kitchen",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.basic-bag-ready",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.pause-freezes-clock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "capture.07-fps-actual-inventory",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\07-fps-actual-inventory.png",
+      "pass": true
+    },
+    {
+      "id": "fps.inventory-real-capacities",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.bunker-e-starts-disaster",
+      "detail": "actor=(-4.50, -3.19, 1.55); focus=bunker; CanInteract=True; ray=",
+      "pass": true
+    },
+    {
+      "id": "bunker.lid-open-before-descent",
+      "detail": "actual post-AnimateHinges frame samples=69",
+      "pass": true
+    },
+    {
+      "id": "roof.exterior.Earthquake",
+      "detail": "kind=Disaster; actor=(-65.00, 0.04, 59.58); roofs=12; enabled=12",
+      "pass": true
+    },
+    {
+      "id": "capture.08-disaster-exterior-roof",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\08-disaster-exterior-roof.png",
+      "pass": true
+    },
+    {
+      "id": "roof.exterior.Flood",
+      "detail": "kind=Disaster; actor=(0.00, 0.05, -7.50); roofs=12; enabled=12",
+      "pass": true
+    },
+    {
+      "id": "capture.roof-flood",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\roof-flood.png",
+      "pass": true
+    },
+    {
+      "id": "roof.exterior.Fire",
+      "detail": "kind=Disaster; actor=(0.00, 0.05, -7.50); roofs=12; enabled=12",
+      "pass": true
+    },
+    {
+      "id": "capture.roof-fire",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\roof-fire.png",
+      "pass": true
+    },
+    {
+      "id": "roof.exterior.Storm",
+      "detail": "kind=Disaster; actor=(0.00, 0.05, -7.50); roofs=12; enabled=12",
+      "pass": true
+    },
+    {
+      "id": "capture.roof-storm",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\roof-storm.png",
+      "pass": true
+    },
+    {
+      "id": "shortflow.starts-isometric-anchor-first",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "shortflow.finite-material-sources-retained",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "shortflow.preparation-anchor-before-water",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "shortflow.31-no-fps",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "shortflow.pause-holds-boundary",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "shortflow.30-automatic-fps",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "shortflow.no-fabricated-success",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "capture.shortflow-final30",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\shortflow-final30.png",
+      "pass": true
+    },
+    {
+      "id": "shortflow.shelter-ready-fixture",
+      "detail": "Explicit anchored-fridge fixture plus finite real supply pickup; no success/outcome field assigned",
+      "pass": true
+    },
+    {
+      "id": "shortflow.fps-e-enters-real-shelter",
+      "detail": "Real HandleKey(E)→Interact→InteractBagStage→TryJuryInteract at grounded cover; prior eye-ray focus=; stage=Earthquake",
+      "pass": true
+    },
+    {
+      "id": "shortflow.shelter-outcome-once",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "phase.exit-restores-isometric",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "visibility.title",
+      "detail": "roots=12; active=0; actual renderer/collider states in frames",
+      "pass": true
+    },
+    {
+      "id": "capture.99-title",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-REVISION-V412-20261017\\silhouette-intake\\native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0\\99-title.png",
+      "pass": true
+    },
+    {
+      "id": "scores.real-file-unchanged",
+      "detail": "",
+      "pass": true
+    }
+  ],
+  "fixtures": [
+    "Isolated model fixtures: new models use already-isolated ScorePathOverride; exact count/time fields are setup, not campaign playthrough.",
+    "Actual damage fixture 74.99: 12 movable table furniture + one stable-ID wall, Earthquake simulation, no TotalDamage override.",
+    "Actual damage fixture 75.00: 12 movable table furniture + one stable-ID wall, Earthquake simulation, no TotalDamage override.",
+    "Actual damage fixture 75.01: 12 movable table furniture + one stable-ID wall, Earthquake simulation, no TotalDamage override.",
+    "Warp setup: real construction-container transaction; (4.10, 0.04, 3.10)",
+    "Direct finite source opening setup: fridge",
+    "Direct finite source opening setup: bookshelf",
+    "Direct finite source opening setup: up_cabinet",
+    "Direct finite source opening setup: up_bookshelf",
+    "Direct finite source opening setup: bath_cabinet",
+    "Direct finite source opening setup: garage_tools",
+    "Direct finite source opening setup: basement_pantry",
+    "Warp setup: real two-screw numeric-material work; (6.50, 0.04, 3.25)",
+    "Warp setup: bounds-based stable structure selection away from origin; (-5.00, 0.04, 7.10)",
+    "Warp setup: bounds-based stable structure selection away from origin; (-5.00, 0.04, 7.10)",
+    "R2 negative LOS setup: enabled default-layer solid cube halfway along torso-to-window-art-center ray; no target/controller collision disabled.",
+    "Warp setup: wall and adjacent real transit door; (1.50, 0.04, -7.30)",
+    "Warp setup: prospective tree-trunk collision rejection; (-10.86, 0.04, -3.30)",
+    "Warp setup: safe whole-row installation; (-9.70, 0.04, 1.00)",
+    "Warp setup: safe whole-row installation; (-12.50, 0.04, 1.00)",
+    "Warp setup: safe whole-row installation; (0.00, 0.04, 11.20)",
+    "Warp setup: same-position automatic final30 handoff; (4.10, 0.04, 3.10)",
+    "TimeRemaining=31; no model Tick injection",
+    "Paused TimeRemaining=30 boundary setup",
+    "Warp setup: FPS cabinet denial, same actor; (6.50, 0.04, 3.10)",
+    "Warp setup: FPS real transit door; (3.10, 0.04, 1.00)",
+    "Warp setup: FPS physical basic supplies; (4.10, 0.04, 3.10)",
+    "Warp setup: FPS bunker eye ray and real prepared bag; (-4.50, -3.16, 1.55)",
+    "Production StartDisasterSimulation(Flood) initializes its own actor/bag; direct EnterBunker for roof-only presentation coverage",
+    "Production StartDisasterSimulation(Fire) initializes its own actor/bag; direct EnterBunker for roof-only presentation coverage",
+    "Production StartDisasterSimulation(Storm) initializes its own actor/bag; direct EnterBunker for roof-only presentation coverage",
+    "Short-flow time fixture: expire onboarding with inputBlocked=true at actual actor pose; no movement/anchor goal granted.",
+    "Short-flow time fixture: actual JuryDemo.Tick to Preparation31, no resource or successful objective mutation.",
+    "Short-shelter R2 setup: directly mark existing fridge Anchored/AnchorOwned/wall; this is NOT an actual fastening route. Water is collected by the finite production supply transaction, without grant/replenish.",
+    "Warp setup: R2 short-flow grounded safe-cover setup; not a walked route; (-2.80, 0.05, -2.10)"
+  ],
+  "errors": [],
+  "frames": [
+    {
+      "label": "supplies-building",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "",
+      "frame": 2,
+      "width": 2560,
+      "height": 1334,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 12,
+      "remaining": 149.95999145507812,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": 11.0,
+        "y": 13.980999946594238,
+        "z": -18.045000076293945
+      }
+    },
+    {
+      "label": "03-selected-structure-bounds",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "wall_south",
+      "frame": 240,
+      "width": 2560,
+      "height": 1334,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 12,
+      "remaining": 145.96450805664062,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 1.5,
+        "y": -0.010000132024288177,
+        "z": -7.300000190734863
+      },
+      "camera": {
+        "x": 7.000000953674316,
+        "y": 13.999998092651367,
+        "z": 20.820003509521484
+      }
+    },
+    {
+      "label": "05-whole-tree-rows",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "plant_east",
+      "frame": 394,
+      "width": 2560,
+      "height": 1334,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 12,
+      "remaining": 143.3982696533203,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": -0.010000191628932953,
+        "z": 11.199999809265137
+      },
+      "camera": {
+        "x": 10.999669075012207,
+        "y": 13.999998092651367,
+        "z": 27.2996883392334
+      }
+    },
+    {
+      "label": "supplies-final30",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "",
+      "frame": 490,
+      "width": 2560,
+      "height": 1334,
+      "supplyRoots": 12,
+      "supplyColliders": 12,
+      "supplyRenderers": 12,
+      "roofRenderers": 12,
+      "remaining": 28.866609573364258,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 4.099999904632568,
+        "y": -0.0030000433325767517,
+        "z": 3.0999999046325684
+      },
+      "camera": {
+        "x": 4.099999904632568,
+        "y": 1.6169999837875366,
+        "z": 3.0999999046325684
+      }
+    },
+    {
+      "label": "06-fps-clean-hud",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "",
+      "frame": 490,
+      "width": 2560,
+      "height": 1334,
+      "supplyRoots": 12,
+      "supplyColliders": 12,
+      "supplyRenderers": 12,
+      "roofRenderers": 12,
+      "remaining": 28.866609573364258,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 4.099999904632568,
+        "y": -0.0030000433325767517,
+        "z": 3.0999999046325684
+      },
+      "camera": {
+        "x": 4.099999904632568,
+        "y": 1.6169999837875366,
+        "z": 3.0999999046325684
+      }
+    },
+    {
+      "label": "fps-supply-bounds",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "supply_water_kitchen",
+      "frame": 536,
+      "width": 2560,
+      "height": 1334,
+      "supplyRoots": 12,
+      "supplyColliders": 12,
+      "supplyRenderers": 12,
+      "roofRenderers": 12,
+      "remaining": 28.099937438964844,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 4.099999904632568,
+        "y": -0.0030000433325767517,
+        "z": 3.0999999046325684
+      },
+      "camera": {
+        "x": 4.099999904632568,
+        "y": 1.6169999837875366,
+        "z": 3.0999999046325684
+      }
+    },
+    {
+      "label": "fps-hud-1600",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "supply_water_kitchen",
+      "frame": 554,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 12,
+      "supplyColliders": 12,
+      "supplyRenderers": 12,
+      "roofRenderers": 12,
+      "remaining": 27.799938201904297,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 4.099999904632568,
+        "y": -0.0030000433325767517,
+        "z": 3.0999999046325684
+      },
+      "camera": {
+        "x": 4.099999904632568,
+        "y": 1.6169999837875366,
+        "z": 3.0999999046325684
+      }
+    },
+    {
+      "label": "fps-hud-960",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "supply_water_kitchen",
+      "frame": 570,
+      "width": 960,
+      "height": 540,
+      "supplyRoots": 12,
+      "supplyColliders": 12,
+      "supplyRenderers": 12,
+      "roofRenderers": 12,
+      "remaining": 27.53327178955078,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 4.099999904632568,
+        "y": -0.0030000433325767517,
+        "z": 3.0999999046325684
+      },
+      "camera": {
+        "x": 4.099999904632568,
+        "y": 1.6169999837875366,
+        "z": 3.0999999046325684
+      }
+    },
+    {
+      "label": "07-fps-actual-inventory",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "",
+      "frame": 626,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 10,
+      "supplyColliders": 10,
+      "supplyRenderers": 10,
+      "roofRenderers": 12,
+      "remaining": 26.866573333740234,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 4.099999904632568,
+        "y": -0.0030000433325767517,
+        "z": 3.0999999046325684
+      },
+      "camera": {
+        "x": 4.099999904632568,
+        "y": 1.6169999837875366,
+        "z": 3.0999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 715,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.3580557107925415,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.0221242904663086
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 716,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.3747224807739258,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.0392539501190186
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 717,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.3913906812667847,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.0718536376953125
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 718,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.4080572128295898,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.117859125137329
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 719,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.4248567819595337,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.175713062286377
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 720,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.441523551940918,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.242429494857788
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 721,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.4581916332244873,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.316371202468872
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 722,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.4748585224151611,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.3954696655273438
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 723,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.4915286302566528,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.4776880741119385
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 724,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.5081921815872192,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.560920000076294
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 725,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.5248578786849976,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.6431515216827393
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 726,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.5415260791778564,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.7223258018493652
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 727,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.5581921339035034,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.796363592147827
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 728,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.5748586654663086,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.8632194995880127
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 729,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.5915278196334839,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.920841932296753
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 730,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.6081916093826294,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 2.9671483039855957
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 731,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.6248596906661987,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 3.0001091957092285
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 732,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.641525387763977,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1600000858306885,
+        "z": 3.017651081085205
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 733,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.65819251537323,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1605560779571533,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 734,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.674858808517456,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1650547981262207,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 735,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.6915968656539917,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1739749908447266,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 736,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.7082624435424805,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.1870667934417725,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 737,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.7249308824539185,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.2041916847229004,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 738,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.7415966987609863,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.225172519683838,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 739,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.7582637071609497,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.2498421669006348,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 740,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.7749313116073608,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.278028726577759,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 741,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.7915972471237183,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.3095569610595703,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 742,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.8082642555236816,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.344259738922119,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 743,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.824931263923645,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.3819642066955566,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 744,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.8416000604629517,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.4225032329559326,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 745,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.8582653999328613,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.4656922817230225,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 746,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.8749314546585083,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.5113697052001953,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 747,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.8915995359420776,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.55936861038208,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 748,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.9082667827606201,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.609509229660034,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 749,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.9249340295791626,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.6616225242614746,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 750,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.9416003227233887,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.715533971786499,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 751,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.9582661390304565,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.771073341369629,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 752,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.9749336242675781,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.8280766010284424,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 753,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 1.991600513458252,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.886364459991455,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 754,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.0082664489746094,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -3.9457640647888184,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 755,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.0249340534210205,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.006113529205322,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 756,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.041599750518799,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.067228317260742,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 757,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.05826735496521,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.128951072692871,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 758,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.074934244155884,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.191100597381592,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 759,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.0916011333465576,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.253507614135742,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 760,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.1082675457000732,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.315999507904053,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 761,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.124934434890747,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.378408432006836,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 762,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.1416015625,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.440561294555664,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 763,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.1582679748535156,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.502283573150635,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 764,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.1749355792999268,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.563410758972168,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 765,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.1916027069091797,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.623765468597412,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 766,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.208268404006958,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.683172225952148,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 767,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.22493577003479,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.741471290588379,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 768,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.2416021823883057,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.798481464385986,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 769,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.258270025253296,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.854039669036865,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 770,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.274935245513916,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.907961368560791,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 771,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.29160213470459,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -4.96008825302124,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 772,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.3082690238952637,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.010243892669678,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 773,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.3249363899230957,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.058258533477783,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 774,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.341609001159668,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.103972434997559,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 775,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.3582770824432373,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.14718770980835,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 776,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.374943733215332,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.187741756439209,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 777,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.391610622406006,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.225467681884766,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 778,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.408276081085205,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.260190963745117,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 779,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.424943447113037,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.291746139526367,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 780,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.441610336303711,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.319957733154297,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 781,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.458277940750122,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.344655513763428,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 782,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.474944829940796,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.365665912628174,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "hatch-descent",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 783,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 2.491610527038574,
+      "lidAngle": 105.0,
+      "actor": {
+        "x": -4.5,
+        "y": -5.38281774520874,
+        "z": 3.0199999809265137
+      },
+      "camera": {
+        "x": -1.2999999523162842,
+        "y": -1.0,
+        "z": -0.5999999046325684
+      }
+    },
+    {
+      "label": "08-disaster-exterior-roof",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "bunker",
+      "frame": 796,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 12,
+      "remaining": 0.0,
+      "cinematicAge": 2.708446502685547,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": -65.0,
+        "y": 0.03999999910593033,
+        "z": 59.58000183105469
+      },
+      "camera": {
+        "x": 21.994474411010742,
+        "y": 14.996240615844727,
+        "z": -23.99472427368164
+      }
+    },
+    {
+      "label": "roof-flood",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "",
+      "frame": 974,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 12,
+      "remaining": 0.0,
+      "cinematicAge": 2.916957139968872,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": -32.16937255859375,
+        "y": 16.779582977294922,
+        "z": -23.169374465942383
+      }
+    },
+    {
+      "label": "roof-fire",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "",
+      "frame": 1152,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 12,
+      "remaining": 0.0,
+      "cinematicAge": 2.918051242828369,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": 20.90317153930664,
+        "y": 14.17737865447998,
+        "z": -23.177377700805664
+      }
+    },
+    {
+      "label": "roof-storm",
+      "phase": "Disaster",
+      "kind": "Disaster",
+      "focus": "",
+      "frame": 1330,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 12,
+      "remaining": 0.0,
+      "cinematicAge": 2.9169836044311523,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 0.0,
+        "y": 0.05000000074505806,
+        "z": -7.5
+      },
+      "camera": {
+        "x": 24.16933250427246,
+        "y": 16.77955436706543,
+        "z": -24.16933250427246
+      }
+    },
+    {
+      "label": "shortflow-final30",
+      "phase": "Preparing",
+      "kind": "",
+      "focus": "",
+      "frame": 1417,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 1,
+      "supplyColliders": 1,
+      "supplyRenderers": 1,
+      "roofRenderers": 12,
+      "remaining": 28.882747650146484,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": 3.0999999046325684,
+        "y": 0.05000000074505806,
+        "z": -3.4000000953674316
+      },
+      "camera": {
+        "x": 3.0999999046325684,
+        "y": 1.6699999570846558,
+        "z": -3.4000000953674316
+      }
+    },
+    {
+      "label": "supplies-title",
+      "phase": "Title",
+      "kind": "",
+      "focus": "",
+      "frame": 1441,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": -2.799999952316284,
+        "y": -0.0030000917613506317,
+        "z": -2.0999999046325684
+      },
+      "camera": {
+        "x": 8.998385429382324,
+        "y": 14.10376262664795,
+        "z": -10.090423583984375
+      }
+    },
+    {
+      "label": "99-title",
+      "phase": "Title",
+      "kind": "",
+      "focus": "",
+      "frame": 1441,
+      "width": 1600,
+      "height": 900,
+      "supplyRoots": 0,
+      "supplyColliders": 0,
+      "supplyRenderers": 0,
+      "roofRenderers": 0,
+      "remaining": 0.0,
+      "cinematicAge": 0.0,
+      "lidAngle": 0.0,
+      "actor": {
+        "x": -2.799999952316284,
+        "y": -0.0030000917613506317,
+        "z": -2.0999999046325684
+      },
+      "camera": {
+        "x": 8.998385429382324,
+        "y": 14.10376262664795,
+        "z": -10.090423583984375
+      }
+    }
+  ],
+  "interactionProbes": [
+    {
+      "label": "window-spare-after-stable-refresh",
+      "target": "window_spare",
+      "focus": "window_spare",
+      "phase": "Preparing",
+      "message": "Kuzey alt duvarı malzemelerle T1 seviyesine yükseltildi.",
+      "frame": 180,
+      "canInteract": true,
+      "pathClear": true,
+      "hasSurface": true,
+      "hasBounds": true,
+      "surfaceDistance": 1.1450475454330444,
+      "actor": {
+        "x": -5.0,
+        "y": -0.010000132024288177,
+        "z": 7.099999904632568
+      },
+      "eye": {
+        "x": -5.0,
+        "y": 0.8899998664855957,
+        "z": 7.099999904632568
+      },
+      "surface": {
+        "x": -4.989999771118164,
+        "y": 0.8930001258850098,
+        "z": 5.954999923706055
+      },
+      "artCenter": {
+        "x": -4.0,
+        "y": 1.621500015258789,
+        "z": 5.765000343322754
+      },
+      "itemPosition": {
+        "x": -4.0,
+        "y": 0.0,
+        "z": 5.820000171661377
+      },
+      "itemSize": {
+        "x": 1.7999999523162842,
+        "y": 1.399999976158142,
+        "z": 0.30000001192092896
+      },
+      "targetBounds": {
+        "m_Center": {
+          "x": -4.0,
+          "y": 1.621500015258789,
+          "z": 5.765000343322754
+        },
+        "m_Extent": {
+          "x": 0.9899997711181641,
+          "y": 0.7284998893737793,
+          "z": 0.19000005722045898
+        }
+      },
+      "targetColliders": [
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ],
+      "surfaceRay": [
+        {
+          "collider": "Collision_solid_north_pier_0",
+          "hierarchy": "House floor 0/Collision_solid_north_pier_0",
+          "pickId": "wall_north",
+          "pickKind": "item",
+          "distance": 0.9700402021408081,
+          "point": {
+            "x": -4.991528034210205,
+            "y": 0.8925415873527527,
+            "z": 6.130000114440918
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -6.449999809265137,
+              "y": 1.600000023841858,
+              "z": 6.0
+            },
+            "m_Extent": {
+              "x": 1.5500001907348633,
+              "y": 1.600000023841858,
+              "z": 0.13000011444091797
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        },
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 1.1450475454330444,
+          "point": {
+            "x": -4.989999771118164,
+            "y": 0.8930001258850098,
+            "z": 5.954999923706055
+          },
+          "normal": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ],
+      "artCenterRay": [
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 1.5621318817138672,
+          "point": {
+            "x": -4.142322063446045,
+            "y": 1.5173914432525635,
+            "z": 5.954999923706055
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ],
+      "highEyeRay": [
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 1.4306408166885376,
+          "point": {
+            "x": -4.142322063446045,
+            "y": 1.6198632717132568,
+            "z": 5.954999923706055
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ]
+    },
+    {
+      "label": "window-spare-explicit-solid-obstruction",
+      "target": "window_spare",
+      "focus": "window_spare",
+      "phase": "Preparing",
+      "message": "İş için hedefe açık yoldan yaklaş.",
+      "frame": 181,
+      "canInteract": false,
+      "pathClear": false,
+      "hasSurface": true,
+      "hasBounds": true,
+      "surfaceDistance": 1.1450475454330444,
+      "actor": {
+        "x": -5.0,
+        "y": -0.010000132024288177,
+        "z": 7.099999904632568
+      },
+      "eye": {
+        "x": -5.0,
+        "y": 0.8899998664855957,
+        "z": 7.099999904632568
+      },
+      "surface": {
+        "x": -4.989999771118164,
+        "y": 0.8930001258850098,
+        "z": 5.954999923706055
+      },
+      "artCenter": {
+        "x": -4.0,
+        "y": 1.621500015258789,
+        "z": 5.765000343322754
+      },
+      "itemPosition": {
+        "x": -4.0,
+        "y": 0.0,
+        "z": 5.820000171661377
+      },
+      "itemSize": {
+        "x": 1.7999999523162842,
+        "y": 1.399999976158142,
+        "z": 0.30000001192092896
+      },
+      "targetBounds": {
+        "m_Center": {
+          "x": -4.0,
+          "y": 1.621500015258789,
+          "z": 5.765000343322754
+        },
+        "m_Extent": {
+          "x": 0.9899997711181641,
+          "y": 0.7284998893737793,
+          "z": 0.19000005722045898
+        }
+      },
+      "targetColliders": [
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ],
+      "surfaceRay": [
+        {
+          "collider": "Collision_solid_north_pier_0",
+          "hierarchy": "House floor 0/Collision_solid_north_pier_0",
+          "pickId": "wall_north",
+          "pickKind": "item",
+          "distance": 0.9700402021408081,
+          "point": {
+            "x": -4.991528034210205,
+            "y": 0.8925415873527527,
+            "z": 6.130000114440918
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -6.449999809265137,
+              "y": 1.600000023841858,
+              "z": 6.0
+            },
+            "m_Extent": {
+              "x": 1.5500001907348633,
+              "y": 1.600000023841858,
+              "z": 0.13000011444091797
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        },
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 1.1450475454330444,
+          "point": {
+            "x": -4.989999771118164,
+            "y": 0.8930001258850098,
+            "z": 5.954999923706055
+          },
+          "normal": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ],
+      "artCenterRay": [
+        {
+          "collider": "Revision412 explicit window LOS blocker fixture",
+          "hierarchy": "Revision412 explicit window LOS blocker fixture",
+          "pickId": "",
+          "pickKind": "",
+          "distance": 0.7742446064949036,
+          "point": {
+            "x": -4.574906349182129,
+            "y": 1.2009559869766235,
+            "z": 6.53249979019165
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.5,
+              "y": 1.2557499408721924,
+              "z": 6.432499885559082
+            },
+            "m_Extent": {
+              "x": 0.15000009536743164,
+              "y": 0.1499999761581421,
+              "z": 0.09999990463256836
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        },
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 1.5621318817138672,
+          "point": {
+            "x": -4.142322063446045,
+            "y": 1.5173914432525635,
+            "z": 5.954999923706055
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ],
+      "highEyeRay": [
+        {
+          "collider": "window_spare",
+          "hierarchy": "window_spare",
+          "pickId": "window_spare",
+          "pickKind": "item",
+          "distance": 1.4306408166885376,
+          "point": {
+            "x": -4.142322063446045,
+            "y": 1.6198632717132568,
+            "z": 5.954999923706055
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "bounds": {
+            "m_Center": {
+              "x": -4.0,
+              "y": 1.621500015258789,
+              "z": 5.765000343322754
+            },
+            "m_Extent": {
+              "x": 0.9899997711181641,
+              "y": 0.7284998893737793,
+              "z": 0.18999958038330078
+            }
+          },
+          "trigger": false,
+          "enabled": true,
+          "active": true
+        }
+      ]
+    }
+  ]
+}

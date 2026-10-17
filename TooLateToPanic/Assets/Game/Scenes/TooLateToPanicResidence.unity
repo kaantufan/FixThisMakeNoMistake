@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1838735560
+--- !u!1 &310757449
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1838735562}
-  - component: {fileID: 1838735561}
+  - component: {fileID: 310757451}
+  - component: {fileID: 310757450}
   m_Layer: 0
   m_Name: "Too Late to Panic \u2014 Home V4.12"
   m_TagString: Untagged
@@ -136,26 +136,26 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1838735561
+--- !u!114 &310757450
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1838735560}
+  m_GameObject: {fileID: 310757449}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 99a6c296dae553b4080e60813aca052b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   InputLocked: 0
---- !u!4 &1838735562
+--- !u!4 &310757451
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1838735560}
+  m_GameObject: {fileID: 310757449}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -168,4 +168,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1838735562}
+  - {fileID: 310757451}

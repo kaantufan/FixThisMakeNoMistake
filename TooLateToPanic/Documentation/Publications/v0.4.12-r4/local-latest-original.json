@@ -1,0 +1,71 @@
+{
+  "variant": "isometric precautions then final30 first-person emergency bag",
+  "version": "Home V4.12-r4 /0.4.12",
+  "scene": "Assets/Game/Scenes/TooLateToPanicResidence.unity",
+  "executable": "Builds/Home-V4.12-r4-20261017/TooLateToPanic.exe",
+  "portableZip": "Builds/TooLateToPanic-Home-V4.12-r4-20261017-portable.zip",
+  "assemblyCSharpSha256": "F5C34832B432FD4583E77CAC099F3B53CD403F52CD924FDD180C23B176B01AEE",
+  "exeSha256": "0E1B64A3C0EBA3482F4C7B57F36CF8811997C0CE3BBED914C116CB9D4799FC7C",
+  "portableZipSha256": "0F652F68AF06263D05CDCDC8BFFCA0F22671332E19F99B00D35B3FC20883E750",
+  "portableZipBytes": 184817461,
+  "portableMatchesNative": true,
+  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-REVISION-V412-20261017/silhouette-intake/r4-source-manifest.json",
+  "sourceManifestSha256": "049F37A28C7FC39A182C3E709A06F8B554D13D41E6270EF257727128767EFC28",
+  "sourceFiles": 34543,
+  "sourceDrift": 0,
+  "buildManifest": "../Evidence/GamejamOrchestra/TLTP-REVISION-V412-20261017/silhouette-intake/r4-build-manifest.json",
+  "buildManifestSha256": "C6F7F17A4C57C3813A90E23AA3EEBDCB309DE35C25D7B6D6709D647472FB117A",
+  "buildFiles": 139,
+  "native": {
+    "passed": true,
+    "checks": 223,
+    "runtimeErrors": 0,
+    "seconds": 24.305572509765625,
+    "evidence": "../Evidence/GamejamOrchestra/TLTP-REVISION-V412-20261017/silhouette-intake/native-r4-0486a86d-47de-4d03-b8bd-126840cf79e0",
+    "assemblyCSharpSha256": "F5C34832B432FD4583E77CAC099F3B53CD403F52CD924FDD180C23B176B01AEE",
+    "evidenceType": "Native production APIs, explicit setup fixtures, actual frame waits, enabled colliders and rendered captures. No OS input or human acceptance.",
+    "declaredSetupWarps": 15,
+    "OSInput": false,
+    "humanAcceptance": false,
+    "fullCampaign": false
+  },
+  "delivery": "Documentation/HOME-V4.12-R4-DELIVERY-2026-10-17.md",
+  "realScoresUnchanged": true,
+  "publishedToGitHub": false,
+  "newProviderCredits": 0,
+  "legacyFpsProjectTouched": false,
+  "retention": {
+    "openUserBuild": "V4.11-r7 user player preserved; process rechecked before promotion",
+    "priorRejectedCleanup": "Prior rejected V411/V410 cleanup targets preserved, no retry or alternate deletion",
+    "failedOwnV412Candidate": "Automatic approval review rejected removal of only Home-V4.12-20261017: blocked by policy; no detailed rationale. Command did not run. Directory retained, no alternate cleanup attempted."
+  },
+  "promotedUtc": "2026-10-17T14:15:26.9140199Z",
+  "buildUtc": "2026-10-17T13:47:17.7502368Z",
+  "buildErrors": 0,
+  "buildWarnings": 0,
+  "osFollowup": {
+    "status": "OS_FULLROUND_IN_PROGRESS",
+    "checks": 0,
+    "record": "Documentation/HOME-V4.12-R4-DELIVERY-2026-10-17.md",
+    "humanAcceptance": false,
+    "fullCampaign": false,
+    "normalPlayerPid": 64564,
+    "normalPlayerFinalState": "Open normal SERBEST OYUN; held SendInput; isolated scores only; no test driver",
+    "separateNativeRetestChecks": 223,
+    "separateNativeRetestRuntimeErrors": 0
+  },
+  "fullNormalOsRoundAttempt": {
+    "status": "IN_PROGRESS_HELD_INPUT",
+    "complete": false,
+    "record": "../Evidence/GamejamOrchestra/TLTP-REVISION-V412-20261017/os-playtest/sendinput-final-r4-7a0bd941-7571-4516-9f99-d4b4e8142491",
+    "normalPlayerPid": 64564,
+    "normalPlayerFinalState": "Current clean normal round in progress after human control confirmation",
+    "heldInputAvailable": true
+  },
+  "campaignTiming": {
+    "precautionsSeconds": 120,
+    "totalSeconds": 150,
+    "bagSeconds": 30,
+    "display": "2:00 then30 FPS"
+  }
+}
