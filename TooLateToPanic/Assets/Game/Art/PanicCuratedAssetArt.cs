@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -18,6 +19,13 @@ namespace TooLateToPanic
         static readonly HashSet<string> Missing = new HashSet<string>();
         static readonly Dictionary<string, Mesh[]> DetailMeshes = new Dictionary<string, Mesh[]>();
         static Material[] detailMaterials;
+        sealed class VisualState
+        {
+            public PanicCuratedMechanism[] Motions;
+            public Transform[] Brackets;
+            public bool LastSecured, Initialized;
+        }
+        static readonly ConditionalWeakTable<GameObject,VisualState> VisualStates=new ConditionalWeakTable<GameObject,VisualState>();
 
         public static bool TryCreatePickup(string supplyId, out GameObject visual)
         {
@@ -59,44 +67,95 @@ namespace TooLateToPanic
                 float.IsInfinity(longestDimension) || longestDimension <= 0) return null;
             if (!Models.TryGetValue(assetName, out var prefab))
             {
-                prefab = Resources.Load<GameObject>(Root + "Models/SM_" + assetName);
+                // Sanitized upstream prefabs retain mechanical pivots and the exact Visual paths
+                // authored in the clips. The original FBX remains the static fallback.
+                prefab = Resources.Load<GameObject>(Root + "Prefabs/PF_" + assetName);
+                if (!prefab) prefab = Resources.Load<GameObject>(Root + "Models/SM_" + assetName);
                 Models[assetName] = prefab;
             }
             if (!prefab)
             {
-                if (Missing.Add(assetName)) Debug.LogWarning("CURATED_ART_MISSING " + assetName + "; existing visual remains available");
+                if (Missing.Add(assetName)) Debug.LogWarning("CURATED_ART_MISSING " + assetName);
                 return null;
             }
             var root = new GameObject("CuratedDisplay_" + assetName);
             var model = UnityEngine.Object.Instantiate(prefab, root.transform, false);
             model.name = "Visual_" + assetName;
-            // Upstream FBX detail faces +Z (its icon rig also views from +Z).
-            // Home's furniture/pickup convention is -Z. Rotate the visual, then fit its bounds.
             model.transform.localRotation = Quaternion.Euler(0, 180, 0) * model.transform.localRotation;
-            // FBX importers disable generated colliders and animation. Keep a defensive guard
-            // if a future export adds either, before it can affect a live frame.
-            foreach (var c in model.GetComponentsInChildren<Collider>(true))
-            {
-                c.enabled = false;
-                Remove(c);
-            }
+            foreach (var c in model.GetComponentsInChildren<Collider>(true)) { c.enabled = false; Remove(c); }
             foreach (var a in model.GetComponentsInChildren<Animator>(true)) { a.enabled = false; Remove(a); }
             foreach (var a in model.GetComponentsInChildren<Animation>(true)) { a.enabled = false; Remove(a); }
             foreach (var r in model.GetComponentsInChildren<Renderer>(true))
-            {
-                r.shadowCastingMode = ShadowCastingMode.On;
-                r.receiveShadows = true;
-            }
+            { r.shadowCastingMode = ShadowCastingMode.On; r.receiveShadows = true; }
             if (!TryGetLocalBounds(root.transform, out var bounds)) { Remove(root); return null; }
             float longest = Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z));
             if (longest <= .00001f) { Remove(root); return null; }
             model.transform.localScale *= Mathf.Clamp(longestDimension, .025f, 4f) / longest;
             TryGetLocalBounds(root.transform, out bounds);
             model.transform.localPosition -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
-            // Source-specific small details in the already fitted, -Z-front coordinate system.
-            // Imported meshes, swatch UVs, materials and their uniform fit are never modified.
-            if (TryGetLocalBounds(root.transform, out bounds)) AttachRefinements(root, assetName, bounds);
+            var open = Resources.Load<AnimationClip>(Root + "Animations/Anim_" + assetName + "_Open");
+            var close = Resources.Load<AnimationClip>(Root + "Animations/Anim_" + assetName + "_Close");
+            if (open && close)
+            {
+                var motion = root.AddComponent<PanicCuratedMechanism>();
+                motion.SampleRoot = model; motion.OpenClip = open; motion.CloseClip = close;
+                motion.Container = assetName == "Refrigerator" || assetName == "FireCabinet";
+                motion.AssetName = assetName;
+            }
+            // The new branch geometry already carries authored identifying detail. The old
+            // normalized R3 overlay coordinates belong to the old mesh and must not be reused.
             return root;
+        }
+
+        public static bool HasAnimatedMechanism(GameObject visual)
+        { return visual && visual.GetComponentInChildren<PanicCuratedMechanism>(true); }
+
+        /// <summary>Presentation only. Call once per world frame; dt=0 pauses motion.</summary>
+        public static void SyncVisualState(GameObject visual, bool open, bool safe, bool secured, float dt)
+        {
+            if (!visual) return;
+            if(!VisualStates.TryGetValue(visual,out var state))
+            {
+                var brackets=new List<Transform>();
+                foreach(var t in visual.GetComponentsInChildren<Transform>(true))if(t.name=="SecuredBracket")brackets.Add(t);
+                state=new VisualState{Motions=visual.GetComponentsInChildren<PanicCuratedMechanism>(true),Brackets=brackets.ToArray()};
+                VisualStates.Add(visual,state);
+            }
+            foreach (var motion in state.Motions) if(motion) motion.SampleState(open, safe, dt);
+            if(!state.Initialized||state.LastSecured!=secured)
+            {
+                foreach(var bracket in state.Brackets)if(bracket)bracket.gameObject.SetActive(secured);
+                state.Initialized=true;state.LastSecured=secured;
+            }
+        }
+
+        public static GameObject CreateEmergencyBackpack()
+        { return CreateDisplay("EmergencyBackpack", .60f); }
+
+        /// <summary>Existing IDs only; no game items, supplies or risks are introduced here.</summary>
+        public static bool TryCreateFixture(string id, out GameObject visual)
+        {
+            string asset; float size;
+            switch ((id ?? "").ToLowerInvariant())
+            {
+                case "fridge": case "refrigerator": asset="Refrigerator"; size=1.96f; break;
+                case "bookshelf": case "bookcase": asset="Bookcase"; size=2.37f; break;
+                case "table": asset="SturdyTable"; size=1.55f; break;
+                case "tv": asset="Television"; size=1.28f; break;
+                case "waterheater": asset="WaterHeater"; size=1.7f; break;
+                case "radio": asset="EmergencyRadio"; size=.32f; break;
+                case "rug": asset="Rug"; size=2.85f; break;
+                case "bagstation": case "emergencybackpack": asset="EmergencyBackpack"; size=.60f; break;
+                case "gasvalve": asset="GasValve"; size=.75f; break;
+                case "watervalve": asset="WaterValve"; size=.75f; break;
+                case "breakerbox": asset="BreakerBox"; size=.75f; break;
+                case "airconditioner": asset="AirConditioner"; size=1.1f; break;
+                case "firecabinet": asset="FireCabinet"; size=.9f; break;
+                default: visual=null; return false;
+            }
+            visual=CreateDisplay(asset,size);
+            if(visual) visual.name="HomeV4_" + id;
+            return visual;
         }
 
         enum DetailSurface { Ink, Paper, Metal }

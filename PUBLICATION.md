@@ -1,22 +1,11 @@
-# Too Late to Panic! — 17 Ekim 2026 GitHub yayını
+﻿# Too Late to Panic! — Home V4.11 GitHub yayını
 
-[Windows V4.8 indir](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.8). ZIP'i çıkarıp TooLateToPanic.exe dosyasını yan klasörleriyle birlikte çalıştırın. Unity kaynak projesi TooLateToPanic/ klasöründedir; Unity 6000.0.73f1 / Built-In kullanılır.
+[Windows V4.11 indir](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.11). ZIP'i çıkarın, TooLateToPanic.exe dosyasını yan klasörleriyle çalıştırın. Kaynak proje TooLateToPanic/ altındadır; Unity6000.0.73f1 / Built-In kullanır.
 
-Bu commit aktif izometrik çalışma alanının güncel kaynaklarını, HUD/çevre/afet/akış geliştirmelerini ve oturumda bulunan son değişiklikleri baytları değiştirilmeden aktarır. Canlı oyun kaynakları, ayarlar, LATEST ve teslim belgeleri yayın için düzenlenmedi. FPS askıdadır ve yerelde korunur. Cache, gerçek kayıt/skor, anahtarlar, tarihsel Evidence ve eski Tolga WAV arşivi yayın kapsamı dışındadır. Gerekli generated assetler statik GUID bağımlılık kapanımıyla seçilir; eski bake geçmişi yerelde korunur.
+FPS yalnız afet çantası hazırlığında, aynı oyuncu konumundan sinematikle devreye girer. G izometrik önlemlere döner; J canlı hazırlık defterini açar. Kaynak havuzu/auto-loot, fiziksel erzaklar, drag-drop/kısmi yığın, bodrum sığınağı, garaj geçişi, duvar fiziği/kesiti, pause ve şömine düzeltmeleri dahildir.
 
-Mevcut V4.8 Windows ZIP'i yeniden derlenmeden yayımlanır. Bu build'in kayıtlı sonucu149/149 kesintisiz gerçek zamanlı üretim API rotası ve189/189 regresyon kontrolü,0runtime hatadır; OS/insan oynanışı, dinleme veya uzun kampanya kabulü değildir.
+Mevcut doğrulanmış Windows ZIP'i yeniden derlenmeden yayınlanır:156/156 izole native API/render kontrolü,0runtime hata,34.24sn,10açık konum fikstürü. OS/human/tüm kampanya ve yeni import/build kabulü değildir. ZIP SHA256: `8C3B199D261B1AEFB470D2896CAB883C2F4FDD06BB265843514BB753E03F2E1D` (177633082byte), DLL SHA256: `34E3969FBBE5047A6400D9FE253ACE1B2177BEDD07ECBBDA3020D3745008E047`.
 
-Doğrulanmış build manifestinden sonra değişmiş kaynaklar aşağıdadır. Bu değişiklikler aynen korunmuştur; mevcut ZIP'in kabulü bu kaynak değişiklikleri için yeni build/native kabulü sayılmaz:
+Yayın seçimi3483dosya, 1184generated bağımlılık ve0eksik GUID içerir. Oyun kaynakları/assetler snapshot byte'larıyla aynıdır. README, güncel belge bağlantıları ve yayın metadata'sı yalnız yayın kopyasında uyarlanır; canlı oturum veya açık oyun değiştirilmez. Kaynak/provenans ve mevcut lisanslar korunur. Bağımsız eski FPS checkout'u, cache, Builds/Evidence, kişisel kayıt/skorlar, anahtarlar ve ertelenmiş Tolga arşivi kapsam dışıdır.
 
-- `TooLateToPanic/Assets/Game/Editor/PanicResidenceBuild.cs`
-- `TooLateToPanic/Assets/Game/Runtime/PanicHomeHud.cs`
-- `TooLateToPanic/Assets/Game/Runtime/PanicHomeWorld.cs`
-- `TooLateToPanic/Assets/Game/Scenes/TooLateToPanicResidence.unity`
-- `TooLateToPanic/Assets/Game/Runtime/PanicInteractionAudit.cs`
-- `TooLateToPanic/Assets/Game/Runtime/PanicInteractionFrameAudit.cs`
-- `TooLateToPanic/Assets/Game/Runtime/PanicInteractionModelAudit.cs`
-- `TooLateToPanic/Assets/Game/Runtime/PanicInteractionWorldAudit.cs`
-
-[Yayın kimliği ve ZIP hash'i](TooLateToPanic/Documentation/RELEASE-v0.4.8.json), [baytları korunan kaynak manifesti](TooLateToPanic/Documentation/Publications/v0.4.8/source-sha256.json), [V4.8 teslim kaydı](TooLateToPanic/Documentation/HOME-V4.8-DELIVERY-2026-10-17.md).
-
-Mevcut README/LATEST/teslim dosyalarındaki yerel Builds/Evidence/FPS bağlantıları ve yayından önceki durum ifadeleri orijinal anlık kaydın parçasıdır. GitHub yayınının güncel durumu bu ayrı kayıt ve Release ile belirlenir. Yerel başlatıcılar kaynak arşivi içinde build indirmez; hazır oyun için yukarıdaki Release ZIP'ini kullanın. Asset/font/ses provenansı ve mevcut lisans metinleri kaynaklarla birlikte korunur; yeni bir genel lisans atanmaz.
+[Seçili kaynak manifesti](TooLateToPanic/Documentation/Publications/v0.4.11/source-sha256.json), [yerel build receipt](TooLateToPanic/Documentation/Publications/v0.4.11/local-build-receipt.json), [native özet](TooLateToPanic/Documentation/Publications/v0.4.11/native-summary.json), [asset/defter/ses uyarlaması](TooLateToPanic/Documentation/Publications/v0.4.11/ADAPTATION.md), [teslim](TooLateToPanic/Documentation/HOME-V4.11-DELIVERY-2026-10-17.md). Eski yayın kayıtları tarihsel olarak korunur. Bu belge ve Release güncel yayın durumudur.

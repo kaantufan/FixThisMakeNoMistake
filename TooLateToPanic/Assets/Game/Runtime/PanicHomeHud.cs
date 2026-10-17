@@ -25,11 +25,10 @@ namespace TooLateToPanic
         static readonly Color Ember = new Color(.894f, .278f, .176f, 1f);
         static readonly Color Line = new Color(.847f, .824f, .784f, .19f);
         static readonly string[][] WalkControls = { new[] { "WASD", "YÜRÜ" }, new[] { "SHIFT", "KOŞ" }, new[] { "SPACE", "ZIPLA" }, new[] { "E", "KULLAN" }, new[] { "TAB", "ÇANTA" } };
-        static readonly string[][] PrepareControls = { new[] { "WASD", "YÜRÜ" }, new[] { "SHIFT", "KOŞ" }, new[] { "SPACE", "ZIPLA" }, new[] { "E", "KULLAN" }, new[] { "TAB", "ÇANTA" }, new[] { "1", "SABİTLE" }, new[] { "2", "KORU" }, new[] { "3", "GÜÇLENDİR" }, new[] { "SAĞ TIK/4", "TAŞI" } };
         static readonly string[][] LootControls = { new[] { "Z/X", "SEÇ" }, new[] { "F", "AL" }, new[] { "E", "KAPAT" }, new[] { "TAB", "ÇANTA" } };
         static readonly string[][] EmptyLootControls = { new[] { "E", "KAPAT" }, new[] { "TAB", "ÇANTA" },new[] { "Q", "HEDEF" } };
-        static readonly string[][] InventoryControls = { new[] { "OKLAR", "SEÇ" }, new[] { "ENTER", "ÇANTAYA" }, new[] { "F", "ÜRET" }, new[] { "BACKSPACE", "GERİ" } };
-        static readonly string[][] WorkControls = { new[] { "A/D", "HİZALA" }, new[] { "ENTER", "KİLİTLE" }, new[] { "SPACE", "UYGULA" }, new[] { "ESC", "İPTAL" } };
+        static readonly string[][] InventoryControls = { new[] { "OKLAR", "SEÇ" }, new[] { "ENTER", "ÇANTAYA" }, new[] { "BACKSPACE", "GERİ" } };
+        static readonly string[][] WorkControls = { new[] { "SOL TIK", "VİDAYI TAK" }, new[] { "ESC", "İPTAL" } };
         static readonly string[][] MoveControls = { new[] { "FARE", "YERLEŞTİR" }, new[] { "SOL TIK", "BIRAK" }, new[] { "TEKER / R", "DÖNDÜR" }, new[] { "SAĞ TIK", "İPTAL" }, new[] { "ESC", "İPTAL" } };
         static readonly string[][] InspectControls = { new[] { "WASD", "İNCELE" }, new[] { "ENTER", "İLERİ" }, new[] { "N", "BİTİR" }, new[] { "ESC", "DURAKLAT" } };
 
@@ -67,6 +66,9 @@ namespace TooLateToPanic
         bool _priorInputLock;
         bool _helpVisible;
         int _menuChoice;
+        int _pauseChoice;
+        int _hudProcessedFrame = -1;
+        public bool Paused { get { return _paused; } }
         int _inspectionStep;
         string _inspectionFocusId;
         PanicPhase _lastPhase = (PanicPhase)(-1);
@@ -209,10 +211,17 @@ namespace TooLateToPanic
             _lastPhase = phase;
         }
 
-        void Update()
+        void Update() { ProcessFrameHotkeys(); }
+
+        public void ProcessFrameHotkeys()
         {
+            if (_hudProcessedFrame == Time.frameCount) return;
             if (!World || World.Model == null) return;
+            _hudProcessedFrame = Time.frameCount;
             ProcessDeveloperHotkeys();
+            World.ProcessNotebookInput();
+            if (World.NotebookBlocksInput) return;
+            if (!World.InventoryOpen) CancelInventoryDrag();
             if (DeveloperMenuOpen || DeveloperInputBlockedThisFrame) return;
 
             // A same-frame work cancel belongs to World. Do not reinterpret that Escape as Pause.
@@ -225,7 +234,7 @@ namespace TooLateToPanic
             if (World.InventoryOpen)
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) World.ToggleInventory();
-                return; // World owns selection, Enter packing, and F crafting.
+                return; // World owns keyboard selection and Enter packing.
             }
 
             if (_helpVisible && Input.GetKeyDown(KeyCode.Escape))
@@ -242,15 +251,16 @@ namespace TooLateToPanic
             if (Input.GetKeyDown(KeyCode.H) && (phase == PanicPhase.Preparing || phase == PanicPhase.Tutorial))
                 _helpVisible = !_helpVisible;
 
-            bool canPause = phase == PanicPhase.Preparing || phase == PanicPhase.Tutorial || phase == PanicPhase.Inspection;
+            bool canPause = phase == PanicPhase.Preparing || phase == PanicPhase.Tutorial || phase == PanicPhase.Inspection || phase == PanicPhase.Disaster || phase == PanicPhase.Aftermath;
             if (canPause && Input.GetKeyDown(KeyCode.Escape)) SetPaused(true);
         }
 
-        void SetPaused(bool value)
+        public void SetPaused(bool value)
         {
             if (!World) return;
             if (value && !_paused)
             {
+                _pauseChoice = 0;
                 _priorInputLock = World.InputLocked;
                 World.InputLocked = true;
             }
@@ -259,11 +269,13 @@ namespace TooLateToPanic
                 World.InputLocked = _priorInputLock;
             }
             _paused = value;
+            if (World.Model != null) World.Model.SetPaused(value);
+            CancelInventoryDrag();
         }
 
         void OnGUI()
         {
-            if (!World || World.Model == null) return;
+            if (!World || World.Model == null || World.NotebookBlocksInput) return;
             PrepareCanvas();
             EnsureStyles();
             _uiRects.Clear();
@@ -277,7 +289,11 @@ namespace TooLateToPanic
             GUI.color = Color.white;
             GUI.contentColor = Color.white;
 
-            if (World.LossAnnounced && World.LossRevealTime > 0f)
+            if (_paused && !_developerMenuOpen)
+            {
+                DrawStatusStrip(); DrawPause();
+            }
+            else if (World.LossAnnounced && World.LossRevealTime > 0f)
             {
                 DrawLossReveal();
             }
@@ -294,11 +310,6 @@ namespace TooLateToPanic
             {
                 DrawTitle();
             }
-            else if (_paused)
-            {
-                DrawStatusStrip();
-                DrawPause();
-            }
             else if (World.WorkActive)
             {
                 DrawStatusStrip();
@@ -309,6 +320,11 @@ namespace TooLateToPanic
                 DrawStatusStrip();
                 DrawInventory();
                 if (RequirementsCardVisible) DrawInventoryRequirements();
+            }
+            else if (World.BagCameraOwnsView)
+            {
+                DrawStatusStrip();
+                if (World.NotificationVisible) DrawToast(World.ShortNotice);
             }
             else if (World.JuryActive)
             {
@@ -474,14 +490,9 @@ namespace TooLateToPanic
             Event e = Event.current;
             if (DeveloperMenuOpen || DeveloperInputBlockedThisFrame) return;
             if (e.type != EventType.KeyDown) return;
-            if (e.keyCode == KeyCode.UpArrow || e.keyCode == KeyCode.W)
+            if (IsNavigationKey(e.keyCode))
             {
-                _menuChoice = (_menuChoice + 4) % 5;
-                e.Use();
-            }
-            else if (e.keyCode == KeyCode.DownArrow || e.keyCode == KeyCode.S)
-            {
-                _menuChoice = (_menuChoice + 1) % 5;
+                _menuChoice = NavigateTitleChoice(_menuChoice, e.keyCode);
                 e.Use();
             }
             else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
@@ -553,6 +564,7 @@ namespace TooLateToPanic
                 FittedLabel(new Rect(context.x + 36, context.y + 3, context.width - 48, 36), World.PlacementMessage, _center, MainText, 14);
             }
             DrawControls(ContextControls());
+            DrawApplicableAction();
             if (TimerAlarmActive && !World.LootVisible && !World.IsMoving)
             {
                 Rect check = new Rect(24, 190, 282, 178);
@@ -624,12 +636,11 @@ namespace TooLateToPanic
                 case "anchorwall": case "anchorfloor": return "SABİTLEME · EKSİKLER";
                 case "upgrade": return "GÜÇLENDİRME · EKSİKLER";
                 case "flood": return "SEL BARİYERİ · EKSİKLER";
-                case "fire": return "YANGIN KORUMASI · EKSİKLER";
-                case "plant": return "FİDAN · EKSİKLER";
+                case "fire": return "YANGIN TÜPÜ · EKSİKLER";
+                case "plant": return "AĞAÇ SIRASI · EKSİKLER";
                 case "drain": return "DRENAJ · EKSİKLER";
                 case "fence": return "SEL ÇİTİ · EKSİKLER";
                 case "hose": return "HORTUM · EKSİKLER";
-                case "craftfirstaid": return "İLK YARDIM · EKSİKLER";
                 case "packbattery": return "ÇANTAYA KOYMAK İÇİN PİL GEREK";
                 default: return "EKSİKLER";
             }
@@ -719,14 +730,15 @@ namespace TooLateToPanic
                 if (selected) Fill(new Rect(cell.x + 18, cell.yMax - 3, cell.width - 36, 2), Sea);
                 Mark(cell);
                 int index = i;
-                if (MousePressed(cell)) World.InventorySelect(index);
+                HandleInventorySlot(cell, false, index);
             }
             for (int i = 0; i < 8; i++)
             {
                 Rect cell = new Rect(824 + (i % 4) * 168, 286 + (i / 4) * 113, 156, 101);
                 SupplySlot slot = bag != null && i < bag.Count ? bag[i] : null;
                 Frame(cell, Panel, Line, 1f);
-                DrawSlot(cell, slot, false); Mark(cell);
+                DrawSlot(cell, slot, _bagSelection == i); Mark(cell);
+                HandleInventorySlot(cell, true, i);
             }
             PanicModel model = World.Model;
             DrawInventoryMeter(new Rect(824, 523, 207, 76), "water", "SU", model.PackedWater, model.RequiredDays);
@@ -741,28 +753,23 @@ namespace TooLateToPanic
             Label(new Rect(126, 672, 600, 32), SlotName(selectedSlot), ColorText(_display, MainText));
             if (!RequirementsCardVisible)
             {
-                Rect craft = new Rect(824, 647, 660, 100);
-                Frame(craft, Panel, Line, 1f);
-                DrawIcon(new Rect(838, 668, 50, 54), "bandage");
-                Label(new Rect(896, 674, 54, 32), "2 ×", _body);
-                Label(new Rect(947, 674, 36, 32), "+", ColorText(_display, Muted));
-                DrawIcon(new Rect(989, 668, 50, 54), "antiseptic");
-                Label(new Rect(1047, 674, 54, 32), "1 ×", _body);
-                Label(new Rect(1103, 674, 44, 32), "=", ColorText(_display, Muted));
-                DrawIcon(new Rect(1155, 668, 54, 54), "firstaid");
-                Label(new Rect(1225, 663, 240, 28), "İLK YARDIM SETİ", ColorText(_body, Brass));
-                Label(new Rect(1225, 696, 240, 24), "F ile üret", _tiny);
+                Rect info = new Rect(824,647,660,100);
+                Frame(info,Panel,Line,1f);
+                Label(new Rect(842,659,624,26), "İLK YARDIM SETİNİ EVDE HAZIR BUL", ColorText(_tiny,Brass));
+                Label(new Rect(842,693,624,42), "Yığınları sürükleyerek birleştir. Farklı eşyaları\nyer değiştir; çantadan envantere geri al.",_wrap);
             }
             Rect packButton = new Rect(126, 762, 212, 44);
-            Rect craftButton = new Rect(350, 762, 172, 44);
+            Rect unpackButton = new Rect(350, 762, 172, 44);
             Rect backButton = new Rect(534, 762, 216, 44);
             DrawKeycap(packButton, "ENTER", "ÇANTAYA KOY", Sea);
-            DrawKeycap(craftButton, "F", "İLK YARDIM", Brass);
+            DrawKeycap(unpackButton, "FARE", "GERİ AL", Brass);
             DrawKeycap(backButton, "BACKSPACE", "GERİ", Line);
             if (MousePressed(packButton)) World.InventoryUse();
-            if (MousePressed(craftButton)) World.CraftFirstAid();
+            if (MousePressed(unpackButton) && _bagSelection >= 0) World.Expedition.UnpackSlot(_bagSelection);
             if (MousePressed(backButton)) World.ToggleInventory();
-            Label(new Rect(824, 767, 650, 32), "OKLAR  Seç     ·     TAB / ESC  Kapat", _tiny);
+            Label(new Rect(824, 767, 650, 32), "FARE  Sürükle / bırak    ·    TAB / ESC  Kapat", _tiny);
+            DrawInventoryMaterialPool();
+            DrawInventoryDrag();
         }
 
         void DrawSlot(Rect cell, SupplySlot slot, bool selected)
@@ -781,79 +788,98 @@ namespace TooLateToPanic
         void DrawWork()
         {
             PanicWorkSession work = World.Expedition.Work;
+            if (work.IsWorldConstruction) { DrawWorldConstruction(work); return; }
             Rect panel = new Rect(66, 164, 1468, 676);
             Frame(panel, Night, new Color(Brass.r, Brass.g, Brass.b, .45f), 1f); Region(panel);
             Rect image = new Rect(88, 186, 1010, 632);
             Frame(image, new Color(.07f, .065f, .06f, 1f), Line, 1f);
-            if (World.WorkTexture)
-                GUI.DrawTexture(new Rect(image.x + 2, image.y + 39, image.width - 4, image.height - 78), World.WorkTexture, ScaleMode.ScaleToFit, false);
-            DrawDot(new Rect(image.x + 16, image.y + 16, 8, 8), new Color(Ember.r, Ember.g, Ember.b, .55f + .45f * Mathf.Sin(Time.unscaledTime * 4f)));
-            Label(new Rect(image.x + 34, image.y + 5, 440, 30), "AKTİF İŞ  /  " + WorkModeName(work.Mode), _tiny);
+            Rect fitted = FittedTextureRect(new Rect(image.x + 2, image.y + 39, image.width - 4, image.height - 78), World.WorkTexture);
+            if (World.WorkTexture) GUI.DrawTexture(fitted, World.WorkTexture, ScaleMode.StretchToFill, false);
+            Label(new Rect(image.x + 22, image.y + 5, 930, 30), "VİDAYA TIKLA · KENDİLİĞİNDEN TAKILSIN", ColorText(_tiny, Brass));
             string costHint = World.Model.FreeMaterials && World.Model.InfiniteBudget ? "Geliştirici: bu işte malzeme ve bütçe harcanmaz." :
                 World.Model.FreeMaterials ? "Geliştirici: malzeme harcanmaz; bütçe iş bitince düşer." :
                 World.Model.InfiniteBudget ? "Geliştirici: bütçe harcanmaz; malzeme iş bitince düşer." :
-                "İşi bitirdiğinde malzeme ve bütçe harcanır. İptal etmek ücretsizdir.";
+                "İki vida bitince malzeme ve bütçe harcanır. İptal etmek ücretsizdir.";
             Label(new Rect(image.x + 22, image.yMax - 33, 960, 28), costHint, _tiny);
-            DrawCorners(new Rect(image.x + 11, image.y + 49, image.width - 22, image.height - 98), Brass);
             Mark(image);
+
+            for (int i = 0; i < work.TotalSteps; i++)
+            {
+                Rect hit = WorkClickTargetBounds(i);
+                if (hit.width <= 0 || hit.height <= 0) continue;
+                Vector2 center = hit.center;
+                bool done = i < work.CompletedSteps, current = i == work.NextClickTarget;
+                Color accent = done ? Sea : current ? Brass : Muted;
+                DrawRing(hit, 1f, new Color(accent.r, accent.g, accent.b, current || done ? .96f : .35f), current ? 3f : 1.5f);
+                if (done) DrawCheck(new Rect(center.x - 10, center.y - 7, 20, 14), Sea);
+                else if (current && work.IsInstalling) DrawRing(new Rect(hit.x + 6, hit.y + 6, hit.width - 12, hit.height - 12), work.StageProgress, Sea, 4f);
+                else if (current)
+                {
+                    Rect hint = new Rect(center.x - 57, hit.yMax + 6, 114, 29);
+                    Frame(hint, Night, Brass, 1f); Label(hint, "TIKLA", ColorText(_center, Brass));
+                    if (!DeveloperInputBlockedThisFrame && !_paused && World.CancelFrame != Time.frameCount && MousePressed(hit)) World.ClickWorkTarget(i);
+                }
+            }
 
             const float x = 1122f; const float w = 384f;
             Brush(new Rect(x, 190, w, 38), Rust);
-            Label(new Rect(x + 14, 190, w - 26, 36), Clip(work.Label, 32).ToUpperInvariant(), _body);
-            Label(new Rect(x, 242, w, 30), (Mathf.Min(work.CompletedSteps + 1, work.TotalSteps)) + " / " + work.TotalSteps + "  ·  " + work.StageName, ColorText(_body, MainText));
-            int steps = Mathf.Max(1, work.TotalSteps);
-            float stepWidth = Mathf.Min(72f, (w - (steps - 1) * 10f) / steps);
-            for (int i = 0; i < steps; i++)
-            {
-                Rect step = new Rect(x + i * (stepWidth + 10f), 285, stepWidth, 43);
-                bool done = i < work.CompletedSteps;
-                Frame(step, done ? Petrol : Panel, done ? Sea : i == work.CompletedSteps ? Brass : Line, 1f);
-                if (done) DrawCheck(new Rect(step.center.x - 10, step.center.y - 7, 20, 14), MainText);
-                else Label(step, (i + 1).ToString("00"), ColorText(_center, i == work.CompletedSteps ? Brass : Muted));
-            }
-            string meter = !work.IsApplying ? "HİZALA VE KİLİTLE" : work.Mode == PanicWorkMode.Timing ? "DOĞRU ANI BEKLE" : work.Mode == PanicWorkMode.Balance ? "BASINCI DENGELE" : "DÖNÜŞÜMLÜ ÇEVİR";
-            Label(new Rect(x, 351, w, 25), meter, ColorText(_tiny, Muted));
-            bool aligned = Mathf.Abs(work.Cursor - work.Target) <= work.TargetWidth;
-            if (work.IsApplying && work.Mode == PanicWorkMode.Ratchet)
-            {
-                float turnWidth = (w - (work.RequiredStrokes - 1) * 12f) / work.RequiredStrokes;
-                for (int i = 0; i < work.RequiredStrokes; i++)
-                {
-                    Rect turn = new Rect(x + i * (turnWidth + 12f), 393, turnWidth, 61);
-                    bool done = work.CompletedStrokes > i;
-                    bool current = work.CompletedStrokes == i;
-                    Frame(turn, done ? new Color(Petrol.r, Petrol.g, Petrol.b, .4f) : Panel, done ? Sea : current ? Brass : Line, current ? 2f : 1f);
-                    int direction = (work.CompletedSteps + i) % 2 == 0 ? -1 : 1;
-                    if (done) DrawCheck(new Rect(turn.center.x - 12, turn.center.y - 8, 24, 16), Sea);
-                    else Label(turn, direction < 0 ? "A  SOL" : "D  SAĞ", ColorText(_center, current ? Brass : Muted));
-                }
-                Label(new Rect(x, 468, w, 28), work.ExpectedDirection == 0 ? "SON DOKUNUŞ · SPACE" : work.ExpectedDirection < 0 ? "A İLE SOLA ÇEVİR" : "D İLE SAĞA ÇEVİR", ColorText(_body, work.ExpectedDirection == 0 ? Sea : Brass));
-            }
-            else
-            {
-                Rect track = new Rect(x, 398, w, 40);
-                Frame(track, new Color(.07f, .065f, .06f, 1f), Line, 1f);
-                float low = Mathf.Clamp01(work.Target - work.TargetWidth);
-                float high = Mathf.Clamp01(work.Target + work.TargetWidth);
-                Fill(new Rect(track.x + low * track.width, track.y + 2, (high - low) * track.width, track.height - 4), Petrol);
-                float targetX = track.x + work.Target * track.width;
-                Fill(new Rect(targetX - 2, track.y - 5, 4, track.height + 10), Brass);
-                float cursorX = track.x + Mathf.Clamp01(work.Cursor) * track.width;
-                Frame(new Rect(cursorX - 5, track.y - 9, 10, track.height + 18), aligned ? Sea : MainText, aligned ? MainText : SoftText, 1f);
-                string hint = !work.IsApplying ? aligned ? "HİZALANDI · ENTER" : "A / D İLE HEDEFLE" : work.Mode == PanicWorkMode.Timing ? aligned ? "ŞİMDİ!  SPACE" : "YEŞİL BÖLGEYİ BEKLE" : "A / D + SPACE BASILI TUT";
-                Label(new Rect(x, 460, w, 30), hint, ColorText(_body, aligned ? Sea : Brass));
-                if (work.IsApplying && work.Mode == PanicWorkMode.Balance) DrawBar(new Rect(x, 501, w, 8), work.StageProgress, Sea);
-            }
-            Label(new Rect(x, 533, w, 55), work.StepHint, _wrap);
-            bool aim = !work.IsApplying;
-            DrawKeycap(new Rect(x, 607, 184, 43), "A / D", aim ? "HİZALA" : work.Mode == PanicWorkMode.Ratchet ? "ÇEVİR" : "DENGELE", Brass);
-            DrawKeycap(new Rect(x + 196, 607, 188, 43), "ENTER", "KİLİTLE", aim ? Sea : Line);
-            string spaceAction = work.Mode == PanicWorkMode.Balance ? "BASILI TUT" : work.Mode == PanicWorkMode.Ratchet ? "OTURT" : "DOĞRU ANDA DOKUN";
-            DrawKeycap(new Rect(x, 662, w, 45), "SPACE", spaceAction, work.IsApplying ? Sea : Line);
-            DrawBar(new Rect(x, 734, w, 8), work.Progress, Sea);
-            Label(new Rect(x, 748, 170, 22), "TOPLAM İLERLEME", _tiny);
-            Label(new Rect(x + w - 94, 746, 94, 25), Mathf.RoundToInt(work.Progress * 100f) + "%", ColorText(_caps, Sea));
-            DrawKeycap(new Rect(x, 784, w, 35), "ESC", "İPTAL ET", Line);
+            Label(new Rect(x + 14, 190, w - 26, 36), "SABİTLEME", _body);
+            DrawAnchorTargetName();
+            Label(new Rect(x, 299, w, 26), CurrentAnchorSurfaceLabel(), ColorText(_tiny, Brass));
+            Label(new Rect(x, 332, w, 40), "Vidaya tıkla.", _heading);
+            Label(new Rect(x, 382, w, 42), "Her vida otomatik takılır.\nİki vida bitince eşya sabitlenir.", _wrap);
+            Label(new Rect(x, 433, w, 38), work.IsInstalling ? "VİDA TAKILIYOR" : "SIRADAKİ VİDA HAZIR", ColorText(_body, work.IsInstalling ? Sea : Brass));
+            Label(new Rect(x, 484, w, 70), work.StepHint, _wrap);
+            Label(new Rect(x, 591, w, 39), work.CompletedSteps + " / " + work.TotalSteps + " VİDA", _display);
+            DrawBar(new Rect(x, 656, w, 9), work.Progress, Sea);
+            Button(new Rect(x, 729, w, 58), "İPTAL ET · ESC", false, Line, World.CancelWork);
+        }
+
+        void DrawWorldConstruction(PanicWorkSession work)
+        {
+            Rect panel = new Rect(488, 648, 624, 154);
+            Frame(panel, Night, Line, 1f); Region(panel);
+            FittedLabel(new Rect(510, 661, 580, 35), work.Label, _heading, MainText, 20);
+            Label(new Rect(512, 704, 560, 27), work.StepHint, ColorText(_small, Sea));
+            DrawBar(new Rect(512, 753, 398, 8), work.Progress, Sea);
+            Button(new Rect(924, 742, 176, 42), "İPTAL · ESC", false, Line, World.CancelWork);
+        }
+
+        /// <summary>Actual screw hit region in the1600x900 logical HUD canvas; shared with opt-in callback QA.</summary>
+        public Rect WorkClickTargetBounds(int index)
+        {
+            if (!World || !World.WorkActive || !World.WorkTexture || World.Expedition.Work.IsWorldConstruction ||
+                index < 0 || index >= World.Expedition.Work.TotalSteps) return new Rect();
+            Vector3 point = World.WorkTargetViewport(index);
+            if (float.IsNaN(point.x) || float.IsInfinity(point.x) || float.IsNaN(point.y) || float.IsInfinity(point.y) ||
+                float.IsNaN(point.z) || float.IsInfinity(point.z) || point.z <= 0 || point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) return new Rect();
+            Rect fitted = FittedTextureRect(new Rect(90,225,1006,554), World.WorkTexture);
+            Vector2 center = new Vector2(fitted.x + point.x * fitted.width, fitted.y + (1f - point.y) * fitted.height);
+            const float radius = 38f;
+            return new Rect(center.x - radius, center.y - radius, radius * 2, radius * 2);
+        }
+
+        static Rect FittedTextureRect(Rect bounds, Texture texture)
+        {
+            if (!texture || texture.width <= 0 || texture.height <= 0) return bounds;
+            float scale = Mathf.Min(bounds.width / texture.width, bounds.height / texture.height);
+            Vector2 size = new Vector2(texture.width * scale, texture.height * scale);
+            return new Rect(bounds.center.x - size.x * .5f, bounds.center.y - size.y * .5f, size.x, size.y);
+        }
+
+        void DrawApplicableAction()
+        {
+            if (World.IsMoving || World.WorkActive || World.InventoryOpen || RequirementsCardVisible || _paused || DeveloperMenuOpen) return;
+            if (World.Model.Phase != PanicPhase.Preparing && World.Model.Phase != PanicPhase.Tutorial) return;
+            PanicItem item = World.Selected;
+            if (item == null || !World.CanInteract) return;
+            bool release = PanicItemActionRules.CanReleaseAnchor(item);
+            int shortcut = release ? 1 : PanicItemActionRules.PrimaryShortcut(item);
+            if (shortcut == 0 || !World.Model.CanBeginJuryWork(release ? "anchorwall" : PanicItemActionRules.PrimaryAction(item), item.Id)) return;
+            Rect panel = new Rect(1100, 170, 476, 126);
+            Frame(panel, Night, Line, 1f); Region(panel);
+            FittedLabel(new Rect(1118, 178, 438, 29), item.Label, _small, SoftText, 14);
+            Button(new Rect(1118, 218, 438, 58), (release ? "ÇÖZ" : PanicItemActionRules.PrimaryLabel(item)) + " · " + shortcut, true, Brass, () => World.QuickAction(shortcut));
         }
 
         void DrawControls(string[][] controls)
@@ -879,7 +905,12 @@ namespace TooLateToPanic
             if (World.Model.Phase == PanicPhase.Inspection) return InspectControls;
             PanicItem selected = World.Selected;
             bool prepare = World.Model.Phase == PanicPhase.Preparing || World.Model.Phase == PanicPhase.Tutorial;
-            return prepare && selected != null && selected.Id != "bunker" && selected.Id != "bagstation" ? PrepareControls : WalkControls;
+            if (!prepare || selected == null || !World.CanInteract) return WalkControls;
+            var controls = new List<string[]>(WalkControls);
+            int shortcut = PanicItemActionRules.PrimaryShortcut(selected);
+            if (shortcut != 0 && World.Model.CanBeginJuryWork(PanicItemActionRules.PrimaryAction(selected), selected.Id)) controls.Add(new[] { shortcut.ToString(), PanicItemActionRules.PrimaryLabel(selected) });
+            if (selected.Movable && !selected.Anchored) controls.Add(new[] { "SAĞ TIK/4", "TAŞI" });
+            return controls.ToArray();
         }
 
         void DrawHelpCard()
@@ -888,9 +919,9 @@ namespace TooLateToPanic
             Frame(panel, Night, new Color(Sea.r, Sea.g, Sea.b, .5f), 1f); Region(panel);
             Brush(new Rect(38, 419, 177, 30), Petrol);
             Label(new Rect(52, 418, 318, 32), "HIZLI HAZIRLIK", _body);
-            Label(new Rect(44, 463, 336, 27), "E ile aç · F ile seçiliyi al", _small);
+            Label(new Rect(44, 463, 336, 27), "E ile dolabı aç · Malzeme havuza eklenir", _small);
             Label(new Rect(44, 497, 336, 27), "Tab ile çantaya su ve gıda koy", _small);
-            Label(new Rect(44, 531, 336, 27), "1 / 2 / 3 ile önlem al · H kapat", ColorText(_tiny, Sea));
+            Label(new Rect(44, 531, 336, 27), "Nesnenin önlemini seç · H kapat", ColorText(_tiny, Sea));
         }
 
         void DrawDisasterCue()
@@ -1019,19 +1050,21 @@ namespace TooLateToPanic
             Fill(LogicalCanvasBounds, new Color(.055f, .05f, .045f, .57f));
             Rect panel = new Rect(96, 176, 1408, 612);
             Frame(panel, Night, Line, 1f); Region(panel);
-            Label(new Rect(156, 224, 634, 30), World.JuryActive ? "KONTROLLER DURDU · SÜRE DEVAM EDİYOR" : "KISA BİR MOLA", ColorText(_tiny, Brass));
+            Label(new Rect(156, 224, 634, 30), "SÜRE VE OYUN DURDU", ColorText(_tiny, Brass));
             Label(new Rect(152, 262, 700, 74), World.JuryActive ? "KISA BİR MOLA" : "DURAKLATILDI", _timer);
             DrawWatch(new Rect(157, 379, 94, 112), Rust);
             Brush(new Rect(148, 509, 624, 51), Rust);
             Label(new Rect(277, 346, 520, 176), FormatTime(World.Model.TimeRemaining), ColorText(_mega, Brass));
             Frame(new Rect(161, 588, 236, 36), new Color(Petrol.r, Petrol.g, Petrol.b, .3f), Sea, 1f);
-            Label(new Rect(174, 590, 210, 30), World.JuryActive ? "II   GİRDİ DURDU" : "II   OYUN DURDU", ColorText(_caps, Sea));
-            Label(new Rect(161, 660, 600, 56), World.JuryActive ? "Hazırlık süresi devam ediyor.\nHazır olduğunda devam et veya yeniden başla." : "Sıradaki adım: su ve gıdayı çantana koy,\nsonra evini afet için güçlendir.", _wrap);
-            Button(new Rect(912, 263, 508, 68), "DEVAM ET", true, Brass, () => SetPaused(false));
-            Button(new Rect(924, 350, 496, 62), "GELİŞTİRİCİ · F2", false, Sea, ToggleDeveloperMenu);
-            Button(new Rect(924, 430, 496, 62), "YENİDEN BAŞLA", false, Brass, RestartRun);
-            Button(new Rect(924, 510, 496, 62), "BAŞLIĞA DÖN", false, Rust, ReturnToMenu);
+            Label(new Rect(174, 590, 210, 30), "II   OYUN DURDU", ColorText(_caps, Sea));
+            Label(new Rect(161, 660, 600, 56), "Hazır olduğunda devam et.\nSüre, afet ve hazırlık burada bekliyor.", _wrap);
+            Button(new Rect(912, 263, 508, 68), "DEVAM ET", _pauseChoice == 0, Brass, () => SetPaused(false));
+            Button(new Rect(924, 350, 496, 62), "GELİŞTİRİCİ · F2", _pauseChoice == 1, Sea, ToggleDeveloperMenu);
+            Button(new Rect(924, 430, 496, 62), "YENİDEN BAŞLA", _pauseChoice == 2, Brass, RestartRun);
+            Button(new Rect(924, 510, 496, 62), "BAŞLIĞA DÖN", _pauseChoice == 3, Rust, ReturnToMenu);
+            Button(new Rect(924, 590, 496, 50), PanicBackgroundMusic.Enabled ? "MÜZİK · AÇIK" : "MÜZİK · KAPALI", _pauseChoice == 4, Sea, () => PanicBackgroundMusic.Enabled = !PanicBackgroundMusic.Enabled);
             DrawKeycap(new Rect(925, 662, 220, 42), "ESC", "DEVAM ET", Line);
+            HandlePauseNavigation();
         }
 
         bool DeveloperBudgetAvailable()
@@ -1214,7 +1247,7 @@ namespace TooLateToPanic
             }
             Mark(rect);
             if (!_developerMenuOpen && DeveloperInputBlockedThisFrame) return;
-            if (MousePressed(rect) && action != null) action();
+            if (MousePressed(rect) && action != null) { World.PlayUiSound(); action(); }
         }
 
         void DrawKeycap(Rect rect, string key, string action, Color accent)
@@ -1238,6 +1271,7 @@ namespace TooLateToPanic
         void DrawIcon(Rect rect, string id)
         {
             if (string.IsNullOrEmpty(id)) return;
+            if (id == "seedling") { DrawTreeRowIcon(rect); return; }
             Texture icon = null;
             if (id == "water" || id == "food")
             {
@@ -1246,6 +1280,21 @@ namespace TooLateToPanic
             }
             if (!icon) icon = PanicResidenceArt.Icon(id);
             if (icon) GUI.DrawTexture(rect, icon, ScaleMode.ScaleToFit, true);
+        }
+
+        // Original vector icon: three mature crowns and trunks, matching the regional kit.
+        void DrawTreeRowIcon(Rect rect)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                float cx = rect.x + rect.width * (.21f + i * .29f);
+                float top = rect.y + rect.height * (i == 1 ? .06f : .17f);
+                Fill(new Rect(cx - rect.width * .035f, top + rect.height * .30f, rect.width * .07f, rect.height * .52f), new Color(.48f,.30f,.16f));
+                Color leaves = i == 1 ? Sea : Petrol;
+                DrawDot(new Rect(cx - rect.width * .17f, top, rect.width * .34f, rect.height * .43f), leaves);
+                DrawDot(new Rect(cx - rect.width * .21f, top + rect.height * .19f, rect.width * .42f, rect.height * .34f), leaves);
+            }
+            Fill(new Rect(rect.x + rect.width * .07f, rect.y + rect.height * .86f, rect.width * .86f, rect.height * .055f), Brass);
         }
 
         void DrawDot(Rect rect, Color color)
@@ -1284,10 +1333,12 @@ namespace TooLateToPanic
 
         bool MousePressed(Rect rect)
         {
+            if (World && (World.DiscreteInputFrame == Time.frameCount || World.CancelFrame == Time.frameCount)) return false;
             Event e = Event.current;
             // IMGUI already transforms event coordinates through GUI.matrix. Use the
             // position belonging to this click, even if the physical cursor moved.
-            if (e.type != EventType.MouseDown || e.button != 0 || !rect.Contains(e.mousePosition)) return false;
+            Vector2 eventPoint = PanicInteractionAudit.GuiPointer(e.mousePosition);
+            if (e.type != EventType.MouseDown || e.button != 0 || !rect.Contains(eventPoint)) return false;
             e.Use();
             return true;
         }
@@ -1349,6 +1400,7 @@ namespace TooLateToPanic
         {
             if (!World || !World.View || _paused || DeveloperMenuOpen || DeveloperInputBlockedThisFrame ||
                 World.InventoryOpen || World.WorkActive || World.CinematicActive || World.LossAnnounced) return;
+            if ((World.Model.Phase == PanicPhase.GameOver || World.Model.Phase == PanicPhase.Success) && (label ?? "").StartsWith("E  ", StringComparison.Ordinal)) return;
             Vector3 projected = World.View.WorldToScreenPoint(worldPosition);
             if (projected.z <= 0f) return;
             PrepareCanvas(); EnsureStyles();
@@ -1365,10 +1417,8 @@ namespace TooLateToPanic
             desired = Mathf.Clamp(desired, 112f, 430f);
             Rect rect = new Rect(Mathf.Clamp(logical.x - desired * .5f, 12f, CanvasWidth - desired - 12f),
                 Mathf.Clamp(logical.y, 142f, CanvasHeight - 110f), desired, 41f);
-            rect = ClearWorldMarkerBounds(rect);
-            if (guidance && rect.Overlaps(JuryObjectiveBounds))
-                rect.x = JuryObjectiveBounds.xMax + 14f;
-            if (World.JuryActive && (rect.Overlaps(JuryObjectiveBounds) || (World.LootVisible && rect.yMax > 600f))) { GUI.matrix = priorMatrix; GUI.color = priorColor; return; }
+            rect = ReserveWorldMarkerBounds(rect, text);
+            WorldMarkerLeader(logical, rect);
             Frame(rect, Night, new Color(Brass.r, Brass.g, Brass.b, .55f), 1f);
             if (key.Length > 0)
             {
@@ -1537,6 +1587,7 @@ namespace TooLateToPanic
             Fill(new Rect(1399, 39, 1, 58), Line);
             FittedLabel(new Rect(1413, 29, 145, 41), model.InfiniteBudget ? "SINIRSIZ" : "$ " + model.Budget.ToString("N0"), _right, Brass, 16);
             Label(new Rect(1420, 77, 133, 21), "BÜTÇE", ColorText(_caps, Muted));
+            DrawMaterialPool();
         }
 
         void Region(Rect rect) { _topLevelRegions.Add(rect); Mark(rect); }
@@ -1720,8 +1771,6 @@ namespace TooLateToPanic
             {
                 case "water": return "Su";
                 case "food": return "Gıda";
-                case "bandage": return "Bandaj";
-                case "antiseptic": return "Antiseptik";
                 case "firstaid": return "İlk yardım";
                 case "flashlight": return "Fener";
                 case "battery": return "Pil";
@@ -1731,7 +1780,7 @@ namespace TooLateToPanic
                 case "bracket": return "Ankraj";
                 case "plank": return "Tahta";
                 case "sandbag": return "Kum torbası";
-                case "seedling": return "Fidan";
+                case "seedling": return "Ağaç paketi";
                 case "hose": return "Hortum";
                 case "extinguisher": return "Söndürücü";
                 default: return Clip(slot.Id, 14);

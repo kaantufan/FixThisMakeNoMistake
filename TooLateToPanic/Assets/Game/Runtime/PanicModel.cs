@@ -98,6 +98,8 @@ namespace TooLateToPanic
         public int Wave;
         public int CompletedWaves;
         public int Budget;
+        public bool IsPaused { get; private set; }
+        public void SetPaused(bool paused) { IsPaused = paused; }
         public int RequiredDays;
         public int WaterStock;
         public int FoodStock;
@@ -229,6 +231,7 @@ namespace TooLateToPanic
 
         public void Tick(float delta)
         {
+            if (IsPaused) return;
             // The bounded demo has its own unscaled clock; campaign phase transitions
             // and score awards must never run alongside that controller.
             if (IsJuryDemo || (IsSimulation && SimulationComplete && Phase == PanicPhase.Inspection)) return;
@@ -254,12 +257,12 @@ namespace TooLateToPanic
                     if (!prepWarningShown && before > 60f && TimeRemaining <= 60f)
                     {
                         prepWarningShown = true;
-                        Message = "Son 60 saniye: afet çantanı kontrol et ve bunkera yetiş.";
+                        Message = IsSimulation ? "Son 60 saniye: hazırlık süresi bitmeden önlemlerini tamamla." : "Son 60 saniye: afet çantanı kontrol et ve bodrumdaki sığınağa yetiş.";
                     }
 
                     if (TimeRemaining <= 0f)
                     {
-                        FailRun(IsSimulation ? "Hazırlık süresi doldu; önlemlerini zamanında tamamlayamadın." : "Hazırlık süresi doldu; bunkera zamanında ulaşamadın.");
+                        FailRun(IsSimulation ? "Hazırlık süresi doldu; önlemlerini zamanında tamamlayamadın." : "Hazırlık süresi doldu; bodrumdaki sığınağa zamanında ulaşamadın.");
                         transitions++;
                         continue;
                     }
@@ -301,7 +304,7 @@ namespace TooLateToPanic
             ResetRunState(false);
             BeginWaveOne();
             Phase = PanicPhase.Preparing;
-            Message = "Öğretici tamamlandı. Gerçek koşu 1. wave ve 1.000 bütçeyle başladı.";
+            Message = "Öğretici tamamlandı. Gerçek koşu 1. dalga ve 1.000 bütçeyle başladı.";
             MarkRunCheatedIfOptionsEnabled();
         }
 
@@ -318,7 +321,7 @@ namespace TooLateToPanic
             if (!CanAfford(cost)) return RefuseBool("Bütçe yetersiz: bu yükseltme " + cost + " bütçe gerektiriyor.");
             SpendBudget(cost);
             item.Tier++;
-            Message = item.Label + " T" + item.Tier + " seviyesine yükseltildi. Bu kademe sonraki wave'lerde korunur.";
+            Message = item.Label + " T" + item.Tier + " seviyesine yükseltildi. Bu kademe sonraki dalgalarda korunur.";
             return true;
         }
 
@@ -395,22 +398,12 @@ namespace TooLateToPanic
 
         public bool BuyWater()
         {
-            if (!CanPrepare()) return RefuseBool("Su yalnızca hazırlık aşamasında alınabilir.");
-            if (!CanAfford(WaterCost)) return RefuseBool("Bir günlük su paketi için 50 bütçe gerekiyor.");
-            SpendBudget(WaterCost);
-            WaterStock = SaturatingAdd(WaterStock, 1);
-            Message = "Bir günlük su paketi alındı. Bunkerde kullanmak için çantaya koy.";
-            return true;
+            return RefuseBool("Suyu evdeki fiziksel nesnelerden topla.");
         }
 
         public bool BuyFood()
         {
-            if (!CanPrepare()) return RefuseBool("Gıda yalnızca hazırlık aşamasında alınabilir.");
-            if (!CanAfford(FoodCost)) return RefuseBool("Bir günlük gıda paketi için 50 bütçe gerekiyor.");
-            SpendBudget(FoodCost);
-            FoodStock = SaturatingAdd(FoodStock, 1);
-            Message = "Bir günlük gıda paketi alındı. Bunkerde kullanmak için çantaya koy.";
-            return true;
+            return RefuseBool("Gıdayı evdeki fiziksel nesnelerden topla.");
         }
 
         public bool PackWater()
@@ -437,16 +430,7 @@ namespace TooLateToPanic
 
         public bool BuySupport(int index)
         {
-            if (!CanPrepare()) return RefuseBool("Destek ekipmanı yalnızca hazırlıkta alınabilir.");
-            if (!IsValidSupportIndex(index)) return RefuseBool("Bilinmeyen destek ekipmanı.");
-            int bit = 1 << index;
-            if ((SupportOwnedMask & bit) != 0) return RefuseBool("Bu destek kategorisi zaten satın alındı.");
-            if (!CanAfford(SupportCost)) return RefuseBool("Bir destek ekipmanı için 100 bütçe gerekiyor.");
-
-            SpendBudget(SupportCost);
-            SupportOwnedMask |= bit;
-            Message = SupportName(index) + " satın alındı. Bütçe bonusu için çantaya koy.";
-            return true;
+            return RefuseBool("Destek ekipmanını evdeki fiziksel nesnelerden topla.");
         }
 
         public bool PackSupport(int index)
@@ -455,10 +439,10 @@ namespace TooLateToPanic
             if (!IsValidSupportIndex(index)) return RefuseBool("Bilinmeyen destek ekipmanı.");
             int bit = 1 << index;
             if ((SupportOwnedMask & bit) == 0) return RefuseBool("Önce bu destek ekipmanını satın al.");
-            if ((PackedSupportMask & bit) != 0) return RefuseBool("Bu destek ekipmanı zaten çantada ve sonraki wave'lerde korunuyor.");
+            if ((PackedSupportMask & bit) != 0) return RefuseBool("Bu destek ekipmanı zaten çantada ve sonraki dalgalarda korunuyor.");
 
             PackedSupportMask |= bit;
-            Message = SupportName(index) + " çantaya kondu. Her başarılı wave bütçesine %5 ekler.";
+            Message = SupportName(index) + " çantaya kondu. Her başarılı dalga bütçesine %5 ekler.";
             return true;
         }
 
@@ -637,6 +621,7 @@ namespace TooLateToPanic
             IsTutorial = tutorial;
             Wave = 1;
             CompletedWaves = 0;
+            IsPaused = false;
             Budget = StartingBudget;
             RequiredDays = 1;
             WaterStock = 0;
@@ -780,7 +765,7 @@ namespace TooLateToPanic
             {
                 Phase = PanicPhase.Inspection;
                 PhaseTime = 20f;
-                Message = "Evi incele: hasar toplamı " + FormatPercent(TotalDamage) + ". Hazır olduğunda yeni wave'e geç.";
+                Message = "Evi incele: hasar toplamı " + FormatPercent(TotalDamage) + ". Hazır olduğunda yeni dalgaya geç.";
                 return;
             }
 
@@ -1030,7 +1015,7 @@ namespace TooLateToPanic
             if (!string.IsNullOrEmpty(FailureReason))
                 summary.Append(" ").Append(FailureReason);
             else if (bagWasReadyForWave)
-                summary.Append(IsSimulation ? " Çantadaki su ve gıda yeterliydi." : " Çanta bu wave için yeterli.");
+                summary.Append(IsSimulation ? " Çantadaki su ve gıda yeterliydi." : " Çanta bu dalga için yeterli.");
             return summary.ToString();
         }
 
@@ -1131,7 +1116,7 @@ namespace TooLateToPanic
             if (IsSimulation) SimulationComplete = true;
             PhaseTime = 4f;
             TimeRemaining = 0f;
-            Message = IsSimulation ? "Hazırlık tamamlanamadı. " + FailureReason + " Önlemlerini değiştirip yeniden deneyebilirsin." : "Koşu sona erdi. " + FailureReason + " Tamamlanan wave: " + CompletedWaves + "; toplam puan: " + Score + ".";
+            Message = IsSimulation ? "Hazırlık tamamlanamadı. " + FailureReason + " Önlemlerini değiştirip yeniden deneyebilirsin." : "Koşu sona erdi. " + FailureReason + " Tamamlanan dalga: " + CompletedWaves + "; toplam puan: " + Score + ".";
             if (!IsTutorial)
                 RecordRunOnce();
         }
@@ -1202,13 +1187,18 @@ namespace TooLateToPanic
             {
                 string path = GetScorePath();
                 if (!File.Exists(path)) return;
-                HighscoreFile data = JsonUtility.FromJson<HighscoreFile>(File.ReadAllText(path, Encoding.UTF8));
+                string json = File.ReadAllText(path, Encoding.UTF8);
+                HighscoreFile data = JsonUtility.FromJson<HighscoreFile>(json);
                 if (data == null || data.entries == null) return;
+                if (data.schema != ScoreTableSchema)
+                { Debug.LogWarning("Too Late to Panic: unsupported highscore schema; original file retained."); return; }
+                if (!PanicScoreShape.TryEntries(json, out var validShapes) || validShapes.Count != data.entries.Count)
+                { Debug.LogWarning("Too Late to Panic: invalid highscore field types; original file retained."); return; }
                 Highscores.Clear();
                 for (int i = 0; i < data.entries.Count; i++)
                 {
                     HighscoreEntry entry = data.entries[i];
-                    if (entry == null || entry.waves < 0 || entry.score < 0) continue;
+                    if (!validShapes[i] || entry == null || entry.waves < 0 || entry.score < 0) continue;
                     Highscores.Add(entry);
                 }
                 StableSortHighscores();
@@ -1250,7 +1240,7 @@ namespace TooLateToPanic
 
         private bool CanPrepare()
         {
-            return Phase == PanicPhase.Preparing || Phase == PanicPhase.Tutorial;
+            return !IsPaused && (Phase == PanicPhase.Preparing || Phase == PanicPhase.Tutorial);
         }
 
         private bool CanAfford(int cost)
@@ -1368,7 +1358,7 @@ namespace TooLateToPanic
             AddItem(items, "up_cabinet", "Üst kat dolabı", "cabinet", ItemKind.Furniture, new Vector3(6f, 3.2f, 4.5f), new Vector3(1.48f, .94f, .67f), true);
             AddItem(items, "up_bookshelf", "Üst kat kitaplığı", "bookshelf", ItemKind.Furniture, new Vector3(-6f, 3.2f, -3.8f), new Vector3(1.54f, 2.37f, .53f), true);
 
-            AddItem(items, "bunker", "Bahçe bunkeri", "bunker", ItemKind.Furniture, new Vector3(11f, 0f, -7f), new Vector3(1.86f, .34f, 1.66f), false);
+            AddItem(items, "bunker", "Bodrum sığınağı", "bunker", ItemKind.Furniture, new Vector3(-4.5f, -3.2f, 3.2f), new Vector3(1.86f, .34f, 1.66f), false);
             AddItem(items, "bagstation", "Depo dolabı", "bagstation", ItemKind.Furniture, new Vector3(5.4f, 0f, -3.8f), new Vector3(1.74f, 1.52f, .76f), false);
             return items;
         }

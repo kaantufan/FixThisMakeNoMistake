@@ -1,0 +1,111 @@
+{
+  "created_utc": "2026-10-17T01:02:13.767902+00:00",
+  "kind": "PLAN_ARTIFACT_VALIDATION_NOT_GAME_ACCEPTANCE",
+  "cases": 257,
+  "screen_groups": 90,
+  "unique_ids": true,
+  "required_fields_present": true,
+  "all_cases_planned": true,
+  "counts": {
+    "priority": {
+      "P0": 22,
+      "P1": 225,
+      "P2": 10
+    },
+    "layer": {
+      "HUMAN": 44,
+      "MODEL": 51,
+      "NATIVE_API": 39,
+      "OS_E2E": 102,
+      "SOURCE": 21
+    }
+  },
+  "source_catalogs": [
+    "Evidence\\GamejamOrchestra\\TLTP-E2E-MASTERPLAN-20261017\\mechanics-plan\\mechanics-cases.json",
+    "Evidence\\GamejamOrchestra\\TLTP-E2E-MASTERPLAN-20261017\\experience-plan\\experience-cases.json",
+    "Evidence\\GamejamOrchestra\\TLTP-E2E-MASTERPLAN-20261017\\coverage-plan\\coverage-cases.json"
+  ],
+  "game_tests_run": 0,
+  "game_fixes_applied": 0,
+  "outputs": [
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\fix-backlog-template.csv",
+      "bytes": 229,
+      "sha256": "D2F69417FA0A3918789AF509AF586FC229608BC9192A0CFC9D28306E2E380A5C"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\index.html",
+      "bytes": 617123,
+      "sha256": "5EE69A6F09B0F76843663CC667D09D1759D482DA3C7AD8C197056C5569622C09"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\quality-policy-template.json",
+      "bytes": 1218,
+      "sha256": "5C6F66E11EF59044EAFB9CE1366F0ABD43321DADFCA72276B983E7E8C0916E54"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\run-results-template.csv",
+      "bytes": 284,
+      "sha256": "F4A85FF36DAC30F866150155C1474A91B8B4AFCC1A83B55253F4DC49F2934C85"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\SABLONLAR.md",
+      "bytes": 8567,
+      "sha256": "FB993FD69C356D41E1A5F9D8C94E8C2099B1127843384D92191A54E6A0B39B77"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\screen-inventory.csv",
+      "bytes": 51747,
+      "sha256": "DD14C5B766C35E10E7264DC2C8F42A406029555586B448A4688FB60C0E3F7AE7"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\screen-inventory.json",
+      "bytes": 74253,
+      "sha256": "446618579D5FE90B102F528C101D8A532E436AE02858B4A430FD943D1A44A581"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\test-cases.csv",
+      "bytes": 418898,
+      "sha256": "3DE63E0D347AC8A8FCFCD076428DCF56CDB715E1C662E1524332B6EEADC4A2C9"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\test-cases.json",
+      "bytes": 526047,
+      "sha256": "5822CCCBCB3CF7B7096206412D7B754F3861B97399CFA562D643F31FCC3C7D27"
+    },
+    {
+      "path": "Docs\\QA-E2E-2026-10-17\\TEST-KATALOGU.md",
+      "bytes": 478910,
+      "sha256": "12059278BDD09C2B28E222EF70CDF8AE3C785F8427C190D16CA9EAC7B5891034"
+    }
+  ],
+  "validated_utc": "2026-10-17T01:02:53.530401+00:00",
+  "validation_errors": [],
+  "local_links_checked": 38,
+  "csv_json_consistent": true,
+  "result_templates_empty": true,
+  "screen_case_links_valid": true,
+  "offline_runtime_dependencies": true,
+  "markdown_cases": 257,
+  "browser_artifact_smoke": {
+    "kind": "PLAN_DASHBOARD_ONLY_NOT_GAME_TEST",
+    "observed": [
+      "257 case count",
+      "90 screen units confirmed on final reload",
+      "search MEC-102 returns one",
+      "case detail sections visible",
+      "HUMAN filter returns44",
+      "no-match empty state",
+      "pagination page2 startsMEC-026",
+      "source atlas40 UI/27 world/18 cinema/5 character",
+      "screen U01 to case EXP-003 navigation",
+      "overview visual inspection"
+    ],
+    "javascript_syntax": "node --check passed"
+  },
+  "master": {
+    "path": "Docs\\TOO-LATE-TO-PANIC-E2E-TEST-VE-FIX-PLANI-2026-10-17.md",
+    "bytes": 55522,
+    "sha256": "FD87CAFABD9CF5C48ACF144ADBD1B8D89041FF6EC76C5BDEF9F0F9BDBC341265"
+  }
+}

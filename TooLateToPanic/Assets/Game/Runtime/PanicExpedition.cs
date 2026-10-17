@@ -23,6 +23,7 @@ namespace TooLateToPanic
         public Vector3 Position;
         public int Floor;
         public bool Open;
+        public bool AutoLooted;
         public List<SupplySlot> Contents;
     }
 
@@ -57,7 +58,7 @@ namespace TooLateToPanic
     /// Run-scoped scavenging, packing, crafting and preparation work state. World owns
     /// proximity, interaction targets, colliders, movement and action presentation.
     /// </summary>
-    public sealed class PanicExpedition
+    public sealed partial class PanicExpedition
     {
         private const int InventoryCapacity = 12;
         private const int BagCapacity = 8;
@@ -111,6 +112,7 @@ namespace TooLateToPanic
         /// <summary>Starts a fresh run's expedition stock. Model run reset remains World-owned.</summary>
         public void Reset()
         {
+            ResetRevisionStock();
             JuryWaterGatheredCount = 0;
             Inventory = MakeEmptySlots(InventoryCapacity);
             Bag = MakeEmptySlots(BagCapacity);
@@ -121,7 +123,7 @@ namespace TooLateToPanic
             for (int i = 0; i < Sources.Count; i++)
                 sourceBlueprints[Sources[i].Id] = CloneSlots(Sources[i].Contents);
             Work = new PanicWorkSession();
-            Message = "Evdeki dolapları ve depoyu araştır.";
+            Message = "Dolaplardan yapı malzemesi, odalardan erzak topla.";
         }
 
         /// <summary>Finite demo fixture, labelled as prepared stock. Water still requires genuine pickup and packing.</summary>
@@ -142,10 +144,11 @@ namespace TooLateToPanic
             {
                 Sources[i].Contents.Clear();
                 Sources[i].Open = false;
-                if (Sources[i].Id == "fridge") Sources[i].Contents.Add(Stack("water", 1));
+                Sources[i].AutoLooted = true;
                 sourceBlueprints[Sources[i].Id] = CloneSlots(Sources[i].Contents);
             }
-            Message = "Başlangıç: 1 gıda çantada; 1 braket, 2 vida, 2 kum torbası, 1 tahta ve 1 tüp envanterde. Su buzdolabında.";
+            PrepareShortFlowSupplies();
+            Message = "Başlangıç: 1 gıda çantada. Yapı malzemeleri havuzda; su mutfak tezgâhında.";
             NotifyModel();
             return true;
         }
@@ -169,7 +172,7 @@ namespace TooLateToPanic
             Reset();
             AddOne("bracket",1);AddOne("screws",2);AddOne("plank",2);AddOne("sandbag",2);AddOne("extinguisher",1);
             SetBagCount("water",Model.PackedWater);SetBagCount("food",Model.PackedFood);
-            Message="Başlangıç çantası hazır. Sonlu iş malzemeleri envanterde; evde daha fazlasını arayabilirsin.";
+            Message="Başlangıç çantası hazır. Sonlu iş malzemeleri havuzda; evde daha fazlasını arayabilirsin.";
             NotifyModel();
         }
 
@@ -177,41 +180,19 @@ namespace TooLateToPanic
         public void OnNewWave()
         {
             if (Model != null && Model.IsJuryDemo) return;
-            if (Model != null)
-            {
-                SetBagCount("water", Model.PackedWater);
-                SetBagCount("food", Model.PackedFood);
-            }
-            for (int i = 0; i < Sources.Count; i++)
-            {
-                LootSource source = Sources[i];
-                List<SupplySlot> baseline;
-                if (!sourceBlueprints.TryGetValue(source.Id, out baseline)) continue;
-                for (int j = 0; j < baseline.Count; j++)
-                {
-                    SupplySlot starting = baseline[j];
-                    if (!IsRenewable(starting.Id)) continue;
-                    SupplySlot current = FindSlot(source.Contents, starting.Id);
-                    if (current == null)
-                    {
-                        source.Contents.Add(new SupplySlot(starting.Id, starting.Count));
-                    }
-                    else
-                    {
-                        current.Count = starting.Count;
-                    }
-                }
-            }
-            Message = "Yeni dalga başladı. Evdeki gıda, su ve sarf malzemeleri yenilendi.";
+            SyncConsumedBagSupplies();
+            RefillRenewableWorldSupplies();
+            Message = "Yeni dalga başladı. Odalardaki su, gıda ve piller yenilendi.";
             NotifyModel();
         }
 
         public bool ToggleSource(string id)
         {
+            if (!CanPrepare()) return Fail("Dolapları hazırlıkta açabilirsin.");
             LootSource source = FindSource(id);
             if (source == null) return Fail("Kaynak bulunamadı.");
             source.Open = !source.Open;
-            Message = source.Open ? "Açıldı." : "Kapandı.";
+            Message = source.Open ? AutoCollectMaterials(source) : "Kapandı.";
             NotifyModel();
             return true;
         }
@@ -236,125 +217,28 @@ namespace TooLateToPanic
         /// <summary>Atomically takes the complete selected stack if the source is open and the inventory can hold it.</summary>
         public bool GatherAt(string sourceId, int contentIndex)
         {
-            if (!CanPrepare()) return Fail("Hazırlıkta topla.");
-            LootSource source = FindSource(sourceId);
-            if (source == null) return Fail("Kaynak bulunamadı.");
-            if (!source.Open) return Fail("Önce E ile aç.");
-            if (source.Contents == null || contentIndex < 0 || contentIndex >= source.Contents.Count)
-                return Fail("Malzeme seçimi geçersiz.");
-
-            SupplySlot loot = source.Contents[contentIndex];
-            if (loot == null || string.IsNullOrEmpty(loot.Id) || loot.Count <= 0) return Fail("Bu yuva boş.");
-            int destination = FindStorageSlot(Inventory, loot.Id, loot.Count);
-            if (destination < 0) return Fail("Envanter dolu.");
-
-            string gathered = loot.Id;
-            int gatheredCount = loot.Count;
-            AddToSlot(Inventory[destination], gathered, gatheredCount);
-            if (Model.IsJuryDemo && gathered == "water") JuryWaterGatheredCount += gatheredCount;
-            loot.Count = 0;
-            loot.Id = string.Empty;
-            Message = DisplayName(gathered) + " ×" + gatheredCount + " alındı.";
-            NotifyModel();
-            return true;
+            return Fail("Yapı malzemeleri kapak açılınca havuza eklenir. Erzakları odalardan al.");
         }
 
         /// <summary>Packs one selected unit, using PanicModel's existing water, food and support state.</summary>
         public bool PackSlot(int index)
         {
-            if (!CanPrepare()) return Fail("Afet çantası yalnızca hazırlıkta düzenlenebilir.");
-            if (index < 0 || index >= Inventory.Count) return Fail("Envanter yuvası geçersiz.");
-            SupplySlot source = Inventory[index];
-            if (source == null || string.IsNullOrEmpty(source.Id) || source.Count <= 0)
+            if (Inventory == null || index < 0 || index >= Inventory.Count || !HasStock(Inventory[index]))
                 return Fail("Bu envanter yuvası boş.");
-
-            string id = source.Id;
-            int supportIndex = SupportIndexFor(id);
-            int batterySlot = -1;
-            if (id == "flashlight" || id == "radio")
-            {
-                batterySlot = FindInventorySlot("battery", 1);
-                if (batterySlot < 0 && (Model == null || !Model.FreeMaterials))
-                    return RequestRequirements("packbattery", id);
-            }
-            if (id == "battery" || id == "screws" || id == "bracket" || id == "plank" ||
-                id == "sandbag" || id == "seedling" || id == "hose" || id == "extinguisher")
-                return Fail(DisplayName(id) + " hazırlık malzemesi; bunu çantaya koymak yerine kullan.");
-            if (id != "water" && id != "food" && supportIndex < 0)
-                return Fail(DisplayName(id) + " bu çanta düzeninde taşınamıyor.");
-
-            int bagSlot = FindStorageSlot(Bag, id, 1);
-            if (bagSlot < 0) return Fail("Afet çantasında boş yuva yok.");
-            if (supportIndex >= 0)
-            {
-                int bit = 1 << supportIndex;
-                if ((Model.PackedSupportMask & bit) != 0)
-                    return Fail(DisplayName(id) + " zaten afet çantasında.");
-            }
-
-            if (id == "water")
-            {
-                Model.WaterStock++;
-                if (!Model.PackWater())
-                {
-                    Model.WaterStock = Mathf.Max(0, Model.WaterStock - 1);
-                    Message = Model.Message;
-                    return false;
-                }
-            }
-            else if (id == "food")
-            {
-                Model.FoodStock++;
-                if (!Model.PackFood())
-                {
-                    Model.FoodStock = Mathf.Max(0, Model.FoodStock - 1);
-                    Message = Model.Message;
-                    return false;
-                }
-            }
-            else
-            {
-                int bit = 1 << supportIndex;
-                int previousOwned = Model.SupportOwnedMask;
-                Model.SupportOwnedMask |= bit;
-                if (!Model.PackSupport(supportIndex))
-                {
-                    Model.SupportOwnedMask = previousOwned;
-                    Message = Model.Message;
-                    return false;
-                }
-            }
-
-            source.Count--;
-            if (source.Count == 0) source.Id = string.Empty;
-            AddToSlot(Bag[bagSlot], id, 1);
-            if (batterySlot >= 0 && (Model == null || !Model.FreeMaterials)) ConsumeAt(batterySlot, 1);
-            if (requirementAction == "packbattery" && requirementTargetId == id) ClearRequirements();
-            Message = DisplayName(id) + " afet çantasına yerleştirildi.";
-            NotifyModel();
-            return true;
+            int destination = FindStorageSlot(Bag, Inventory[index].Id, 1);
+            if (destination < 0) return Fail("Afet çantasında boş yuva yok.");
+            return TransferSlots(false, index, true, destination, 1);
         }
 
         public bool CraftFirstAid()
         {
-            if (!CanPrepare()) return Fail("İlk yardım seti yalnızca hazırlıkta üretilebilir.");
-            IReadOnlyList<PanicMaterialCost> costs = MaterialCosts("craftfirstaid", null);
-            bool freeMaterials = Model != null && Model.FreeMaterials;
-            if (!freeMaterials && !HasCosts(costs)) return RequestRequirements("craftfirstaid", "firstaid");
-            if (!CanStoreAfterConsumption("firstaid", 1, freeMaterials ? new PanicMaterialCost[0] : costs))
-                return Fail("İlk yardım seti için envanterde boş bir yuva aç.");
-
-            ConsumeCosts(costs);
-            AddOne("firstaid", 1);
-            if (requirementAction == "craftfirstaid") ClearRequirements();
-            Message = "İlk yardım seti üretildi. Afet çantasına koyabilirsin.";
-            NotifyModel();
-            return true;
+            return Fail("Hazır ilk yardım setini evde bul ve çantaya koy.");
         }
 
         /// <summary>Counts loose inventory only; packed items are tracked by Bag and PanicModel.</summary>
         public int Count(string itemId)
         {
+            if (IsConstructionMaterial(itemId)) return MaterialCount(itemId);
             if (string.IsNullOrEmpty(itemId) || Inventory == null) return 0;
             int total = 0;
             for (int i = 0; i < Inventory.Count; i++)
@@ -363,6 +247,10 @@ namespace TooLateToPanic
         }
 
         public bool Has(string id, int count) { return count <= 0 || Count(id) >= count; }
+
+        /// <summary>Run-scoped identity for completed fixed installations; reset with the expedition.</summary>
+        public bool IsWorkCommitted(string action, string targetId)
+        { return !string.IsNullOrEmpty(action) && !string.IsNullOrEmpty(targetId) && committedWork.Contains(action + "|" + targetId); }
 
         /// <summary>Validates a new work attempt without spending stock or budget.</summary>
         public bool CanBeginWork(string action, string targetId)
@@ -380,13 +268,13 @@ namespace TooLateToPanic
             return true;
         }
 
-        /// <summary>Commits a completed keyboard work session exactly once, after validating all costs and targets.</summary>
+        /// <summary>Commits a completed direct-click work session exactly once, after validating all costs and targets.</summary>
         public bool TryCompleteWork(string action, string targetId)
         {
             if (Model != null && !Model.CanBeginJuryWork(action, targetId)) return Fail("Bu iş için süre doldu; malzemelerin sende kaldı.");
             if (!CanPrepare()) return Fail("Hazırlık işi yalnızca hazırlık aşamasında tamamlanabilir.");
             if (Work == null || !Work.Complete || Work.Action != action || Work.TargetId != targetId)
-                return Fail("İşi tamamlamak için etkin klavye görevini bitir.");
+                return Fail("İşi tamamlamak için kurulumu bitir.");
             if (string.IsNullOrEmpty(targetId)) return Fail("İş hedefi belirtilmedi.");
 
             PanicItem item;
@@ -414,7 +302,6 @@ namespace TooLateToPanic
                 case "flood": item.FloodProtected = true; break;
                 case "fire":
                     Model.FireToolCount++;
-                    if (item != null) item.FireProtected = true;
                     break;
                 case "plant": Model.TreeCount++; break;
                 case "drain": Model.DrainCount++; break;
@@ -432,13 +319,14 @@ namespace TooLateToPanic
 
         private static bool IsFixedGardenSite(string action)
         {
-            return action == "plant" || action == "drain" || action == "fence" || action == "hose";
+            return action == "plant" || action == "drain" || action == "fence" || action == "hose" || action == "fire";
         }
 
         private bool ValidateWorkTarget(string action, string targetId, out PanicItem item, out string resultMessage)
         {
             item = FindItem(targetId);
             resultMessage = string.Empty;
+            if (!PanicItemActionRules.Allows(action, item, targetId)) return Fail("Bu hazırlık işi bu hedefe uygulanmaz.");
             if (string.IsNullOrEmpty(targetId)) return Fail("İş hedefi belirtilmedi.");
             if (IsFixedGardenSite(action) && committedWork.Contains(action + "|" + targetId))
                 return Fail("Bu hazırlık işi bu turda zaten tamamlandı.");
@@ -480,8 +368,8 @@ namespace TooLateToPanic
                     resultMessage = "Yangın söndürücü hazırlandı ve müdahale ekipmanına eklendi.";
                     break;
                 case "plant":
-                    if (Model.TreeCount >= 5) return Fail("Bahçe için beş fidanlık sınırına ulaşıldı.");
-                    resultMessage = "Bahçeye fidan dikildi; toprak suyu daha iyi emiyor.";
+                    if (Model.TreeCount >= 3) return Fail("Üç ağaç bölgesi de tamamlandı.");
+                    resultMessage = "Seçili bahçe bölgesine ağaç sırası kuruldu.";
                     break;
                 case "drain":
                     if (Model.DrainCount >= 4) return Fail("Bahçede dört drenaj hattı yeterli.");
@@ -508,8 +396,6 @@ namespace TooLateToPanic
             {
                 case "water": return "Su";
                 case "food": return "Gıda";
-                case "bandage": return "Bandaj";
-                case "antiseptic": return "Antiseptik";
                 case "firstaid": return "İlk yardım seti";
                 case "flashlight": return "El feneri";
                 case "battery": return "Pil";
@@ -519,7 +405,7 @@ namespace TooLateToPanic
                 case "bracket": return "Ankraj braketi";
                 case "plank": return "Tahta";
                 case "sandbag": return "Kum torbası";
-                case "seedling": return "Fidan";
+                case "seedling": return "Ağaç sırası paketi";
                 case "hose": return "Bahçe hortumu";
                 case "extinguisher": return "Yangın söndürücü";
                 default: return string.IsNullOrEmpty(id) ? "Boş" : id;
@@ -544,7 +430,6 @@ namespace TooLateToPanic
                 case "fire": return new[] { new PanicMaterialCost("extinguisher", 1) };
                 case "plant": return new[] { new PanicMaterialCost("seedling", 1) };
                 case "hose": return new[] { new PanicMaterialCost("hose", 1) };
-                case "craftfirstaid": return new[] { new PanicMaterialCost("bandage", 2), new PanicMaterialCost("antiseptic", 1) };
                 case "packbattery": return new[] { new PanicMaterialCost("battery", 1) };
                 default: return new PanicMaterialCost[0];
             }
@@ -569,25 +454,16 @@ namespace TooLateToPanic
 
         private static List<LootSource> CreateSources()
         {
-            List<LootSource> sources = new List<LootSource>(9);
-            // Core sources reuse item IDs, allowing World to attach prompts to actual furniture.
-            sources.Add(Source("fridge", "Buzdolabı", "fridge", new Vector3(6.5f, 0f, 4.6f), 0,
-                Stack("water", 2), Stack("food", 2)));
-            sources.Add(Source("cabinet", "Mutfak dolabı", "cabinet", new Vector3(4.5f, 0f, 4.7f), 0,
-                Stack("food", 1), Stack("water", 1), Stack("bandage", 1)));
-            sources.Add(Source("bookshelf", "Salon kitaplığı", "bookshelf", new Vector3(-6f, 0f, 4.8f), 0,
-                Stack("flashlight", 1), Stack("battery", 2), Stack("blanket", 1)));
-            sources.Add(Source("up_cabinet", "Üst kat dolabı", "cabinet", new Vector3(4.6f, 3.2f, -4.5f), 1,
-                Stack("food", 1), Stack("water", 1), Stack("bandage", 1), Stack("antiseptic", 1)));
-            sources.Add(Source("up_bookshelf", "Üst kat kitaplığı", "bookshelf", new Vector3(-6f, 3.2f, -3.8f), 1,
-                Stack("radio", 1), Stack("battery", 1), Stack("blanket", 1), Stack("screws", 2)));
-            sources.Add(Source("bath_cabinet", "Banyo dolabı", "medicinecabinet", new Vector3(2.24f, 3.2f, 4.15f), 1,
-                Stack("bandage", 3), Stack("antiseptic", 2), Stack("battery", 1)));
-            sources.Add(Source("garage_tools", "Garaj alet kutusu", "toolbox", new Vector3(14f, 0f, 5f), 0,
-                Stack("screws", 4), Stack("bracket", 3), Stack("extinguisher", 1)));
-            sources.Add(Source("basement_pantry", "Bodrum kileri", "supplycrate", new Vector3(-5f, -3.2f, 4f), -1,
-                Stack("water", 2), Stack("food", 2), Stack("sandbag", 4), Stack("plank", 4), Stack("seedling", 4), Stack("hose", 1), Stack("extinguisher", 1)));
-            return sources;
+            return new List<LootSource> {
+                Source("fridge", "Buzdolabı", "fridge", new Vector3(6.5f,0,4.6f),0, Stack("screws",2)),
+                Source("cabinet", "Mutfak dolabı", "cabinet", new Vector3(4.5f,0,4.7f),0, Stack("screws",3),Stack("bracket",2)),
+                Source("bookshelf", "Salon kitaplığı", "bookshelf", new Vector3(-6,0,4.8f),0,Stack("bracket",1),Stack("screws",2)),
+                Source("up_cabinet", "Üst kat dolabı", "cabinet", new Vector3(4.6f,3.2f,-4.5f),1,Stack("plank",2),Stack("screws",2)),
+                Source("up_bookshelf", "Üst kat kitaplığı", "bookshelf",new Vector3(-6,3.2f,-3.8f),1,Stack("bracket",1),Stack("screws",2)),
+                Source("bath_cabinet", "Banyo dolabı", "medicinecabinet",new Vector3(2.24f,3.2f,4.15f),1,Stack("screws",2)),
+                Source("garage_tools", "Garaj alet kutusu", "toolbox",new Vector3(14,0,5),0,Stack("screws",4),Stack("bracket",3),Stack("extinguisher",1)),
+                Source("basement_pantry", "Bodrum deposu", "supplycrate",new Vector3(-5,-3.2f,4),-1,Stack("sandbag",4),Stack("plank",4),Stack("seedling",3),Stack("hose",1),Stack("extinguisher",1))
+            };
         }
 
         private static LootSource Source(string id, string label, string artId, Vector3 position, int floor, params SupplySlot[] items)
@@ -610,13 +486,13 @@ namespace TooLateToPanic
         private static List<SupplySlot> CloneSlots(List<SupplySlot> source)
         {
             List<SupplySlot> copy = new List<SupplySlot>(source.Count);
-            for (int i = 0; i < source.Count; i++) copy.Add(new SupplySlot(source[i].Id, source[i].Count));
+            for (int i = 0; i < source.Count; i++) copy.Add(source[i] == null ? new SupplySlot() : new SupplySlot(source[i].Id, source[i].Count));
             return copy;
         }
 
         private static bool IsRenewable(string id)
         {
-            return id == "water" || id == "food" || id == "bandage" || id == "antiseptic" || id == "battery";
+            return id == "water" || id == "food" || id == "battery";
         }
 
         private static int StackLimitFor(string id)
@@ -696,6 +572,7 @@ namespace TooLateToPanic
 
         private void Consume(string id, int count)
         {
+            if (IsConstructionMaterial(id)) { materials[id] = Mathf.Max(0, MaterialCount(id) - count); return; }
             for (int i = 0; i < Inventory.Count && count > 0; i++)
             {
                 SupplySlot slot = Inventory[i];
@@ -708,25 +585,16 @@ namespace TooLateToPanic
 
         private void AddOne(string id, int count)
         {
-            int slot = FindStorageSlot(Inventory, id, count);
-            if (slot >= 0) AddToSlot(Inventory[slot], id, count);
+            if (IsConstructionMaterial(id)) { AddMaterial(id, count); return; }
+            TryAddPartial(Inventory, id, count);
         }
 
         private void SetBagCount(string id, int count)
         {
-            SupplySlot slot = FindSlot(Bag, id);
-            if (count <= 0)
-            {
-                if (slot != null) { slot.Id = string.Empty; slot.Count = 0; }
-                return;
-            }
-            if (slot == null)
-            {
-                int empty = FindStorageSlot(Bag, id, count);
-                if (empty >= 0) AddToSlot(Bag[empty], id, count);
-                return;
-            }
-            slot.Count = Mathf.Min(count, StackLimitFor(id));
+            for (int i = 0; i < Bag.Count; i++)
+                if (Bag[i] != null && Bag[i].Id == id) { Bag[i].Id = string.Empty; Bag[i].Count = 0; }
+            if (count > 0 && !TryAddPartial(Bag, id, count))
+                throw new InvalidOperationException("Bag/model capacity invariant violated.");
         }
 
         private bool CanStoreAfterConsumption(string id, int count, IReadOnlyList<PanicMaterialCost> costs)
@@ -796,7 +664,7 @@ namespace TooLateToPanic
 
         private bool CanPrepare()
         {
-            return Model != null && (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial);
+            return Model != null && !Model.IsPaused && (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial);
         }
 
         private static bool IsStructure(PanicItem item)
@@ -822,273 +690,103 @@ namespace TooLateToPanic
 
     public enum PanicWorkMode { Ratchet, Timing, Balance }
 
-    /// <summary>Four short, manual work stages. Only completed work may be committed by Expedition.</summary>
+    /// <summary>Direct asset work. A click queues a short automatic installation; only the final commit spends stock.</summary>
     public sealed class PanicWorkSession
     {
-        const float AlignTolerance = .12f;
-        const float BalanceSeconds = .95f;
-        const float SettleSeconds = .25f;
-        bool juryFriendly;
-        public int RequiredStrokes { get { return juryFriendly ? 2 : 3; } }
-        public int CompletedStrokes { get { return strokes; } }
-        float CurrentAlignTolerance { get { return juryFriendly ? .19f : AlignTolerance; } }
-        float CurrentBalanceSeconds { get { return juryFriendly ? .65f : BalanceSeconds; } }
-        public bool JuryFriendly { get { return juryFriendly; } }
-        float stageProgress, stageAge, workAge, settleRemaining, strokeCooldown;
-        float feedbackAge, toolMotion, baseTarget;
-        int strokes, expectedDirection;
-        bool applying, spaceWasHeld;
+        const float Duration = .60f;
+        bool juryFriendly, installing;
+        float installAge, stageProgress, toolMotion;
 
+        // Kept for source compatibility with retained work-art/test adapters. Keyboard
+        // values are deliberately inert; all current work is started through TryClick.
         public bool Active;
-        public string Action;
-        public string TargetId;
-        public string Label;
-        public string Hint;
-        public int CompletedSteps;
-        public int TotalSteps;
-        public float Cursor;
-        public float Target;
-        public float Progress;
-        public float Quality;
+        public string Action = string.Empty, TargetId = string.Empty, Label = string.Empty, Hint = string.Empty;
+        public int CompletedSteps, TotalSteps;
+        public float Cursor, Target, Progress, Quality;
         public bool Complete;
-
         public PanicWorkMode Mode { get; private set; }
-        public bool IsApplying { get { return applying; } }
-        public int ExpectedDirection { get { return applying && Mode == PanicWorkMode.Ratchet && strokes < RequiredStrokes ? expectedDirection : 0; } }
+        public bool JuryFriendly { get { return juryFriendly; } }
+        public bool UsesDirectClick { get { return true; } }
+        public bool IsWorldConstruction { get { return Action != "anchorwall" && Action != "anchorfloor"; } }
+        public bool IsInstalling { get { return installing; } }
+        public int NextClickTarget { get { return Active && !Complete ? CompletedSteps : -1; } }
+        public float InstallSeconds { get { return Duration; } }
+        public bool IsApplying { get { return installing; } }
+        public int RequiredStrokes { get { return 0; } }
+        public int CompletedStrokes { get { return 0; } }
+        public int ExpectedDirection { get { return 0; } }
         public string StepHint { get { return Hint; } }
         public float StageProgress { get { return stageProgress; } }
-        public float TargetWidth { get { return juryFriendly ? .19f : !applying ? AlignTolerance : Mode == PanicWorkMode.Timing ? .11f : .12f; } }
+        public float TargetWidth { get { return 0f; } }
         public float ToolMotion { get { return toolMotion; } }
-        public string StageName { get { return NameForStage(Action, juryFriendly && CompletedSteps > 0 ? 3 : Mathf.Min(CompletedSteps, 3)); } }
+        public string StageName
+        {
+            get
+            {
+                if (!Active) return string.Empty;
+                if (Complete) return "Tamamlandı";
+                return IsWorldConstruction ? Label : "Vida " + (CompletedSteps + 1);
+            }
+        }
 
         public void Begin(string action, string targetId) { Begin(action, targetId, false); }
-
         public void Begin(string action, string targetId, bool juryDemo)
         {
             Cancel();
-            juryFriendly = juryDemo;
-            if (!IsSupported(action)) return;
-            Action = action;
-            TargetId = targetId ?? string.Empty;
-            Label = LabelFor(action);
-            Mode = action == "fire" || action == "hose" ? PanicWorkMode.Balance :
-                action == "plant" || action == "drain" || action == "flood" ? PanicWorkMode.Timing : PanicWorkMode.Ratchet;
-            TotalSteps = juryFriendly ? 2 : 4;
-            Quality = 1f;
-            Active = true;
-            StartStage();
+            if (!IsSupported(action) || string.IsNullOrEmpty(targetId)) return;
+            Action = action; TargetId = targetId; juryFriendly = juryDemo;
+            Label = LabelFor(action); Mode = PanicWorkMode.Ratchet;
+            TotalSteps = IsWorldConstruction ? 1 : 2;
+            Quality = 1f; Active = true;
+            RefreshHint();
         }
 
-        /// <param name="direction">-1 A, +1 D, 0 neither. Ratchet requires alternating directions.</param>
-        /// <param name="held">Space held. Used only for the actively steered pressure test.</param>
-        /// <param name="pressed">One-frame Enter press to seat/align a tool.</param>
-        public void Tick(float dt, float direction, bool held, bool pressed)
+        /// <summary>Accepts one next screw/installation only. Repeated or future clicks cannot bypass its0.60s seating.</summary>
+        public bool TryClick(int targetIndex)
         {
-            Tick(dt, direction, held, pressed, held && !spaceWasHeld);
+            if (!Active || Complete || installing || targetIndex != CompletedSteps || targetIndex < 0 || targetIndex >= TotalSteps) return false;
+            installing = true; installAge = 0f; stageProgress = toolMotion = 0f;
+            RefreshHint();
+            return true;
         }
 
-        /// <param name="pulse">One-frame Space press. Independent of held, for taps and strokes.</param>
+        public void Tick(float dt, float direction, bool held, bool pressed) { Tick(dt, direction, held, pressed, false); }
         public void Tick(float dt, float direction, bool held, bool pressed, bool pulse)
         {
-            spaceWasHeld = held;
-            if (!Active || Complete || float.IsNaN(dt) || float.IsInfinity(dt) || dt <= 0f) return;
-            dt = Mathf.Min(dt, .1f);
-            float input = float.IsNaN(direction) || float.IsInfinity(direction) ? 0f : Mathf.Clamp(direction, -1f, 1f);
-            workAge += dt;
-            stageAge += dt;
-            feedbackAge = Mathf.Max(0, feedbackAge - dt);
-            strokeCooldown = Mathf.Max(0, strokeCooldown - dt);
-            toolMotion = Mathf.MoveTowards(toolMotion, 0, dt * 3.6f);
-
-            if (settleRemaining > 0f)
+            if (!Active || Complete || !installing || float.IsNaN(dt) || float.IsInfinity(dt) || dt <= 0f) return;
+            // Keep the existing production hitch cap; an arbitrary large test delta
+            // cannot fabricate a completed installation in one frame.
+            installAge = Mathf.Min(Duration, installAge + Mathf.Min(dt, .1f));
+            stageProgress = Mathf.Clamp01(installAge / Duration);
+            toolMotion = Mathf.Sin(stageProgress * Mathf.PI);
+            Progress = Mathf.Clamp01((CompletedSteps + stageProgress) / Mathf.Max(1, TotalSteps));
+            if (installAge + .000001f >= Duration)
             {
-                settleRemaining = Mathf.Max(0f, settleRemaining - dt);
-                if (settleRemaining <= 0f)
-                {
-                    CompletedSteps++;
-                    if (CompletedSteps >= TotalSteps)
-                    {
-                        Complete = true;
-                        applying = false;
-                        Progress = 1f;
-                        Hint = "Hazır!";
-                        return;
-                    }
-                    StartStage();
-                }
-                RefreshProgress();
-                return;
+                CompletedSteps++; installing = false; stageProgress = toolMotion = 0f;
+                Complete = CompletedSteps >= TotalSteps;
+                Progress = Complete ? 1f : CompletedSteps / (float)TotalSteps;
             }
-
-            if (!applying)
-            {
-                Cursor = Mathf.Clamp01(Cursor + input * dt * .82f);
-                if (pressed)
-                {
-                    float error = Mathf.Abs(Cursor - Target);
-                    if (error <= CurrentAlignTolerance)
-                    {
-                        applying = true;
-                        stageAge = 0f;
-                        strokes = 0;
-                        expectedDirection = CompletedSteps % 2 == 0 ? -1 : 1;
-                        if (Mode == PanicWorkMode.Timing)
-                        {
-                            Target = CompletedSteps % 2 == 0 ? .66f : .42f;
-                            Cursor = .04f;
-                        }
-                        else if (Mode == PanicWorkMode.Balance)
-                        {
-                            baseTarget = Target;
-                            // Start in the band; player actively steers against flow drift.
-                            Cursor = Target;
-                        }
-                        if (error > .065f) Quality = Mathf.Max(.45f, Quality - .015f);
-                        RefreshHint();
-                    }
-                    else Feedback("İbreyi yeşile getir", false);
-                }
-            }
-            else if (Mode == PanicWorkMode.Ratchet)
-            {
-                if (strokes < RequiredStrokes && strokeCooldown <= 0f && input * expectedDirection > .5f)
-                {
-                    toolMotion = expectedDirection;
-                    strokes++;
-                    stageProgress = strokes / (float)(RequiredStrokes + 1);
-                    expectedDirection *= -1;
-                    strokeCooldown = juryFriendly ? .24f : .36f;
-                    RefreshHint();
-                }
-                if (pulse)
-                {
-                    if (strokes >= RequiredStrokes) SeatStage();
-                    else Feedback("Önce A / D ile çevir", false);
-                }
-            }
-            else if (Mode == PanicWorkMode.Timing)
-            {
-                // A force sweep is independent of progress: waiting or holding never completes it.
-                Cursor = .04f + Mathf.PingPong(stageAge * .50f, .92f);
-                if (pulse)
-                {
-                    if (Mathf.Abs(Cursor - Target) <= TargetWidth) SeatStage();
-                    else
-                    {
-                        toolMotion = -.6f;
-                        Feedback("Yeşilde Space'e dokun", false);
-                    }
-                }
-            }
-            else
-            {
-                Target = Mathf.Clamp01(baseTarget + Mathf.Sin(stageAge * 1.7f + CompletedSteps) * .055f);
-                float drift = Mathf.Sin(workAge * 2.1f + CompletedSteps * 1.3f) * .20f + .075f;
-                Cursor = Mathf.Clamp01(Cursor + (input * .70f + drift) * dt);
-                bool inBand = Mathf.Abs(Cursor - Target) <= TargetWidth;
-                if (held && inBand)
-                {
-                    stageProgress = Mathf.Min(1f, stageProgress + dt / CurrentBalanceSeconds);
-                    toolMotion = .45f + stageProgress * .5f;
-                    if (stageProgress >= 1f) SeatStage();
-                }
-                else
-                {
-                    if (held && !inBand) stageProgress = Mathf.Max(0, stageProgress - dt * .22f);
-                    if (feedbackAge <= 0f) Hint = !inBand ? "A / D ile basıncı dengele" : "Yeşilde Space basılı tut";
-                }
-            }
-            if (feedbackAge <= 0f && settleRemaining <= 0f) RefreshHint();
-            RefreshProgress();
+            RefreshHint();
         }
 
         public void Cancel()
         {
-            juryFriendly = false;
-            Active = false;
+            juryFriendly = installing = Active = Complete = false;
             Action = TargetId = Label = Hint = string.Empty;
-            CompletedSteps = TotalSteps = strokes = expectedDirection = 0;
-            Cursor = Target = Progress = Quality = stageProgress = stageAge = workAge = 0f;
-            settleRemaining = strokeCooldown = feedbackAge = toolMotion = baseTarget = 0f;
-            applying = Complete = spaceWasHeld = false;
+            CompletedSteps = TotalSteps = 0;
+            installAge = stageProgress = toolMotion = Cursor = Target = Progress = Quality = 0f;
             Mode = PanicWorkMode.Ratchet;
         }
-
-        void StartStage()
-        {
-            applying = false;
-            stageProgress = stageAge = settleRemaining = feedbackAge = 0f;
-            strokes = 0;
-            Cursor = .5f;
-            unchecked
-            {
-                uint hash = 2166136261u;
-                string seed = (Action ?? string.Empty) + "|" + (TargetId ?? string.Empty) + "|" + CompletedSteps;
-                for (int i = 0; i < seed.Length; i++) hash = (hash ^ seed[i]) * 16777619u;
-                Target = juryFriendly ? ((hash & 1u) == 0u ? .36f : .64f) : ((hash & 1u) == 0u ? .26f : .74f);
-            }
-            baseTarget = Target;
-            RefreshHint();
-            RefreshProgress();
-        }
-
-        void SeatStage()
-        {
-            stageProgress = 1f;
-            settleRemaining = juryFriendly ? .16f : SettleSeconds;
-            toolMotion = 1f;
-            Hint = "Yerine oturdu";
-        }
-
-        void Feedback(string hint, bool good)
-        {
-            Hint = hint;
-            feedbackAge = .65f;
-            if (!good) Quality = Mathf.Max(.35f, Quality - .04f);
-        }
-
         void RefreshHint()
         {
-            if (Complete) { Hint = "Hazır!"; return; }
-            if (feedbackAge > 0f || settleRemaining > 0f) return;
-            if (!applying) Hint = "A / D ile hedefle · Enter";
-            else if (Mode == PanicWorkMode.Ratchet) Hint = strokes >= RequiredStrokes ? "Space ile yerine oturt" : expectedDirection < 0 ? "A ile sola çevir" : "D ile sağa çevir";
-            else if (Mode == PanicWorkMode.Timing) Hint = "Yeşilde Space'e dokun";
-            else Hint = Mathf.Abs(Cursor - Target) > TargetWidth ? "A / D ile basıncı dengele" : "Yeşilde Space basılı tut";
+            Hint = Complete ? "Hazır!" : installing ? IsWorldConstruction ? "Kuruluyor..." : "Vida otomatik takılıyor..." :
+                IsWorldConstruction ? "Kurulumu başlat." : "Vidaya tıkla; kendiliğinden takılsın.";
         }
-
-        void RefreshProgress()
-        {
-            Progress = TotalSteps <= 0 ? 0f : Mathf.Clamp01((CompletedSteps + stageProgress) / TotalSteps);
-            if (Complete) Progress = 1f;
-        }
-
         static bool IsSupported(string action)
         {
-            return action == "anchorwall" || action == "anchorfloor" || action == "upgrade" ||
-                action == "flood" || action == "fire" || action == "plant" || action == "drain" ||
-                action == "fence" || action == "hose";
+            return action == "anchorwall" || action == "anchorfloor" || action == "upgrade" || action == "flood" ||
+                action == "fire" || action == "plant" || action == "drain" || action == "fence" || action == "hose";
         }
-
-        static readonly string[] PlantStages = { "Çukuru aç", "Fidanı indir", "Toprağı bastır", "Can suyunu ver" };
-        static readonly string[] DrainStages = { "Kanalı aç", "Eğimi ver", "Izgarayı yerleştir", "Akışı kontrol et" };
-        static readonly string[] FloodStages = { "Sol kenarı kapat", "Üst kenarı kapat", "Sağ kenarı kapat", "Alt kenarı kapat" };
-        static readonly string[] FireStages = { "Pimi kontrol et", "Vanayı dene", "Basıncı ayarla", "Hazır konuma al" };
-        static readonly string[] HoseStages = { "Bağlantıyı oturt", "Vanayı aç", "Kaçağı denetle", "Basıncı ayarla" };
-
-        static string NameForStage(string action, int index)
-        {
-            switch (action)
-            {
-                case "plant": return PlantStages[index];
-                case "drain": return DrainStages[index];
-                case "flood": return FloodStages[index];
-                case "fire": return FireStages[index];
-                case "hose": return HoseStages[index];
-                default: return "Bağlantı " + (index + 1);
-            }
-        }
-
         static string LabelFor(string action)
         {
             switch (action)
@@ -1096,12 +794,12 @@ namespace TooLateToPanic
                 case "anchorwall": return "Duvara sabitle";
                 case "anchorfloor": return "Zemine sabitle";
                 case "upgrade": return "Yapıyı güçlendir";
-                case "flood": return "Sel bariyeri";
-                case "fire": return "Yangın tüpü";
-                case "plant": return "Fidan dik";
-                case "drain": return "Drenaj aç";
-                case "fence": return "Sel çiti kur";
-                case "hose": return "Hortum bağla";
+                case "flood": return "Sel bariyerini kur";
+                case "fire": return "Yangın tüpünü hazırla";
+                case "plant": return "Ağaç sırasını kur";
+                case "drain": return "Drenajı kur";
+                case "fence": return "Sel çitini kur";
+                case "hose": return "Hortumu bağla";
                 default: return "Hazırlık işi";
             }
         }

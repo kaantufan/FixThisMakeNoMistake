@@ -655,7 +655,7 @@ namespace TooLateToPanic
             }
             public void B(Vector3 p,Vector3 size,M material,float bevel=.02f,Quaternion rotation=default(Quaternion))
             {
-                if(rotation==default(Quaternion))rotation=Quaternion.identity;
+                if(rotation.Equals(default(Quaternion)))rotation=Quaternion.identity;
                 string key="b"+size.ToString("F4")+bevel.ToString("F4",System.Globalization.CultureInfo.InvariantCulture);
                 Mesh mesh;
                 if(!MeshCache.TryGetValue(key,out mesh)){mesh=BevelBox(size,bevel);MeshCache[key]=mesh;}
@@ -663,7 +663,7 @@ namespace TooLateToPanic
             }
             public void C(Vector3 p,float radius,float height,M material,int segments=16,Quaternion rotation=default(Quaternion))
             {
-                if(rotation==default(Quaternion))rotation=Quaternion.identity;
+                if(rotation.Equals(default(Quaternion)))rotation=Quaternion.identity;
                 string key="c"+segments;
                 Mesh mesh;
                 if(!MeshCache.TryGetValue(key,out mesh)){mesh=Cylinder(segments);MeshCache[key]=mesh;}

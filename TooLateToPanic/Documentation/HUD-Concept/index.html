@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TLTP HUD Konsepti</title>
+<link rel="icon" href="logo/mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -487,13 +488,14 @@ button{font:inherit;color:inherit}
 @keyframes flap{50%{transform:scaleY(.3)}}
 .fog{position:absolute;left:-10%;width:120%;height:220px;background:radial-gradient(ellipse 40% 50% at 30% 50%,rgba(216,210,200,.13),transparent 70%),radial-gradient(ellipse 35% 45% at 75% 55%,rgba(216,210,200,.1),transparent 70%);animation:fogd 30s ease-in-out infinite alternate;pointer-events:none}
 @keyframes fogd{to{transform:translateX(6%)}}
-.t-left{position:absolute;left:96px;top:96px;width:640px}
-.kick{font:700 15px 'Barlow Condensed';letter-spacing:.32em;color:var(--amber)}
+.t-left{position:absolute;left:70px;top:70px;width:700px}
+.t-left .logo{display:block;width:700px;height:auto;margin-top:6px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.55))}
+.kick{font:700 15px 'Barlow Condensed';letter-spacing:.32em;color:var(--amber);padding-left:44px}
 .h1{font:700 128px/.88 Oswald;letter-spacing:.01em;margin-top:18px;text-shadow:0 6px 0 rgba(0,0,0,.25)}
 .h1 .p{position:relative;isolation:isolate;display:inline-block;padding:0 20px 0 10px}
 .h1 .p .brush{position:absolute;left:-24px;top:16px;width:calc(100% + 50px);height:84%;z-index:-1;color:var(--rust)}
 .on .h1 .p .brush{animation:wipe .8s var(--ease) .5s both}
-.dzr{display:flex;gap:10px;margin-top:26px}
+.dzr{display:flex;gap:10px;margin-top:8px;padding-left:44px}
 .dzr span{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:6px;border:1px solid var(--line2);background:rgba(26,24,23,.6);font:600 16px 'Barlow Condensed';letter-spacing:.14em}
 .dzr .ico{width:20px;height:20px;color:var(--rust)}
 .t-menu{position:absolute;left:96px;top:520px;width:440px;display:flex;flex-direction:column;gap:12px}
@@ -532,7 +534,7 @@ button{font:inherit;color:inherit}
 .fontrow:last-child{border-bottom:0}
 
 @media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  *,*::before,*::after{animation-delay:0s !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
 }
 @media (max-width:700px){.navhint{display:none}.bar{gap:8px}}
 </style>
@@ -577,7 +579,7 @@ button{font:inherit;color:inherit}
 </svg>
 
 <header class="bar">
-  <div class="brand">TOO LATE TO <em>PANIC!</em> · HUD</div>
+  <div class="brand" style="display:flex;align-items:center;gap:8px"><img src="logo/mark.svg" width="28" height="28" alt="">TOO LATE TO <em>PANIC!</em> · HUD <a href="logo.html" style="font:600 13px 'Barlow Condensed';letter-spacing:.1em;color:var(--amber);margin-left:6px">LOGO</a></div>
   <nav class="tabs" id="tabs" aria-label="HUD ekranları"></nav>
   <div class="seg" id="dsel" aria-label="Afet"><span class="seg-l">AFET</span></div>
   <div class="navhint"><kbd>[</kbd> <kbd>]</kbd> ekran · diğer tuşlar oyundaki gibi</div>
@@ -597,7 +599,7 @@ button{font:inherit;color:inherit}
         <div class="fog" style="top:690px;animation-duration:40s;animation-direction:alternate-reverse"></div>
         <div class="t-left">
           <div class="kick slideL" style="--d:.1s">AFETE HAZIRLIK VE ÖNLEM</div>
-          <div class="h1 slideL" style="--d:.2s">TOO LATE<br>TO <span class="p"><svg class="brush"><use href="#brush"/></svg>PANIC!</span></div>
+          <img class="logo slideL" style="--d:.2s" src="logo/logo.svg" alt="Too Late to Panic!">
           <div class="dzr slideL" style="--d:.35s">
             <span><svg class="ico"><use href="#i-quake"/></svg>DEPREM</span>
             <span><svg class="ico"><use href="#i-flood"/></svg>SEL</span>
@@ -1465,7 +1467,8 @@ function fit(){
   document.documentElement.style.setProperty('--s', s.toFixed(4));
 }
 addEventListener('resize',fit); fit();
-setState('prep');
+const startState = location.hash.slice(1);
+setState(STATES[startState] ? startState : 'prep');
 })();
 </script>
 </body>

@@ -20,7 +20,7 @@ namespace TooLateToPanic
             readonly PanicHomeWorld w;
             readonly PanicHomeHud hud;
             readonly Action<string, bool, string> check;
-            readonly FieldInfo settle = typeof(PanicWorkSession).GetField("settleRemaining", Hidden);
+            readonly FieldInfo settle = typeof(PanicWorkSession).GetField("installAge", Hidden);
             readonly FieldInfo cinema = typeof(PanicHomeWorld).GetField("<CinematicActive>k__BackingField", Hidden);
             CharacterController body;
             bool savedLock, savedScripted, terminalReached;
@@ -42,6 +42,11 @@ namespace TooLateToPanic
                 w.InputLocked = true; w.FullFlowScriptedInput = true;
                 try
                 {
+                    string incoming = Options();
+                    foreach (PanicDeveloperOption option in Enum.GetValues(typeof(PanicDeveloperOption))) w.Model.SetDeveloperOption(option, false);
+                    w.StartGame(false); yield return Wait(.08f);
+                    C("FIXTURE normal economy independent of prior suite", !w.Model.DeveloperAnyEnabled && !w.Model.CheatedRun,
+                        "Explicit developer false via sole model API then StartGame; incoming=" + incoming + "; current=" + Options());
                     yield return DiscreteFrames();
                     foreach (bool shortSession in new[] { false, true })
                     foreach (string action in new[] { "anchorwall", "drain", "fire" })
@@ -120,8 +125,8 @@ namespace TooLateToPanic
             IEnumerator CancelBoundary(string action, bool shortSession, bool legacy)
             {
                 w.StartGame(false); yield return Wait(.05f);
-                string target = action == "drain" ? "drain_west" : "up_cabinet";
-                Vector3 approach = action == "drain" ? new Vector3(-5, .08f, -9.8f) : new Vector3(3.1f, 3.28f, -3.25f);
+                string target = action == "drain" ? "drain_west" : action == "fire" ? PanicItemActionRules.FireStationId : "bookshelf";
+                Vector3 approach = action == "drain" ? new Vector3(-5, .08f, -9.8f) : action == "fire" ? new Vector3(.9f,.05f,-2.2f) : new Vector3(-6, .08f, 3.5f);
                 if (!body.enabled) throw new InvalidOperationException("FIXTURE body disabled before work setup; refused Warp.");
                 w.Warp(approach); warps++; Physics.SyncTransforms(); yield return Wait(.1f); w.SetFocus(target);
                 var item = w.Model.Items.Find(i => i.Id == target);
@@ -130,14 +135,20 @@ namespace TooLateToPanic
                 // developer free materials/budget options are never used.
                 foreach (var slot in w.Expedition.Inventory) { slot.Id = ""; slot.Count = 0; }
                 for (int i = 0; i < recipe.Length; i++) { w.Expedition.Inventory[i].Id = recipe[i].Id; w.Expedition.Inventory[i].Count = recipe[i].Required; }
+                bool reachable = w.CanInteract;
+                bool canBegin = w.Expedition.CanBeginWork(action, target);
+                string preflightMessage = w.Model.Message;
                 w.BeginWork(action, target);
                 if (shortSession && w.WorkActive)
                     w.Expedition.Work.Begin(action, target, true); // Production two-step session; explicit, not a full short-flow fixture.
-                int total = shortSession ? 2 : 4;
-                string label = action + "/" + (shortSession ? "short2" : "normal4") + "/" + (legacy ? "old-order-observation" : "cancel-first");
+                int total = action == "anchorwall" ? 2 : 1;
+                string label = action + "/" + (shortSession ? "short-direct" : "normal-direct") + "/" + (legacy ? "old-order-observation" : "cancel-first");
                 C("FIXTURE work session " + label, w.WorkActive && w.Expedition.Work.TotalSteps == total && !w.Expedition.Work.Complete && w.CanInteract &&
-                    !w.Model.InfiniteBudget && !w.Model.FreeMaterials, "Finite recipe stock + explicit Warp; session began through production APIs; target=" + target);
-                if (!w.WorkActive) yield break;
+                    !w.Model.InfiniteBudget && !w.Model.FreeMaterials && canBegin, "active=" + w.WorkActive + "; total=" + w.Expedition.Work.TotalSteps + "; expectedTotal=" + total + "; complete=" + w.Expedition.Work.Complete +
+                    "; reachable=" + reachable + "; actor=" + w.PlayerPosition + "; target=" + target + "; actualTargetPosition=" + (item == null ? "garden(-5,0,-8.5)" : item.Position.ToString()) +
+                    "; canBegin=" + canBegin + "; preflightMessage=" + preflightMessage + "; startMessage=" + w.Model.Message + "; phase=" + w.Model.Phase + "; jury=" + w.JuryActive +
+                    "; options=" + Options() + "; stock=" + Inventory());
+                if (!w.WorkActive || !canBegin || !reachable || w.Model.InfiniteBudget || w.Model.FreeMaterials) { w.CancelWork(); yield break; }
                 string initialStock = Inventory(); int budget = w.Model.Budget;
                 int expectedCost = PanicExpedition.WorkCost(action, item); string targetState = TargetState(action, item);
                 yield return DriveToLastSettle();
@@ -151,7 +162,9 @@ namespace TooLateToPanic
                     w.StepWork(.08f, 0, false, false, false); w.CancelWork();
                     bool paid = w.Model.Budget == budget - expectedCost && recipe.All(c => w.Expedition.Count(c.Id) == 0) && TargetState(action, item) != targetState;
                     C("expected old-order commit observation " + label, paid && !w.WorkActive,
-                        "StepWork(.08) then CancelWork commits before cancel; expected cost=" + expectedCost + "; actual=" + (budget - w.Model.Budget) + "; regression observation only.");
+                        "StepWork(.08) then CancelWork; paid=" + paid + "; expectedCost=" + expectedCost + "; actualCost=" + (budget - w.Model.Budget) +
+                        "; beforeStock=" + initialStock + "; afterStock=" + Inventory() + "; beforeTarget=" + targetState + "; afterTarget=" + TargetState(action, item) +
+                        "; phase=" + w.Model.Phase + "; options=" + Options() + "; message=" + w.Model.Message + "; regression observation only.");
                 }
                 else
                 {
@@ -168,34 +181,18 @@ namespace TooLateToPanic
 
             IEnumerator DriveToLastSettle()
             {
-                terminalReached = false; driveFrames = 0; terminalSettle = 0; terminalSteps = terminalTotal = 0;
-                float deadline = Time.realtimeSinceStartup + 22f;
-                while (w.WorkActive && Time.realtimeSinceStartup < deadline && driveFrames < 3000)
+                terminalReached=false;driveFrames=0;terminalSettle=0;terminalSteps=terminalTotal=0;
+                float deadline=Time.realtimeSinceStartup+8f;
+                while(w.WorkActive&&Time.realtimeSinceStartup<deadline&&driveFrames<600)
                 {
-                    var work = w.Expedition.Work; float remaining = (float)settle.GetValue(work);
-                    if (work.CompletedSteps == work.TotalSteps - 1 && remaining > 0 && remaining <= .08f)
-                    { terminalReached = true; terminalSettle = remaining; terminalSteps = work.CompletedSteps; terminalTotal = work.TotalSteps; yield break; }
-                    float dt = Mathf.Clamp(Time.unscaledDeltaTime, .0001f, .04f);
-                    // Never overshoot the final settle boundary merely because a frame stalled.
-                    if (work.CompletedSteps == work.TotalSteps - 1 && remaining > .08f) dt = Mathf.Min(dt, remaining - .06f);
-                    float delta = work.Target - work.Cursor, direction = 0; bool held = false, enter = false, pulse = false;
-                    if (!work.IsApplying)
-                    {
-                        bool aligned = Mathf.Abs(delta) <= work.TargetWidth * .4f;
-                        direction = aligned ? 0 : Mathf.Sign(delta); enter = aligned;
-                    }
-                    else if (work.Mode == PanicWorkMode.Ratchet)
-                    { direction = work.ExpectedDirection; pulse = work.ExpectedDirection == 0; held = pulse; }
-                    else if (work.Mode == PanicWorkMode.Timing)
-                    { pulse = Mathf.Abs(delta) <= work.TargetWidth * .45f; held = pulse; }
-                    else
-                    { direction = Mathf.Abs(delta) > .018f ? Mathf.Sign(delta) : 0; held = true; }
-                    w.StepWork(dt, direction, held, enter, pulse); driveFrames++; yield return null;
-                }
-                if (w.WorkActive)
-                {
-                    terminalSettle = (float)settle.GetValue(w.Expedition.Work);
-                    terminalSteps = w.Expedition.Work.CompletedSteps; terminalTotal = w.Expedition.Work.TotalSteps;
+                    var work=w.Expedition.Work;
+                    if(!work.IsInstalling&&!work.Complete){bool locked=w.InputLocked;w.InputLocked=false;try{w.ClickWorkTarget(work.NextClickTarget);}finally{w.InputLocked=locked;}}
+                    float remaining=work.IsInstalling?work.InstallSeconds-(float)settle.GetValue(work):0;
+                    if(work.CompletedSteps==work.TotalSteps-1&&remaining>0&&remaining<=.08f)
+                    {terminalReached=true;terminalSettle=remaining;terminalSteps=work.CompletedSteps;terminalTotal=work.TotalSteps;yield break;}
+                    float dt=Mathf.Clamp(Time.unscaledDeltaTime,.0001f,.04f);
+                    if(work.CompletedSteps==work.TotalSteps-1&&remaining>.08f)dt=Mathf.Min(dt,remaining-.06f);
+                    w.StepWork(dt,0,false,false,false);driveFrames++;yield return null;
                 }
             }
 
@@ -211,8 +208,9 @@ namespace TooLateToPanic
             void Dispatch(IEnumerable<KeyCode> keys, bool click, bool ui)
             { bool locked = w.InputLocked; w.InputLocked = false; try { w.DispatchWorldInput(keys, click, ui); } finally { w.InputLocked = locked; } }
             string TargetState(string action, PanicItem item)
-            { return action == "drain" ? "drains=" + w.Model.DrainCount : action == "fire" ? "fire=" + w.Model.FireToolCount + ";item=" + item.FireProtected : "anchor=" + item.Anchored; }
+            { return action == "drain" ? "drains=" + w.Model.DrainCount : action == "fire" ? "fire=" + w.Model.FireToolCount + ";station=" + w.Expedition.IsWorkCommitted("fire",PanicItemActionRules.FireStationId) : "anchor=" + item.Anchored; }
             string Inventory() { return string.Join("|", w.Expedition.Inventory.Select(s => s.Id + ":" + s.Count).ToArray()); }
+            string Options() { return "budget=" + w.Model.InfiniteBudget + ",materials=" + w.Model.FreeMaterials + ",clock=" + w.Model.FreezePreparationTime + ",noLoss=" + w.Model.DeveloperNoLoss; }
             IEnumerator Wait(float seconds)
             {
                 float end = Time.realtimeSinceStartup + seconds;

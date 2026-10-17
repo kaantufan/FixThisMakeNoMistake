@@ -1,0 +1,196 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using UnityEngine;
+
+namespace TooLateToPanic
+{
+    /// <summary>Finite world stock. World owns visibility, reach, ray tests and actual prop placement.</summary>
+    public sealed class PanicWorldSupply
+    {
+        public string Id { get; private set; }
+        public string ItemId { get; private set; }
+        public int Count { get; internal set; }
+        public int InitialCount { get; private set; }
+        public Vector3 Position { get; set; }
+        public int Floor { get; private set; }
+        public bool Taken { get { return Count <= 0; } }
+        internal PanicWorldSupply(string id, string item, int count, Vector3 position, int floor)
+        { Id = id; ItemId = item; Count = InitialCount = count; Position = position; Floor = floor; }
+    }
+
+    public sealed partial class PanicExpedition
+    {
+        readonly Dictionary<string, int> materials = new Dictionary<string, int>(StringComparer.Ordinal);
+        readonly List<PanicWorldSupply> worldSupplies = new List<PanicWorldSupply>();
+        System.Random lootRandom;
+        public static readonly string[] MaterialIds = { "screws", "bracket", "plank", "sandbag", "seedling", "hose", "extinguisher" };
+        public IReadOnlyDictionary<string, int> Materials { get { return new ReadOnlyDictionary<string, int>(materials); } }
+        public IReadOnlyList<PanicWorldSupply> WorldSupplies { get { return worldSupplies.AsReadOnly(); } }
+        public static bool IsConstructionMaterial(string id)
+        {
+            return id == "screws" || id == "bracket" || id == "plank" || id == "sandbag" ||
+                id == "seedling" || id == "hose" || id == "extinguisher";
+        }
+        static bool HasStock(SupplySlot slot) { return slot != null && slot.Count > 0 && !string.IsNullOrEmpty(slot.Id); }
+        static bool IsSupply(string id)
+        {
+            return id == "water" || id == "food" || id == "firstaid" || id == "flashlight" ||
+                id == "battery" || id == "radio" || id == "blanket";
+        }
+        int MaterialCount(string id) { int count; return id != null && materials.TryGetValue(id, out count) ? count : 0; }
+        void AddMaterial(string id, int count)
+        { if (count > 0 && IsConstructionMaterial(id)) materials[id] = (int)Math.Min(int.MaxValue, (long)MaterialCount(id) + count); }
+
+        void ResetRevisionStock()
+        {
+            materials.Clear();
+            lootRandom = new System.Random(Guid.NewGuid().GetHashCode());
+            worldSupplies.Clear();
+            // Positions are authored visible prop centers, not floor-projected container positions.
+            Supply("supply_water_kitchen", "water", 2, new Vector3(4.08f,1.05f,4.7f),0);
+            Supply("supply_food_kitchen", "food", 2, new Vector3(4.82f,1.05f,4.7f),0);
+            Supply("supply_firstaid_bath", "firstaid", 1, new Vector3(4.8f,4.15f,4.8f),1);
+            Supply("supply_flashlight_living", "flashlight",1,new Vector3(-3.9f,1.12f,-3),0);
+            Supply("supply_battery_living", "battery",2,new Vector3(-3.3f,1.1f,-3),0);
+            Supply("supply_radio_upper", "radio",1,new Vector3(4,4.3f,-2.5f),1);
+            Supply("supply_battery_upper", "battery",1,new Vector3(4.55f,4.3f,-2.5f),1);
+            Supply("supply_blanket_bed", "blanket",1,new Vector3(-4,4.1f,3.8f),1);
+            Supply("supply_water_basement", "water",2,new Vector3(-5,-2.15f,4),-1);
+            Supply("supply_food_basement", "food",2,new Vector3(-4.35f,-2.15f,4),-1);
+            Supply("supply_water_upper", "water",2,new Vector3(3.6f,4.3f,-2.5f),1);
+            Supply("supply_food_upper", "food",2,new Vector3(-4.6f,4.1f,3.8f),1);
+        }
+        void Supply(string id,string item,int count,Vector3 position,int floor)
+        { worldSupplies.Add(new PanicWorldSupply(id,item,count,position,floor)); }
+        void PrepareShortFlowSupplies()
+        {
+            foreach (var supply in worldSupplies) supply.Count = supply.Id == "supply_water_kitchen" ? 1 : 0;
+        }
+        void RefillRenewableWorldSupplies()
+        { foreach (var supply in worldSupplies) if (IsRenewable(supply.ItemId)) supply.Count = supply.InitialCount; }
+        public PanicWorldSupply FindWorldSupply(string id)
+        { return worldSupplies.Find(s => s.Id == id); }
+        public bool TryCollectWorldSupply(string id)
+        {
+            if (!CanPrepare()) return Fail("Erzakları hazırlıkta toplayabilirsin.");
+            PanicWorldSupply supply = FindWorldSupply(id);
+            if (supply == null || supply.Taken || !IsSupply(supply.ItemId)) return Fail("Bu eşya alınamıyor.");
+            int amount = supply.Count;
+            if (!TryAddPartial(Inventory, supply.ItemId, amount)) return Fail("Envanter dolu; eşya yerinde kaldı.");
+            supply.Count = 0;
+            if (Model.IsJuryDemo && supply.ItemId == "water") JuryWaterGatheredCount += amount;
+            Message = DisplayName(supply.ItemId) + " ×" + amount + " alındı.";
+            NotifyModel(); return true;
+        }
+        string AutoCollectMaterials(LootSource source)
+        {
+            if (source.AutoLooted) return "Açıldı · Buradaki malzemeleri aldın.";
+            // Roll and validate the entire reward before committing once. Reopening never rolls again.
+            var rewards = new List<SupplySlot>();
+            foreach (var slot in source.Contents)
+                if (HasStock(slot) && IsConstructionMaterial(slot.Id))
+                    rewards.Add(new SupplySlot(slot.Id, lootRandom.Next(Mathf.Max(1,slot.Count-1),slot.Count+2)));
+            source.AutoLooted = true;
+            var labels = new List<string>();
+            foreach (var reward in rewards)
+            { AddMaterial(reward.Id,reward.Count); labels.Add("+"+reward.Count+" "+DisplayName(reward.Id)); }
+            source.Contents.Clear();
+            return labels.Count == 0 ? "Açıldı · Boş." : string.Join(" · ",labels.ToArray());
+        }
+
+        /// <summary>Preflight all partial stacks before mutating; no capacity means zero changes.</summary>
+        static bool TryAddPartial(List<SupplySlot> slots,string id,int count)
+        {
+            if (!IsSupply(id) || count <= 0) return false;
+            int limit = StackLimitFor(id), capacity = 0;
+            foreach (var slot in slots)
+                capacity += !HasStock(slot) ? limit : slot.Id == id ? Mathf.Max(0,limit-slot.Count) : 0;
+            if (capacity < count) return false;
+            for (int i=0;i<slots.Count && count>0;i++)
+            {
+                SupplySlot slot=slots[i];
+                if (!HasStock(slot)||slot.Id!=id) continue;
+                int amount=Mathf.Min(count,Mathf.Max(0,limit-slot.Count));slot.Count+=amount;count-=amount;
+            }
+            for (int i=0;i<slots.Count && count>0;i++)
+            {
+                if (HasStock(slots[i])) continue;
+                int amount=Mathf.Min(count,limit);slots[i]=new SupplySlot(id,amount);count-=amount;
+            }
+            return true;
+        }
+
+        public bool UnpackSlot(int index)
+        {
+            if (index<0 || index>=Bag.Count || !HasStock(Bag[index])) return Fail("Bu çanta yuvası boş.");
+            int target=FindStorageSlot(Inventory,Bag[index].Id,1);
+            return target>=0 ? TransferSlots(true,index,false,target,1) : Fail("Envanter dolu.");
+        }
+
+        /// <summary>Exact-slot drop: merge to limit and leave remainder, or swap complete stacks.
+        /// Cross-boundary changes validate a candidate bag and publish both arrays/model together.</summary>
+        public bool TransferSlots(bool fromBag,int fromIndex,bool toBag,int toIndex,int count=0)
+        {
+            if (!CanPrepare()) return Fail("Çantayı hazırlıkta düzenleyebilirsin.");
+            var source=fromBag?Bag:Inventory; var destination=toBag?Bag:Inventory;
+            if (fromIndex<0||fromIndex>=source.Count||toIndex<0||toIndex>=destination.Count||count<0)
+                return Fail("Yuva seçimi geçersiz.");
+            if (fromBag==toBag && fromIndex==toIndex) return false;
+            if (!HasStock(source[fromIndex]) || !IsSupply(source[fromIndex].Id)) return Fail("Bu yuva boş.");
+            var candidateInventory=CloneSlots(Inventory);var candidateBag=CloneSlots(Bag);
+            var a=fromBag?candidateBag:candidateInventory;var b=toBag?candidateBag:candidateInventory;
+            SupplySlot moving=a[fromIndex], target=b[toIndex];
+            int requested=count==0?moving.Count:count;
+            if (requested>moving.Count) return Fail("Yığında yeterli eşya yok.");
+            int moved=requested;
+            if (!HasStock(target)||target.Id==moving.Id)
+            {
+                moved=Mathf.Min(requested,StackLimitFor(moving.Id)-(HasStock(target)?target.Count:0));
+                if (moved<=0) return Fail("Bu yığın dolu.");
+                if (!HasStock(target)) b[toIndex]=new SupplySlot(moving.Id,moved);else target.Count+=moved;
+                moving.Count-=moved;if(moving.Count==0)moving.Id=string.Empty;
+            }
+            else
+            {
+                if (requested!=moving.Count) return Fail("Farklı eşya ile yer değiştirmek için tüm yığını taşı.");
+                a[fromIndex]=target;b[toIndex]=moving;
+            }
+            // Newly packed devices consume one loose battery each; moving inside bag consumes nothing.
+            int batteries=0;
+            if (fromBag!=toBag && !Model.FreeMaterials)
+            {
+                batteries+=Mathf.Max(0,CountSlots(candidateBag,"flashlight")-CountSlots(Bag,"flashlight"));
+                batteries+=Mathf.Max(0,CountSlots(candidateBag,"radio")-CountSlots(Bag,"radio"));
+                if (CountSlots(candidateInventory,"battery")<batteries) return RequestRequirements("packbattery","battery");
+                ConsumeFromSlots(candidateInventory,"battery",batteries);
+            }
+            string reason;
+            if (!ValidBag(candidateBag,out reason)) return Fail(reason);
+            PublishSlots(Inventory,candidateInventory);PublishSlots(Bag,candidateBag);
+            Model.PackedWater=CountSlots(Bag,"water");Model.PackedFood=CountSlots(Bag,"food");
+            Model.PackedSupportMask=SupportMask(Bag);Model.SupportOwnedMask=SupportMask(Bag)|SupportMask(Inventory);
+            ClearRequirements();
+            Message="Eşya yerleştirildi.";NotifyModel();return true;
+        }
+        static int CountSlots(List<SupplySlot> slots,string id)
+        { int n=0;foreach(var slot in slots)if(HasStock(slot)&&slot.Id==id)n+=slot.Count;return n; }
+        static int SupportMask(List<SupplySlot> slots)
+        {
+            int mask=0;foreach(var slot in slots)if(HasStock(slot)){int index=SupportIndexFor(slot.Id);if(index>=0)mask|=1<<index;}return mask;
+        }
+        static void PublishSlots(List<SupplySlot> actual,List<SupplySlot> candidate)
+        { for(int i=0;i<actual.Count;i++)actual[i]=new SupplySlot(candidate[i].Id,candidate[i].Count); }
+        static bool ValidBag(List<SupplySlot> slots,out string reason)
+        {
+            reason=string.Empty;
+            foreach(var slot in slots)if(HasStock(slot)&&(!IsSupply(slot.Id)||slot.Count>StackLimitFor(slot.Id)))
+            {reason="Bu eşya çantaya sığmıyor.";return false;}
+            if(CountSlots(slots,"water")>3||CountSlots(slots,"food")>3)
+            {reason="Çantada en fazla üçer günlük su ve gıda taşınabilir.";return false;}
+            foreach(var id in new[]{"firstaid","flashlight","radio","blanket"})if(CountSlots(slots,id)>1)
+            {reason=DisplayName(id)+" zaten çantada.";return false;}
+            return true;
+        }
+    }
+}

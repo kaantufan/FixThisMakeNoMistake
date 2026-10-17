@@ -36,7 +36,11 @@ namespace TooLateToPanic
             readonly PanicHomeHud hud;
             readonly Action<string, bool, string> check;
             CharacterController body;
+            CapsuleCollider actorQuery;
             FieldInfo hingeField, itemsField;
+            FieldInfo velocityField;
+            string watchedDoor;
+            float maximumDoorOverlap;
             int setupWarps;
             bool walkReached;
             bool oldLocked, oldScripted;
@@ -50,13 +54,22 @@ namespace TooLateToPanic
                 body = UnityEngine.Object.FindObjectsByType<CharacterController>(FindObjectsSortMode.None).FirstOrDefault(c => c.name == "Survivor");
                 hingeField = typeof(PanicHomeWorld).GetField("hinges", Private);
                 itemsField = typeof(PanicHomeWorld).GetField("items", Private);
-                C("FIXTURE production world references", body && hingeField != null && itemsField != null, "Missing reference is a harness failure, not a gameplay assertion.");
-                if (!body || hingeField == null || itemsField == null) yield break;
+                velocityField = typeof(PanicHomeWorld).GetField("desiredVelocity", Private);
+                C("FIXTURE production world references", body && hingeField != null && itemsField != null && velocityField != null, "Missing reference is a harness failure, not a gameplay assertion.");
+                if (!body || hingeField == null || itemsField == null || velocityField == null) yield break;
+                var queryRoot = new GameObject("AUDIT independent enabled actor capsule query"); queryRoot.layer = 2;
+                queryRoot.transform.position = Vector3.one * 500; queryRoot.transform.localScale = body.transform.lossyScale;
+                actorQuery = queryRoot.AddComponent<CapsuleCollider>(); actorQuery.direction = 1; actorQuery.center = body.center;
+                actorQuery.radius = body.radius; actorQuery.height = body.height; actorQuery.isTrigger = true; actorQuery.enabled = true;
                 oldLocked = w.InputLocked; oldScripted = w.FullFlowScriptedInput;
                 w.FullFlowScriptedInput = true; w.InputLocked = true;
                 try
                 {
+                    string incomingOptions = DeveloperFlags();
+                    foreach (PanicDeveloperOption option in Enum.GetValues(typeof(PanicDeveloperOption))) w.Model.SetDeveloperOption(option, false);
                     w.StartGame(false); yield return Settle(.25f);
+                    C("FIXTURE clean economy after prior suites", !w.Model.DeveloperAnyEnabled && !w.Model.CheatedRun,
+                        "Explicit SetDeveloperOption(false) then StartGame; incoming=" + incomingOptions + "; current=" + DeveloperFlags());
                     C("FIXTURE free-game preparation and enabled body", w.Model.Phase == PanicPhase.Preparing && body.enabled && !w.CinematicActive,
                         "StartGame(false); no game clock Tick shortcut; controller=" + body.enabled);
                     if (w.Model.Phase != PanicPhase.Preparing || !body.enabled || w.CinematicActive) yield break;
@@ -75,6 +88,7 @@ namespace TooLateToPanic
                     if (hud.DeveloperMenuOpen) hud.SetDeveloperMenuOpen(false);
                     w.CancelMove(); w.CancelWork();
                     if (w.InventoryOpen) w.ToggleInventory();
+                    if (actorQuery) UnityEngine.Object.Destroy(actorQuery.gameObject);
                     w.InputLocked = oldLocked; w.FullFlowScriptedInput = oldScripted;
                 }
             }
@@ -209,14 +223,23 @@ namespace TooLateToPanic
                         if (!Fixture(origin + normal * side * .6f + Vector3.up * .08f, door.Id + " side " + side)) yield break;
                         yield return Settle(.12f); w.SetFocus(door.Id); Vector3 approach = w.PlayerPosition;
                         bool reachable = w.CanInteract; yield return Push(-normal * side, .23f);
+                        // Stop the commanded SmoothDamp movement while the leaf is still shut.
+                        // The old .08s pause left ~.049m of voluntary forward drift after E.
+                        yield return Settle(.35f);
                         float before = Vector3.Dot(approach - origin, normal), after = Vector3.Dot(w.PlayerPosition - origin, normal);
                         bool blocked = before * after > 0 && Mathf.Abs(after) > .13f && Mathf.Abs(before) - Mathf.Abs(after) > .025f;
                         var others = HingeStates(door.Id); w.SetFocus(door.Id); Vector3 preOpen = w.PlayerPosition;
-                        Key(KeyCode.E); yield return Settle(.72f); h = ReadHinge(door.Id);
+                        Vector3 residual = (Vector3)velocityField.GetValue(w);
+                        maximumDoorOverlap = DoorOverlap(ReadHinge(door.Id)); watchedDoor = door.Id;
+                        Key(KeyCode.E); yield return Settle(.72f); h = ReadHinge(door.Id); watchedDoor = null;
+                        Vector3 drift = w.PlayerPosition - preOpen;
                         bool opened = h.open && Mathf.Abs(Mathf.DeltaAngle(side * 100, h.Angle)) < 2.5f;
                         C("door " + door.Id + "/" + side + " closed collision and away opening", closed && reachable && blocked && opened &&
-                            Vector3.Distance(preOpen, w.PlayerPosition) < .04f && Supported(door.Position.y) && HingeStates(door.Id) == others,
-                            "Explicit setup Warp; signed distances=" + before.ToString("F3") + "/" + after.ToString("F3") + "; angle=" + h.Angle.ToString("F2") + "; actor drift=" + Vector3.Distance(preOpen, w.PlayerPosition).ToString("F4"));
+                            residual.magnitude < .002f && drift.magnitude < .04f && maximumDoorOverlap < .006f && Supported(door.Position.y) && HingeStates(door.Id) == others,
+                            "closed=" + closed + "; reachable=" + reachable + "; blocked=" + blocked + "; opened=" + opened + "; supported=" + Supported(door.Position.y) +
+                            "; signed=" + before.ToString("F4") + "/" + after.ToString("F4") + "; angle=" + h.Angle.ToString("F2") +
+                            "; residualVelocity=" + residual.ToString("F6") + "; actorDriftVector=" + drift.ToString("F6") + "; driftAlongNormal=" + Vector3.Dot(drift, normal).ToString("F6") +
+                            "; maxIndependentCapsuleOverlap=" + maximumDoorOverlap.ToString("F6") + "; otherHingesUnchanged=" + (HingeStates(door.Id) == others));
                         Vector3 destination = origin - normal * side * .6f;
                         yield return WalkTo(destination, 2.3f);
                         C("door " + door.Id + "/" + side + " real open-plane crossing", walkReached && Supported(door.Position.y) && ReadHinge(door.Id).open &&
@@ -255,12 +278,16 @@ namespace TooLateToPanic
                 if (!Fixture(tools.Position + new Vector3(0, .08f, -1.3f), "real work stock")) yield break;
                 yield return Settle(.12f); w.SetFocus(tools.Id); bool canGather = w.CanInteract;
                 Key(KeyCode.E); Key(KeyCode.F); Key(KeyCode.F); Key(KeyCode.E);
-                var target = w.Model.Items.Single(i => i.Id == "up_cabinet");
-                if (!Fixture(new Vector3(3.1f, 3.28f, -3.25f), "real work target")) yield break;
+                var target = w.Model.Items.Single(i => i.Id == "bookshelf");
+                if (!Fixture(target.Position + new Vector3(0, .08f, -1.3f), "real work target")) yield break;
                 yield return Settle(.12f); w.SetFocus(target.Id); string stock = Inventory(); int budget = w.Model.Budget;
+                if (w.AnchorMode != "wall") Key(KeyCode.T);
+                bool canTarget = w.CanInteract;
                 Key(KeyCode.Alpha1);
                 C("FIXTURE work begins through actual collected materials", canGather && w.Expedition.Count("screws") == 4 && w.Expedition.Count("bracket") == 3 && w.WorkActive,
-                    "Real E/F garage stock and production Alpha1; no progress/completion fixture.");
+                    "canGather=" + canGather + "; screws=" + w.Expedition.Count("screws") + "; bracket=" + w.Expedition.Count("bracket") + "; target=" + target.Id +
+                    "; targetPosition=" + target.Position + "; actor=" + w.PlayerPosition + "; CanInteract=" + canTarget + "; AnchorMode=" + w.AnchorMode +
+                    "; WorkActive=" + w.WorkActive + "; phase=" + w.Model.Phase + "; options=" + DeveloperFlags() + "; message=" + w.Model.Message);
                 if (!w.WorkActive) yield break;
                 bool sourceOpen = w.NearestSource.Open; Key(KeyCode.E); Key(KeyCode.F); Key(KeyCode.Tab); Unlocked(() => { w.BeginMove(); return w.IsMoving; });
                 w.StepCameraOrbitInput(w.View.pixelRect.center, true, true, false, false, 0);
@@ -344,6 +371,7 @@ namespace TooLateToPanic
                 {
                     // Never re-enable or move a body temporarily owned by presentation.
                     if (body.enabled && !w.CinematicActive && !w.LossAnnounced) w.SmokeMove(Vector2.zero, Dt);
+                    if (watchedDoor != null && body.enabled) maximumDoorOverlap = Mathf.Max(maximumDoorOverlap, DoorOverlap(ReadHinge(watchedDoor)));
                     yield return null;
                 }
             }
@@ -378,6 +406,20 @@ namespace TooLateToPanic
             bool Pointer(Vector3 p, bool ui) { Vector3 screen = w.View.WorldToScreenPoint(p); return screen.z > 0 && w.UpdatePlacementPointer(screen, ui); }
             GameObject ItemVisual(string id) { return (GameObject)((IDictionary)itemsField.GetValue(w))[id]; }
             string Inventory() { return string.Join("|", w.Expedition.Inventory.Select(s => s.Id + ":" + s.Count).ToArray()); }
+            string DeveloperFlags() { return "budget=" + w.Model.InfiniteBudget + ",materials=" + w.Model.FreeMaterials + ",clock=" + w.Model.FreezePreparationTime + ",noLoss=" + w.Model.DeveloperNoLoss; }
+            float DoorOverlap(Hinge h)
+            {
+                if (!body.enabled || !actorQuery) return 0;
+                Physics.SyncTransforms(); float maximum = 0;
+                foreach (var collider in h.leaf.GetComponentsInChildren<Collider>())
+                {
+                    if (!collider.enabled || collider.isTrigger || !collider.gameObject.activeInHierarchy) continue;
+                    Vector3 direction; float distance;
+                    if (Physics.ComputePenetration(collider, collider.transform.position, collider.transform.rotation, actorQuery, body.transform.position, body.transform.rotation, out direction, out distance))
+                        maximum = Mathf.Max(maximum, distance);
+                }
+                return maximum;
+            }
             static string SourceStock(LootSource s) { return string.Join("|", s.Contents.Select(c => c.Id + ":" + c.Count).ToArray()); }
             string FocusId() { return (string)typeof(PanicHomeWorld).GetField("focusId", Private).GetValue(w); }
             Hinge ReadHinge(string id)

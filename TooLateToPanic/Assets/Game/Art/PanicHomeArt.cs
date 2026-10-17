@@ -164,6 +164,8 @@ namespace TooLateToPanic
             var low = Group(root, "FrontLowWalls");
             var high = Group(root, "FrontHighWalls");
             var divisions = Group(root, "Partitions");
+            var north = Group(root, "FacadeNorth"); var west = Group(root, "FacadeWest");
+            var south = Group(root, "FacadeSouth"); var east = Group(root, "FacadeEast");
             var detail = new Builder();
             // Physical structural slabs and physical timber strips. Top of all finishes is y=0.
             if (floor == 0 && !residenceV3) Solid(deck, "floor_slab", new Vector3(0, -.12f, 0), new Vector3(16, .204f, 12), M.Concrete, .01f);
@@ -215,18 +217,24 @@ namespace TooLateToPanic
             }
             detail.Attach(deck, "floor_finish");
             // The same cut geometry is used on both floors, each with its own local origin.
-            WallWithWindows(back, "north", false, 6, -8, 8, new[] { -4f, 4f }, 0, WallHeight);
-            WallWithWindows(back, "west", true, -8, -6, 6, new[] { -3f, 3f }, 0, WallHeight);
+            WallWithWindows(north, "north", false, 6, -8, 8, new[] { -4f, 4f }, 0, WallHeight);
+            WallWithWindows(west, "west", true, -8, -6, 6, new[] { -3f, 3f }, 0, WallHeight);
             // South/east near-facing walls split at .45 so a world can hide only their high groups.
-            SouthWall(low, 0, .45f, floor == 0 || residenceV3);
-            SouthWall(high, .45f, WallHeight, floor == 0 || residenceV3);
-            WallWithWindows(low, "east_low", true, 8, -6, 6, new[] { -3f, 3f }, 0, .45f);
-            WallWithWindows(high, "east_high", true, 8, -6, 6, new[] { -3f, 3f }, .45f, WallHeight);
-            // Near-facing windows belong to the high cutaway group; north/west windows are separate Create assets.
-            for (int s = -1; s <= 1; s += 2)
+            SouthWall(south, 0, .45f, floor == 0 || residenceV3);
+            SouthWall(south, .45f, WallHeight, floor == 0 || residenceV3);
+            if (residenceV3 && floor == 0)
             {
-                Place(high, Create("window"), new Vector3(s * 4, 0, -6), 180);
-                Place(high, Create("window"), new Vector3(8, 0, s * 3), 90);
+                // House/garage shared aperture: z1.55..2.85, y0..2.30, center(8.1,0,2.2).
+                WallWithWindows(east,"east_south",true,8,-6,1.55f,new[]{-3f},0,WallHeight);
+                Segment(east,"east_garage_lintel",true,8,1.55f,2.85f,2.30f,WallHeight,M.Plaster);
+                Segment(east,"east_garage_north",true,8,2.85f,6,0,WallHeight,M.Plaster);
+            }
+            else WallWithWindows(east,"east_full",true,8,-6,6,new[]{-3f,3f},0,WallHeight);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Place(south, Create("window"), new Vector3(side*4,0,-6),180);
+                if (!(residenceV3 && floor == 0 && side == 1))
+                    Place(east, Create("window"), new Vector3(8,0,side*3),90);
             }
             // The residence upper bathroom owns its single x=2 west wall and z=2.5 entrance.
             // Keep the original east divider only on the ground floor and legacy non-residence layouts.
@@ -240,8 +248,10 @@ namespace TooLateToPanic
                 trim.Box(new Vector3(2, 2.3f, 1), new Vector3(.2f, .08f, 1.36f), M.WalnutDark, .012f);
                 trim.Attach(divisions, "door_jamb");
             }
-            InteriorTrim(back, true);
-            InteriorTrim(low, false);
+            DirectionalTrim(north,"north",floor,residenceV3);
+            DirectionalTrim(west,"west",floor,residenceV3);
+            DirectionalTrim(south,"south",floor,residenceV3);
+            DirectionalTrim(east,"east",floor,residenceV3);
             if (floor == 0)
             {
                 var baseMasonry = new Builder();
@@ -255,8 +265,11 @@ namespace TooLateToPanic
                             i % 5 == 0 ? M.Stone : M.Brick, .012f);
                     }
                     for (int i = 0; i < 23; i++)
+                    {
+                        if(residenceV3 && -5.75f+i*.51f > 1.30f && -5.75f+i*.51f < 3.10f) continue;
                         baseMasonry.Box(new Vector3(8.145f, .045f + row * .105f, -5.75f + i * .51f),
                             new Vector3(.05f, .095f, .49f), i % 5 == 0 ? M.Stone : M.Brick, .012f);
+                    }
                 }
                 baseMasonry.Attach(low, "brick_foundation");
             }
@@ -292,6 +305,7 @@ namespace TooLateToPanic
         {
             Init();
             id = (id ?? "supplycrate").ToLowerInvariant();
+            if (PanicCuratedAssetArt.TryCreateFixture(id, out var curated)) return curated;
             var root = new GameObject("HomeV2_" + id);
             var b = new Builder();
             switch (id)
@@ -334,7 +348,9 @@ namespace TooLateToPanic
                     // Never remap them by an old palette's name heuristics (baked assets may have numeric suffixes).
                     if (!original || original.name.StartsWith("HomeV2_", StringComparison.Ordinal) ||
                         original.name.StartsWith("HomeV3_", StringComparison.Ordinal) ||
-                        original.name.StartsWith("HomeV4_", StringComparison.Ordinal)) continue;
+                        original.name.StartsWith("HomeV4_", StringComparison.Ordinal) ||
+                        original.name.StartsWith("M_", StringComparison.Ordinal) ||
+                        original.name.StartsWith("Curated", StringComparison.Ordinal)) continue;
                     Material replacement;
                     if (!recolored.TryGetValue(original, out replacement) || !replacement)
                     {
@@ -437,6 +453,24 @@ namespace TooLateToPanic
             b.Box(p + Vector3.up * (size.y * .5f), new Vector3(size.x + .035f, .055f, size.z), M.WalnutDark, .01f);
             b.Attach(parent, name + "_cap");
         }
+        static void DirectionalTrim(GameObject parent,string side,int floor,bool residence)
+        {
+            var b=new Builder();
+            if(side=="north")
+            { b.Box(new Vector3(0,.07f,5.845f),new Vector3(15.75f,.14f,.055f),M.WalnutDark,.008f);
+              b.Box(new Vector3(0,3.08f,5.84f),new Vector3(15.75f,.1f,.075f),M.Taupe,.008f); }
+            else if(side=="west")
+            { b.Box(new Vector3(-7.845f,.07f,0),new Vector3(.055f,.14f,11.75f),M.WalnutDark,.008f);
+              b.Box(new Vector3(-7.84f,3.08f,0),new Vector3(.075f,.1f,11.75f),M.Taupe,.008f); }
+            else if(side=="south")
+              for(int sign=-1;sign<=1;sign+=2)b.Box(new Vector3(sign*4.34f,.07f,-5.845f),new Vector3(7.23f,.14f,.055f),M.WalnutDark,.008f);
+            else if(residence&&floor==0)
+            { b.Box(new Vector3(7.845f,.07f,(-5.875f+1.55f)*.5f),new Vector3(.055f,.14f,7.425f),M.WalnutDark,.008f);
+              b.Box(new Vector3(7.845f,.07f,(2.85f+5.875f)*.5f),new Vector3(.055f,.14f,3.025f),M.WalnutDark,.008f); }
+            else b.Box(new Vector3(7.845f,.07f,0),new Vector3(.055f,.14f,11.75f),M.WalnutDark,.008f);
+            b.Attach(parent,"DirectionalSkirting_"+side);
+        }
+
         static void InteriorTrim(GameObject parent, bool back)
         {
             var b = new Builder();
@@ -989,12 +1023,12 @@ namespace TooLateToPanic
             }
             public void Box(Vector3 p, Vector3 size, M m, float bevel = .015f, Quaternion rotation = default(Quaternion))
             {
-                if (rotation == default(Quaternion)) rotation = Quaternion.identity;
+                if (rotation.Equals(default(Quaternion))) rotation = Quaternion.identity;
                 Add(m, BoxMesh(size, bevel), p, rotation, Vector3.one);
             }
             public void Cylinder(Vector3 p, float radius, float height, M m, int sides = 12, Quaternion rotation = default(Quaternion))
             {
-                if (rotation == default(Quaternion)) rotation = Quaternion.identity;
+                if (rotation.Equals(default(Quaternion))) rotation = Quaternion.identity;
                 string key = "cylinder_" + sides;
                 Mesh mesh;
                 if (!shapes.TryGetValue(key, out mesh) || !mesh) { mesh = CylinderMesh(1, 1, sides); shapes[key] = mesh; }

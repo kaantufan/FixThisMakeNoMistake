@@ -147,11 +147,11 @@ namespace TooLateToPanic
             yield return Shot("07-real-upper-refuge"); world.HandleKey(KeyCode.E); yield return Wait(.15f);
             CheckIt("actual physical stair route and refuge E starts fire", world.JuryDemo.Stage == PanicJuryStage.Fire && world.PlayerPosition.y > 3.05f); Mark("physical-flood-refuge");
             if (world.JuryDemo.Stage != PanicJuryStage.Fire) yield break;
-            yield return PathTo("upper-fire-preparation", new Vector3(-1.6f,3.2f,5.35f), new Vector3(-2.8f,3.2f,4.5f)); if (!routeOK) yield break;
-            CheckIt("fire guidance points to nearby upper-floor furniture", world.JurySnapshot.TargetId == "bed", "target=" + world.JurySnapshot.TargetId);
-            yield return Key("bed", KeyCode.Alpha2); yield return DriveWork(PanicWorkMode.Balance);
+            yield return PathTo("fire-station", new Vector3(0,0,-.65f), new Vector3(.9f,0,-2.2f)); if (!routeOK) yield break;
+            CheckIt("fire guidance points to dedicated equipment station", world.JurySnapshot.TargetId == PanicItemActionRules.FireStationId, "target=" + world.JurySnapshot.TargetId);
+            yield return Key(PanicItemActionRules.FireStationId, KeyCode.E); yield return DriveWork(PanicWorkMode.Balance);
             CheckIt("actual fire tool preparation consumes extinguisher", world.Model.FireToolCount == 1 && world.Expedition.Count("extinguisher") == 0 && world.Model.Budget == 815); Mark("fire-prevention");
-            yield return PathTo("fire-egress", new Vector3(-1.6f,3.2f,5.35f), new Vector3(0,3.2f,5.35f), new Vector3(0,0,-.65f), new Vector3(0,0,-3.8f), new Vector3(0,0,-7.2f), new Vector3(-3,0,-9.5f), PanicJuryDemo.FireAssemblyPosition); if (!routeOK) yield break;
+            yield return PathTo("fire-egress", new Vector3(0,0,-3.8f), new Vector3(0,0,-7.2f), new Vector3(-3,0,-9.5f), PanicJuryDemo.FireAssemblyPosition); if (!routeOK) yield break;
             world.HandleKey(KeyCode.E); yield return Wait(.15f); yield return Shot("08-short-inspection");
             CheckIt("physical fire egress E reaches inspection", world.JuryDemo.Stage == PanicJuryStage.Inspection && world.JuryDemo.Outcomes.Count == 3); Mark("all-three-disasters-visible");
             bool goals = world.JurySnapshot.Goals.All(g => g.State == PanicJuryGoalState.Complete);
@@ -183,6 +183,13 @@ namespace TooLateToPanic
             {
                 yield return Key("door", KeyCode.Alpha3); yield return DriveWork(PanicWorkMode.Ratchet);
                 prepared = Item("door").Tier == 1;
+            }
+            else if (type == DisasterType.Fire)
+            {
+                yield return Key("door", KeyCode.E); yield return Wait(.65f);
+                yield return PathTo("sim-fire-station", new Vector3(0,0,-4.9f), new Vector3(0,0,-2.2f), new Vector3(.9f,0,-2.2f));
+                if (routeOK) { yield return Key(PanicItemActionRules.FireStationId, KeyCode.E); yield return DriveWork(PanicWorkMode.Balance); }
+                prepared = world.Model.FireToolCount == 1;
             }
             else
             {
@@ -221,7 +228,9 @@ namespace TooLateToPanic
             if (world.Model.Phase == PanicPhase.Inspection)
             {
                 CheckIt("inspection restores playable camera and controller " + type, world.PlayerControllerEnabled && world.View.orthographic && !world.CinematicActive && !world.InputLocked);
-                Vector3 inspectStart = world.PlayerPosition; Vector3 inspectTarget = inspectStart + (type == DisasterType.Flood ? Vector3.left : Vector3.back) * .6f;
+                // The fire station is beside the radio side table. Test movement
+                // into the clear hall, rather than asking the capsule to enter that table.
+                Vector3 inspectStart = world.PlayerPosition; Vector3 inspectTarget = inspectStart + (type == DisasterType.Flood || type == DisasterType.Fire ? Vector3.left : Vector3.back) * .6f;
                 yield return MoveTo("inspection-controller-restored-" + type, inspectTarget, .12f);
                 CheckIt("inspection actual movement available " + type, routeOK && Vector3.Distance(inspectStart, world.PlayerPosition) > .3f);
                 world.FinishInspection(); yield return Wait(.1f);
@@ -244,19 +253,13 @@ namespace TooLateToPanic
         {
             var record = new Work { section = section, action = world.Expedition.Work.Action, target = world.Expedition.Work.TargetId, mode = expected.ToString(), began = world.WorkActive, budgetBefore = world.Model.Budget };
             report.works.Add(record); float start = Time.realtimeSinceStartup;
-            CheckIt("production work began " + expected, world.WorkActive && world.Expedition.Work.Mode == expected);
+            CheckIt("production direct-click installation began " + expected, world.WorkActive && world.Expedition.Work.UsesDirectClick);
             if (!world.WorkActive) yield break;
             while (world.WorkActive && Time.realtimeSinceStartup - start < 12f)
             {
                 float dt = WorkDt; var work = world.Expedition.Work;
-                if (!work.IsApplying)
-                {
-                    float offset = work.Target - work.Cursor;
-                    world.StepWork(dt, Mathf.Abs(offset) <= work.TargetWidth * .65f ? 0 : Mathf.Sign(offset), false, Mathf.Abs(offset) <= work.TargetWidth * .65f, false);
-                }
-                else if (work.Mode == PanicWorkMode.Ratchet) world.StepWork(dt, work.ExpectedDirection, false, false, work.ExpectedDirection == 0);
-                else if (work.Mode == PanicWorkMode.Timing) world.StepWork(dt, 0, false, false, Mathf.Abs(work.Cursor - work.Target) <= work.TargetWidth * .65f);
-                else world.StepWork(dt, Mathf.Clamp((work.Target - work.Cursor) * 8f, -1, 1), true, false, false);
+                if (!work.IsInstalling && !work.IsWorldConstruction) world.ClickWorkTarget(work.NextClickTarget);
+                world.StepWork(dt, 0, false, false, false);
                 record.frames++; record.deltaSum += dt; yield return null;
             }
             record.complete = !world.WorkActive && world.Model.Budget < record.budgetBefore;

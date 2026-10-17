@@ -42,6 +42,7 @@ namespace TooLateToPanic
         public bool Muted { get; set; }
         public float SpeechVolume { get; set; } = .78f;
         public float SfxVolume { get; set; } = .40f;
+        string fullSubtitle = string.Empty; int revealed; float typingClock;
         public string Subtitle { get; private set; } = string.Empty;
         public bool SpeechActive { get { return configured && speech && speech.clip && (speech.isPlaying || pausedByWorld); } }
         public float EffectsDuckFactor { get { return duck; } }
@@ -98,15 +99,10 @@ namespace TooLateToPanic
                 CancelSpeech();
                 currentPriority = cue.Priority;
                 spokenThisRun.Add(id);
-                var clip = FindClip(id);
-                Subtitle = cue.Text;
-                subtitleRemaining = clip ? Mathf.Max(1.8f, clip.length + .15f) : 2.8f;
-                if (clip && !Muted)
-                {
-                    speech.clip = clip;
-                    speech.volume = Mathf.Clamp01(SpeechVolume);
-                    speech.Play();
-                }
+                var clip = PanicAudioBank.Get("dialogue_blip");
+                fullSubtitle = cue.Text; revealed = 0; typingClock = 0; Subtitle = string.Empty;
+                subtitleRemaining = Mathf.Max(3f, cue.Text.Length / 32f + 1.8f);
+                if (clip && !Muted) { speech.clip = clip; speech.volume = .20f; }
                 return true;
             }
 
@@ -134,20 +130,30 @@ namespace TooLateToPanic
             if (suspended) return;
             dt = Mathf.Max(0f, dt);
             clock += dt;
+            typingClock += dt;
+            if (revealed < fullSubtitle.Length && typingClock >= .03125f)
+            {
+                int before = revealed; revealed = Mathf.Min(fullSubtitle.Length, revealed + Mathf.Max(1, Mathf.FloorToInt(typingClock * 32f))); typingClock %= .03125f;
+                Subtitle = fullSubtitle.Substring(0, revealed);
+                char c = fullSubtitle[revealed-1];
+                if (!Muted && char.IsLetterOrDigit(c) && revealed / 2 != before / 2 && speech && speech.clip)
+                { speech.pitch = 1f + (revealed % 3 - 1) * .07f; speech.Play(); }
+                if (c == '.' || c == ',' || c == '?' || c == '!') typingClock = -.12f;
+            }
             if (Muted) { speech.Stop(); sfx.Stop(); speech.clip = null; }
             subtitleRemaining = Mathf.Max(0f, subtitleRemaining - dt);
             if (subtitleRemaining <= 0f) { Subtitle = string.Empty; currentPriority = 0; }
             bool speaking = speech && speech.isPlaying;
             duck = Mathf.MoveTowards(duck, speaking ? .55f : 1f, dt * (speaking ? 8f : 4f));
             sfx.volume = Mathf.Clamp01(SfxVolume) * (speaking ? .62f : 1f);
-            if (speech) speech.volume = Mathf.Clamp01(SpeechVolume);
-            if (speech && !speech.isPlaying) speech.clip = null;
+            if (speech) speech.volume = .20f;
+            if (speech && revealed >= fullSubtitle.Length && !speech.isPlaying) speech.clip = null;
         }
 
         public void CancelSpeech()
         {
             if (speech) { speech.Stop(); speech.clip = null; }
-            Subtitle = string.Empty;
+            Subtitle = string.Empty; fullSubtitle = string.Empty; revealed = 0; typingClock = 0;
             subtitleRemaining = 0f;
             currentPriority = 0;
         }

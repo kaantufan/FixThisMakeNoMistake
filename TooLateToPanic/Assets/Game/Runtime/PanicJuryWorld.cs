@@ -23,12 +23,13 @@ namespace TooLateToPanic
             Warp(PanicJuryDemo.SpawnPosition); SyncVisuals(true);
             if (effects) effects.OnPhase(Model.Phase);
             UpdateContext();
+            BeginBagPreparation();
         }
 
-        /// <summary>Always call once each Update while JuryActive, outside pause/input/model Tick gates.</summary>
+        /// <summary>Advance the short flow only while the shared pause/notebook clock gate is open.</summary>
         void TickJuryDemo(bool inputBlocked)
         {
-            if (!JuryActive || JuryDemo == null) return;
+            if (!JuryActive || JuryDemo == null || Model.IsPaused || NotebookBlocksInput) return;
             var before = JuryDemo.Stage;
             JuryDemo.Tick(Time.unscaledDeltaTime, PlayerPosition, controller && controller.isGrounded, inputBlocked);
             if (before != JuryDemo.Stage) RefreshJuryPresentation();

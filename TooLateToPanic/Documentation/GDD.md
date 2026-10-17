@@ -176,3 +176,8 @@ Basılı sağ sürükleme ortografik yaw/pitch, kısa sağ bırakma taşıma; UI
 
 
 Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zamanlı kesintisiz rota + 189/189 regresyon,0runtime hata. Kısa akış49.67sn, dört doğal simülasyon; test Warp/Tick/hile0. Üretim API girdisi, OS/insan keyif kabulü değildir. LATEST ve HOME-V4.8-DELIVERY-2026-10-17.md yeniDLL/manifesti bağlar; eskiV4.7 açıkoyun korunur.
+
+
+## Home V4.9 güncel iş sözleşmesi —17Ekim
+
+Son kullanıcı kararı eski A/D–Enter–Space Ratchet/Timing/Balance zorunluluğunu geçersiz kılar. Sabitlemede iki gerçek vida fareyle seçilir, her biri0,60sn otomatik takılır. Diğer uygun hedefler0,60sn dünya montajıdır. Duvar/pencere gerçek güçlendirme parçası ve karakter build hareketi; yangın tüpü yalnız fire_station;3bölge×4olgun ağaç; hareket×1,35. Yalnız geçerli/tamamlanmamış önlem seçeneği gösterilir. Malzeme/bütçe tamamlamada bir kez, iptal ücretsiz. Son karakter fork mesajıyla görünüm güzelleştirmesi iptal edildi; eskiV2 görünümü korunur, gerekli montaj hareketi kalır. FPS askıda korunur. YeniDLL kabulü LATEST ve HOME-V4.9-DELIVERY-2026-10-17.md ile bağlıdır: 44/44 direkt iş +141/141 kesintisiz rota,0runtime hata. OS/insan/tüm kampanya kabulü değildir. Eski sayılar yeniDLLkanıtı sayılmaz.

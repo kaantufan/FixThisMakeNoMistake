@@ -168,6 +168,9 @@ namespace TooLateToPanic
             st.Restore();
             string job = (task ?? "").ToLowerInvariant();
             if (job.Length == 0 || job == "idle" || job == "walk" || job == "none") return;
+            bool directBuild = job.Contains("build") || job.Contains("anchor") || job.Contains("upgrade") ||
+                job.Contains("tree") || job.Contains("drain") || job.Contains("fence") || job.Contains("fire") || job.Contains("hose");
+            if (directBuild) { ApplyDirectBuild(st, model.transform, job, normalizedProgress); return; }
             st.Capture();
             Transform root = model.transform;
             float phase = Time.time * 8.5f + Mathf.Clamp01(normalizedProgress) * Tau * 2;
@@ -190,6 +193,31 @@ namespace TooLateToPanic
             if (st.RightHand != null && !hose)
                 st.RightHand.rotation = Quaternion.AngleAxis(wave * (fence ? 20 : 32), root.forward) * st.RightHand.rotation;
             if (st.Head != null) st.Head.rotation = Quaternion.AngleAxis(ground ? 16 : 6, root.right) * st.Head.rotation;
+            st.Commit();
+        }
+
+        static void ApplyDirectBuild(PoseState st, Transform root, string job, float progress)
+        {
+            float p = float.IsNaN(progress) || float.IsInfinity(progress) ? 0 : Mathf.Clamp01(progress);
+            if (job.Contains("anchor") && p < 1f) p = Mathf.Repeat(p * 2f, 1f);
+            // One reach/seat/release per installation. Endpoints restore the Animator pose exactly.
+            float strength = Mathf.SmoothStep(0, 1, Mathf.Clamp01(p / .18f)) *
+                (1f - Mathf.SmoothStep(0, 1, Mathf.Clamp01((p - .78f) / .22f)));
+            if (strength <= .0001f) return;
+            st.Capture();
+            bool ground = job.Contains("ground") || job.Contains("floor") || job.Contains("drain");
+            float seat = Mathf.Sin(Mathf.Clamp01((p - .18f) / .60f) * Mathf.PI);
+            st.Lean((ground ? 22f : 9f) * strength + seat * 2f, seat * .65f * strength);
+            Vector3 hip = st.Hips != null ? root.InverseTransformPoint(st.Hips.position) : new Vector3(0, .95f, 0);
+            float height = hip.y + (ground ? -.23f : .34f);
+            float reach = ground ? .43f : .45f;
+            Vector3 rightGoal = root.TransformPoint(new Vector3(.16f, height - seat * .018f, hip.z + reach));
+            Vector3 leftGoal = root.TransformPoint(new Vector3(-.16f, height - .045f, hip.z + reach - .035f));
+            st.ReachBlended(false, rightGoal, root.TransformPoint(new Vector3(.45f, hip.y + .10f, hip.z + .08f)), strength);
+            st.ReachBlended(true, leftGoal, root.TransformPoint(new Vector3(-.45f, hip.y + .10f, hip.z + .08f)), strength);
+            if (st.RightHand != null)
+                st.RightHand.rotation = Quaternion.AngleAxis(Mathf.Sin(p * Mathf.PI * 4f) * 7f * strength, root.forward) * st.RightHand.rotation;
+            if (st.Head != null) st.Head.rotation = Quaternion.AngleAxis((ground ? 12f : 5f) * strength, root.right) * st.Head.rotation;
             st.Commit();
         }
 
@@ -225,6 +253,22 @@ namespace TooLateToPanic
                 b.Segment("driver shaft", go.transform, steel, new Vector3(0, 0, .07f), new Vector3(0, 0, .23f), .008f, .006f);
             }
             b.Flush(); return go;
+        }
+
+        public static void ReleaseHandTool(GameObject tool)
+        {
+            if (!tool || !tool.name.StartsWith("Panic work tool ", StringComparison.Ordinal)) return;
+            var ownedMeshes = new HashSet<Mesh>();
+            var ownedMaterials = new HashSet<Material>();
+            foreach (var filter in tool.GetComponentsInChildren<MeshFilter>(true))
+                if (filter.sharedMesh && filter.sharedMesh.name.StartsWith("PanicWear authored ", StringComparison.Ordinal))
+                    ownedMeshes.Add(filter.sharedMesh);
+            foreach (var renderer in tool.GetComponentsInChildren<Renderer>(true))
+                foreach (var material in renderer.sharedMaterials)
+                    if (material && material.name.StartsWith("PanicWear Tool ", StringComparison.Ordinal)) ownedMaterials.Add(material);
+            foreach (var mesh in ownedMeshes) UnityEngine.Object.Destroy(mesh);
+            foreach (var material in ownedMaterials) UnityEngine.Object.Destroy(material);
+            UnityEngine.Object.Destroy(tool);
         }
 
         /// <summary>
@@ -357,6 +401,12 @@ namespace TooLateToPanic
             public void Lean(float degrees, float twist)
             {
                 if (Chest != null) Chest.rotation = Quaternion.AngleAxis(twist, Root.up) * Quaternion.AngleAxis(degrees, Root.right) * Chest.rotation;
+            }
+            public void ReachBlended(bool left, Vector3 target, Vector3 pole, float strength)
+            {
+                Transform hand = left ? LeftHand : RightHand;
+                if (hand == null) return;
+                Reach(left, Vector3.Lerp(hand.position, target, Mathf.Clamp01(strength)), pole);
             }
             public void Reach(bool left, Vector3 target, Vector3 pole)
             {

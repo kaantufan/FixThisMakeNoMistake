@@ -72,14 +72,14 @@ namespace TooLateToPanic
 
         public void BeginMove()
         {
-            if (IsMoving || WorkActive || InventoryOpen || InputLocked) return;
+            if (IsMoving || WorkActive || InventoryOpen || InputLocked || BagCameraOwnsView || NotebookBlocksInput || Model.IsPaused) return;
             var item = Selected;
             if (item == null || !item.Movable || item.Anchored || !item.Installed || !CanInteract)
             { Model.Notify("Taşımak için yaklaş ve sabitlemeyi kaldır."); return; }
             if (Model.Phase != PanicPhase.Preparing && Model.Phase != PanicPhase.Tutorial)
             { Model.Notify("Eşyalar yalnızca hazırlıkta taşınabilir."); return; }
 
-            movingId = item.Id;
+            movingId = item.Id; effects.Play("furniture",.28f);
             placementOrigin = moveCandidate = item.Position;
             placementFloorY = item.Position.y;
             moveRotation = item.Rotation;
@@ -113,7 +113,7 @@ namespace TooLateToPanic
         {
             if (Model.Items.Find(i => i.Id == movingId) == null) { CancelMove(); return; }
             if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape))
-            { CancelMove(); return; }
+            { effects.Play("ui",.2f); CancelMove(); return; }
 
             MovePlayer(dt, ReadMove());
             if (Input.GetKeyDown(KeyCode.Space)) Jump();
@@ -159,7 +159,7 @@ namespace TooLateToPanic
         public void RotatePlacement(float degrees)
         {
             if (!IsMoving || !PlacementFinite(degrees)) return;
-            moveRotation = Mathf.Repeat(moveRotation + degrees, 360);
+            moveRotation = Mathf.Repeat(moveRotation + degrees, 360); effects.Play("furniture",.18f);
             var item = Model.Items.Find(i => i.Id == movingId);
             if (item != null) UpdatePlacementPreview(item);
         }
@@ -171,8 +171,9 @@ namespace TooLateToPanic
             var item = Model.Items.Find(i => i.Id == movingId);
             if (item == null) { CancelMove(); return false; }
             UpdatePlacementPreview(item);
-            if (!placementValid) return false;
-            if (!Model.MoveItem(movingId, moveCandidate, moveRotation)) return false;
+            if (!placementValid) { effects.Play("reject",.25f); return false; }
+            if (!Model.MoveItem(movingId, moveCandidate, moveRotation)) { effects.Play("reject",.25f); return false; }
+            effects.Play("furniture",.4f);
             CancelMove();
             SyncVisuals(true); // Includes matching loot-source position and floor, without cloning or costs.
             UpdateContext();

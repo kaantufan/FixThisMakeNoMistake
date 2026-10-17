@@ -14,8 +14,10 @@ namespace TooLateToPanic
         [Serializable] public sealed class Report
         {
             public string evidenceType = "Native semantic/API smoke with explicit actor-position and delta-time fixtures";
-            public string limitations = "No OS keyboard/mouse, no human route/timing/fun acceptance, no broad campaign/art acceptance. Warp is setup only at named task/shelter positions; reachability between those points is NOT accepted. Work is driven by real production Tick input, never Work.Complete=true. Injected 8/80/300 second Tick values test timeline semantics, not elapsed wall-clock play.";
-            public string scorePath, scoreBefore, scoreAfter;
+            public string limitations = "No OS keyboard/mouse, no human route/timing/fun acceptance, no broad campaign/art acceptance. Warp is setup only at named task/shelter positions; reachability between those points is NOT accepted. Direct screws use production ClickWorkTarget plus Tick; world installs use production timed work. No Complete=true writes. Fixed-delta work steps are fixtures, not real0.60s acceptance. Injected 8/80/300 second Tick values test timeline semantics, not elapsed wall-clock play.";
+            public string scorePath, scoreBefore, scoreAfter, startedUtc, finishedUtc;
+            public bool completed, success;
+            public List<string> errors = new List<string>();
             public int passed, total;
             public float wallSeconds;
             public List<Entry> checks = new List<Entry>();
@@ -46,7 +48,8 @@ namespace TooLateToPanic
             Directory.CreateDirectory(evidence);
             reportPath = Path.Combine(evidence, "jury-smoke.json");
             report = new Report { scorePath = score, scoreBefore = Hash(score) };
-            began = Time.realtimeSinceStartup;
+            began = Time.realtimeSinceStartup; report.startedUtc = DateTime.UtcNow.ToString("o");
+            Application.logMessageReceived += OnLog;
             while (!UnityEngine.Rendering.SplashScreen.isFinished) yield return null;
             yield return new WaitForSeconds(.5f);
             var bodies = new Stack<IEnumerator>(); bodies.Push(Run());
@@ -61,14 +64,22 @@ namespace TooLateToPanic
             }
             report.scoreAfter = Hash(score); report.wallSeconds = Time.realtimeSinceStartup - began;
             Check("isolated score bytes unchanged after demo/reset/campaign", report.scoreBefore == report.scoreAfter, report.scoreBefore + " -> " + report.scoreAfter);
+            report.completed = true; report.finishedUtc = DateTime.UtcNow.ToString("o");
+            report.success = report.passed == report.total && string.IsNullOrEmpty(report.error) && report.errors.Count == 0;
+            Application.logMessageReceived -= OnLog;
             File.WriteAllText(reportPath, JsonUtility.ToJson(report, true));
             Debug.Log("JURY_SMOKE_DONE " + report.passed + "/" + report.total + " " + reportPath);
+            Application.Quit(report.success ? 0 : 1);
         }
 
         IEnumerator Run()
         {
             yield return Capture("01-title");
             world.StartJuryDemo(); yield return null;
+            // The current subtitle contract reveals text on the normal32char/s
+            // clock. The event intentionally starts empty; wait for a real tick.
+            float subtitleDeadline=Time.realtimeSinceStartup+.5f;
+            while(string.IsNullOrEmpty(world.PresentationSubtitle)&&Time.realtimeSinceStartup<subtitleDeadline)yield return null;
             CheckPresentationAssets();
             yield return Capture("02-jury-onboarding");
             CaptureHudSupplyPreviews();
@@ -97,11 +108,11 @@ namespace TooLateToPanic
             world.QuickAction(1); yield return null;
             yield return Capture("04-short-manual-work");
             Check("demo work has two real stages", world.WorkActive && expedition.Work.TotalSteps == 2 && expedition.Work.JuryFriendly);
-            world.StepWork(.05f, 0, false, true, false); world.CancelWork(); yield return null;
+            world.ClickWorkTarget(0); world.StepWork(.05f, 0, false, false, false); world.CancelWork(); yield return null;
             Check("cancel before completion costs nothing", model.Budget == budget && expedition.Count("bracket") == 1 && expedition.Count("screws") == 2 && !Find("fridge").Anchored);
             world.SmokeFocus("fridge"); world.QuickAction(1);
             yield return DriveWork(PanicWorkMode.Ratchet);
-            Check("ratchet commits exact recipe once", Find("fridge").Anchored && model.Budget == budget - 60 && expedition.Count("bracket") == 0 && expedition.Count("screws") == 0);
+            Check("two screw clicks commit exact recipe once", Find("fridge").Anchored && model.Budget == budget - 60 && expedition.Count("bracket") == 0 && expedition.Count("screws") == 0);
             yield return Capture("05-secured-hardware");
             int committed = model.Budget; world.CompleteWork();
             Check("duplicate completion cannot charge", model.Budget == committed);
@@ -127,16 +138,16 @@ namespace TooLateToPanic
             yield return Place(new Vector3(5f, .05f, -8.5f), "east drain: task proximity fixture; outside route not tested");
             world.SmokeFocus("drain_east"); world.HandleKey(KeyCode.E);
             yield return DriveWork(PanicWorkMode.Timing);
-            Check("timing commits exact drain recipe", model.DrainCount == 1 && model.Budget == 890 && expedition.Count("sandbag") == 0 && expedition.Count("plank") == 0);
+            Check("direct drain installation commits exact recipe once", model.DrainCount == 1 && model.Budget == 890 && expedition.Count("sandbag") == 0 && expedition.Count("plank") == 0);
             Check("basement cannot be flood refuge", !world.JuryDemo.TryReachShelter(PanicJuryShelter.FloodHighGround, new Vector3(0, -3.2f, 5.15f), true));
             yield return Place(PanicJuryDemo.FloodRefugePosition, "upper landing: refuge position fixture; stair traversal not tested");
             world.HandleKey(KeyCode.E); yield return null;
             Check("upper floor refuge E advances", world.JuryDemo.Stage == PanicJuryStage.Fire && world.JuryDemo.Outcomes.Count == 2 && world.JuryDemo.Outcomes[1].ShelterReached);
 
-            yield return Place(new Vector3(6.5f, .05f, 3.25f), "fridge: fire preparation position fixture, no active fire traversal");
-            world.SmokeFocus("fridge"); world.QuickAction(2);
+            yield return Place(new Vector3(.9f, .05f, -2.2f), "ground fire station: task proximity fixture, no egress route acceptance");
+            world.SmokeFocus(PanicItemActionRules.FireStationId); world.HandleKey(KeyCode.E);
             yield return DriveWork(PanicWorkMode.Balance);
-            Check("balance commits exact fire recipe", model.FireToolCount == 1 && expedition.Count("extinguisher") == 0 && model.Budget == 815);
+            Check("dedicated station commits actual extinguisher recipe once", model.FireToolCount == 1 && expedition.Count("extinguisher") == 0 && model.Budget == 815);
             Check("airborne exit rejected", !world.JuryDemo.TryReachShelter(PanicJuryShelter.FireAssembly, PanicJuryDemo.FireAssemblyPosition, false));
             yield return Place(PanicJuryDemo.FireAssemblyPosition, "outdoor assembly: goal position fixture; egress route not tested");
             world.HandleKey(KeyCode.E); yield return null;
@@ -151,7 +162,7 @@ namespace TooLateToPanic
             float timer = model.TimeRemaining; model.Tick(1f);
             Check("campaign reset clears demo and prepared stock", !model.IsJuryDemo && world.JuryDemo == null && model.PackedFood == 0 && model.PackedWater == 0 && expedition.Count("bracket") == 0 && model.TimeRemaining < timer);
             expedition.Work.Begin("anchorwall", "fridge");
-            Check("normal work still has four stages", expedition.Work.TotalSteps == 4 && !expedition.Work.JuryFriendly); world.CancelWork(); world.ReturnToMenu();
+            Check("normal anchor uses two direct screws", expedition.Work.TotalSteps == 2 && expedition.Work.UsesDirectClick && !expedition.Work.JuryFriendly); world.CancelWork(); world.ReturnToMenu();
 
             var clockModel = new PanicModel(); var clockExpedition = new PanicExpedition(clockModel); var clock = new PanicJuryDemo(clockModel, clockExpedition);
             clock.Start(); clockModel.SetDeveloperOption(PanicDeveloperOption.FreezePreparationTime, true);
@@ -260,12 +271,15 @@ namespace TooLateToPanic
             Check("upper floor hides lower floors while their solids remain",world.ActiveFloor==1&&world.FloorHasVisibleRenderers(1)&&!world.FloorHasVisibleRenderers(0)&&!world.FloorHasVisibleRenderers(-1)&&world.FloorPhysicalCollidersIntact(0)&&world.FloorPhysicalCollidersIntact(-1)&&world.FloorPhysicalCollidersIntact(1));
             Check("interior view hides the rescue helicopter",!world.HelicopterVisible);
             yield return Capture("17-upper-floor-cutaway");
+            float orbitGateDeadline=Time.realtimeSinceStartup+5f;
+            while((world.CinematicActive||world.LossAnnounced||world.InputLocked)&&Time.realtimeSinceStartup<orbitGateDeadline)yield return null;
             Quaternion original=world.View.transform.rotation;
             world.StepCameraOrbitInput(new Vector2(800,450),true,true,false,false,.016f);
             world.StepCameraOrbitInput(new Vector2(1120,550),false,true,false,false,.2f);
             var released=world.StepCameraOrbitInput(new Vector2(1120,550),false,false,true,false,.016f);
-            for(int i=0;i<30;i++)yield return null;
-            Check("real orbit rotates orthographic view without starting placement",!released.Click&&!world.IsMoving&&world.View.orthographic&&Mathf.Abs(world.CameraOrbitYaw)>40&&Quaternion.Angle(original,world.View.transform.rotation)>30);
+            float orbitDeadline=Time.realtimeSinceStartup+2f;
+            while((Mathf.Abs(world.CameraOrbitYaw)<=40||Quaternion.Angle(original,world.View.transform.rotation)<=30)&&Time.realtimeSinceStartup<orbitDeadline)yield return null;
+            Check("real orbit rotates orthographic view without starting placement",!released.Click&&!world.IsMoving&&world.View.orthographic&&Mathf.Abs(world.CameraOrbitYaw)>40&&Quaternion.Angle(original,world.View.transform.rotation)>30,"yaw="+world.CameraOrbitYaw+"; angle="+Quaternion.Angle(original,world.View.transform.rotation)+"; click="+released.Click+"; moving="+world.IsMoving+"; cinema="+world.CinematicActive+"; loss="+world.LossAnnounced+"; locked="+world.InputLocked+"; pixelRect="+world.View.pixelRect+"; natural-clock deadline, no injected camera Tick");
             yield return Capture("18-upper-floor-orbit");
             world.HandleKey(KeyCode.Tab);yield return null;
             float yaw=world.CameraOrbitYaw;
@@ -436,7 +450,7 @@ namespace TooLateToPanic
 
         void CheckPresentationAssets()
         {
-            string[] ids = {"jury_intro","jury_bag_ready","jury_secured","jury_quake_result","jury_flood","jury_fire","jury_end","pickup_soft","anchor_latch","objective_tick"};
+            string[] ids = {"pickup_soft","anchor_latch","objective_tick"};
             float speechSeconds = 0f;
             foreach (string id in ids)
             {
@@ -445,8 +459,10 @@ namespace TooLateToPanic
                 Check("real imported audio " + id, valid, clip ? clip.length.ToString("F3") + "s " + clip.frequency + "Hz" : "missing");
                 if (valid && id.StartsWith("jury_")) speechSeconds += clip.length;
             }
-            Check("short speech total below 30 seconds", speechSeconds > 0 && speechSeconds < 30f, speechSeconds.ToString("F3") + "s");
-            Check("native cue router enabled and real speech active", world.PresentationAudioEnabled && world.PresentationSpeechActive && !string.IsNullOrEmpty(world.PresentationSubtitle));
+            foreach(string id in new[]{"jury_intro","jury_bag_ready","jury_secured","jury_quake_result","jury_flood","jury_fire","jury_end"})
+                Check("spoken clip excluded " + id,!Resources.Load<AudioClip>("Audio/Jury/"+id));
+            Check("imported short dialogue blip", PanicAudioBank.Get("dialogue_blip") && PanicAudioBank.Get("dialogue_blip").length < .12f);
+            Check("native subtitle router enabled", world.PresentationAudioEnabled && !string.IsNullOrEmpty(world.PresentationSubtitle));
             foreach (string id in new[]{"water","food","firstaid","flashlight","battery","radio","blanket","extinguisher"})
             {
                 var visual = PanicResidenceArt.CreatePickup(id, 0); visual.transform.position = new Vector3(100,100,100);
@@ -476,26 +492,21 @@ namespace TooLateToPanic
         PanicItem Find(string id) { return world.Model.Items.Find(item => item.Id == id); }
         IEnumerator DriveWork(PanicWorkMode expected)
         {
-            Check("manual work mode " + expected, world.WorkActive && world.Expedition.Work.Mode == expected);
+            Check("direct installation started " + expected, world.WorkActive && world.Expedition.Work.UsesDirectClick);
+            report.fixtures.Add("Direct work uses .04 injected Tick per yielded frame; engine may also tick work. This validates semantic commit only, not real .60 second duration or OS hit areas.");
             int frames = 0;
             while (world.WorkActive && frames++ < 1400)
             {
                 var work = world.Expedition.Work;
-                if (!work.IsApplying)
-                {
-                    float offset = work.Target - work.Cursor;
-                    world.StepWork(.04f, Mathf.Abs(offset) <= work.TargetWidth ? 0 : Mathf.Sign(offset), false, Mathf.Abs(offset) <= work.TargetWidth, false);
-                }
-                else if (work.Mode == PanicWorkMode.Ratchet)
-                    world.StepWork(.04f, work.ExpectedDirection, false, false, work.ExpectedDirection == 0);
-                else if (work.Mode == PanicWorkMode.Timing)
-                    world.StepWork(.04f, 0, false, false, Mathf.Abs(work.Cursor - work.Target) <= work.TargetWidth * .7f);
-                else world.StepWork(.04f, Mathf.Clamp((work.Target - work.Cursor) * 8f, -1, 1), true, false, false);
+                if (!work.IsInstalling && !work.IsWorldConstruction) world.ClickWorkTarget(work.NextClickTarget);
+                world.StepWork(.04f, 0, false, false, false);
                 yield return null;
             }
-            Check("manual production work terminates " + expected, !world.WorkActive, "semantic Tick frames=" + frames + "; .04 dt fixture; no Complete flag writes");
+            Check("direct production work terminates " + expected, !world.WorkActive, "semantic Tick frames=" + frames + "; .04 dt fixture; no Complete flag writes");
             if (world.WorkActive) world.CancelWork();
         }
+        void OnLog(string message, string stack, LogType type)
+        { if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert) report.errors.Add(message + "\n" + stack); }
         static string Hash(string path)
         {
             if (!File.Exists(path)) return "absent";

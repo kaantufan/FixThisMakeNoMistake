@@ -91,7 +91,7 @@ namespace TooLateToPanic
             }
             label = snapshot.ShelterKind != PanicJuryShelter.None ? "E  GÜVENLİ NOKTA" :
                 snapshot.Stage == PanicJuryStage.Flood ? "DRENAJ · E İLE BAŞLA" :
-                snapshot.Stage == PanicJuryStage.Fire ? "TÜPÜ HAZIRLA · 2" :
+                snapshot.Stage == PanicJuryStage.Fire ? "TÜPÜ YERLEŞTİR · E" :
                 snapshot.Heading;
             return target;
         }

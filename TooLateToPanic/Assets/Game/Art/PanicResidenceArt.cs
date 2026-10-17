@@ -144,18 +144,22 @@ namespace TooLateToPanic
             var floor=Group(root,"Floor"); var back=Group(root,"BackWalls");
             var low=Group(root,"FrontLowWalls"); var high=Group(root,"FrontHighWalls"); var roof=Group(root,"Roof");
             Solid(floor,"garage_slab",V(11.7f,-.11f,3.1f),V(7,.2f,6.2f),M.Concrete);
-            Solid(back,"garage_north",V(11.7f,1.5f,6.2f),V(7,3,.22f),M.Cream);
-            Solid(back,"garage_west",V(8.2f,1.5f,3.1f),V(.22f,3,6.2f),M.Cream);
-            Solid(low,"garage_east_low",V(15.2f,.25f,3.1f),V(.22f,.5f,6.2f),M.Brick);
-            Solid(high,"garage_east_high",V(15.2f,1.75f,3.1f),V(.22f,2.5f,6.2f),M.Cream);
+            var north=Group(root,"FacadeNorth");var west=Group(root,"FacadeWest");
+            var south=Group(root,"FacadeSouth");var east=Group(root,"FacadeEast");
+            Solid(north,"garage_north",V(11.7f,1.5f,6.2f),V(7,3,.22f),M.Cream);
+            Solid(west,"garage_west_south",V(8.2f,1.5f,.775f),V(.22f,3,1.55f),M.Cream);
+            Solid(west,"garage_west_north",V(8.2f,1.5f,4.525f),V(.22f,3,3.35f),M.Cream);
+            Solid(west,"garage_west_lintel",V(8.2f,2.65f,2.2f),V(.22f,.7f,1.3f),M.Cream);
+            Solid(east,"garage_east_low",V(15.2f,.25f,3.1f),V(.22f,.5f,6.2f),M.Brick);
+            Solid(east,"garage_east_high",V(15.2f,1.75f,3.1f),V(.22f,2.5f,6.2f),M.Cream);
             // Width3m aperture x10.2..13.2, lintel never crosses below y2.4.
             for(int side=0;side<2;side++)
             {
                 float x=side==0?9.2f:14.2f;
-                Solid(low,"garage_front_low_"+side,V(x,.25f,0),V(2,.5f,.22f),M.Brick);
-                Solid(high,"garage_front_high_"+side,V(x,1.75f,0),V(2,2.5f,.22f),M.Cream);
+                Solid(south,"garage_front_low_"+side,V(x,.25f,0),V(2,.5f,.22f),M.Brick);
+                Solid(south,"garage_front_high_"+side,V(x,1.75f,0),V(2,2.5f,.22f),M.Cream);
             }
-            Solid(high,"garage_front_lintel",V(11.7f,2.7f,0),V(3,.6f,.22f),M.Cream);
+            Solid(south,"garage_front_lintel",V(11.7f,2.7f,0),V(3,.6f,.22f),M.Cream);
             Solid(roof,"garage_roof_deck",V(11.7f,3.06f,3.1f),V(7.36f,.16f,6.56f),M.DarkWood);
             var b=new Builder();
             for(int i=0;i<18;i++) b.Box(V(8.2f+i*.41f,3.161f,3.1f),V(.037f,.037f,6.56f),M.Steel,.005f);
@@ -179,6 +183,14 @@ namespace TooLateToPanic
         public static GameObject Create(string id)
         {
             Init(); id=(id??"houseplant").ToLowerInvariant();
+            if(PanicCuratedAssetArt.TryCreateFixture(id,out var curated))
+            {
+                // Existing tabletop contract y1.05 is retained; rest of the world places its
+                // book/lamp props there. Fit table height explicitly without changing physics.
+                if(id=="table"&&PanicCuratedAssetArt.TryGetLocalBounds(curated.transform,out var tableBounds)&&tableBounds.size.y>.01f)
+                    curated.transform.localScale=new Vector3(1,1.05f/tableBounds.size.y,1);
+                return curated;
+            }
             var root=new GameObject("HomeV3_"+id); var b=new Builder();
             switch(id)
             {
@@ -187,7 +199,13 @@ namespace TooLateToPanic
                 case "desk": Desk(root,b); break;
                 case "bookshelf": Bookshelf(b); break;
                 case "table": DiningTable(b); break;
-                case "tv": case "tvstand": Television(b); break;
+                case "tv": case "tvstand":
+                    // Retain a low media stand; replace the screen/feet with the real branch model.
+                    b.Box(V(0,.31f,.04f),V(1.7f,.62f,.55f),M.DarkWood,.025f);
+                    for(int side=-1;side<=1;side+=2)b.Box(V(side*.42f,.34f,-.246f),V(.76f,.35f,.018f),M.Honey,.012f);
+                    var screen=PanicCuratedAssetArt.CreateDisplay("Television",1.28f);
+                    if(screen)Place(root,screen,V(0,.63f,0),0);else Television(b);
+                    break;
                 case "toolbox": Toolbox(root,b); break;
                 case "cabinet": case "kitchencabinet": StorageCabinet(root,b,1.48f,.94f,.67f,true,false); break;
                 case "locker": StorageCabinet(root,b,.76f,2.08f,.63f,false,false); break;
@@ -426,24 +444,53 @@ namespace TooLateToPanic
 
         static void Fireplace(Builder b)
         {
-            // An open firebox: there is no flat black cube over the opening.
-            b.Box(V(0,.085f,0),V(1.85f,.17f,.88f),M.Concrete,.028f);
-            b.Box(V(0,.66f,.3f),V(1.57f,1.12f,.15f),M.DarkWood,.014f);
-            for(int s=-1;s<=1;s+=2) b.Box(V(s*.67f,.68f,0),V(.3f,1.15f,.72f),M.Terracotta,.025f);
-            b.Box(V(0,1.2f,0),V(1.62f,.25f,.75f),M.Brick,.022f);
-            b.Box(V(0,1.37f,-.02f),V(1.89f,.13f,.91f),M.Honey,.025f);
-            b.Box(V(0,1.8f,.22f),V(1.1f,.76f,.42f),M.Cream,.016f);
-            for(int i=0;i<7;i++) b.Beam(V(-.47f+i*.155f,.24f,-.28f),V(-.47f+i*.155f,.55f,-.28f),.021f,M.Steel);
-            b.Beam(V(-.5f,.49f,-.28f),V(.5f,.49f,-.28f),.025f,M.Steel);
-            for(int i=0;i<4;i++) b.Cylinder(V(-.27f+i*.18f,.26f,.01f),.066f,.65f,M.DarkWood,10,Quaternion.Euler(0,0,80+i*7));
-            for(int r=0;r<4;r++) for(int s=-1;s<=1;s+=2)
+            // Authored arched stone hearth. Opening has actual depth and remains clear for
+            // the retained flame at local(0,.13,-.22), and light at(0,.7,-.45).
+            b.Box(V(0,.075f,-.01f),V(1.85f,.15f,.88f),M.Concrete,.035f);
+            b.Box(V(0,.18f,-.02f),V(1.64f,.06f,.72f),M.Steel,.012f);
+            b.Box(V(0,.69f,.30f),V(1.45f,1.02f,.12f),M.Navy,.008f);
+            for(int side=-1;side<=1;side+=2)
             {
-                b.Box(V(s*.67f,.24f+r*.27f,-.37f),V(.3f,.014f,.012f),M.Honey,.001f);
-                b.Box(V(s*.55f,.25f+r*.27f,-.379f),V(.02f,.13f,.01f),M.Cream,.001f);
+                for(int row=0;row<4;row++)
+                {
+                    b.Box(V(side*.675f,.305f+row*.225f,-.01f),V(.31f,.214f,.68f),row%2==0?M.Cream:M.Concrete,.022f);
+                    b.Box(V(side*.681f,.305f+row*.225f,-.361f),V(.274f,.17f,.025f),M.Tile,.013f);
+                }
+                b.Box(V(side*.68f,1.166f,-.01f),V(.36f,.11f,.73f),M.Honey,.018f);
             }
-            Books(b,V(-.49f,1.445f,.06f),.45f);
-            b.Cylinder(V(.51f,1.53f,.12f),.072f,.15f,M.Olive,18);
-            b.Cylinder(V(.51f,1.61f,.12f),.035f,.02f,M.Glow,16);
+            // Nine real wedge stones form an arch; no flat lintel fills the fire opening.
+            for(int i=0;i<9;i++)
+            {
+                float a=(i*20f+1.5f)*Mathf.Deg2Rad,c=(i*20f+18.5f)*Mathf.Deg2Rad;
+                Vector3[] v=new Vector3[8];
+                for(int face=0;face<2;face++)
+                {
+                    float z=face==0?-.37f:.32f;
+                    v[face*4]=V(Mathf.Cos(a)*.49f,.68f+Mathf.Sin(a)*.49f,z);
+                    v[face*4+1]=V(Mathf.Cos(c)*.49f,.68f+Mathf.Sin(c)*.49f,z);
+                    v[face*4+2]=V(Mathf.Cos(c)*.73f,.68f+Mathf.Sin(c)*.73f,z);
+                    v[face*4+3]=V(Mathf.Cos(a)*.73f,.68f+Mathf.Sin(a)*.73f,z);
+                }
+                b.Prism(v,i==4?M.Honey:i%2==0?M.Cream:M.Concrete);
+            }
+            b.Box(V(0,1.465f,-.03f),V(1.91f,.105f,.91f),M.Honey,.026f);
+            b.Box(V(0,1.535f,-.03f),V(1.96f,.055f,.94f),M.Walnut,.016f);
+            // Tapered plaster chimney breast, separate from the stone surround.
+            b.Prism(new[]{V(-.66f,1.57f,-.01f),V(.66f,1.57f,-.01f),V(.45f,2.18f,.07f),V(-.45f,2.18f,.07f),
+                V(-.66f,1.57f,.38f),V(.66f,1.57f,.38f),V(.45f,2.18f,.38f),V(-.45f,2.18f,.38f)},M.Cream);
+            for(int i=0;i<4;i++)
+            {
+                float x=-.28f+i*.18f;
+                b.Cylinder(V(x,.27f,.01f),.065f,.57f,M.DarkWood,12,Quaternion.Euler(0,0,80+i*7));
+                b.Cylinder(V(x-.28f,.27f,.01f),.052f,.008f,M.Honey,12,Quaternion.Euler(0,0,90));
+            }
+            for(int i=0;i<7;i++)b.Beam(V(-.46f+i*.153f,.22f,-.29f),V(-.46f+i*.153f,.50f,-.29f),.018f,M.Steel);
+            b.Beam(V(-.49f,.49f,-.29f),V(.49f,.49f,-.29f),.025f,M.Steel);
+            for(int row=0;row<3;row++)for(int col=0;col<5;col++)
+                b.Box(V(-.40f+col*.19f,.32f+row*.19f,.232f),V(.18f,.18f,.013f),M.Brick,.006f);
+            Books(b,V(-.49f,1.568f,.06f),.4f);
+            b.Cylinder(V(.54f,1.67f,.11f),.065f,.19f,M.Olive,18);
+            b.Cylinder(V(.54f,1.775f,.11f),.026f,.022f,M.Glow,12);
         }
         static void Computer(Builder b)
         {
@@ -1610,10 +1657,10 @@ namespace TooLateToPanic
                 list.Add(new CombineInstance{mesh=mesh,transform=Matrix4x4.TRS(p,q,scale)});
             }
             public void Box(Vector3 p,Vector3 size,M m,float bevel=.012f,Quaternion rotation=default(Quaternion))
-            {if(rotation==default(Quaternion))rotation=Quaternion.identity;Add(m,BoxMesh(size,bevel),p,rotation,Vector3.one);}
+            {if(rotation.Equals(default(Quaternion)))rotation=Quaternion.identity;Add(m,BoxMesh(size,bevel),p,rotation,Vector3.one);}
             public void Cylinder(Vector3 p,float r,float h,M m,int sides=16,Quaternion rotation=default(Quaternion))
             {
-                if(rotation==default(Quaternion))rotation=Quaternion.identity;
+                if(rotation.Equals(default(Quaternion)))rotation=Quaternion.identity;
                 Add(m,TurnedMesh(1,1,sides),p,rotation,V(r,h,r));
             }
             public void Cone(Vector3 p,float bottom,float top,float h,M m,int sides)

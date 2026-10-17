@@ -1,6 +1,18 @@
+﻿> Güncel V4.11 ses/provenans açıklaması: [uyarlama kaydı](Publications/v0.4.11/ADAPTATION.md). Yedi eski konuşma kaydı arşivdedir; güncel konuşma olayları yazı + dialogue_blip kullanır. Aşağıdaki eski sürüm notları tarihsel kayıttır.
+
 # Too Late to Panic! — asset kaynakları
 
-## Güncel Home V4.7
+## Home V4.11 güncel kaynaklar — 17 Ekim 2026
+
+Yarkın `yarkin-assets` dalının `11f12b4cf1f6bf676dcf3dc5055e1b66c8b1ff57` sürümünden31FBX, temizlenmiş prefablar,14klip/7mekanizma ve Built-In materyaller alındı. Mevcut eşyaların eşdeğerleri değiştirildi; yeni oynanış kimliği bulunmayan modeller kaynak olarak korunur. Üst dalın fizik/girdi/model scriptleri aktarılmadı. Kliplerde oyuncuda pasif örnekleme için yalnız Legacy bayrağı düzeltildi; eğriler, zamanlar, olaylar ve GUID'ler korundu. Yeni bir genel lisans atanmadı. Tam provenans: [Yarkın V4.11](Publications/v0.4.11/upstream-assets-original.md).
+
+Defter, `defter-mockup` dalı `07ecbccb097ea796067afd8a35af615563857d43` HTML tasarımının yerel Unity uyarlamasıdır; mockup sayıları yerine gerçek Model/Expedition kayıtları kullanılır. Yeni el/kol modeli ve kemerli şömine bu görev için yerel kaynakta üretildi. Eski V2 üçüncü şahıs görünümü korunur. Bu görevde ücretli servis, kredi veya yeni ses üretimi yapılmadı. Önceki lisanslar ve ses politikası korunur. [Eksik/eşdeğer asset listesi](MISSING-ASSETS-V411.md).
+
+## Korunan Home V4.9
+
+Yeni özgün prosedürel vida hedefleri, güçlendirme montajı ve olgun ağaç sıraları PanicWorkArt/PanicConstructionArt kaynaklarıdır. Varolan Yarkın yangın ekipmanı provenansı korunur. Karakter görünüm polish paketi son kullanıcı kararıyla geri alındı; eskiV2 geometri/materyalleri ve lisansları korunur, yalnız işlevsel montaj pozu/alet temizliği eklendi. Yeni sağlayıcı/kredi/indirme yoktur.
+
+## Korunan Home V4.7 kaynakları
 
 Yarkın yarkin-assets/eb05475ee0533b86031b36f156f6022521118a15 kaynağından seçili32FBX/32ikon/29materyal+atlas alındı; import/shared mesh ve GUID provenansı Assets/Vendor/Yarkin/Documentation altında korunur. Branch bütün olarak merge edilmedi. Yerel yeni12prop detay geçişi özgün prosedürel koddur. Kaynaklara yeni genel CC0/MIT lisansı atanmaz.
 

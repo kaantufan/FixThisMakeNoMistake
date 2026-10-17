@@ -1,10 +1,10 @@
-# Too Late to Panic! — çalışma düzeni
+﻿# Too Late to Panic! — çalışma düzeni
 
 ## Güncel oyun ve çalışma alanı
 
 Oyunun kesin adı **Too Late to Panic!**; tema **Afete Hazırlık ve Önlem**. Kullanıcının 16 Ekim 2026 tarihli kararıyla bu çalışma alanı yalnız bu oyuna aittir. İlgisiz kaynaklar, build'ler, belgeler ve eski oyun yönergeleri kaldırılır; klasör ve aktif belge adları bu oyuna göre düzenlenir. Başka bir oyunun hedeflerini yeniden kapsam sayma.
 
-- `TooLateToPanic/`: aktif izometrik oyun; güncel geliştirme Home V4.6.
+- `TooLateToPanic/`: aktif izometrik oyun; güncel geliştirme Home V4.9.
 - `TooLateToPanicFPS/`: kullanıcının 16 Ekim son kararıyla geliştirmesi durdurulmuş bağımsız FPS denemesi; kaynakları korunur, yeni görev başlatılmaz.
 - `Docs/TOO-LATE-TO-PANIC-GDD.md`: ortak temel oyun tasarımı; Home V3 ve FPS farkları kendi sözleşmelerinde.
 - `Docs/TOO-LATE-TO-PANIC-TEAM.md`: ekip ve teslim düzeni.
@@ -96,3 +96,18 @@ Güncel kanıt ve hashler LATEST-BUILD.json ile Documentation/HOME-V4.7-DELIVERY
 
 
 Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zamanlı kesintisiz rota + 189/189 regresyon,0runtime hata. Kısa akış49.67sn, dört doğal simülasyon; test Warp/Tick/hile0. Üretim API girdisi, OS/insan keyif kabulü değildir. LATEST ve HOME-V4.8-DELIVERY-2026-10-17.md yeniDLL/manifesti bağlar; eskiV4.7 açıkoyun korunur.
+
+
+## Home V4.9 güncel iş sözleşmesi —17Ekim
+
+Son kullanıcı kararı eski A/D–Enter–Space Ratchet/Timing/Balance zorunluluğunu geçersiz kılar. Sabitlemede iki gerçek vida fareyle seçilir, her biri0,60sn otomatik takılır. Diğer uygun hedefler0,60sn dünya montajıdır. Duvar/pencere gerçek güçlendirme parçası ve karakter build hareketi; yangın tüpü yalnız fire_station;3bölge×4olgun ağaç; hareket×1,35. Yalnız geçerli/tamamlanmamış önlem seçeneği gösterilir. Malzeme/bütçe tamamlamada bir kez, iptal ücretsiz. Son karakter fork mesajıyla görünüm güzelleştirmesi iptal edildi; eskiV2 görünümü korunur, gerekli montaj hareketi kalır. FPS askıda korunur. YeniDLL kabulü LATEST ve HOME-V4.9-DELIVERY-2026-10-17.md ile bağlıdır: 44/44 direkt iş +141/141 kesintisiz rota,0runtime hata. OS/insan/tüm kampanya kabulü değildir. Eski sayılar yeniDLLkanıtı sayılmaz.
+
+
+17 Ekim Home V4.9 QA arka plan teslimi: Computer Use/OS girişi/aktivasyon0. Ankraj ÇÖZ ve ücretsiz iki vidalı yeniden takma, yeni ağaç gövdesi–gerçek controller çakışmasında harcamasız red/iptal, simülasyon60sn uyarısı düzeltildi. DLL471E6AFF3DBD054C3FE099FD20AABFB8A5498661C16325D3AC5217705106AC01; son adayda338/338 mekanik,24/24 fizik,44/44 direkt,141/141 kesintisiz,161/161 GUI,27/27 sonuç/skip,58/58 frame,11/11 kapı-merdiven ve11/11 yerleşim;0runtime hata. Matrix429gözlem kanıt katmanlarıyla geçti;505plan satırının hepsi tam native PASS değildir, kısmi/NOT_RUN/OS sınırları CSV/JSON içindedir. LATEST ve Documentation/HOME-V4.9-QA-DELIVERY-2026-10-17.md günceldir. Eski fixture FAIL kayıtları korunur; sadece test rota yaklaşımı yeni hıza uyarlanmıştır, collision/kayıp/maliyet toleransları gevşetilmedi. Kullanıcının açık V4.8 PID44264 ve DLL hash'i korundu; yeni normal pencere açılmadı. FPS askıda korunur, GitHub güncellenmedi.
+
+
+## Home V4.11 son kullanıcı kararı ve teslim —17Ekim
+
+Yeni açık kullanıcı isteğiyle FPS, yalnız afet çantası hazırlığı aşamasında aktif oyuna döndü: aynı oyuncu/controller/Model/Expedition, gerçek konumdan1.1sn kamera sinematiği, E/F ile açık3D erzak toplama, G ile aynı yerde izometrik önlemlere dönüş. Genel FPS kampanyası açılmaz; bağımsız eski FPS checkout/kayıtları korunur. Bu karar eski genel askı cümlelerini bu dar kapsam için günceller. Yeni FPS el/kol modeli üçüncü şahıs V2 görünümünü değiştirmez.
+
+Kaynak havuzu/teksefer RNG auto-loot,12+8 yuva drag-drop/partial-fill, hazır ilk yardım, bodrum sığınağı, fiziksel çanta, garaj iç kapısı,3.2m duvar fiziği, dört cephe kesiti, bodrum atmosferi, yerel kemerli şömine, pause/menu düzeltmeleri ve gerçek verili J defteri entegredir. Yarkın11f12b4/defter07ecbcc kaynaklarıyla provenance korunur; yeni ücret/kredi yok. Güncel build/ZIP/LATEST ve Documentation/HOME-V4.11-DELIVERY-2026-10-17.md aynı son adayı bağlar. 156/156native API/render kontrolü,0runtime hata;10konum fikstürü, OS/insan/tüm kampanya kabulü değildir. DLL34E3969FBBE5047A6400D9FE253ACE1B2177BEDD07ECBBDA3020D3745008E047. Önceki test sayıları bu DLL kabulü sayılmaz.

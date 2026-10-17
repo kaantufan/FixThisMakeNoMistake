@@ -10,19 +10,53 @@ namespace TooLateToPanic
         float age;
         float disasterAmbienceVolume = .32f;
         bool warned;
+        AudioSource[] voices;
+        AudioSource outdoors, hearth, rotor;
+        int nextVoice;
+        bool suspended;
+        readonly System.Collections.Generic.Dictionary<string,float> last = new System.Collections.Generic.Dictionary<string,float>();
+        public int PlayedCount { get; private set; }
+        public string LastPlayed { get; private set; }
         void Awake()
         {
             oneShot = gameObject.AddComponent<AudioSource>(); oneShot.volume = .65f;
             ambience = gameObject.AddComponent<AudioSource>(); ambience.loop = true; SetDisasterAmbienceVolume(.32f);
             roomTone = gameObject.AddComponent<AudioSource>(); roomTone.loop = true; roomTone.volume = 0;
+            voices = new AudioSource[8];
+            for(int i=0;i<voices.Length;i++) { voices[i]=gameObject.AddComponent<AudioSource>(); voices[i].playOnAwake=false; }
+            outdoors=MakeLoop(); hearth=MakeLoop(); rotor=MakeLoop();
+        }
+        AudioSource MakeLoop() { var s=gameObject.AddComponent<AudioSource>();s.playOnAwake=false;s.loop=true;s.volume=0;return s; }
+        public void SetSuspended(bool value)
+        {
+            if(suspended==value)return;suspended=value;
+            foreach(var s in GetComponents<AudioSource>()) { if(value)s.Pause();else s.UnPause(); }
+        }
+        void Loop(AudioSource source,string id,float volume)
+        {
+            if(volume<=0) { source.Stop();return; }
+            if(!source.clip)source.clip=PanicAudioBank.Get(id);
+            source.volume=volume;
+            if(source.clip&&!source.isPlaying&&!suspended)source.Play();
+        }
+        public void SetEnvironment(bool active,bool inside,bool fire,bool helicopter)
+        {
+            Loop(roomTone,"roomtone",active&&inside?.035f:0);
+            Loop(outdoors,"garden",active&&!inside?.07f:0);
+            Loop(hearth,"fireplace",active&&fire?.09f:0);
+            Loop(rotor,"rotor",active&&helicopter?.20f:0);
         }
         public void Play(string name, float volume = .5f)
         {
-            if(PanicHomeWorld.DisasterAudioOnly)return;
-            string id = name == "step" ? "woodstep" + Random.Range(0, 4) : name == "select" ? "click" : name;
-            var clip = Resources.Load<AudioClip>("Audio/" + id);
-            if (!clip) clip = PanicArt.GetSound(name == "step" ? "anchor" : name == "build" || name == "buy" ? "upgrade" : name == "bunker" ? "anchor" : id);
-            if (clip) oneShot.PlayOneShot(clip, volume);
+            if(suspended && name!="ui" && name!="reject")return;
+            string id=name=="step"?"step_wood":name=="select"||name=="click"?"ui":name=="bunker"?"door_metal":name=="build"?"wood_build":name=="buy"?"pickup_cloth":name=="anchor_release"?"door_toolbox":name;
+            if(last.TryGetValue(id,out float time)&&Time.unscaledTime-time<.065f)return;
+            var clip=PanicAudioBank.Get(id);
+            if(!clip&&id=="objective_tick")clip=Resources.Load<AudioClip>("Audio/Jury/objective_tick");
+            if(!clip) { Debug.LogWarning("AUDIO_MISSING "+id);return; }
+            last[id]=Time.unscaledTime;
+            var source=voices[nextVoice++%voices.Length];source.Stop();source.clip=clip;source.pitch=id.StartsWith("step_")?Random.Range(.94f,1.06f):1;
+            source.volume=Mathf.Clamp01(volume)*.7f;source.Play();PlayedCount++;LastPlayed=id;
         }
         public void OnPhase(PanicPhase phase)
         {
@@ -31,7 +65,8 @@ namespace TooLateToPanic
             {
                 if (weather) Destroy(weather); weather = PanicDisasterArt.Create(World.Model.Disaster);
                 string id = HazardSoundId(World.Model.Disaster);
-                ambience.clip = Resources.Load<AudioClip>("Audio/" + id); if (!ambience.clip) ambience.clip = PanicArt.GetSound(id); SetDisasterAmbienceVolume(.32f); if (ambience.clip) ambience.Play();
+                ambience.clip = PanicAudioBank.Get(id); SetDisasterAmbienceVolume(.32f); if (ambience.clip) ambience.Play();
+                Play("warning",.35f);
             }
             else if (phase == PanicPhase.Aftermath) SetDisasterAmbienceVolume(.14f);
             else if (phase == PanicPhase.Success || phase == PanicPhase.Inspection || phase == PanicPhase.GameOver)
@@ -51,7 +86,7 @@ namespace TooLateToPanic
             if(!World)return;
             if(!weather)weather=PanicDisasterArt.Create(World.Model.Disaster);
             age=0;string id=HazardSoundId(World.Model.Disaster);
-            ambience.clip=Resources.Load<AudioClip>("Audio/"+id);if(!ambience.clip)ambience.clip=PanicArt.GetSound(id);
+            ambience.clip=PanicAudioBank.Get(id);
             SetDisasterAmbienceVolume(.3f);if(ambience.clip)ambience.Play();
         }
         void SetDisasterAmbienceVolume(float volume)
@@ -72,6 +107,7 @@ namespace TooLateToPanic
         void Update()
         {
             if (!World || World.Model == null) return;
+            if (suspended || World.Model.IsPaused || World.NotebookBlocksInput) return;
             age += Time.deltaTime;
             if (World.Model.Phase == PanicPhase.Preparing && World.Model.TimeRemaining <= 60 && !warned) { warned = true; Play("warning", .6f); }
             if (weather) PanicDisasterArt.Animate(weather, age, World.Model.Phase == PanicPhase.Disaster || World.CinematicActive&&World.Model.Phase==PanicPhase.GameOver ? Mathf.Clamp01(age * .4f) : .35f);

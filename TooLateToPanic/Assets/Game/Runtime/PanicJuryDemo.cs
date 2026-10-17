@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -89,8 +89,7 @@ namespace TooLateToPanic
 
     /// <summary>
     /// Bounded jury scenario: real pickup/pack/atomic work, three explicitly separate
-    /// vignettes, immutable outcomes. Tick with unscaled wall time even while menus are
-    /// open. It never warps the player, grants success, replenishes stock or saves scores.
+    /// vignettes, immutable outcomes. Tick with unscaled wall time, except while genuinely paused. It never warps the player, grants success, replenishes stock or saves scores.
     /// </summary>
     public sealed class PanicJuryDemo
     {
@@ -101,13 +100,14 @@ namespace TooLateToPanic
         public static readonly Vector3 QuakeCoverPosition = new Vector3(-2.8f, .05f, -2.1f);
         public static readonly Vector3 FloodRefugePosition = new Vector3(0f, 3.25f, 5.15f);
         public static readonly Vector3 FireAssemblyPosition = new Vector3(-7f, .05f, -11.7f);
+        public static readonly Vector3 FireStationPosition = new Vector3(1.72f, .05f, -2.2f);
 
         internal PanicModel Model { get; }
         readonly PanicExpedition expedition;
         readonly List<PanicJuryDisasterOutcome> outcomes = new List<PanicJuryDisasterOutcome>(3);
         readonly Dictionary<string, PanicJuryGoalState> goals = new Dictionary<string, PanicJuryGoalState>();
         readonly string[] goalIds = { "move", "water_gathered", "water_packed", "anchor", "quake_cover", "quake_observed", "flood_drain", "flood_refuge", "fire_ready", "fire_exit" };
-        readonly string[] goalLabels = { "İlk adımlar", "Suyu al", "Suyu çantaya koy", "Bir eşyayı sabitle", "Çök–kapan–tutun alanı", "Önlemin sonucunu gör", "Drenajı tamamla", "Üst kattaki güvenli noktaya çık", "Tüpü hazırla", "Dışarıdaki toplanma alanına çık" };
+        readonly string[] goalLabels = { "İlk adımlar", "Suyu al", "Suyu çantaya koy", "Bir eşyayı sabitle", "Çök–kapan–tutun alanı", "Önlemin sonucunu gör", "Drenajı tamamla", "Üst kattaki güvenli noktaya çık", "Yangın söndürücüyü hazırla", "Dışarıdaki toplanma alanına çık" };
         Vector3 startPosition, lastActorPosition;
         float elapsed, stageAge, stageDuration;
         bool running, dirty = true, quakeCaptured, floodCaptured, fireCaptured, quakePresented;
@@ -144,11 +144,11 @@ namespace TooLateToPanic
 
         public void Tick(float unscaledDeltaTime, Vector3 actorPosition, bool grounded, bool inputBlocked)
         {
-            if (!IsRunning) return;
+            if (!IsRunning || Model.IsPaused) return;
             if (!Finite(unscaledDeltaTime) || unscaledDeltaTime <= 0) return;
             if (Finite(actorPosition)) lastActorPosition = actorPosition;
             if (Stage == PanicJuryStage.Earthquake && !inputBlocked) quakePresented = true;
-            // Do not clamp away hitches or stop this clock on inventory/pause/dev menus.
+            // Do not clamp away hitches. Model.IsPaused is the explicit shared pause gate.
             // Objective evaluation happens once using the real current actor state;
             // a long frame cannot manufacture movement through several future stages.
             EvaluateObjectives(actorPosition, grounded, inputBlocked);
@@ -168,7 +168,7 @@ namespace TooLateToPanic
 
         public bool TryReachShelter(PanicJuryShelter kind, Vector3 actorPosition, bool grounded)
         {
-            if (!IsRunning || !grounded || !Finite(actorPosition)) return false;
+            if (!IsRunning || Model.IsPaused || !grounded || !Finite(actorPosition)) return false;
             if (kind == PanicJuryShelter.QuakeCover && Stage == PanicJuryStage.Preparation && PreparationReady && At(actorPosition, QuakeCoverPosition, 1.25f, .6f))
             {
                 SetComplete("quake_cover"); BeginEarthquake(); return true;
@@ -186,13 +186,13 @@ namespace TooLateToPanic
 
         public bool Advance()
         {
-            if (!IsRunning || !CanAdvance) return false;
+            if (!IsRunning || Model.IsPaused || !CanAdvance) return false;
             AdvanceAtDeadline(false); return true;
         }
 
         public bool SkipCinematic()
         {
-            if (!IsRunning || Stage != PanicJuryStage.Earthquake) return false;
+            if (!IsRunning || Model.IsPaused || Stage != PanicJuryStage.Earthquake) return false;
             goals["quake_observed"] = PanicJuryGoalState.Skipped;
             BeginStage(PanicJuryStage.EarthquakeResult);
             return true;
@@ -200,7 +200,7 @@ namespace TooLateToPanic
 
         public bool SkipCurrentSegment()
         {
-            if (!IsRunning || !CanSkipSegment) return false;
+            if (!IsRunning || Model.IsPaused || !CanSkipSegment) return false;
             AdvanceAtDeadline(true); return true;
         }
 
@@ -375,7 +375,7 @@ namespace TooLateToPanic
                 switch (Stage)
                 {
                     case PanicJuryStage.Onboarding: return "Bir önlemle başla";
-                    case PanicJuryStage.Preparation: return !Done("water_gathered") ? "Buzdolabından suyu al" : !Done("water_packed") ? "Suyu çantana koy" : !Done("anchor") ? "Bir eşyayı sabitle" : "Güvenli noktaya geç";
+                    case PanicJuryStage.Preparation: return !Done("water_gathered") ? "Tezgâhtaki suyu al" : !Done("water_packed") ? "Suyu çantana koy" : !Done("anchor") ? "Bir eşyayı sabitle" : "Güvenli noktaya geç";
                     case PanicJuryStage.Earthquake: return "Önlemin farkı";
                     case PanicJuryStage.EarthquakeResult: return "Deprem sonucu";
                     case PanicJuryStage.Flood: return Done("flood_drain") ? "Merdivenden üst kata çık" : "Suya karşı önlem al";
@@ -393,9 +393,9 @@ namespace TooLateToPanic
                 if (Stage == PanicJuryStage.Onboarding) return "WASD / oklarla yürü. 1 gıda çantada hazır; suyu sen alacaksın.";
                 if (Stage == PanicJuryStage.Preparation)
                 {
-                    if (!Done("water_gathered")) return "Buzdolabına yaklaş: E aç · F suyu al.";
+                    if (!Done("water_gathered")) return "Mutfak tezgâhındaki suya yaklaş · E ile al.";
                     if (!Done("water_packed")) return "Tab envanter · suyu seç · Enter çantaya koy.";
-                    if (!Done("anchor")) return "Buzdolabı ya da kitaplığı seç · 1 ile sabitle. Malzeme envanterde hazır.";
+                    if (!Done("anchor")) return "G ile önlemlere dön · buzdolabı ya da kitaplığı seç · 1 ile vidaları tak.";
                     return "İşaretli alana yaklaş · E ile çök–kapan–tutun. Sarsıntıda koşma.";
                 }
                 if (Stage == PanicJuryStage.Earthquake) return Done("quake_cover") ? "Sarsıntı sürüyor. Seçtiğin eşyanın bağlantısına bak." : "Hazırlık süresi bitti. Eksikler sonuçta gösterilecek; tamamlanmış sayılmadı.";
@@ -407,8 +407,8 @@ namespace TooLateToPanic
                     return summary;
                 }
                 if (Stage == PanicJuryStage.Flood) return Done("flood_drain") ? "Merdivenden üst kata çık · işaretli güvenli noktada E. Bodruma inme." : "Bahçe girişinin yanındaki drenajı E ile tamamla; sonra üst kata çık.";
-                if (Stage == PanicJuryStage.Fire) return Done("fire_ready") ? "Merdivenden alt kata in · bahçe kapısından çık · toplanma alanında E." : "İşaretli mobilyaya yaklaş · 2 ile tüpü hazırla; sonra dışarı çık.";
-                if (Stage == PanicJuryStage.Inspection) return "İnceleme isteğe bağlı; Devam ile sonucu hemen açabilirsin.";
+                if (Stage == PanicJuryStage.Fire) return Done("fire_ready") ? "Bahçe kapısından çık · toplanma alanında E." : "Alt kattaki yangın ekipmanı noktasına git · E ile yangın tüpünü yerleştir.";
+                if (Stage == PanicJuryStage.Inspection) return InspectionOutcomeHint();
                 return BuildSummary();
             }
         }
@@ -427,10 +427,10 @@ namespace TooLateToPanic
             get
             {
                 if (ShelterKind != PanicJuryShelter.None) return "@jury_" + ShelterKind;
-                if (Stage == PanicJuryStage.Onboarding) return "fridge";
-                if (Stage == PanicJuryStage.Preparation) return Done("water_packed") ? ClosestAnchorCandidate() : "fridge";
+                if (Stage == PanicJuryStage.Onboarding) return "supply_water_kitchen";
+                if (Stage == PanicJuryStage.Preparation) return Done("water_packed") ? ClosestAnchorCandidate() : "supply_water_kitchen";
                 if (Stage == PanicJuryStage.Flood) return "drain_east";
-                if (Stage == PanicJuryStage.Fire) return ClosestFireCandidate();
+                if (Stage == PanicJuryStage.Fire) return PanicItemActionRules.FireStationId;
                 return string.Empty;
             }
         }
@@ -442,16 +442,31 @@ namespace TooLateToPanic
                 if (ShelterKind == PanicJuryShelter.FloodHighGround) return FloodRefugePosition;
                 if (ShelterKind == PanicJuryShelter.FireAssembly) return FireAssemblyPosition;
                 if (TargetId == "drain_east") return new Vector3(5, .05f, -8.5f);
+                if (TargetId == PanicItemActionRules.FireStationId) return FireStationPosition;
+                PanicWorldSupply supply = expedition.FindWorldSupply(TargetId);
+                if (supply != null) return supply.Position;
                 for (int i = 0; i < Model.Items.Count; i++) if (Model.Items[i].Id == TargetId) return Model.Items[i].Position;
                 return Vector3.zero;
             }
         }
+        string InspectionOutcomeHint()
+        {
+            string text = "";
+            foreach (var outcome in outcomes)
+            {
+                if (outcome.Disaster != DisasterType.Flood && outcome.Disaster != DisasterType.Fire) continue;
+                bool flood = outcome.Disaster == DisasterType.Flood;
+                text += (flood ? "Sel · Drenaj " : "Yangın · Ekipman ") + (outcome.PreparationComplete ? "hazır" : "eksik") + " · Hasar %" + outcome.TotalDamage.ToString("0.#") + "\n";
+            }
+            return text + "İnceleme isteğe bağlı; Devam ile sonucu aç.";
+        }
+
         internal string BuildSummary()
         {
             int done = 0, missed = 0, skipped = 0;
             foreach (var state in goals.Values)
                 if (state == PanicJuryGoalState.Complete) done++; else if (state == PanicJuryGoalState.Missed) missed++; else if (state == PanicJuryGoalState.Skipped) skipped++;
-            return "Tamamlanan önlemler: " + done + "/" + goalIds.Length + " · Eksik: " + missed + " · Atlanan: " + skipped +
+            return "Tamamlanan adımlar: " + done + "/" + goalIds.Length + " · Eksik: " + missed + " · Atlanan: " + skipped +
                 ". Daha iyi bir hazırlık için yeniden deneyebilirsin." + (Model.CheatedRun ? " Geliştirici seçeneği kullanıldı." : string.Empty);
         }
 

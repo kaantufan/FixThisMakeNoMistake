@@ -118,7 +118,7 @@ namespace TooLateToPanic
                 if (pickupFlights[0].Visual) { pickupFlights[0].Visual.SetActive(false); Destroy(pickupFlights[0].Visual); }
                 pickupFlights.RemoveAt(0);
             }
-            var visual = PanicResidenceArt.CreatePickup(supplyId, variant);
+            var visual = CreatePreparedPickup(supplyId, variant);
             visual.name = "Cosmetic pickup flight " + supplyId;
             visual.transform.SetParent(transform, true);
             visual.transform.position = start;

@@ -36,7 +36,7 @@ namespace TooLateToPanic
         static readonly Quaternion FrontAxis = Quaternion.Euler(90, 0, 0);
 
         /// <summary>~1.6m wide work display. Fits the Home V2 closeup camera unchanged.
-        /// Four work steps are assumed, matching PanicWorkSession.TotalSteps=4.</summary>
+        /// Anchor rigs use two direct screw seats; remaining legacy rigs are compatibility fallback.</summary>
         public static GameObject CreateWorkRig(string action)
         {
             Init();
@@ -79,6 +79,11 @@ namespace TooLateToPanic
             {
                 s = ReadState(rig, JobFromName(rig.name));
                 rigs[rig.GetInstanceID()] = s;
+            }
+            if (s.Job == Job.AnchorWall || s.Job == Job.AnchorFloor)
+            {
+                UpdateDirectAnchor(s, progress, completedSteps);
+                return;
             }
             float p = Finite(progress) ? Mathf.Clamp01(progress) : 0;
             int done = Mathf.Clamp(completedSteps, 0, 4);
@@ -169,6 +174,13 @@ namespace TooLateToPanic
         public static void UpdateWorkRig(GameObject rig, float progress, int completedSteps, float time,
             float cursor, bool isApplying, float toolMotion)
         {
+            if (rig)
+            {
+                RigState direct;
+                if (!rigs.TryGetValue(rig.GetInstanceID(), out direct)) { direct = ReadState(rig, JobFromName(rig.name)); rigs[rig.GetInstanceID()] = direct; }
+                if (direct.Job == Job.AnchorWall || direct.Job == Job.AnchorFloor)
+                { UpdateDirectAnchor(direct, progress, completedSteps); return; }
+            }
             // Progress may reach 1 during the final .25s stroke, before the fourth
             // stage is committed. Keep the tool visible until that real settling motion ends.
             float visualProgress = completedSteps < 4 ? Mathf.Min(progress, .9998f) : progress;
@@ -239,6 +251,45 @@ namespace TooLateToPanic
                     s.Flow.localScale = new Vector3(1 + flutter, 1 + flutter * .6f, 1);
                 }
             }
+        }
+
+        /// <summary>Two actual screw heads. Input/target order and hit tolerance belong to World/HUD.</summary>
+        public static bool GetClickTargetPosition(GameObject rig, int index, out Vector3 worldPosition)
+        {
+            worldPosition = Vector3.zero;
+            if (!rig || index < 0 || index > 1) return false;
+            RigState state;
+            if (!rigs.TryGetValue(rig.GetInstanceID(), out state) || state.Root != rig)
+            { state = ReadState(rig, JobFromName(rig.name)); rigs[rig.GetInstanceID()] = state; }
+            if (state.Job != Job.AnchorWall && state.Job != Job.AnchorFloor || !state.Heads[index]) return false;
+            worldPosition = state.Heads[index].position;
+            return true;
+        }
+
+        static void UpdateDirectAnchor(RigState s, float progress, int completedSteps)
+        {
+            float p = Finite(progress) ? Mathf.Clamp01(progress) : 0;
+            int done = Mathf.Clamp(completedSteps, 0, 2);
+            float activeProgress = done >= 2 ? 1 : Mathf.Clamp01(p * 2f - done);
+            for (int i = 0; i < 2; i++)
+            {
+                if (!s.Screws[i]) continue;
+                float seated = i < done ? 1 : i == done ? activeProgress : 0;
+                float eased = Mathf.SmoothStep(0, 1, seated);
+                s.Screws[i].localPosition = s.ScrewSeats[i] + s.Screws[i].localRotation * new Vector3(0, 0, -.068f * (1 - eased));
+                if (s.Heads[i]) s.Heads[i].localRotation = Quaternion.Euler(0, 0, seated * 1080f);
+            }
+            if (s.Tool)
+            {
+                bool installing = done < 2 && activeProgress > .0001f && activeProgress < .9999f;
+                s.Tool.gameObject.SetActive(installing);
+                if (done < 2 && s.Screws[done])
+                {
+                    s.Tool.localPosition = s.Screws[done].localPosition + s.Screws[done].localRotation * new Vector3(0, 0, -.018f);
+                    s.Tool.localRotation = s.Screws[done].localRotation * Quaternion.Euler(8, -11, activeProgress * 1080f);
+                }
+            }
+            s.LastProgress = p;
         }
 
         /// <summary>Furniture is grounded and centred X/Z. Hardware stays at the upper
@@ -330,8 +381,8 @@ namespace TooLateToPanic
                 Between(p, "Tension_steel_strap", new Vector3(x, .815f, .12f), new Vector3(x, .559f, -.08f), .075f, .021f, P.Steel);
                 Box(p, "Furniture_rear_mount", new Vector3(x, .549f, -.097f), new Vector3(.155f, .11f, .025f), P.SteelDark);
                 Ring(p, "Copper_compression_washer", new Vector3(x, .77f, .117f), Vector3.forward, .039f, .005f, P.Copper);
-                DynamicScrew(p, side < 0 ? 0 : 2, new Vector3(x, .77f, .111f));
-                DynamicScrew(p, side < 0 ? 1 : 3, new Vector3(x, .553f, -.119f));
+                DynamicScrew(p, side < 0 ? 0 : 1, new Vector3(x, .77f, .111f));
+                FixedScrew(p, new Vector3(x, .553f, -.119f), Quaternion.identity, .86f);
             }
             Driver(p, false);
         }
@@ -349,8 +400,8 @@ namespace TooLateToPanic
                 Box(p, "Folded_vertical_leg", new Vector3(x, .24f, .052f), new Vector3(.16f, .21f, .027f), P.SteelDark);
                 Box(p, "Floor_anchor_plate", new Vector3(x, .154f, -.05f), new Vector3(.23f, .027f, .25f), P.Steel);
                 FixedScrew(p, new Vector3(x, .27f, .03f), Quaternion.identity, .86f);
-                DynamicScrew(p, side < 0 ? 0 : 2, new Vector3(x - .055f, .178f, -.095f), down);
-                DynamicScrew(p, side < 0 ? 1 : 3, new Vector3(x + .055f, .178f, -.095f), down);
+                DynamicScrew(p, side < 0 ? 0 : 1, new Vector3(x, .178f, -.095f), down);
+                FixedScrew(p, new Vector3(x + .07f, .178f, .025f), down, .78f);
             }
             Driver(p, false);
         }
@@ -518,7 +569,7 @@ namespace TooLateToPanic
 
         static void DynamicScrew(Transform p, int index, Vector3 seat, Quaternion rotation = default(Quaternion))
         {
-            if (rotation == default(Quaternion)) rotation = Quaternion.identity;
+            if (rotation.Equals(default(Quaternion))) rotation = Quaternion.identity;
             var root = New(p, screwNames[index], seat, rotation);
             ScrewGeometry(root, 1, true);
             // Seat marker records the unextended rest pose for prefab clones.
@@ -759,7 +810,7 @@ namespace TooLateToPanic
         static Transform New(Transform parent, string name, Vector3 pos, Quaternion rot = default(Quaternion))
         {
             var go = new GameObject(name); go.transform.SetParent(parent, false);
-            go.transform.localPosition = pos; go.transform.localRotation = rot == default(Quaternion) ? Quaternion.identity : rot;
+            go.transform.localPosition = pos; go.transform.localRotation = rot.Equals(default(Quaternion)) ? Quaternion.identity : rot;
             return go.transform;
         }
         static Transform MeshObject(Transform p, string name, Mesh mesh, P mat, Vector3 pos, Quaternion rot, Vector3 size)
@@ -771,11 +822,11 @@ namespace TooLateToPanic
             return t;
         }
         static void Box(Transform p, string name, Vector3 pos, Vector3 size, P mat, Quaternion rot = default(Quaternion))
-        { MeshObject(p, name, Cached("Bevel_box", BevelBoxMesh), mat, pos, rot == default(Quaternion) ? Quaternion.identity : rot, size); }
+        { MeshObject(p, name, Cached("Bevel_box", BevelBoxMesh), mat, pos, rot.Equals(default(Quaternion)) ? Quaternion.identity : rot, size); }
         static void Between(Transform p, string name, Vector3 a, Vector3 b, float width, float depth, P mat)
         { Box(p, name, (a + b) * .5f, new Vector3(width, Vector3.Distance(a,b), depth), mat, Quaternion.FromToRotation(Vector3.up, (b-a).normalized)); }
         static void Cyl(Transform p, string name, Vector3 pos, float radius, float length, P mat, Quaternion rot = default(Quaternion), int sides = 20)
-        { MeshObject(p, name, Cached("Cylinder_" + sides, () => CylinderMesh(sides)), mat, pos, rot == default(Quaternion) ? Quaternion.identity : rot, new Vector3(radius, length, radius)); }
+        { MeshObject(p, name, Cached("Cylinder_" + sides, () => CylinderMesh(sides)), mat, pos, rot.Equals(default(Quaternion)) ? Quaternion.identity : rot, new Vector3(radius, length, radius)); }
         static void CylBetween(Transform p, string name, Vector3 a, Vector3 b, float radius, P mat)
         { Cyl(p, name, (a+b)*.5f, radius, Vector3.Distance(a,b), mat, Quaternion.FromToRotation(Vector3.up,(b-a).normalized), 12); }
         static void Sphere(Transform p, string name, Vector3 pos, Vector3 radius, P mat)

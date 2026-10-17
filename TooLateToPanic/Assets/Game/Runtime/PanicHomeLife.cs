@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -17,19 +17,19 @@ namespace TooLateToPanic
         Quaternion bunkerClosed;
         AudioSource radioVoice,radioNoise,rotorAudio; Light helicopterSearch,hearthLight;
         bool hearthEnabled=true,computerEnabled=true,garageOpen,minuteVoice;
-        string lootSignature,lastNotice,queuedVoice,radioClipId;
+        string lastNotice,queuedVoice,radioClipId;
         int radioSequence;
         public LootSource OpenSource { get { var s=NearestSource; return s!=null&&s.Open&&CanInteract&&!InventoryOpen&&!WorkActive&&!IsMoving ? s:null; } }
         public int LootIndex {get;private set;}
         public string SelectedLootId {get {var s=OpenSource;return s!=null&&LootIndex>=0&&LootIndex<s.Contents.Count?s.Contents[LootIndex].Id:"";}}
-        public bool LootVisible {get {return OpenSource!=null;}}
+        public bool LootVisible {get {return false;}}
         public float GatherFeedback {get;private set;}
         public int GatherCount {get;private set;}
         public string GatherItemId {get;private set;}
         public string ShortAction {get;private set;}="Aç";
         public bool IsGrounded {get {return controller&&controller.isGrounded;}}
         public string RadioHeadline {get;private set;}="";
-        public static bool DisasterAudioOnly {get {return true;}}
+        public static bool DisasterAudioOnly {get {return false;}}
         public bool HasNarrationPlayback {get {return PresentationSpeechActive||radioVoice&&radioVoice.isPlaying;}}
         public bool RadioEnabled {get;private set;}=false;
         public bool RadioSpeaking {get {return radioVoice&&radioVoice.isPlaying;}}
@@ -43,11 +43,13 @@ namespace TooLateToPanic
             Model.Items.RemoveAll(i=>i.Id=="door_inner_upper");
             var upper=Model.Items.Find(i=>i.Id=="up_cabinet"); if(upper!=null)upper.Position=new Vector3(4.6f,3.2f,-4.5f);
             var loungeSofa=Model.Items.Find(i=>i.Id=="sofa"); if(loungeSofa!=null)loungeSofa.ArtId="sofa_indigo";
-            var bunker=Model.Items.Find(i=>i.Id=="bunker");if(bunker!=null)bunker.ArtId="bunkerhatch";
+            var bunker=Model.Items.Find(i=>i.Id=="bunker");if(bunker!=null){bunker.ArtId="bunkerhatch";bunker.Position=BunkerPosition;}
+            var bag=Model.Items.Find(i=>i.Id=="bagstation");if(bag!=null){bag.Label="Afet çantası";bag.Position=new Vector3(-2.4f,.035f,-3.3f);bag.Size=new Vector3(.48f,.62f,.32f);}
             var desk=Model.Items.Find(i=>i.Id=="desk_upper");if(desk!=null){desk.Size=new Vector3(1.75f,.805f,.8f);desk.Position=new Vector3(5.3f,3.2f,-2.5f);}
             var bed=Model.Items.Find(i=>i.Id=="bed");if(bed!=null)bed.Position=new Vector3(-4.5f,3.2f,4.5f);
             AddResidenceItem("door_balcony","Balkon", "door",ItemKind.Door,new Vector3(0,3.2f,-6),new Vector3(1.2f,2.25f,.2f));
             AddResidenceItem("bathroom_door","Banyo", "door",ItemKind.Door,new Vector3(3.25f,3.2f,1.8f),new Vector3(1.1f,2.25f,.2f));
+            AddResidenceItem("door_garage_inner","Garaj iç kapısı","door",ItemKind.Door,new Vector3(8.1f,0,2.2f),new Vector3(1.2f,2.25f,.2f),90);
             // The garage rolling door is presentation-driven, not a swinging house leaf.
             for(int side=0;side<4;side++) { string label=new[]{"Kuzey","Batı","Güney","Doğu"}[side]; string id=new[]{"north","west","south","east"}[side]; Vector3 p=side==0?new Vector3(0,-3.2f,5.91f):side==1?new Vector3(-7.91f,-3.2f,0):side==2?new Vector3(0,-3.2f,-5.91f):new Vector3(7.91f,-3.2f,0); AddResidenceItem("wall_"+id+"_basement","Bodrum "+label,"wall",ItemKind.Wall,p,new Vector3(side==1||side==3?12:16,3.2f,.2f),side==1?270:side==3?90:0); }
         }
@@ -56,7 +58,9 @@ namespace TooLateToPanic
         BoxCollider AddTightCollision(MeshFilter mf,Transform owner)
         {
             var c=new GameObject("Collision_"+mf.name);c.transform.SetParent(owner,true);c.transform.position=mf.transform.TransformPoint(mf.sharedMesh.bounds.center);c.transform.rotation=mf.transform.rotation;
-            var box=c.AddComponent<BoxCollider>();box.size=Vector3.Scale(mf.sharedMesh.bounds.size,mf.transform.lossyScale);return box;
+            var box=c.AddComponent<BoxCollider>();box.size=Vector3.Scale(mf.sharedMesh.bounds.size,mf.transform.lossyScale);
+            if(IsFullHeightPartition(mf.name)) { var size=box.size;size.y=3.2f;box.size=size;var p=c.transform.position;p.y=owner.position.y+1.6f;c.transform.position=p; }
+            return box;
         }
         void BuildStairFlight(int level)
         {
@@ -109,7 +113,7 @@ namespace TooLateToPanic
             AddBox("Balcony walk surface",new Vector3(-2,3.13f,-7.5f),new Vector3(7,.14f,3));
             residenceBunkerRoom=Room("bunker_interior",PanicResidenceArt.BuildBunkerInterior,BunkerInteriorPosition);
             var lit=new GameObject("Bunker emergency lamp").AddComponent<Light>();lit.transform.position=BunkerInteriorPosition+new Vector3(0,2.2f,0);lit.type=LightType.Point;lit.color=new Color(1,.65f,.3f);lit.range=8;lit.intensity=2;
-            AddDecor("@fireplace","fireplace",new Vector3(-7.5f,0,-.2f),90);
+            AddDecor("@fireplace","fireplace",new Vector3(-7.5f,0,-.2f),-90);
             AddDecor("decor_radio_table","sidetable",new Vector3(1.25f,0,-3.3f));
             AddDecor("@radio","radio",new Vector3(1.25f,.61f,-3.3f),0,false);
             AddDecor("@garage","garagedoor",new Vector3(11.7f,0,0));
@@ -126,6 +130,8 @@ namespace TooLateToPanic
             // Keep a full turning/egress strip behind the front door, on both sides.
             AddDecor("decor_entry_shoes","shoe_rack",new Vector3(1.25f,0,-4.4f));
             AddDecor("decor_coats","coat_rack",new Vector3(-1.8f,0,-4.5f));
+            AddPhysicalBagStation();
+            AddDecor("decor_bath_firstaid_table","sidetable",new Vector3(3.1f,3.2f,4.7f));
             AddDecor("decor_lounge_lamp","floorlamp",new Vector3(-5.6f,0,-.1f));
             AddDecor("decor_upper_lamp","floorlamp",new Vector3(-6.7f,3.2f,3.8f));
             AddDecor("decor_lounge_rug","rug",new Vector3(-3.8f,.025f,-2),0,false);
@@ -153,56 +159,57 @@ namespace TooLateToPanic
         void UpdateResidenceVisibility(bool cutawayInside)
         {
             if(residenceBalcony)SetResidenceRenderersVisible(residenceBalcony,!cutawayInside||ActiveFloor>=1);
-            if(residenceGarage){SetResidenceRenderersVisible(residenceGarage,!cutawayInside||ActiveFloor==0);foreach(var t in residenceGarage.GetComponentsInChildren<Transform>(true))if(t.name=="Roof"||t.name=="FrontHighWalls"||t.name=="solid_garage_west")t.gameObject.SetActive(!cutawayInside);}
+            if(residenceGarage)
+            {
+                bool shown=!cutawayInside||ActiveFloor==0;
+                SetResidenceRenderersVisible(residenceGarage,shown);
+                if(shown && cutawayInside) ApplyFacadeCutaway(residenceGarage,player.position,8.1f,15.3f,0,6.3f,0);
+                if(cutawayInside) foreach(var r in residenceGarage.GetComponentsInChildren<Renderer>(true)) if(HasParentNamed(r.transform,"Roof",residenceGarage.transform))r.enabled=false;
+            }
         }
         void InitResidenceLife()
         {
             radioVoice=new GameObject("Radio broadcast").AddComponent<AudioSource>();radioVoice.transform.SetParent(transform,false);radioVoice.playOnAwake=false;radioVoice.spatialBlend=.25f;radioVoice.volume=0;radioVoice.minDistance=8;radioVoice.maxDistance=75;
             radioNoise=gameObject.AddComponent<AudioSource>();radioNoise.playOnAwake=false;radioNoise.spatialBlend=0;radioNoise.volume=0;radioNoise.loop=true;
-            if(residenceTargets.TryGetValue("@fireplace",out var hearth)){hearthFlame=PanicAtmosphereArt.CreateFireplaceFlames();hearthFlame.transform.position=hearth.transform.position+new Vector3(.22f,.13f,0);hearthFlame.transform.rotation=hearth.transform.rotation;floorItems.Add(hearthFlame);hearthLight=new GameObject("Hearth warm flicker").AddComponent<Light>();hearthLight.transform.position=hearth.transform.position+new Vector3(.45f,.7f,0);hearthLight.type=LightType.Point;hearthLight.range=5.5f;hearthLight.color=new Color(1,.38f,.12f);hearthLight.intensity=1;}
+            if(residenceTargets.TryGetValue("@fireplace",out var hearth)){hearthFlame=PanicAtmosphereArt.CreateFireplaceFlames();hearthFlame.transform.position=hearth.transform.TransformPoint(new Vector3(0,.13f,-.22f));hearthFlame.transform.rotation=hearth.transform.rotation;floorItems.Add(hearthFlame);hearthLight=new GameObject("Hearth warm flicker").AddComponent<Light>();hearthLight.transform.position=hearth.transform.TransformPoint(new Vector3(0,.7f,-.45f));hearthLight.type=LightType.Point;hearthLight.range=5.5f;hearthLight.color=new Color(1,.38f,.12f);hearthLight.intensity=1;}
             foreach(var p in new[]{new Vector3(-4,-.9f,-2),new Vector3(5,-.9f,3),new Vector3(11.7f,2.5f,3)}){var l=new GameObject("Service room lamp").AddComponent<Light>();l.type=LightType.Point;l.range=7;l.intensity=2.3f;l.color=new Color(1,.78f,.55f);l.transform.position=p;}
             lastNotice=Model.Message;ResetResidenceLife();
         }
-        public void Jump(){if(!IsGrounded||jumpCooldown>0||WorkActive||InventoryOpen||IsMoving||CinematicActive)return;gravitySpeed=5.8f;jumpCooldown=.3f;effects.Play("step",.25f);}
-        public void ToggleContainer(){var s=NearestSource;if(s==null||!CanInteract)return;Expedition.ToggleSource(s.Id);LootIndex=FirstLoot(s);lootSignature=null;gatherPoseTime=.55f;effects.Play("bunker",.22f);lastNotice=Model.Message;UpdateContext();}
+        public void Jump(){if(!IsGrounded||jumpCooldown>0||WorkActive||InventoryOpen||IsMoving||CinematicActive)return;gravitySpeed=5.8f;jumpCooldown=.3f;effects.Play("jump",.30f);}
+        public void ToggleContainer(){var s=NearestSource;if(s==null||!CanInteract)return;Expedition.ToggleSource(s.Id);LootIndex=FirstLoot(s);gatherPoseTime=.55f;if(BagFirstPersonActive)bagOpenAge=0;effects.Play(ContainerAudio(s.Id),.35f);if(s.Open)Notice(Model.Message);lastNotice=Model.Message;UpdateContext();}
         static int FirstLoot(LootSource s){for(int i=0;i<s.Contents.Count;i++)if(s.Contents[i].Count>0&&!string.IsNullOrEmpty(s.Contents[i].Id))return i;return 0;}
-        public void SelectLoot(int index){var s=OpenSource;if(s==null||s.Contents.Count==0)return;int n=s.Contents.Count;int d=index<LootIndex?-1:1;index=(index%n+n)%n;for(int i=0;i<n;i++){if(s.Contents[index].Count>0&&!string.IsNullOrEmpty(s.Contents[index].Id)){LootIndex=index;lootSignature=null;return;}index=(index+d+n)%n;}}
-        public bool TakeLoot()
-        {
-            var s=OpenSource;if(s==null){Notice("Önce kapağı aç");return false;}if(LootIndex<0||LootIndex>=s.Contents.Count)return false;
-            string id=s.Contents[LootIndex].Id;int count=s.Contents[LootIndex].Count;int pickupVariant=LootIndex;if(string.IsNullOrEmpty(id)||count<=0)return false;
-            if(!Expedition.GatherAt(s.Id,LootIndex)){Notice("Yer yok");return false;}
-            // The real gather is committed above. Presentation can never defer or repeat it.
-            Vector3 pickupStart=SelectedPickupPosition(s.Position+Vector3.up);
-            GatherItemId=id;GatherCount=count;GatherFeedback=.4f;gatherPoseTime=.32f;lastNotice=Model.Message;LootIndex=FirstLoot(s);lootSignature=null;
-            BeginPickupPresentation(id,pickupStart,pickupVariant);PlayPresentationCue("pickup_soft");return true;
-        }
+        public void SelectLoot(int index){var s=OpenSource;if(s==null||s.Contents.Count==0)return;int n=s.Contents.Count;int d=index<LootIndex?-1:1;index=(index%n+n)%n;for(int i=0;i<n;i++){if(s.Contents[index].Count>0&&!string.IsNullOrEmpty(s.Contents[index].Id)){LootIndex=index;return;}index=(index+d+n)%n;}}
+        public bool TakeLoot() { return TakeWorldSupply(); }
         void UpdateLootTray()
         {
-            var s=OpenSource;
-            if(s==null||CinematicActive||LossAnnounced){ClearPickupFocus();if(lootTray)Destroy(lootTray);lootTray=null;lootSignature=null;return;}
-            string key=s.Id+"|"+LootIndex+"|"+string.Join(",",s.Contents.Select(x=>x.Id+":"+x.Count));if(key==lootSignature)return;lootSignature=key;
-            ClearPickupFocus();if(lootTray)Destroy(lootTray);lootTray=new GameObject("Visible cupboard contents");Vector3 toward=Flat(player.position-s.Position).normalized;if(toward.sqrMagnitude<.1f)toward=Vector3.back;Vector3 across=Vector3.Cross(Vector3.up,toward);int shown=0;
-            for(int i=0;i<s.Contents.Count;i++)
-            {
-                var slot=s.Contents[i];if(slot.Count<=0||string.IsNullOrEmpty(slot.Id))continue;
-                var go=new GameObject("Loot interaction "+i);go.transform.SetParent(lootTray.transform,false);go.transform.position=s.Position+toward*.85f+across*((shown%3-1)*.39f)+Vector3.up*(.75f+(shown/3)*.37f);
-                var visual=PanicResidenceArt.CreatePickup(slot.Id,i);visual.transform.SetParent(go.transform,false);visual.transform.localScale=Vector3.one*(i==LootIndex?1f:.78f);MakeCosmeticOnly(visual);AddBoundsCollider(go);go.AddComponent<ResidenceLootPick>().Index=i;
-                if(i==LootIndex)SetPickupFocus(visual.transform);
-                // Only the selected item gets a marker. Other supplies keep their authored colour.
-                if(i==LootIndex){var ring=MakeLine("Selected supply",new[]{new Vector3(-.14f,0,-.10f),new Vector3(.14f,0,-.10f),new Vector3(.14f,0,.10f),new Vector3(-.14f,0,.10f)},PresentationOrange,.018f);ring.transform.SetParent(go.transform,false);ring.transform.localPosition=Vector3.down*.015f;}
-                shown++;
-            }
+            // Containers add materials directly; food and equipment remain physical world pickups.
+            if(lootTray){Destroy(lootTray);lootTray=null;}
+            
         }
         void UpdateResidenceContext()
         {
+            var supply=Expedition.FindWorldSupply(focusId);
+            if(supply!=null && supply.Count>0)
+            {
+                FocusLabel=PanicExpedition.DisplayName(supply.ItemId);
+                ShortAction=BagFirstPersonActive?"Al":"Çanta hazırlığına geç";
+                ContextHint=CanInteract?(BagFirstPersonActive?"E / F · "+FocusLabel+" al":"Erzak toplamak için afet çantasından hazırlığa başla"):"";
+                return;
+            }
+            if(focusId=="@bagstation") {FocusLabel="Afet çantası";ShortAction=BagFirstPersonActive?"Çantayı düzenle":"Çanta hazırlığına başla";ContextHint=CanInteract?"E · "+ShortAction:"";return;}
             var s=NearestSource;var item=Selected;var site=gardenSites.Find(x=>x.id==focusId);
             FocusLabel=s!=null?s.Label:item!=null?item.Label:site!=null?site.label:focusId=="@radio"?"Radyo":focusId=="@computer"?"Bilgisayar":focusId=="@fireplace"?"Şömine":focusId=="@garage"?"Garaj":focusId=="@laundry"?"Çamaşır makinesi":focusId=="@toilet"?"Tuvalet":focusId=="@sink"?"Lavabo":"";
-            ShortAction=s!=null?(s.Open?"Kapat":"Aç"):focusId=="@bunker"||item!=null&&item.Id=="bunker"?"Sığın":focusId=="@radio"?(RadioEnabled?"Kapat":"Aç"):focusId=="@garage"?(garageOpen?"Kapat":"Aç"):focusId=="@fireplace"?(hearthEnabled?"Söndür":"Yak"):focusId=="@computer"?(computerEnabled?"Kapat":"Aç"):focusId!=null&&hinges.ContainsKey(focusId)?(hinges[focusId].open?"Kapat":"Aç"):item!=null&&item.Kind==ItemKind.Door?"Aç / Kapat":site!=null?"Başla":"";
+            ShortAction=s!=null?(s.Open?"Kapat":"Aç"):focusId=="@bunker"||item!=null&&item.Id=="bunker"?"Sığın":focusId=="@radio"?(RadioEnabled?"Kapat":"Aç"):focusId=="@garage"?(garageOpen?"Kapat":"Aç"):focusId=="@fireplace"?(hearthEnabled?"Söndür":"Yak"):focusId=="@computer"?(computerEnabled?"Kapat":"Aç"):focusId!=null&&hinges.ContainsKey(focusId)?(hinges[focusId].open?"Kapat":"Aç"):item!=null&&item.Kind==ItemKind.Door?"Aç / Kapat":site!=null&&!site.done?"Başla":"";
             ContextHint=CanInteract?"E "+ShortAction:"";
+            if (focusId == PanicItemActionRules.FireStationId)
+            {
+                FocusLabel = "Yangın ekipmanı noktası";
+                ShortAction = Expedition.IsWorkCommitted("fire", focusId) ? "" : "Yangın söndürücüyü hazırla";
+                ContextHint = CanInteract ? (Expedition.IsWorkCommitted("fire", focusId) ? "Yangın tüpü hazır" : "E Yangın söndürücüyü hazırla") : "";
+            }
         }
-        void ToggleHearth(){hearthEnabled=!hearthEnabled;if(hearthFlame)hearthFlame.SetActive(hearthEnabled);if(hearthLight)hearthLight.enabled=hearthEnabled;}
-        void ToggleComputer(){computerEnabled=!computerEnabled;ApplyComputerPower();UpdateContext();}
+        void ToggleHearth(){hearthEnabled=!hearthEnabled;effects.Play("ignite",hearthEnabled?.38f:.16f);if(hearthFlame)hearthFlame.SetActive(hearthEnabled);if(hearthLight)hearthLight.enabled=hearthEnabled;}
+        void ToggleComputer(){computerEnabled=!computerEnabled;effects.Play("computer",.3f);ApplyComputerPower();UpdateContext();}
         void ApplyComputerPower(){if(!residenceTargets.TryGetValue("@computer",out var pc)||!pc)return;var b=new MaterialPropertyBlock();foreach(var r in pc.GetComponentsInChildren<Renderer>()){var m=r.sharedMaterial;if(!m||!m.HasProperty("_EmissionColor")||!(m.name.Contains("_Screen")||m.name.Contains("_Glow")))continue;r.GetPropertyBlock(b);b.SetColor("_EmissionColor",computerEnabled?m.GetColor("_EmissionColor"):Color.black);r.SetPropertyBlock(b);}}
         void Notice(string text){ShortNotice=text;noticeAge=2.2f;}
         public void ToggleRadio(){RadioEnabled=false;radioVoice.Stop();radioNoise.Stop();RadioHeadline="";Notice("Radyo daha sonra");UpdateContext();}
@@ -222,7 +229,10 @@ namespace TooLateToPanic
         }
         void ResetResidenceLife()
         {
-            ResetResidenceCinematic();ResetPresentation();ResetCameraOrbit();ResetExteriorLife();if(lootTray)Destroy(lootTray);lootTray=null;lootSignature=null;GatherFeedback=0;LootIndex=0;noticeAge=0;minuteVoice=false;radioClock=15;queuedVoice=null;
+            InventoryIndex=0;AnchorMode="wall";focusId=null;
+            ResetDirectActions();
+            ResetRevisionWorld();
+            ResetResidenceCinematic();ResetPresentation();ResetCameraOrbit();ResetExteriorLife();if(lootTray)Destroy(lootTray);lootTray=null;GatherFeedback=0;LootIndex=0;noticeAge=0;minuteVoice=false;radioClock=15;queuedVoice=null;
             if(aftermath)Destroy(aftermath);aftermath=null;if(helicopter)Destroy(helicopter);helicopter=null;if(rotorAudio)Destroy(rotorAudio);rotorAudio=null;radioVoice?.Stop();SetBunkerDoorOpen(false);
             foreach(var h in hinges.Values){h.open=false;h.closeBlocked=h.motionBlocked=false;}garageOpen=false;
         }

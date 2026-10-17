@@ -1,0 +1,35 @@
+{
+  "status": "TEMPLATE_NOT_SELECTED_NOT_EXECUTED",
+  "selected_at_f0": false,
+  "behavior_profile": null,
+  "contract_sha256": null,
+  "contract_constraints": {
+    "first_meaningful_cycle_seconds": 180,
+    "short_content_seconds": 270,
+    "short_hard_limit_seconds": 300,
+    "direct_install_target_seconds": 0.6,
+    "construction_min_seconds": 0.5,
+    "construction_max_seconds": 0.7,
+    "walk_mps": 3.645,
+    "run_mps": 5.67
+  },
+  "proposed_quality_defaults": {
+    "human_participants_min": 3,
+    "human_first_goal_and_prevention_explanation": "all participants; report each result separately",
+    "reference_device_p95_frame_ms": 33.3,
+    "reference_device_target_fps": 60,
+    "soak_min_minutes": 30,
+    "soak_target_minutes": 60,
+    "retry_cycles_min": 10,
+    "critical_visual_readability_min_score": 3,
+    "critical_visual_score_0_or_1_allowed": false
+  },
+  "optional_extended_scope": {
+    "human_participants": 5,
+    "retry_cycles": [
+      20,
+      50
+    ]
+  },
+  "rule": "Freeze selected values before execution. Contract requirements are distinct from proposed quality defaults. Never lower thresholds after observing a failure to turn it into PASS."
+}

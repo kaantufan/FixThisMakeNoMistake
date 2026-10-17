@@ -31,11 +31,11 @@ Bu belge önceki **14 Markdown raporunu, iki CSV tablosunu ve asset atlasının 
 <a id="durum"></a>
 ## 2. Güncel durum, gelişim ve korunacak oyun tabanı
 
-### 2.1. Güncel izometrik sürüm — Home V4.8
+### 2.1. Güncel izometrik sürüm — Home V4.9
 
-Kısa hazırlık akışı gerçek zamanlı kesintisiz CharacterController rotasında **49.67sn** içinde bütün hedeflerle tamamlandı. Dört afet doğal sürelerinde başlatıldı/sonuçlandı; gerçek kayıp/hasar korunarak inceleme, menü ve tekrar denendi. **149/149rota**, **189/189regresyon**,0runtime hata; kaynak/prefab/asset/settings farkı0. Test ışınlanması/zaman enjeksiyonu/hile0. Girdiler üretim API'sinden; OS girdisi, ilk kez oynayan insan keyfi/işitmesi ve tam kampanya kabulü değildir.
+İki vidaya doğrudan tıklama, 0,60 sn ilgili assetin dünya montajı, gerçek güçlendirilmiş duvar/pencere geometrisi ve karakter montaj hareketi, ×1,35 hareket, üç bölgede dört olgun ağaçtan sıralar ve yalnız geçerli önlem seçenekleri uygulanmıştır. Yatakta ilgisiz yangın tüpü yerine ayrı yangın ekipmanı noktası vardır. Karakter forkundaki son kullanıcı kararıyla görünüm güzelleştirmesi geri alınmış, eski V2 görünümü korunmuştur. FPS askıda korunur.
 
-Enter atlama, adım sayısı, tüketilen çanta, doğru kayıp nedeni, farklı kat rehberi ve kayıptan sonra hasarı inceleme düzeltildi. Beş üretim oturumunun tamamlandığı doğrulandı. [Yeni teslim ve süreler](../TooLateToPanic/Documentation/HOME-V4.8-DELIVERY-2026-10-17.md). DLL `5683E713C90F2FD070DB819D14526EBA74ACC25B65C6581DABD6FB602F6BD17E`.
+Güncel Jury/OS DLL `A29F0DF6DE2D…`: iki gerçek vida/doğrudan montaj/dedicated yangın istasyonu adaptörü uygulandı; **189/189 Jury regresyonu**,0runtime error,gerçekexit0. Güncel modelde5510/5510 managed-shim kontrol tekrarlandı. Gerçek klavye/fareyle otomatik yapılabilen menü, dört doğal afet, atla/tekrar ve süre alt testleri kaydedildi. Basılı yürüyüş gerektiren tam rotalar,kesintisiz video ve insan ilk180sn/keyif kabulü açık. Önceki44/141ve505satır QA kanıtı kendi tarihselDLLlerine bağlıdır. [Güncel teslim ve sınırlar](../TooLateToPanic/Documentation/HOME-V4.9-JURY-OS-DELIVERY-2026-10-17.md).
 
 ### 2.2. Gelişim özeti
 

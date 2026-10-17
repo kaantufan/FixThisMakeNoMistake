@@ -1,20 +1,11 @@
+﻿> **Windows V4.11:** [Oynanabilir ZIP / Release](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.11). Kaynak checkout'unda `Builds` bulunmaz; hazır oyun için ZIP'i çıkarıp EXE'yi yan klasörleriyle çalıştırın. Unity kaynak projesi `TooLateToPanic/`, Unity6000.0.73f1 / Built-In.
+
 # Too Late to Panic!
 
-Afete Hazırlık ve Önlem temalı, çevrimdışı 3D Windows oyunu.
+Afete Hazırlık ve Önlem temalı, çevrimdışı Unity6000.0.73f1 / Built-In Windows oyunu.
 
-| Klasör | İçerik |
-| --- | --- |
-| [TooLateToPanic](TooLateToPanic/README.md) | İzometrik Home V4.8; dört seçilebilir afet, akan dere, çevre NPC'leri, yenilenen asset/HUD; 149/149 kesintisiz rota + 189/189 regresyon kontrolü |
-| [TooLateToPanicFPS](TooLateToPanicFPS/README.md) | Askıdaki FPS denemesi; mevcut dosyalar korunur |
-| [Docs](Docs/TOO-LATE-TO-PANIC-GDD.md) | Oyun tasarımı ve ekip düzeni |
-| [Tools/GamejamOrchestra](Tools/GamejamOrchestra/policy.json) | Bu oyun için görev metinleri ve teslim şablonları |
-| [Evidence/GamejamOrchestra](Evidence/GamejamOrchestra/) | TLTP staging, kaynak/derleme/test ve düzenleme kayıtları |
+Güncel Home V4.11: izometrik önlemler + yalnız afet çantası hazırlığında sinematikle geçilen FPS. Yeni Yarkın assetleri, fiziksel erzaklar, kaynak havuzu ve interaktif defter. [Oyunun README'si](TooLateToPanic/README.md), [güncel teslim](TooLateToPanic/Documentation/HOME-V4.11-DELIVERY-2026-10-17.md), [build kimliği](TooLateToPanic/LATEST-BUILD.json).
 
-İzometrik oyunu `Play-TooLateToPanic.cmd` açar. Sürümün güncel durumu ve kontrolleri ilgili projenin README dosyasındadır. Aktif geliştirme yalnız izometrik sürümdedir. FPS denemesi kullanıcının kararıyla durduruldu; dosyaları korunur.
+`Play-TooLateToPanic.cmd` güncel oyunu açar. Aktif Unity projesi `TooLateToPanic/` altındadır. `TooLateToPanicFPS/` bağımsız eski deneme kaynakları ve kayıtları korunur; güncel FPS aşaması aktif oyunun aynı Model/Expedition/controller verisini kullanır.
 
-Unity 6000.0.73f1 / Built-In kullanılır. Projeyi Unity'de açarken iki oyun klasöründen ilgili olanı seçin; bu üst klasör bir Unity projesi değildir. Çalışma kuralları [AGENTS.md](AGENTS.md), ekip düzeni [TOO-LATE-TO-PANIC-TEAM.md](Docs/TOO-LATE-TO-PANIC-TEAM.md) içindedir.
-
-
-
-
-
+[Tasarım](Docs/TOO-LATE-TO-PANIC-GDD.md), [çalışma kuralları](AGENTS.md), [ekip](Docs/TOO-LATE-TO-PANIC-TEAM.md), [kanıtlar](Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/).

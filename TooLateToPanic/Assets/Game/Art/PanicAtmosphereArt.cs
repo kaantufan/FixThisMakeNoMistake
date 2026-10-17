@@ -376,7 +376,7 @@ namespace TooLateToPanic
             }
             public void Box(Vector3 p,Vector3 size,Material m,Quaternion q=default(Quaternion))
             {
-                if(q==default(Quaternion))q=Quaternion.identity;
+                if(q.Equals(default(Quaternion)))q=Quaternion.identity;
                 Vector3[] v={new Vector3(-.5f,-.5f,-.5f),new Vector3(.5f,-.5f,-.5f),new Vector3(.5f,.5f,-.5f),new Vector3(-.5f,.5f,-.5f),new Vector3(-.5f,-.5f,.5f),new Vector3(.5f,-.5f,.5f),new Vector3(.5f,.5f,.5f),new Vector3(-.5f,.5f,.5f)};
                 int[] t={0,2,1,0,3,2,4,5,6,4,6,7,0,4,7,0,7,3,1,2,6,1,6,5,0,1,5,0,5,4,3,7,6,3,6,2};
                 var mesh=Mesh(v,t);Add(mesh,p,q,size,m);

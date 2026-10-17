@@ -1,0 +1,854 @@
+﻿{
+  "complete": true,
+  "passed": true,
+  "error": "",
+  "seconds": 34.239776611328125,
+  "renderStates": [
+    "pause width=1600 height=900 frame=174 page=Rooms turning=False progress=0 bagProgress=0",
+    "garage-interior width=1600 height=900 frame=387 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-garage-North width=1600 height=900 frame=388 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-garage-East width=1600 height=900 frame=389 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-garage-South width=1600 height=900 frame=390 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-garage-West width=1600 height=900 frame=391 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-upper-North width=1600 height=900 frame=396 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-upper-East width=1600 height=900 frame=397 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-upper-South width=1600 height=900 frame=398 page=Rooms turning=False progress=0 bagProgress=0",
+    "cutaway-upper-West width=1600 height=900 frame=399 page=Rooms turning=False progress=0 bagProgress=0",
+    "fps-kitchen-hands width=1600 height=900 frame=478 page=Rooms turning=False progress=0 bagProgress=1",
+    "fps-gather-contact width=1600 height=900 frame=490 page=Rooms turning=False progress=0 bagProgress=1",
+    "fps-fridge-mid-open width=1600 height=900 frame=516 page=Rooms turning=False progress=0 bagProgress=1",
+    "fps-gather-rest width=1600 height=900 frame=593 page=Rooms turning=False progress=0 bagProgress=1",
+    "inventory-drag-layout width=1600 height=900 frame=632 page=Rooms turning=False progress=0 bagProgress=1",
+    "notebook-rooms width=1600 height=900 frame=697 page=Rooms turning=False progress=0 bagProgress=1",
+    "notebook-turn-quarter width=1600 height=900 frame=709 page=Rooms turning=True progress=0,2499311 bagProgress=1",
+    "notebook-turn-middle width=1600 height=900 frame=720 page=Rooms turning=True progress=0,4976813 bagProgress=1",
+    "notebook-inventory width=1600 height=900 frame=785 page=Inventory turning=False progress=0 bagProgress=1",
+    "notebook-page-Rooms width=1600 height=900 frame=1336 page=Rooms turning=False progress=0 bagProgress=1",
+    "notebook-page-Flood width=1600 height=900 frame=1382 page=Flood turning=False progress=0 bagProgress=1",
+    "notebook-page-Earthquake width=1600 height=900 frame=1426 page=Earthquake turning=False progress=0 bagProgress=1",
+    "notebook-page-Fire width=1600 height=900 frame=1470 page=Fire turning=False progress=0 bagProgress=1",
+    "notebook-page-Storm width=1600 height=900 frame=1512 page=Storm turning=False progress=0 bagProgress=1",
+    "notebook-page-Inventory width=1600 height=900 frame=1555 page=Inventory turning=False progress=0 bagProgress=1",
+    "notebook-960x540 width=960 height=540 frame=1666 page=Inventory turning=False progress=0 bagProgress=1",
+    "basement-shelter width=1600 height=900 frame=1860 page=Inventory turning=False progress=0 bagProgress=0",
+    "isometric-restored width=1600 height=900 frame=1936 page=Inventory turning=False progress=0 bagProgress=0",
+    "fireplace-closeup width=1600 height=900 frame=1960 page=Inventory turning=False progress=0 bagProgress=0"
+  ],
+  "setupWarps": 10,
+  "evidence": "Native production APIs, real frame clocks/rays/colliders, explicit position fixtures. No OS input or human acceptance.",
+  "rows": [
+    {
+      "id": "model.12 inventory / 8 bag reset empty",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.containers contain only construction materials",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.world supplies omit removed ingredients and construction stock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.first opening awards bounded RNG stock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.auto loot uses currency without slots or budget",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.reopen cannot roll or pay twice",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.new wave cannot repay construction containers",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.legacy gathering and first aid craft do not produce stock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.erzak cannot be bought through old model APIs",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.reset clears construction balance and loot identity",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.finite world pickup enters inventory",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.world pickup cannot duplicate",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.insufficient partial capacity rejects entire world pickup",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.4 plus 2 partial fill becomes 5 plus 1",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.full inventory still auto collects materials",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.exact slot merge preserves overflow in source",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.different inventory stacks swap",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.invalid transfers have no stock mutation",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.packing stack publishes model and bag together",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.cross boundary swap synchronizes both water food counters",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.unpack restores loose supply and clears bag counter",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.full bag denies packing atomically",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.device without battery is fully rejected",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.device packing consumes exactly one battery",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.reorder packed device does not consume another battery",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.unpacking device clears packed support bit",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.repacking device uses a new real battery",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.spare batteries can be carried in bag",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.three day water cap retained without partial loss",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.support category remains unique",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.work preflight reads numeric material balance",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.cancelled work spends neither budget nor materials",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.completed anchor spends canonical currency recipe exactly once",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.repeated completion cannot double spend",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.campaign pause freezes time without cheat marking",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.paused expedition mutations reject",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.campaign resumes without catching up paused time",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.disaster pause freezes phase countdown",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.aftermath pause freezes phase countdown",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.simulation starts",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.simulation clock respects real pause",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.short flow starts with physical supply stock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.short flow water exists only in world",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.short flow pause freezes clock and objectives",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.paused flow rejects skip advance and shelter mutation",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.short flow resumes from unchanged clock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.short flow genuine world pickup sets objective provenance",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.developer cheat marking remains sticky",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "model.cheated run cannot persist a highscore",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.resources.AirConditioner",
+      "detail": "Native-loaded sanitized prefab and real clips; isolated visual fixture",
+      "pass": true
+    },
+    {
+      "id": "animation.sample-moves.AirConditioner",
+      "detail": "Explicit .3s phase sample through passive production adapter; not an OS/world interaction claim",
+      "pass": true
+    },
+    {
+      "id": "animation.reverse-settles.AirConditioner",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.resources.BreakerBox",
+      "detail": "Native-loaded sanitized prefab and real clips; isolated visual fixture",
+      "pass": true
+    },
+    {
+      "id": "animation.sample-moves.BreakerBox",
+      "detail": "Explicit .3s phase sample through passive production adapter; not an OS/world interaction claim",
+      "pass": true
+    },
+    {
+      "id": "animation.reverse-settles.BreakerBox",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.resources.FireCabinet",
+      "detail": "Native-loaded sanitized prefab and real clips; isolated visual fixture",
+      "pass": true
+    },
+    {
+      "id": "animation.sample-moves.FireCabinet",
+      "detail": "Explicit .3s phase sample through passive production adapter; not an OS/world interaction claim",
+      "pass": true
+    },
+    {
+      "id": "animation.reverse-settles.FireCabinet",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.resources.GasValve",
+      "detail": "Native-loaded sanitized prefab and real clips; isolated visual fixture",
+      "pass": true
+    },
+    {
+      "id": "animation.sample-moves.GasValve",
+      "detail": "Explicit .3s phase sample through passive production adapter; not an OS/world interaction claim",
+      "pass": true
+    },
+    {
+      "id": "animation.reverse-settles.GasValve",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.resources.Refrigerator",
+      "detail": "Native-loaded sanitized prefab and real clips; isolated visual fixture",
+      "pass": true
+    },
+    {
+      "id": "animation.sample-moves.Refrigerator",
+      "detail": "Explicit .3s phase sample through passive production adapter; not an OS/world interaction claim",
+      "pass": true
+    },
+    {
+      "id": "animation.reverse-settles.Refrigerator",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.resources.WaterHeater",
+      "detail": "Native-loaded sanitized prefab and real clips; isolated visual fixture",
+      "pass": true
+    },
+    {
+      "id": "animation.sample-moves.WaterHeater",
+      "detail": "Explicit .3s phase sample through passive production adapter; not an OS/world interaction claim",
+      "pass": true
+    },
+    {
+      "id": "animation.reverse-settles.WaterHeater",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.resources.WaterValve",
+      "detail": "Native-loaded sanitized prefab and real clips; isolated visual fixture",
+      "pass": true
+    },
+    {
+      "id": "animation.sample-moves.WaterValve",
+      "detail": "Explicit .3s phase sample through passive production adapter; not an OS/world interaction claim",
+      "pass": true
+    },
+    {
+      "id": "animation.reverse-settles.WaterValve",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.initial-stage",
+      "detail": "Normal free game begins its bag stage through the real cinematic",
+      "pass": true
+    },
+    {
+      "id": "fps.initial-finish",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "bunker.basement",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "bag.physical",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pickup.3d",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "container.auto-pool",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "container.no-reroll",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pause.campaign-native",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pause.keyboard-right",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pause.keyboard-left",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pause.keyboard-confirm",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "title.horizontal-layout",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "collision.kitchen-jump",
+      "detail": "Actual CharacterController, one jump attempt; no route warp",
+      "pass": true
+    },
+    {
+      "id": "collision.bath-jump",
+      "detail": "Actual upper-floor bathroom west wall",
+      "pass": true
+    },
+    {
+      "id": "garage.internal-route",
+      "detail": "Real doorway opening and controller traversal; furniture/rails stay physical",
+      "pass": true
+    },
+    {
+      "id": "cutaway.garage.North",
+      "detail": "Actual renderer enabled state: near=1 far=5; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "cutaway.garage.East",
+      "detail": "Actual renderer enabled state: near=2 far=3; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "cutaway.garage.South",
+      "detail": "Actual renderer enabled state: near=5 far=1; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "cutaway.garage.West",
+      "detail": "Actual renderer enabled state: near=3 far=2; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "cutaway.upper.North",
+      "detail": "Actual renderer enabled state: near=8 far=19; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "cutaway.upper.East",
+      "detail": "Actual renderer enabled state: near=17 far=8; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "cutaway.upper.South",
+      "detail": "Actual renderer enabled state: near=19 far=8; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "cutaway.upper.West",
+      "detail": "Actual renderer enabled state: near=8 far=17; controller/colliders unchanged",
+      "pass": true
+    },
+    {
+      "id": "collision.cutaway-keeps-physics",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.begin",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.same-position",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.perspective",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.full-height-partition-bottom",
+      "detail": "Actual native renderer bounds, separately from persistent colliders",
+      "pass": true
+    },
+    {
+      "id": "fps.water-ray-focus",
+      "detail": "actor=(4.10, 0.00, 3.10) supply=(4.04, 1.01, 4.48) focus=supply_water_kitchen CanInteract=True floor=0 mode=True ray=supply_water_kitchen:supply_water_kitchen:1,273067;cabinet:cabinet:1,384918",
+      "pass": true
+    },
+    {
+      "id": "fps.stale-focus-rejected",
+      "detail": "Turn away and press F in the same frame without fixture focus refresh",
+      "pass": true
+    },
+    {
+      "id": "fps.water-diagnostics",
+      "detail": "actor=(4.10, 0.00, 3.10) supply=(4.04, 1.01, 4.48) focus=supply_water_kitchen CanInteract=False floor=0 mode=True ray=cabinet:cabinet:1,384909",
+      "pass": true
+    },
+    {
+      "id": "fps.center-ray-pickup",
+      "detail": "Center viewport ray + production E transaction",
+      "pass": true
+    },
+    {
+      "id": "fps.no-double-pickup",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.only-bag-work",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "animation.fridge-real-open",
+      "detail": "Actual world container, center-ray E and real frame clock",
+      "pass": true
+    },
+    {
+      "id": "animation.fridge-real-reverse",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.hands-overlay",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.pause-clock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.inventory-cursor",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "inventory.drag-begins",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "inventory.drag-to-bag",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "inventory.drag-unpack",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.modal-clock",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.live-values",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.latest-page",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.readonly",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.close-releases",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Open owns input in the request frame",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Open animation reaches its final pose",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Notebook does not steal the existing InputLocked owner",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.World model clock is gated while notebook is open",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Page settles: Rooms",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Page settles: Flood",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Page settles: Earthquake",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Page settles: Fire",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Page settles: Storm",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Page settles: Inventory",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Reverse fixture is inside a real page turn",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Reverse request preserves the current paper pose",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Reverse returns to the source page",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Latest rapid page request wins",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Close/reopen in one frame preserves pose and ownership",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Budget comes from the live model",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Notebook materials use the canonical live Count API",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Notebook capacities come from real storage",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Notebook navigation changes no gameplay stock/budget/score/cheat state",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Instant close retains the request-frame input gate",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.native-helper.Closed notebook releases only its own gate next frame",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.render-settled.Rooms",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.render-settled.Flood",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.render-settled.Earthquake",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.render-settled.Fire",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.render-settled.Storm",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "notebook.render-settled.Inventory",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.finish",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fps.return-same-position",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pickup.iso-stage-reject",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "basement.dark",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "basement.restore",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "fireplace.native-model",
+      "detail": "Authored arched masonry plus actual linked flame origin; visual frame separately reviewed",
+      "pass": true
+    },
+    {
+      "id": "fireplace.opens-into-room",
+      "detail": "Actual mesh front local-Z faces east into the room; flame is inside its authored opening",
+      "pass": true
+    },
+    {
+      "id": "fireplace.extinguish",
+      "detail": "Visibility refresh must preserve the switched-off flame across real frames",
+      "pass": true
+    },
+    {
+      "id": "fireplace.ignite",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pause.shortflow-native",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "pause.shortflow-resume",
+      "detail": "",
+      "pass": true
+    },
+    {
+      "id": "no-cheat",
+      "detail": "",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "captures": [
+    "pause.png",
+    "garage-interior.png",
+    "cutaway-garage-North.png",
+    "cutaway-garage-East.png",
+    "cutaway-garage-South.png",
+    "cutaway-garage-West.png",
+    "cutaway-upper-North.png",
+    "cutaway-upper-East.png",
+    "cutaway-upper-South.png",
+    "cutaway-upper-West.png",
+    "fps-kitchen-hands.png",
+    "fps-gather-contact.png",
+    "fps-fridge-mid-open.png",
+    "fps-gather-rest.png",
+    "inventory-drag-layout.png",
+    "notebook-rooms.png",
+    "notebook-turn-quarter.png",
+    "notebook-turn-middle.png",
+    "notebook-inventory.png",
+    "notebook-page-Rooms.png",
+    "notebook-page-Flood.png",
+    "notebook-page-Earthquake.png",
+    "notebook-page-Fire.png",
+    "notebook-page-Storm.png",
+    "notebook-page-Inventory.png",
+    "notebook-960x540.png",
+    "basement-shelter.png",
+    "isometric-restored.png",
+    "fireplace-closeup.png"
+  ],
+  "capturePublication": "29 original native captures retained locally. Three representative frames are included here; no OS/human acceptance."
+}

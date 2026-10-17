@@ -7,6 +7,15 @@ namespace TooLateToPanic
     {
         public Rect JuryObjectiveBounds { get { return new Rect(24, 176, 430, 240); } }
 
+        public static string JuryStagePrompt(PanicJuryStage stage, PanicJuryShelter shelter)
+        {
+            if (stage == PanicJuryStage.Earthquake) return "SARSINTI SÜRÜYOR";
+            if (stage == PanicJuryStage.EarthquakeResult) return "SONUCU İNCELE";
+            if (stage == PanicJuryStage.Inspection) return "EVİ İNCELE";
+            if (stage == PanicJuryStage.Onboarding) return "İLK ADIMLAR";
+            return shelter != PanicJuryShelter.None ? "İŞARETLİ NOKTADA · E" : "ÖNLEMİNİ SEÇ";
+        }
+
         void StartJuryRun()
         {
             if (_paused) SetPaused(false);
@@ -43,7 +52,7 @@ namespace TooLateToPanic
             Frame(panel, Night, Line, 1f); Region(panel);
             FittedLabel(new Rect(42, 188, 390, 40), snapshot.Heading, _heading, MainText, 22);
             Label(new Rect(42, 238, 386, 98), snapshot.Hint, _wrap);
-            Label(new Rect(42, 343, 386, 26), snapshot.ShelterKind != PanicJuryShelter.None ? "İŞARETLİ NOKTADA · E" : "ÖNLEMİNİ SEÇ", ColorText(_tiny, Brass));
+            Label(new Rect(42, 343, 386, 26), JuryStagePrompt(snapshot.Stage, snapshot.ShelterKind), ColorText(_tiny, Brass));
             if (snapshot.Stage == PanicJuryStage.Earthquake)
                 Button(new Rect(42, 373, 386, 34), "SAHNEYİ ATLA · ENTER", false, Sea, World.SkipResidenceCinematic);
             else if (snapshot.CanAdvance)

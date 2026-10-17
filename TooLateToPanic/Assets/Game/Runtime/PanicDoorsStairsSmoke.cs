@@ -264,7 +264,7 @@ namespace TooLateToPanic
             {
                 Vector3 delta = target - w.PlayerPosition; delta.y = 0;
                 if (delta.magnitude < .035f) { walk.reached = true; break; }
-                Step(walk, Vector3.ClampMagnitude(delta / .35f, 1)); yield return null;
+                Step(walk, Vector3.ClampMagnitude(delta / .8f, 1)); yield return null;
             }
             yield return Settle(10); EndWalk(walk);
         }

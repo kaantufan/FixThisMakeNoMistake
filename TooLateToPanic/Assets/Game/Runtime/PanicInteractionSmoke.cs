@@ -271,7 +271,7 @@ namespace TooLateToPanic
             {
                 Vector3 delta = target - w.PlayerPosition; delta.y = 0;
                 if (delta.magnitude < .035f) { walk.reached = true; break; }
-                Vector3 direction = Vector3.ClampMagnitude(delta / .35f, 1);
+                Vector3 direction = Vector3.ClampMagnitude(delta / .8f, 1);
                 Vector3 forward = w.View.transform.forward; forward.y = 0; forward.Normalize();
                 Vector3 right = w.View.transform.right; right.y = 0; right.Normalize();
                 w.SmokeMove(new Vector2(Vector3.Dot(direction, right), Vector3.Dot(direction, forward)), Dt);

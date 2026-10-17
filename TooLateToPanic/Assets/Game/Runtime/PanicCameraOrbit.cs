@@ -108,7 +108,7 @@ namespace TooLateToPanic
         {
             get
             {
-                if (Model == null || !View || InputLocked || WorkActive || InventoryOpen || IsMoving ||
+                if (Model == null || !View || InputLocked || Model.IsPaused || NotebookBlocksInput || BagCameraOwnsView || WorkActive || InventoryOpen || IsMoving ||
                     CinematicActive || LossAnnounced || !JuryAllowsMovement || CancelFrame == Time.frameCount) return false;
                 if (hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame)) return false;
                 return Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial || Model.Phase == PanicPhase.Inspection;
