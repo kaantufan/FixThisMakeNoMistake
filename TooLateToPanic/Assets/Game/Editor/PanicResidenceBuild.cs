@@ -18,7 +18,7 @@ namespace TooLateToPanic
         const string HomeArt = "Assets/Game/Resources/HomeArt";
         const string ResidenceArt = "Assets/Game/Resources/ResidenceArt";
         const string ScenePath = "Assets/Game/Scenes/TooLateToPanicResidence.unity";
-        const string Version = "0.4.12";
+        const string Version = "0.4.13";
 
         // Every explicit Create case in the residence r1 package; no default/fallback IDs.
         static readonly string[] ResidenceIds =
@@ -31,7 +31,7 @@ namespace TooLateToPanic
             "laundrybasket", "pendantlamp", "bunkerhatch", "bookshelf", "table", "tvstand", "toolbox", "cabinet", "kitchencabinet", "locker", "bagstation", "medicinecabinet", "supplycrate"
         };
 
-        [MenuItem("Too Late to Panic/Build Home V4.12")]
+        [MenuItem("Too Late to Panic/Build Home V4.13")]
         public static void Build()
         {
             try
@@ -49,6 +49,7 @@ namespace TooLateToPanic
                 PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
                 PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Standalone, ApiCompatibilityLevel.NET_Standard);
                 PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Standalone, ManagedStrippingLevel.Disabled);
+                ConfigureBrand();
 
                 bool reuseArt=Environment.GetCommandLineArgs().Contains("-reuseResidenceArt");
                 bool rebakeSurvivor=Environment.GetCommandLineArgs().Contains("-rebakeSurvivor");
@@ -92,7 +93,7 @@ namespace TooLateToPanic
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
                 AssetDatabase.SaveAssets();
                 var project = Directory.GetParent(Application.dataPath).FullName;
-                var outputDir = Path.Combine(project, "Builds", "Home-V4.12-20261017");
+                var outputDir = Path.Combine(project, "Builds", "Home-V4.13-20261017");
                 var buildArgs = Environment.GetCommandLineArgs();
                 int auditOutput = Array.IndexOf(buildArgs, "-panicBuildDirectory");
                 if (auditOutput >= 0)
@@ -119,6 +120,36 @@ namespace TooLateToPanic
                 if (report.summary.result != BuildResult.Succeeded) EditorApplication.Exit(2);
             }
             catch (Exception ex) { Debug.LogException(ex); EditorApplication.Exit(3); }
+        }
+
+        // Title logo and exe icon (Documentation/HUD-Concept/logo). Import settings are enforced here,
+        // so the staged .meta files only need to carry stable GUIDs.
+        static void ConfigureBrand()
+        {
+            Texture2D Import(string path, bool mips)
+            {
+                var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer == null) throw new Exception("Brand texture missing: " + path);
+                importer.textureType = TextureImporterType.Default;
+                importer.alphaIsTransparency = true;
+                importer.mipmapEnabled = mips;
+                importer.npotScale = TextureImporterNPOTScale.None;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.filterMode = mips ? FilterMode.Trilinear : FilterMode.Bilinear;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.maxTextureSize = 2048;
+                importer.SaveAndReimport();
+                return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            }
+
+            Import("Assets/Game/Resources/HUD/TltpLogo.png", true);
+            var mark = Import("Assets/Game/Brand/TltpMark.png", false);
+            var markSmall = Import("Assets/Game/Brand/TltpMarkSmall.png", false);
+            // 16-32 px use the crack-free mark; larger sizes the full one.
+            var sizes = PlayerSettings.GetIconSizes(NamedBuildTarget.Standalone, IconKind.Any);
+            PlayerSettings.SetIcons(NamedBuildTarget.Standalone, sizes.Select(s => s <= 32 ? markSmall : mark).ToArray(), IconKind.Any);
+            PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { mark }, IconKind.Any);
+            Debug.Log("HOME_BRAND logo+icon sizes=" + string.Join(",", sizes));
         }
 
         static void Folder(string path)

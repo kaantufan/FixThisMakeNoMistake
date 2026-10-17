@@ -1,4 +1,4 @@
-﻿# Too Late to Panic! — çalışma düzeni
+# Too Late to Panic! — çalışma düzeni
 
 ## Güncel oyun ve çalışma alanı
 
@@ -118,3 +118,8 @@ Kaynak havuzu/teksefer RNG auto-loot,12+8 yuva drag-drop/partial-fill, hazır il
 Hazırlık önce izometrik önlemler, son30saniyede aynı gerçek oyuncu/controller konumundan otomatik FPS çantadır; G ile geri dönüş yoktur. Her dalga1su+1gıda yeterli; gerçek sonlu toplama gereken ilk birimi çantaya, artanı envantere ekler. Önlem sırasında çanta erzakları görünmez; çanta sırasında yapı malzemesi toplama/önlem ve dolap açma yoktur. Transit kapıları ve gerçek sığınak E ile kullanılabilir; kısa akış güvenli alanı FPS E ile çözer. Yüzde75ve üzeri hasarda kayıp. Çit inşası ve iki etkileşimsiz ayaklı lamba kaldırıldı; dekoratif sınır çitleri korunur.3×4tam ağaç sırası ve sonlu kaynakta asgari3sıra paketi; kararlı gerçek yüzey/merkez pencere ışını; gerçek3D sınır vurgusu; tek sahibi olan açık bunker kapağı; dış sinematiklerde çatı/Skybox; sade FPS HUD.
 
 Kısa akışın yalnız-ankraj ve boşaltılmış dolap stokları kısıtı kaldırıldı; geçerli isteğe bağlı işler yalnız önlem aşamasında açılır. Gerçek maliyet/iptal/controller/score kuralları korunur. Son kaynak99dosyada0kayma, DLL8E3DE7EEB0D3F52D4F77539B9CBE6D04CA7FCF40043803BACE073579484364CB;204/204native model/API/frame/render,0runtime hata,15konum/saat/hazır fikstürü. OS/insan/tüm kampanya kabulü değildir. LATEST ve Documentation/HOME-V4.12-DELIVERY-2026-10-17.md son r2adayını bağlar. Açık V4.11-r7oyuncusu/kayıtları korunur; bağımsız FPS projesi dokunulmaz. Yalnız başarısız kendi V4.12v1build klasörü silme komutu otomatik onay incelemesinde blocked by policy ile reddedildi; komut çalışmadı, alternatif denenmedi, klasör ve önceki reddedilmiş hedefler korunur.
+
+
+## Home V4.13 logo ve EXE ikonu —17Ekim
+
+V4.12-r5 son kaynakları korunarak başlık logosu ve boyuta bağlı Windows amblemi eklendi; normal120+30sn, gerçek yüzey/pickup ve yukarı açılan kapak korunur. Sadece HUD/builder C# değişti;98diğer kaynak aynı. DLL97996C5ED34A843FD4FA04D79761C6004A022EF1643DCE79257B4EFD3F83207E; yeni224/224native API/frame/render,0runtime hata,15kurulum fikstürü.1600native ve960renderer pencere başlığı kontrol edildi; gerçek PE16/32small48/256full ve9ikon payloadı doğrulandı. Explorer ek büyük görünümü kullanıcı fizikselEsc ile Computer Use'ı durdurduğundan NOT_RUN; sonrasındaCUgirdisi yok. Yeni DLL tam OS/insan/kampanya kabulü değildir; R5 başarılı OS turu tarihsel kalır. LATEST ve Documentation/HOME-V4.13-BRAND-DELIVERY-2026-10-17.md kaynak/build/ZIPhashlerini bağlar. R4açık kaldı; devirdekiR5süreci finalde görülmedi, bu root ona girdi/sonlandırma göndermedi, dosyaları aynı. Eski reddedilmiş temizlik tekrarlanmadı; bağımsızFPSkorunur.

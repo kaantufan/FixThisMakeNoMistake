@@ -87,6 +87,7 @@ namespace TooLateToPanic
         GUIStyle _timer;
         GUIStyle _mega;
         GUIStyle _logo;
+        Texture2D _brandLogo;
         GUIStyle _wrap;
         GUIStyle _right;
         Font _displayFont;
@@ -451,9 +452,16 @@ namespace TooLateToPanic
             Region(new Rect(78, 78, 816, 744));
             DrawHazardStripe(new Rect(110, 111, 230, 6), Rust);
             Label(new Rect(116, 132, 680, 28), "AFETE HAZIRLIK VE ÖNLEM", ColorText(_tiny, Brass));
-            Label(new Rect(110, 173, 730, 132), "TOO LATE", _logo);
-            Brush(new Rect(107, 310, 696, 116), Rust);
-            Label(new Rect(128, 294, 680, 136), "TO PANIC!", _logo);
+            // Brand logo from Documentation/HUD-Concept/logo; the text title stays as a fallback.
+            if (!_brandLogo) _brandLogo = Resources.Load<Texture2D>("HUD/TltpLogo");
+            if (_brandLogo)
+                GUI.DrawTexture(new Rect(160, 160, 580, 290), _brandLogo, ScaleMode.ScaleToFit, true);
+            else
+            {
+                Label(new Rect(110, 173, 730, 132), "TOO LATE", _logo);
+                Brush(new Rect(107, 310, 696, 116), Rust);
+                Label(new Rect(128, 294, 680, 136), "TO PANIC!", _logo);
+            }
             Label(new Rect(118, 453, 668, 32), "Panik için geç. Hazırlık için şimdi.", _body);
             Label(new Rect(118, 492, 660, 26), "Evi güçlendir. Çantanı hazırla. Sığınağa yetiş.", _small);
 
