@@ -1,5 +1,9 @@
 # Too Late to Panic! — asset kaynakları
 
+## Home V5 — 18 Ekim 2026
+
+Dört acil servis aracı, sel zodiac botu, dört meslek kıyafet/aksesuar seti, iki boy raf ve üç farklı dolap özgün yerel C# üreticileriyle oluşturuldu. Ana karakterin beyaz göğüs paneli kaldırılarak indigo sivil ceket uygulandı; mevcut Quaternius humanoid/Avatar/UAL animasyon kaynakları korunur. Panik odası, ayrı komşu deprem kökleri ve yeni defter kapak/kâğıt/spirali yerel çalışmadır. Yeni indirme, sağlayıcı, kredi veya ödeme yoktur. [V5 asset ve sınır kaydı](HOME-V5-ASSETS-2026-10-18.md); eski lisans/provenance kayıtları aşağıda korunur.
+
 ## Home V4.14 — 17 Ekim 2026
 
 `defter-mockup` dalı `00377265c740fdc973039d0266cefc8c913633b9` karakter mesh/kaplamaları ve `yarkin-assets` dalı `29bf309fa0c7ccfdafd0a935e93512a44f550c9e` bunker kapağı/kilit meshleri seçilerek alındı. İlk Meshy karakterde rig/klip yoktu; iki yerel hareket denemesi kullanıcı tarafından reddedildi. Son r4 adayı çalışan eski Quaternius humanoid Avatar ve gerçek UAL Idle/Walk/Jog/Jump/Interact/Fixing kliplerini korur; görünümü yeni referanstaki yeşil ceket, açık tişört, sade pantolon ve saç/sakal çizgisine göre yerel olarak uyarlanır. Yeni procedural yürüyüş kullanılmaz; Meshy kaynakları arşivde korunur. FPS el rig'i, oda/tesisat geometrileri, yerel nabız/nefes sesleri, afet VFX ve yardım aracı düzenlemeleri bu görevdeki yerel kod üretimidir. Harici ücretli servis veya kredi kullanılmadı.

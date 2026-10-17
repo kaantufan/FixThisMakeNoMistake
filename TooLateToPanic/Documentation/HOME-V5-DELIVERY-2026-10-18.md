@@ -1,6 +1,6 @@
 # Too Late to Panic! — Home V5
 
-18 Ekim2026. Kullanıcının iki ekran görüntüsü ve hata/asset listesi üç aynı-dizin fork sohbetinde uygulandı; ana sohbet Unity/import/build/player entegrasyonunu yönetti. Kesin teslim kimliği ve test sonuçları tamamlanınca LATEST-BUILD.json ile bağlanır. Bu dosyanın ilk durumu INTEGRATION_IN_PROGRESS'dir; önceki V4.14 sonuçları V5 kabulü değildir.
+18 Ekim2026. **Home V5-r4 /0.5.0, kullanıcı oyun testine hazır.** Kullanıcının iki ekran görüntüsü ve hata/asset listesi üç aynı-dizin fork sohbetinde uygulandı; ana sohbet Unity/import/build/player entegrasyonunu yönetti. [LATEST-BUILD.json](../LATEST-BUILD.json) test edilen derleme, kaynak manifesti ve taşınabilir ZIP kimliğini bağlar. Önceki V4.14 sonuçları V5 kabulü değildir.
 
 ## Oynanış ve ortam
 
@@ -32,4 +32,10 @@ Yeni ücretli servis, kredi veya indirme kullanılmadı. Yeni sanat kaydı [HOME
 
 İlk r1 denemesi Unity native nesnesinin MonoBehaviour alan başlatıcısında oluşturulması hatası nedeniyle kabul edilmedi ve yalnız bu kökün build süreci durduruldu. Dar düzeltme native nesneleri kullanım aşamasında oluşturur; küçük rafın üst yüzeyindeki erzak konumu da düzeltildi. Bu başarısız kanıt korunur.
 
-Yeni derleme/native/render/ZIP sonuçları bu bölümde finalde güncellenecek. Kaynak incelemesi, import, derleme, native API/gerçek fizik/render, OS girişi ve insan kabulü ayrı katmanlardır. Bu çalışma eski test sayılarını yeni DLL için kullanmaz. Gerçek kayıtlar izole test profilleriyle korunur; önceki reddedilmiş build temizliği tekrarlanmaz.
+Son r4 Unity6000.0.73f1 Windows derlemesi **Succeeded,0 hata,0 uyarı**. Aynı yeni DLL üzerinde **94/94 ilgili kontrol,0 runtime hata,59.02sn**: gerçek controller/ışın, üst oda kabulü/yanlış bodrum reddi, gerçek konumda deadline, battaniye işlemi, elektrik/emisyon, komşu hareket/reset, doğal16sn intro/saat, defter ve köşe rehberi,14kaynak/16erzak, RNG/partial stok/skor kuralları, araç/ekip/boat rig ve render kayıtları. Bunlar API ve açık kurulum fikstürleridir;6konum yerleştirmesi,3saat fikstürü ve bağımsız model seed/wave/durum fikstürleri vardır.16sn açılış gerçek zamanlı gözlendi.1600x900 gameplay/defter/sel ve960x540 sonuç görüntüsü alındı; her HUD'nin her çözünürlükte fiziksel OS testi yapılmadı.
+
+DLL SHA256: `3CE17011107B0D3C6FD949A8EBDF773D796E5C403FDC66E6B47503053A8177BA`. Dondurulmuş138C#/shader dosyasıyla kaynak farkı0. Profil `native-r4-30d27f3a-2451-48a6-b4f7-aa0abc069408`; rapor `Evidence/GamejamOrchestra/TLTP-V5-20261018/manager/.../v5-smoke.json`. Gerçek skor dosyasının önce/sonra hash'i aynı.
+
+R2 otomatik test başlangıç rehberinin aynı-kare korumasını yanlış sırada çağırdığı için INVALID_TEST'dir. R3'te kamera yumuşaması/rehber geçişi tamamlanmadan doğrulama ve son ekip ulaşmadan erken sayım FAIL kayıtları korundu; hedefe gerçek ışın hâlâ zorunludur, tolerans/fizik/maliyet gevşetilmedi. R4, kamera yerleşmesini ve tüm ekibin gerçek varışını bekler; ikinci bayrak veya sahte kabul kullanmaz. Görsel incelemede üst sel odası kamerası karakterin başını kesiyordu; kadraj genişletildi. Defter kapağı ortak alpha'ya bağlandı; sonuç kısayol yardımındaki kullanılamayan tuş iddiaları çıkarıldı.
+
+Kaynak incelemesi, import, derleme, native API/gerçek fizik/render, OS girişi ve insan kabulü ayrı katmanlardır. Bu sonuç fiziksel OS girişi, insanın ses/animasyon/keyif onayı veya tüm kampanya kabulü değildir. Bu çalışma eski test sayılarını yeni DLL için kullanmaz. Gerçek kayıtlar izole test profilleriyle korunur; önceki reddedilmiş build temizliği tekrarlanmaz. Başlangıçta gözlenen V4.14 kullanıcı sürecine root girdi veya sonlandırma göndermedi; son gözlemde o PID artık bulunmadı. Root yalnız kendi hatalı Unity ve izole QA süreçlerini durdurdu. Yeni ödeme veya GitHub yayını yapılmadı.

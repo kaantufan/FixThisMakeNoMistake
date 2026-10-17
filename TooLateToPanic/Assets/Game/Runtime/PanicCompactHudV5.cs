@@ -72,7 +72,7 @@ namespace TooLateToPanic
             else if (World.BagCameraOwnsView) text = "WASD  Yürü · SHIFT  Koş\nFARE  Bak · E / F  Al / Kullan\nTAB  Çanta · J  Defter · ESC  Duraklat";
             else if (World.Model.Phase == PanicPhase.Inspection) text = "WASD  Yürü · Q  Hedef değiştir\nENTER  Sonraki hasar · N  Devam\nJ  Defter · ESC  Duraklat";
             else if (World.Model.Phase == PanicPhase.Title) text = "OKLAR  Menüde seç\nENTER  Başlat · F1  Tuşları gizle";
-            else if (World.Model.Phase == PanicPhase.GameOver || World.Model.Phase == PanicPhase.Success) text = "ENTER  Devam et\nESC  Menü · F1  Tuşları gizle";
+            else if (World.Model.Phase == PanicPhase.GameOver || World.Model.Phase == PanicPhase.Success) text = "FARE  Sonuç seçeneklerini kullan\nF1  Tuşları gizle";
             else text = "WASD  Yürü · SHIFT  Koş · SPACE  Zıpla\nE  Kullan · Q  Hedef değiştir\nTAB  Çanta · J  Defter · ESC  Duraklat";
             int rows = World.CinematicActive || World.LossAnnounced || World.Model.Phase == PanicPhase.Title || World.Model.Phase==PanicPhase.GameOver || World.Model.Phase==PanicPhase.Success ? 2 : 3;
             Rect guide = new Rect(24, toggle.y - rows * 25 - 13, 352, rows * 25 + 7);

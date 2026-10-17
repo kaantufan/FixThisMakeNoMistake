@@ -119,7 +119,7 @@ namespace TooLateToPanic
             Check("character.real-clips",animator.runtimeAnimatorController.animationClips.Any(c=>c.name.Contains("Walk_Loop"))&&animator.runtimeAnimatorController.animationClips.Any(c=>c.name.Contains("Jump_Loop")));
             yield return Place(new Vector3(-3.1f,0,-3.9f));yield return Capture("01-compact-hud");
             bool controls=hud.CompactControlsExpandedV5;hud.ToggleCompactControlsV5();Check("hud.controls-toggle",hud.CompactControlsExpandedV5!=controls);yield return Capture("02-controls");hud.ToggleCompactControlsV5();
-            Check("notebook.opens",w.Notebook.RequestOpen());yield return Wait(.6f);yield return Capture("03-notebook");w.Notebook.RequestClose();yield return Wait(.5f);
+            yield return null;Check("notebook.opens",w.Notebook.RequestOpen());yield return Wait(.6f);yield return Capture("03-notebook");w.Notebook.RequestClose();yield return Wait(.5f);
             Check("power.bound-real-lamps",w.MainsLightCountV5>=6&&w.MainsEmitterCountV5>0,"lamps="+w.MainsLightCountV5+" emitters="+w.MainsEmitterCountV5);
             w.Model.UtilitySafety.Complete("poweroff");yield return Wait(.15f);
             var mains=Field<List<Light>>(w,"mainsLightsV5");
@@ -130,9 +130,12 @@ namespace TooLateToPanic
             yield return StartRun();
             yield return Place(new Vector3(-5.78f,3.2f,2.0f));w.Model.TimeRemaining=44;report.timeFixtures++;yield return Wait(1.4f);
             Check("bag.real-firstperson-stage",w.BagFirstPersonActive);
-            var blanket=w.Expedition.FindWorldSupply("supply_blanket_bed");Aim(blanket.Position+Vector3.up*.09f);yield return Wait(.15f);
+            var blanket=w.Expedition.FindWorldSupply("supply_blanket_bed");
+            var blanketRoot=Field<Dictionary<string,GameObject>>(w,"worldSupplyObjects")[blanket.Id];
+            Aim(blanketRoot.GetComponent<BoxCollider>().bounds.center);yield return Wait(.7f);
             string ray=(string)Call(w,"BagRayTarget");
-            Check("blanket.actual-eye-ray",ray==blanket.Id,"ray="+ray+" supply="+blanket.Position+" actor="+w.PlayerPosition,"NATIVE_PHYSICS_RAY");
+            string eyeHits=string.Join(";",Physics.RaycastAll(w.View.ViewportPointToRay(new Vector3(.5f,.5f)),2.4f,~((1<<28)|(1<<30)),QueryTriggerInteraction.Collide).OrderBy(h=>h.distance).Select(h=>h.collider.name+"@"+h.distance.ToString("F2")));
+            Check("blanket.actual-eye-ray",ray==blanket.Id,"ray="+ray+" supply="+blanket.Position+" actor="+w.PlayerPosition+" hits="+eyeHits,"NATIVE_PHYSICS_RAY");
             int before=w.Expedition.Count("blanket");bool took=w.TakeWorldSupply();
             Check("blanket.actual-world-transaction",took&&w.Expedition.Count("blanket")>before&&blanket.Taken,"No collider disabling or through-wall targeting.");
             yield return Capture("05-blanket-pickup");
@@ -158,18 +161,24 @@ namespace TooLateToPanic
             var street=w.GetComponent<PanicStreetLifeV414>();
             Check("response.flood-zodiac",street.ResponseBoatActive&&street.ZodiacRoot&&street.ZodiacRoot.GetComponent<PanicV5VehicleRig>());
             // The response owner drives actual route roots; observe motion without writing their transforms.
-            yield return Wait(11f);
+            float responseEnd=Time.realtimeSinceStartup+21f;while(street.ResponderCount<5&&Time.realtimeSinceStartup<responseEnd)yield return null;
             Check("response.four-real-vehicles",street.ResponseVehicleCount>=5,"includes4 road vehicles+boat="+street.ResponseVehicleCount);
-            Check("response.distinct-real-crew",street.ResponderCount>=4,"responders="+street.ResponderCount);
+            Check("response.distinct-real-crew",street.ResponderCount==5,"responders="+street.ResponderCount);
             foreach(var rig in FindObjectsByType<PanicV5VehicleRig>(FindObjectsInactive.Include,FindObjectsSortMode.None))
             {
                 Check("asset.rig."+rig.ServiceId,rig.IsBoat?rig.Propeller&&rig.GetComponentsInChildren<Collider>().Length>0:rig.Wheels.Length>=4&&rig.FlashLights.Length>0&&rig.Doors.Length>0&&rig.GetComponentsInChildren<Collider>().Length>0);
             }
-            Photo("09-response-vehicles",new Vector3(7,9,-27),new Vector3(1,1,-18),60);
+            Photo("09-response-vehicles",new Vector3(3,14,-40),new Vector3(1,1,-21),56);
+            foreach(var rig in FindObjectsByType<PanicV5VehicleRig>(FindObjectsSortMode.None))
+                if(!rig.IsBoat)Photo("asset-vehicle-"+rig.ServiceId,rig.transform.position+new Vector3(5,3.8f,5),rig.transform.position+Vector3.up*1.1f,50);
+            var responseRoot=Field<GameObject>(street,"responseRoot");int crewIndex=0;
+            foreach(var actor in responseRoot.GetComponentsInChildren<Animator>())
+                Photo("asset-crew-"+crewIndex++,actor.transform.position+new Vector3(1.9f,1.5f,2.4f),actor.transform.position+Vector3.up*1.05f,46);
             Photo("10-zodiac",street.ZodiacRoot.transform.position+new Vector3(5,3,-5),street.ZodiacRoot.transform.position+Vector3.up*.4f,50);
             Screen.SetResolution(960,540,false);yield return Wait(.4f);yield return Capture("11-compact-960");
             Screen.SetResolution(1600,900,false);yield return Wait(.3f);
             yield return StartRun();yield return Place(new Vector3(4.9f,3.2f,-1.5f));yield return Capture("12-panic-room-hud");
+            Photo("13-main-character",w.PlayerPosition+new Vector3(1.8f,1.5f,2.5f),w.PlayerPosition+Vector3.up*1.05f,46);
             Check("finish.runtime-errors",report.errors.Count==0,string.Join("\n",report.errors));
         }
         static string Hash(string path){if(!File.Exists(path))return "absent";using(var h=SHA256.Create())return BitConverter.ToString(h.ComputeHash(File.ReadAllBytes(path))).Replace("-","");}

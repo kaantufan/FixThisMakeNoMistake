@@ -1,5 +1,11 @@
 # Too Late to Panic! — çalışma düzeni
 
+## 18 Ekim Home V5 güncel karar
+
+Güncel V5 sözleşmesi `Evidence/GamejamOrchestra/TLTP-V5-20261018/CONTRACT.md`; teslim `TooLateToPanic/Documentation/HOME-V5-DELIVERY-2026-10-18.md` ve `LATEST-BUILD.json` ile bağlanır. Sel üst kattaki fiziksel panik odasını, diğer afetler bodrum sığınağını kullanır. `Model.ReachedShelterV5` gerçek kabulün tek kaynağıdır; deadline/no-loss başarılı giriş üretmez. `TryEnterActiveShelterV5` gerçek controller/kat/ışın/yol kapısıdır.120+45sn ve75% sınırı korunur.
+
+Her yeni dalgada14malzeme kaynağı/16erzak noktası bir kez sonlu hafifRNG stokla yenilenir; aynı Wave tekrarı yeniden stok yaratmaz. Üst banyo penceresi kaldırılır; yedi komşu ev depremde kendi görsel köküyle sarsılır. Ana şalter ev devresi/ekran/garajı keser, açık tesisatta tek memoize küçük afet-özel olay gerçek hasara eklenir. Yeni kullanıcı görünüm/asset/ikincil olay isteği eski ilgili ertelemeleri V5 için günceller; yeni ücret/kredi yetkisi yoktur. Ayrı FPS projesi korunur. Beyaz göğüs paneli kaldırılmış sivil karakter retained humanoid/UAL ile çalışır; yeni animasyon sahibi eklenmez. F1 köşe tuş rehberidir. Eski kabul sayıları yeni DLL kanıtı değildir.
+
 ## Güncel oyun ve çalışma alanı
 
 Oyunun kesin adı **Too Late to Panic!**; tema **Afete Hazırlık ve Önlem**. Kullanıcının 16 Ekim 2026 tarihli kararıyla bu çalışma alanı yalnız bu oyuna aittir. İlgisiz kaynaklar, build'ler, belgeler ve eski oyun yönergeleri kaldırılır; klasör ve aktif belge adları bu oyuna göre düzenlenir. Başka bir oyunun hedeflerini yeniden kapsam sayma.

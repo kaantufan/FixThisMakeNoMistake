@@ -76,16 +76,16 @@ namespace TooLateToPanic
                     return true;
                 }
                 float t = SmoothResidence01(age / 4.7f);
-                camera = cinematicActorStart + Vector3.Lerp(new Vector3(.7f, 1.25f, -1.35f), new Vector3(1.15f, 1.3f, -1.1f), t);
+                camera = cinematicActorStart + Vector3.Lerp(new Vector3(1.25f, 1.65f, -2.65f), new Vector3(1.5f, 1.7f, -2.45f), t);
                 target = cinematicActorStart + Vector3.up * .92f;
-                fov = 57;
+                fov = 54;
                 return true;
             }
             if (CinematicKind == "Success" || CinematicKind == "BagFailure")
             {
                 float t = SmoothResidence01(age / residenceCinematicDuration);
                 Vector3 wait = ShelterWaitPositionV5;
-                camera = wait + Vector3.Lerp(new Vector3(.8f, 1.2f, -1.45f), new Vector3(1.2f, 1.28f, -1.2f), t);
+                camera = wait + Vector3.Lerp(new Vector3(1.25f, 1.65f, -2.65f), new Vector3(1.5f, 1.7f, -2.45f), t);
                 target = wait + Vector3.up * .85f;
                 return true;
             }

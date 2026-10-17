@@ -1,0 +1,84 @@
+{
+  "releaseStatus": "CANDIDATE_FOR_USER_PLAYTEST_OS_NOT_COMPLETED",
+  "requiresUserPlaytest": true,
+  "native": {
+    "checks": 41,
+    "explicitTimerFixtures": 0,
+    "passed": true,
+    "scope": "Onboarding only; full mechanics NOT_RUN on this DLL",
+    "humanAcceptance": false,
+    "runtimeErrors": 0,
+    "setupWarps": 0,
+    "evidence": "..\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\native-v8-cf5cfd57-4012-40d7-8661-3a8d3e1c903d",
+    "OSInput": false,
+    "seconds": 1.7401814460754395
+  },
+  "retainedRegression": {
+    "reportSha256": "32B445775B22537FBAF7C083CA8861961A64EB940ABAEB54C3BC82FE86DD2B37",
+    "unchangedCodeShaders": 125,
+    "scope": "Historical full mechanics; source-equivalent core, not a new-DLL full acceptance",
+    "passed": true,
+    "checks": 431,
+    "proof": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\r7-r8-gameplay-source-equivalence.json",
+    "dllSha256": "7C21D8153A6AD941ACD1D3E962C570608A889A86D64940E7334D40124E0D2BDC",
+    "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\native-v7-9a7f5c81-f48d-4b93-958a-51ede914b161\\overhaul414-smoke.json"
+  },
+  "audio": {
+    "checks": 206,
+    "evidence": "..\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\audio-v8-1a5a001c-0edf-46b0-9fce-112160d5b862",
+    "humanListening": "NOT_RUN",
+    "passed": true,
+    "failures": 0
+  },
+  "quake": {
+    "housePoseChanges": 150,
+    "timerWrites": 0,
+    "evidence": "..\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\quake-v8-792f7431-8180-431a-97de-253359e9d0b5",
+    "captures": 22,
+    "qaWarps": 0,
+    "checks": 55,
+    "passed": true
+  },
+  "campaign50": {
+    "knownFailure": "sequence.four_disasters: existing normal pool excludes Storm",
+    "evidence": "..\\Evidence\\GamejamOrchestra\\TLTP-WAVE50-V414-20261017\\wave50-v8-f77f26f2-cfcc-4dfe-b058-f8ea4c8f19d3",
+    "layer": "Accelerated native Model/Expedition API; not50 OS or real-time rounds",
+    "completed50": true,
+    "runtimeErrors": 0,
+    "passed": false
+  },
+  "osRound": {
+    "method": "Attempted physical SendInput held keys/mouse, read-only observer; repeated foreground loss and one growing-ledger tail read error prevented full round acceptance",
+    "reward": 0,
+    "modelTick": 0,
+    "precautionSeconds": 120,
+    "profile": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\os-v8-e9dc3214-d542-4742-9257-b427f9102f58",
+    "externalWarp": 0,
+    "totalPreparationSeconds": 165,
+    "score": 0,
+    "result": "OS_ROUND_NOT_COMPLETED",
+    "budget": 1000,
+    "damage": 0.0,
+    "failedAttempts": [
+      "os-v8-failed-route-01.json",
+      "os-v8-failed-route-02.json",
+      "os-v8-focus-resume.json",
+      "os-v8-guide-extra-return.json"
+    ],
+    "humanAcceptance": false,
+    "closedOnlyExactOwnedTest": 32704,
+    "bagSeconds": 45,
+    "earlierCompletedR4": "Historical different DLL only; not R8 acceptance",
+    "realScoreBefore": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+    "realScoreAfter": "62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+    "status": "FOREGROUND_AND_INPUT_HARNESS_BLOCKED",
+    "developerOptions": 0,
+    "utc": "2026-10-17T20:38:14.0657565Z",
+    "ledgerSha256": "1C8448E8379634C9A48FCC06C01BB1482D82EE84C72D02A2D36D148317896AB4",
+    "completedWaves": 0,
+    "successfulEarlierSameDllGuideProfile": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-OVERHAUL-V414-20261017\\manager\\os-v8-4db99283-bf0f-4a79-94fd-db2fc30ddca2",
+    "cheated": false,
+    "observerErrors": [],
+    "dllSha256": "4740C599AB0CBEC9EC1FA7D01DFCB8E61308A1F71CA888F15C9869FE89BDA16A"
+  }
+}
