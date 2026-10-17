@@ -228,7 +228,7 @@ namespace TooLateToPanic
             FreeplayKeyboardRowV414(306,
                 new[] { "Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\" },
                 new[] { 1.5f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.5f },
-                new[] { 3, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+                new[] { 3, 2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
             FreeplayKeyboardRowV414(358,
                 new[] { "Caps", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'", "Enter" },
                 new[] { 1.75f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2.25f },
@@ -249,7 +249,7 @@ namespace TooLateToPanic
             Label(new Rect(876, 474, 152, 30), "Hareket", _freeplayGuideMutedV414);
 
             FreeplayGuideLegendV414(new Rect(104, 534, 452, 42), "WASD / Oklar · Hareket et", 1);
-            FreeplayGuideLegendV414(new Rect(572, 534, 462, 42), "E · Kapı / dolap aç-kapat", 2);
+            FreeplayGuideLegendV414(new Rect(572, 534, 462, 42), "E · Etkileşim   Q · Hedef değiştir", 2);
             FreeplayGuideLegendV414(new Rect(104, 582, 452, 42), "Sol Shift · Koş  /  Space · Zıpla", 1);
             FreeplayGuideLegendV414(new Rect(572, 582, 462, 42), "F · Erzak al (son 45 sn)", 2);
             FreeplayGuideLegendV414(new Rect(104, 630, 930, 42), "Tab · Envanter/çanta     J · Defter     Esc · Duraklat / iptal", 3);

@@ -53,6 +53,7 @@ namespace TooLateToPanic
         {
             public string startedUtc, finishedUtc, error, dllSha256, realScoreBefore, realScoreAfter, scorePath;
             public string evidence = "Native production APIs, real frame waits/render captures, actual CharacterController/colliders; explicit setup and pose/model fixtures are enumerated. No OS input or human acceptance.";
+            public string scope = "Full overhaul";
             public bool complete, passed, osInput = false, humanAcceptance = false;
             public float seconds;
             public int setupWarps, startGameCalls, simulationStarts, explicitTimerFixtures, directControllerProbeFrames, workApiSamples, modelFixtureTicks, runPoseFixtures, bagLookApiSamples;
@@ -65,7 +66,7 @@ namespace TooLateToPanic
         }
         readonly Receipt report = new Receipt();
         PanicHomeWorld w; PanicHomeHud hud; CharacterController controller; Transform hero;
-        Coroutine sequence; float began; bool finished; string realScore;
+        Coroutine sequence; float began; bool finished, guideOnlyR8; string realScore;
         bool lastReached; Camera photoCamera;
         static float Dt { get { return Mathf.Max(.001f, Mathf.Min(Time.unscaledDeltaTime,.06f)); } }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)] static void Attach()
@@ -80,6 +81,8 @@ namespace TooLateToPanic
             if (!Environment.GetCommandLineArgs().Contains(Flag)) { enabled=false; return; }
             w=GetComponent<PanicHomeWorld>(); hud=GetComponent<PanicHomeHud>();
             controller=Field<CharacterController>(w,"controller");hero=Field<Transform>(w,"hero");
+            guideOnlyR8=Environment.GetCommandLineArgs().Contains("--onboarding-only");
+            if(guideOnlyR8){report.scope="Onboarding only; full mechanics NOT_RUN on this DLL";report.evidence="Native first-use guide, modal input/pause and three-resolution framebuffer captures. Retained R7 gameplay regression is separate; OS round is root-owned.";}
             began=Time.realtimeSinceStartup;report.startedUtc=DateTime.UtcNow.ToString("o");
             realScore=Path.Combine(Application.persistentDataPath,"TooLateToPanic","highscores.json");
             report.realScoreBefore=Hash(realScore);report.scorePath=PanicModel.ScorePathOverride;
@@ -230,6 +233,7 @@ namespace TooLateToPanic
             yield return Section("launch",Launch());
             while(!UnityEngine.Rendering.SplashScreen.isFinished)yield return null;
             yield return Section("onboarding",Onboarding());
+            if(guideOnlyR8){w.ReturnToMenu();yield return Wait(.1f);yield return Shot("99-onboarding-only-final-title");yield break;}
             yield return Section("intro",Intro());
             w.InputLocked=false;FixtureNote("CHARACTER_NORMAL_CLOCK", "InputLocked=false during actual character walk/jump; preparation clock runs and root LateUpdate samples real desiredVelocity. No locomotion bypass.");
             float characterClock=w.Model.TimeRemaining;yield return Section("character",Character());
@@ -938,10 +942,10 @@ namespace TooLateToPanic
         void Finish()
         {
             if(finished)return;finished=true;
-            foreach(string section in RequiredSections)if(!report.sections.Contains(section))report.rows.Add(new Row{id="required-section."+section,status="NOT_RUN",layer="NOT_RUN",detail="Required section did not complete.",frame=Time.frameCount});
+            foreach(string section in guideOnlyR8?new[]{"launch","onboarding"}:RequiredSections)if(!report.sections.Contains(section))report.rows.Add(new Row{id="required-section."+section,status="NOT_RUN",layer="NOT_RUN",detail="Required section did not complete.",frame=Time.frameCount});
             report.realScoreAfter=Hash(realScore);Check("scores.real-file-unchanged",report.realScoreBefore==report.realScoreAfter);
             report.seconds=Time.realtimeSinceStartup-began;report.finishedUtc=DateTime.UtcNow.ToString("o");
-            report.passed=report.complete&&string.IsNullOrEmpty(report.error)&&report.errors.Count==0&&report.rows.Count>40&&report.rows.All(r=>r.status=="PASS");
+            report.passed=report.complete&&string.IsNullOrEmpty(report.error)&&report.errors.Count==0&&report.rows.Count>(guideOnlyR8?30:40)&&report.rows.All(r=>r.status=="PASS");
             if(photoCamera)Destroy(photoCamera.gameObject);Application.logMessageReceived-=OnLog;
             if(w&&!string.IsNullOrEmpty(w.EvidencePath))File.WriteAllText(Path.Combine(w.EvidencePath,"overhaul414-smoke.json"),JsonUtility.ToJson(report,true));
             Debug.Log("OVERHAUL414_SMOKE "+(report.passed?"PASS":"FAIL")+" checks="+report.rows.Count+" seconds="+report.seconds.ToString("F2"));Application.Quit(report.passed?0:2);
