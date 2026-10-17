@@ -39,7 +39,7 @@ namespace TooLateToPanic
             public string evidence = "Native production APIs, real frame waits/render captures, actual CharacterController/colliders; explicit setup and pose/model fixtures are enumerated. No OS input or human acceptance.";
             public bool complete, passed, osInput = false, humanAcceptance = false;
             public float seconds;
-            public int setupWarps, startGameCalls, simulationStarts, explicitTimerFixtures, directControllerProbeFrames, workApiSamples, modelFixtureTicks, runPoseFixtures;
+            public int setupWarps, startGameCalls, simulationStarts, explicitTimerFixtures, directControllerProbeFrames, workApiSamples, modelFixtureTicks, runPoseFixtures, bagLookApiSamples;
             public List<Row> rows = new List<Row>(); public List<Fixture> fixtures = new List<Fixture>();
             public List<Route> routes = new List<Route>(); public List<Frame> frames = new List<Frame>();
             public List<string> sections = new List<string>(), errors = new List<string>(), captures = new List<string>();
@@ -239,6 +239,17 @@ namespace TooLateToPanic
             Check("intro.started-on-normal-entry",active);float clock=w.Model.TimeRemaining;int before=Int(w,"IntroStoryResolutionCountV414");
             yield return Shot("01-intro-story-street");yield return Wait(.75f);
             Check("intro.preparation-clock-frozen",active&&Bool(w,"IntroStoryActiveV414")&&Mathf.Abs(clock-w.Model.TimeRemaining)<.005f,"before="+clock+" after="+w.Model.TimeRemaining);
+            FixtureNote("INTRO_NATURAL_REAL_FRAMES","First normal StartGame waits for the actual9s opening to finish. No direct Tick, cinematic-age write or skip.");
+            float naturalEnd=Time.realtimeSinceStartup+10f;bool naturalClockHeld=true;
+            while(Bool(w,"IntroStoryActiveV414")&&Time.realtimeSinceStartup<naturalEnd)
+            {naturalClockHeld&=Mathf.Abs(clock-w.Model.TimeRemaining)<.005f;yield return null;}
+            Check("intro.natural-resolves-once",active&&count&&!Bool(w,"IntroStoryActiveV414")&&!w.CinematicActive&&Int(w,"IntroStoryResolutionCountV414")==before+1&&naturalClockHeld&&Mathf.Abs(clock-w.Model.TimeRemaining)<.25f,"Actual natural end, resolution+1, preparation clock held until control returns.");
+            float resumed=w.Model.TimeRemaining;yield return Wait(.18f);
+            Check("intro.natural-control-and-clock-resume",controller.enabled&&!w.InputLocked&&!w.CinematicActive&&w.Model.Phase==PanicPhase.Preparing&&w.Model.TimeRemaining<resumed-.05f&&Int(w,"IntroStoryResolutionCountV414")==before+1,"Enabled original controller; real preparation clock resumes without resolving twice.");
+            w.ReturnToMenu();w.StartGame(false);report.startGameCalls++;w.FullFlowScriptedInput=true;yield return null;
+            FixtureNote("INTRO_SKIP_NEW_RUN","Second explicitly counted normal StartGame isolates double-skip from the first natural-end case.");
+            before=Int(w,"IntroStoryResolutionCountV414");
+            Check("intro.skip-run-started",Bool(w,"IntroStoryActiveV414"));
             var skip=w.GetType().GetMethod("SkipIntroStoryV414",Instance);
             Check("intro.skip-api-present",skip!=null);
             if(skip!=null){skip.Invoke(w,null);skip.Invoke(w,null);}else if(w.CinematicActive){w.SkipResidenceCinematic();FixtureNote("MISSING_INTRO_FALLBACK","Clear existing presentation only to continue QA; required intro checks already FAIL.");}
@@ -251,7 +262,7 @@ namespace TooLateToPanic
         static int Changed(Quaternion[] a,Quaternion[] b){return a.Zip(b,(x,y)=>Quaternion.Angle(x,y)>.12f?1:0).Sum();}
         IEnumerator Character()
         {
-            yield return Place(new Vector3(0,0,-10),"character-exterior");
+            yield return Place(new Vector3(0,0,-18),"character-exterior-open-road");
             var skin=hero.GetComponentInChildren<SkinnedMeshRenderer>(true);var rig=hero.GetComponents<Component>().FirstOrDefault(c=>c&&c.GetType().Name=="PanicCuratedCharacterRig");
             var prefab=Resources.Load<GameObject>("Player/SurvivorV2");var prefabSkin=prefab?prefab.GetComponentInChildren<SkinnedMeshRenderer>(true):null;
             var source=Resources.Load<GameObject>("CuratedCharacter/DefterSurvivor");var baseTexture=Resources.Load<Texture2D>("CuratedCharacter/DefterSurvivor_BaseColor");
@@ -279,12 +290,16 @@ namespace TooLateToPanic
                 float end=Time.realtimeSinceStartup+1.2f;while(Time.realtimeSinceStartup<end){w.SmokeMove(Vector2.zero,Dt);yield return null;peak=Mathf.Max(peak,w.PlayerPosition.y);if(!w.IsGrounded){airborne=true;deltas=Mathf.Max(deltas,Changed(grounded,Pose(skin.bones)));}}
                 Check("character.actual-jump-deforms",airborne&&peak>baseY+.6f&&deltas>=4,"Real Jump/controller y and root-driven joint changes; peak="+peak,"NATIVE_PHYSICS_ANIMATION");
             }
-            yield return Photo("03-character-front",w.PlayerPosition+new Vector3(0,1.15f,-3.3f),w.PlayerPosition+Vector3.up*.95f);
-            yield return Photo("04-character-back",w.PlayerPosition+new Vector3(0,1.15f,3.3f),w.PlayerPosition+Vector3.up*.95f);
+            Vector3 facing=hero.forward;facing.y=0;facing.Normalize();
+            FixtureNote("CHARACTER_CAPTURE_FACING","Open-road original live hero. Front/back cameras use actual hero.forward; no renderer, actor rotation, material or overlay override.");
+            yield return Photo("03-character-front",w.PlayerPosition+facing*3.3f+Vector3.up*1.15f,w.PlayerPosition+Vector3.up*.95f);
+            yield return Photo("04-character-back",w.PlayerPosition-facing*3.3f+Vector3.up*1.15f,w.PlayerPosition+Vector3.up*.95f);
         }
         static bool Finite(float n){return !float.IsNaN(n)&&!float.IsInfinity(n);}
         IEnumerator Layout()
         {
+            var windows=w.Model.Items.Where(i=>i.Kind==ItemKind.Window).ToArray();var windowRoots=Field<Dictionary<string,GameObject>>(w,"items");
+            Check("layout.eight-real-model-window-identities",windows.Length==8&&windows.Select(i=>i.Id).Distinct().Count()==8&&windows.All(i=>i.Installed&&windowRoots!=null&&windowRoots.TryGetValue(i.Id,out var root)&&root&&root.GetComponentsInChildren<Renderer>(true).Length>0),"Exactly8 distinct installed Model windows with actual production mesh roots, including hidden upper-floor renderers; no visible-from-one-camera count.");
             Check("layout.new-room-door-targets",new[]{"door_wc","door_pantry","door_parent","door_child","door_study","bathroom_door","door_garage_inner"}.All(id=>w.Model.Items.Any(i=>i.Id==id&&i.Installed&&i.Kind==ItemKind.Door)));
             var bathroomDoor=w.Model.Items.Find(i=>i.Id=="bathroom_door");
             Check("layout.bath-west-door-contract",bathroomDoor!=null&&Vector3.Distance(bathroomDoor.Position,new Vector3(2,3.2f,4.6f))<.01f&&Mathf.Abs(Mathf.DeltaAngle(bathroomDoor.Rotation,90))<.1f,"Final root-approved west door at north landing z4.6, gap3.92..5.28; old south and earlier westz2.6 gaps must be closed.");
@@ -302,7 +317,8 @@ namespace TooLateToPanic
             yield return Photo("05-ground-room-overview",new Vector3(13,16,-16),new Vector3(0,.5f,0),12.5f);
             yield return Place(new Vector3(3.35f,0,-1.3f),"wc-door-approach");yield return Open("door_wc");yield return Walk("wc-entry",new Vector3(3.35f,0,-3.75f));yield return Walk("wc-interior",new Vector3(3.35f,0,-4.35f));
             yield return Place(new Vector3(6.4f,0,-1.3f),"pantry-door-approach");yield return Open("door_pantry");yield return Walk("pantry-entry",new Vector3(6.4f,0,-3.65f));yield return Walk("pantry-interior",new Vector3(6.25f,0,-4.35f));
-            yield return Place(new Vector3(4.4f,0,3.5f),"garage-route-approach");yield return Walk("garage-kitchen-passage",new Vector3(6.7f,0,3.15f));yield return Walk("garage-inner-door-approach",new Vector3(7.15f,0,2.2f));yield return Open("door_garage_inner");
+            yield return Place(new Vector3(4.4f,0,3.5f),"garage-route-approach");yield return Walk("garage-kitchen-passage",new Vector3(6.7f,0,3.15f));
+            yield return Walk("garage-east-of-dining-chair",new Vector3(7.5f,0,3.25f));yield return Walk("garage-inner-door-approach",new Vector3(7.5f,0,2.2f));yield return Open("door_garage_inner");
             yield return Walk("garage-through-door",new Vector3(9.15f,0,2.2f));yield return Walk("garage-panel-passage",new Vector3(9.65f,0,3.5f));yield return Walk("garage-panel-approach",new Vector3(9.65f,0,5));
         }
         IEnumerator Stairs()
@@ -318,7 +334,7 @@ namespace TooLateToPanic
             yield return Place(new Vector3(1.48f,3.2f,4.6f),"bath-north-landing-approach");yield return Open("bathroom_door");yield return Walk("bath-west-entry",new Vector3(3.1f,3.2f,4.6f));yield return Walk("bath-interior",new Vector3(4,3.2f,3.5f));
             yield return Photo("06-upper-two-bedrooms-study-bath",new Vector3(13,19,-16),new Vector3(0,3.8f,0),12.5f);
             yield return Place(new Vector3(0,3.2f,-3.6f),"balcony-approach");yield return Walk("balcony-door-approach",new Vector3(0,3.2f,-5.1f));yield return Open("door_balcony");yield return Walk("balcony-outside",new Vector3(0,3.2f,-6.8f));
-            yield return Place(new Vector3(-1.5f,0,-2),"basement-ground-approach");yield return Walk("basement-west-hall",new Vector3(-1.5f,0,4.6f),4.5f);yield return Walk("basement-north-landing",new Vector3(0,0,4.45f));yield return Walk("basement-flight-entry",new Vector3(0,0,3.85f));
+            yield return Place(new Vector3(-1.5f,0,-2),"basement-ground-approach");yield return Walk("basement-west-hall",new Vector3(-1.5f,0,4.2f),4.5f);yield return Walk("basement-north-landing",new Vector3(0,0,4.2f));yield return Walk("basement-flight-entry",new Vector3(0,0,3.85f));
             yield return Walk("basement-real-descent",new Vector3(0,-3.2f,-1.5f),5f);Check("stairs.basement-level-reached",lastReached&&w.IsGrounded&&w.ActiveFloor==-1,"No warp in descent route.","NATIVE_PHYSICS_ROUTE");
             yield return Walk("basement-south-passage",new Vector3(-2.4f,-3.2f,-1.5f));yield return Walk("basement-shelter-approach",new Vector3(-4.4f,-3.2f,1.9f));
             yield return Shot("07-basement-approach");
@@ -451,9 +467,23 @@ namespace TooLateToPanic
         }
         void Aim(Vector3 target)
         {
-            w.View.transform.position=w.PlayerPosition+Vector3.up*1.62f;Vector3 d=(target-w.View.transform.position).normalized;
+            Vector3 d=(target-w.View.transform.position).normalized;
             float yaw=Mathf.Atan2(d.x,d.z)*Mathf.Rad2Deg,pitch=-Mathf.Asin(d.y)*Mathf.Rad2Deg;
-            w.StepBagLook(new Vector2(Mathf.DeltaAngle(Field<float>(w,"bagYaw"),yaw)/2,(Field<float>(w,"bagPitch")-pitch)/1.7f));Call(w,"RefreshBagRayFocus");
+            float gain=Mathf.Clamp(w.FpsLookMultiplierV414,.01f,1f);
+            w.StepBagLook(new Vector2(Mathf.DeltaAngle(Field<float>(w,"bagYaw"),yaw)/(2*gain),(Field<float>(w,"bagPitch")-pitch)/(1.7f*gain)));report.bagLookApiSamples++;Call(w,"RefreshBagRayFocus");
+        }
+        string RayDetail(string expected,Vector3 target)
+        {
+            Physics.SyncTransforms();var hits=Physics.RaycastAll(w.View.ViewportPointToRay(new Vector3(.5f,.5f)),2.4f,~((1<<28)|(1<<30)),QueryTriggerInteraction.Collide)
+                .Where(h=>h.collider!=controller&&!h.transform.IsChildOf(controller.transform)).OrderBy(h=>h.distance).ToArray();
+            return "expected="+expected+" actualFocus="+Field<string>(w,"focusId")+" actor="+w.PlayerPosition+" camera="+w.View.transform.position+" targetCenter="+target+" direction="+w.View.transform.forward+" CanInteract="+w.CanInteract+" interactionDistance="+w.InteractionDistance(expected)+" torsoPathDiagnostic="+Call(w,"InteractionPathClear",expected,target)+" ray="+string.Join(";",hits.Select(h=>h.collider.name+":"+(h.collider.GetComponentInParent<HomePick>()?.Id??"-")+":"+h.distance.ToString("F4")));
+        }
+        IEnumerator AimForRay(Vector3 target,string expected,string label)
+        {
+            FixtureNote("FPS_LOOK_API",label+"; production StepBagLook with actual damping gain, real-frame settling toward actual collider center; no camera pose write, SetFocus or alternate ray.");
+            float end=Time.realtimeSinceStartup+1.25f;
+            do {Aim(target);yield return null;Call(w,"RefreshBagRayFocus");if(Field<string>(w,"focusId")==expected&&w.CanInteract)break;}while(Time.realtimeSinceStartup<end&&w.BagFirstPersonActive);
+            Check("bag.actual-center-ray-focus."+label,Field<string>(w,"focusId")==expected&&w.CanInteract,RayDetail(expected,target),"NATIVE_PRODUCTION_RAY");
         }
         IEnumerator SettleBag()
         {float end=Time.realtimeSinceStartup+3;while((!w.BagFirstPersonActive||w.BagCameraTransitionActive)&&Time.realtimeSinceStartup<end)yield return null;Check("bag.actual-camera-settled",w.BagFirstPersonActive&&!w.BagCameraTransitionActive);}
@@ -478,6 +508,15 @@ namespace TooLateToPanic
             hud.SetPaused(true);w.Model.TimeRemaining=30;report.explicitTimerFixtures++;FixtureNote("TIMER_BOUNDARY","Paused TimeRemaining=30; exact boundary fixture.");w.TickPreparationStages();yield return Wait(.15f);
             Check("bag.pause-blocks-entry",!w.BagCameraOwnsView&&Mathf.Abs(w.Model.TimeRemaining-30)<.001f);hud.SetPaused(false);w.TickPreparationStages();yield return SettleBag();
             Check("bag.same-controller-and-position",controller==original&&controller.enabled&&Vector3.Distance(actor,w.PlayerPosition)<.005f&&!w.View.orthographic);
+            yield return Wait(.12f);
+            bool stressSeams=Require(w,"FpsStressIntensityV414","fps.stress-intensity-seam")&Require(w,"FpsVeilOpacityV414","fps.veil-opacity-seam")&Require(w,"FpsFeedbackAudioPlayingV414","fps.audio-state-seam")&Require(w,"FpsStressClockV414","fps.stress-clock-seam");
+            Check("fps.actual-stress-finite-and-bounded",stressSeams&&Finite(w.FpsStressIntensityV414)&&w.FpsStressIntensityV414>=0&&w.FpsStressIntensityV414<=1&&Finite(w.FpsVeilOpacityV414)&&w.FpsVeilOpacityV414>=.16f&&w.FpsVeilOpacityV414<=.2201f&&Finite(w.FpsMovementMultiplierV414)&&w.FpsMovementMultiplierV414>=.94f&&w.FpsMovementMultiplierV414<=1&&Finite(w.FpsLookMultiplierV414)&&w.FpsLookMultiplierV414>=.94f&&w.FpsLookMultiplierV414<=1&&w.FpsVeilTextureV414&&w.FpsVeilTextureV414.width>=96&&w.FpsStressVisibleV414,"Actual final30 production stress/veil/texture/damping state. This does not establish human readability or comfort.","NATIVE_API_FRAME");
+            Check("fps.actual-local-audio-playing",w.FpsFeedbackAudioPlayingV414,"Actual local heartbeat/breath AudioSource.isPlaying; no listening acceptance.","NATIVE_AUDIO_STATE");
+            FixtureNote("FPS_HUD_PAUSE_API","Production HUD.SetPaused(true/false), real .25s frame wait. No OS Escape and no live timer assignment in this pause case.");
+            hud.SetPaused(true);yield return null;float pausedTimer=w.Model.TimeRemaining,pausedStress=w.FpsStressClockV414;yield return Wait(.25f);
+            Check("fps.pause-clock-veil-audio-stop",w.Model.IsPaused&&Mathf.Abs(w.Model.TimeRemaining-pausedTimer)<.001f&&Mathf.Abs(w.FpsStressClockV414-pausedStress)<.001f&&!w.FpsFeedbackAudioPlayingV414&&!w.FpsStressVisibleV414&&w.FpsVeilOpacityV414==0,"Paused production clock/stress clock remain fixed and local AudioSources stop.","NATIVE_AUDIO_STATE");
+            hud.SetPaused(false);yield return Wait(.12f);
+            Check("fps.resume-clock-veil-audio",!w.Model.IsPaused&&w.Model.TimeRemaining<pausedTimer-.04f&&w.FpsStressClockV414>pausedStress&&w.FpsStressVisibleV414&&w.FpsFeedbackAudioPlayingV414,"Normal final30 resumes through the same controller/view; no second phase wait.","NATIVE_AUDIO_STATE");
             w.HandleKey(KeyCode.G);Check("bag.no-return-to-precautions",w.BagFirstPersonActive&&!w.FinishBagPreparation());Call(w,"RefreshPreparationVisibility");Supplies(true,"final30");
             Check("bag.containers-auto-closed",w.Expedition.Sources.All(s=>!s.Open));
             foreach(string item in new[]{"water","food"})
@@ -485,9 +524,14 @@ namespace TooLateToPanic
                 var supply=w.Expedition.WorldSupplies.FirstOrDefault(s=>s.ItemId==item&&!s.Taken);
                 Check("bag.real-finite-supply-exists."+item,supply!=null);if(supply==null)continue;
                 Vector3 ground=new Vector3(supply.Position.x,supply.Floor*3.2f,supply.Position.z)-Vector3.forward*.95f;
-                yield return Place(ground,"fps-pickup-"+item);Aim(supply.Position);yield return null;int amount=supply.Count,beforeLoose=w.Expedition.Count(item);w.HandleKey(KeyCode.E);yield return null;
+                yield return Place(ground,"fps-pickup-"+item);
+                var supplyRoots=Field<Dictionary<string,GameObject>>(w,"worldSupplyObjects");GameObject supplyRoot=supplyRoots!=null&&supplyRoots.TryGetValue(supply.Id,out var actualSupply)?actualSupply:null;
+                var pickCollider=supplyRoot?supplyRoot.GetComponent<Collider>():null;
+                Check("bag.actual-pick-collider."+item,pickCollider&&pickCollider.enabled&&pickCollider.gameObject.activeInHierarchy,"Actual stable production picking collider, no QA-created substitute.");
+                Vector3 targetCenter=pickCollider?pickCollider.bounds.center:supply.Position;yield return AimForRay(targetCenter,supply.Id,item);
+                int amount=supply.Count,beforeLoose=w.Expedition.Count(item);string rayBefore=RayDetail(supply.Id,targetCenter);w.HandleKey(KeyCode.E);yield return null;
                 int packed=item=="water"?w.Model.PackedWater:w.Model.PackedFood;
-                Check("bag.real-ray-E-autopack."+item,supply.Taken&&packed==1&&w.Expedition.Count(item)==beforeLoose+amount-1,"Finite stock consumed; first required unit to real bag, remaining to inventory.");
+                Check("bag.real-ray-E-autopack."+item,supply.Taken&&packed==1&&w.Expedition.Count(item)==beforeLoose+amount-1,"Finite stock consumed; first required unit to real bag, remaining to inventory. "+rayBefore+" packed="+packed+" looseBefore="+beforeLoose+" looseAfter="+w.Expedition.Count(item)+" amount="+amount+" taken="+supply.Taken);
             }
             Check("bag.ready-one-water-one-food",w.Model.BagReady&&w.Expedition.Bag.Where(s=>s.Id=="water").Sum(s=>s.Count)==1&&w.Expedition.Bag.Where(s=>s.Id=="food").Sum(s=>s.Count)==1);
             var hands=Field<GameObject>(w,"bagHands");var handCamera=Field<Camera>(w,"bagHandsCamera");
@@ -520,8 +564,9 @@ namespace TooLateToPanic
             var hatch=w.Model.Items.Find(i=>i.Id=="bunker");var itemRoots=Field<Dictionary<string,GameObject>>(w,"items");GameObject hatchRoot=itemRoots!=null&&itemRoots.ContainsKey("bunker")?itemRoots["bunker"]:null;
             Check("bunker.actual-yarkin-lid-intake",hatchRoot&&hatchRoot.GetComponentsInChildren<Component>(true).Any(c=>c&&c.GetType().Name=="PanicCuratedBunkerLid")&&hatchRoot.GetComponentsInChildren<Transform>(true).Any(t=>t.name=="ActualYarkinBunkerLid_V414"));
             Check("bunker.open-transition-ring",hatchRoot&&hatchRoot.GetComponentsInChildren<MeshFilter>(true).Any(f=>f.sharedMesh&&f.sharedMesh.name=="V414_Bunker_OpenSquareToCircleRing"),"Actual ring mesh, not a filled centre collider.");
-            yield return Place(PanicHomeWorld.BunkerPosition+Vector3.back*1.65f,"real-fps-bunker-entry");Aim(PanicHomeWorld.BunkerPosition+Vector3.up*.14f);yield return null;
+            yield return Place(PanicHomeWorld.BunkerPosition+Vector3.back*1.65f,"real-fps-bunker-entry");yield return AimForRay(PanicHomeWorld.BunkerPosition+Vector3.up*.14f,"bunker","bunker-entry");
             int before=Int(w,"BunkerSequenceResolutionCountV414");w.HandleKey(KeyCode.E);yield return null;Check("bunker.real-fps-E-entry",w.Model.Phase==PanicPhase.Disaster&&!w.BagCameraOwnsView,w.ContextHint);
+            Check("fps.exit-cinematic-stops-audio",w.Model.Phase==PanicPhase.Disaster&&!w.BagCameraOwnsView&&!w.FpsFeedbackAudioPlayingV414&&!w.FpsStressVisibleV414&&w.FpsVeilOpacityV414==0,"Actual FPS E shelter transition invokes production ResetBagPreparation/SuspendExperienceFeedback; no listening claim.","NATIVE_AUDIO_STATE");
             var stages=new List<string>();bool releaseBefore=false;int releases=0;float maxBagMotion=0,maxActorMotion=0;Vector3? firstBag=null;Vector3 firstActor=w.PlayerPosition;
             bool openBeforeThrow=false,lidDuringJump=true,closed=false,bagRendered=false,openCapture=false;
             var head=hero.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="Head");int jumpFrames=0;float end=Time.realtimeSinceStartup+6.5f;
@@ -592,6 +637,11 @@ namespace TooLateToPanic
             var list=Field<IList>(street,name);if(list==null)return Array.Empty<GameObject>();var roots=new List<GameObject>();
             foreach(object item in list){var root=Read(item,"Root") as GameObject;if(root)roots.Add(root);}return roots.ToArray();
         }
+        static GameObject[] ResponseRoots(Component street,bool crew)
+        {
+            var list=Field<IList>(street,"response");if(list==null)return Array.Empty<GameObject>();var roots=new List<GameObject>();
+            foreach(object item in list){var root=Read(Read(item,crew?"Crew":"Car"),"Root") as GameObject;if(root)roots.Add(root);}return roots.ToArray();
+        }
         IEnumerator Street()
         {
             w.ReturnToMenu();w.StartGame(false);report.startGameCalls++;w.FullFlowScriptedInput=true;yield return null;
@@ -606,9 +656,19 @@ namespace TooLateToPanic
             Check("street.actual-native-transforms-move",civiliansMoved>0&&vehiclesMoved>0,"Actual civilian roots moved="+civiliansMoved+" traffic roots moved="+vehiclesMoved+"; counts alone are insufficient.");
             yield return Photo("22-alive-street-before",new Vector3(-5,5,-28),new Vector3(0,1,-18),14f);
             w.ReturnToMenu();w.StartDisasterSimulation(DisasterType.Fire);report.simulationStarts++;w.FullFlowScriptedInput=true;yield return null;w.Model.EnterBunker();
-            float end=Time.realtimeSinceStartup+14;while(!Bool(street,"ResponseActive")&&Time.realtimeSinceStartup<end)yield return null;
+            float end=Time.realtimeSinceStartup+28;while(!Bool(street,"ResponseActive")&&Time.realtimeSinceStartup<end)yield return null;
+            var responseVehicles=ResponseRoots(street,false);var responseBefore=responseVehicles.ToDictionary(g=>g.GetInstanceID(),g=>g.transform.position);
+            yield return Wait(5.25f);int arrivingMoved=responseVehicles.Count(g=>g&&responseBefore.ContainsKey(g.GetInstanceID())&&Vector3.Distance(responseBefore[g.GetInstanceID()],g.transform.position)>.02f);
+            Check("street.actual-response-vehicles-move",responseVehicles.Length==4&&arrivingMoved==4,"Actual arrival roots moving across real frames="+arrivingMoved+"/4; no speed-only counter claim.","NATIVE_RENDER_TRANSFORM");
+            FixtureNote("RESPONSE_REAL_ARRIVAL_WAIT","ResponseActive creates cars before arrival; crews activate only at actual destinations. Wait for4 crews on the existing Fire aftermath, without a new disaster or time mutation.");
+            while((Int(street,"ResponseVehicleCount")!=4||Int(street,"ResponderCount")!=4)&&Time.realtimeSinceStartup<end)yield return null;
             var responseRoot=Field<GameObject>(street,"responseRoot");
-            Check("street.actual-disaster-response",Bool(street,"ResponseActive")&&Int(street,"ResponseVehicleCount")>0&&Int(street,"ResponderCount")>0&&responseRoot&&responseRoot.GetComponentsInChildren<Renderer>(true).Any(r=>r.enabled&&r.gameObject.activeInHierarchy),"Production phase lifecycle activates actual rendered emergency vehicle and crew.");
+            Check("street.actual-disaster-response",Bool(street,"ResponseActive")&&Int(street,"ResponseVehicleCount")==4&&Int(street,"ResponderCount")==4&&responseRoot&&responseRoot.GetComponentsInChildren<Renderer>(true).Any(r=>r.enabled&&r.gameObject.activeInHierarchy),"Production phase lifecycle and real arrival activate all4 vehicles and crews.");
+            string[] services={"Police","Ambulance","Fire","Rescue"};var responseCrews=ResponseRoots(street,true);
+            Check("street.four-actual-service-kinds",responseVehicles.Length==4&&responseCrews.Length==4&&services.All(service=>responseVehicles.Count(g=>g&&g.name=="V414 "+service+" response vehicle"&&g.activeInHierarchy&&g.GetComponentsInChildren<Renderer>(true).Any(r=>r.enabled&&r.gameObject.activeInHierarchy))==1&&responseCrews.Count(g=>g&&g.name=="V414 "+service+" responder"&&g.activeInHierarchy&&g.GetComponentsInChildren<Renderer>(true).Any(r=>r.enabled&&r.gameObject.activeInHierarchy))==1),"Exactly one actual named production vehicle and rendered active crew for Police/Ambulance/Fire/Rescue; visual differentiation remains human review.","NATIVE_RENDER_STATE");
+            var crewBefore=responseCrews.ToDictionary(g=>g.GetInstanceID(),g=>g.transform.position);yield return Wait(.65f);
+            int crewsMoved=responseCrews.Count(g=>g&&crewBefore.ContainsKey(g.GetInstanceID())&&Vector3.Distance(crewBefore[g.GetInstanceID()],g.transform.position)>.02f);
+            Check("street.actual-four-crews-move",responseCrews.Length==4&&crewsMoved==4,"Actual active responder roots moving across real frames="+crewsMoved+"/4.","NATIVE_RENDER_TRANSFORM");
             yield return Photo("23-street-emergency-response",new Vector3(8,7,-30),new Vector3(0,1,-18),16f);
         }
         IEnumerator Models()
