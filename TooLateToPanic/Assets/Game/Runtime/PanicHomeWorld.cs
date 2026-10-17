@@ -151,6 +151,8 @@ namespace TooLateToPanic
             InitDirectActions();
             InitExteriorLife();
             InitRevisionWorld();
+            InitExperienceFeedbackV414();
+            InitOverhaulV414();
             previousPhase = Model.Phase; previousWave = Model.Wave;
             if (smoke) gameObject.AddComponent<PanicHomeSmoke>();
             if (Array.IndexOf(args, "--residence-smoke") >= 0) { Application.runInBackground=true; gameObject.AddComponent<PanicResidenceSmoke>(); }
@@ -340,6 +342,7 @@ namespace TooLateToPanic
             UpdateBagCursor();
             if (Model.IsPaused || NotebookBlocksInput)
             {
+                SuspendExperienceFeedbackV414();
                 desiredVelocity = smoothVelocity = Vector3.zero;
                 if (animator) animator.speed = 0f;
                 if (presentationAudio) presentationAudio.Tick(0f, true);
@@ -350,8 +353,8 @@ namespace TooLateToPanic
             if (animator && animator.speed == 0f) animator.speed = 1f;
             float dt = Mathf.Min(Time.deltaTime, .08f);
             ProcessBagPreparationInput(dt);
-            TickJuryDemo(InputLocked || LossAnnounced || CinematicActive || developerBlocksInput || BagCameraTransitionActive);
-            if (!InputLocked && !LossAnnounced && !developerBlocksInput) Model.Tick(dt);
+            if (!IntroStoryActiveV414) TickJuryDemo(InputLocked || LossAnnounced || CinematicActive || developerBlocksInput || BagCameraTransitionActive);
+            if (!InputLocked && !LossAnnounced && !developerBlocksInput && !IntroStoryActiveV414) Model.Tick(dt);
             if (Model.Wave != previousWave) { Expedition.OnNewWave(); previousWave = Model.Wave; }
             if (Model.Phase != previousPhase)
             {
@@ -389,16 +392,19 @@ namespace TooLateToPanic
             TickExteriorLife(dt);
             ObserveJuryPresentation();
             UpdateCameraOrbitInput(hud && hud.PointerOverUi);
-            AnimateHinges(dt); SyncVisuals(false); ApplyFloorVisibility(); ApplyDirectVisibility(); FollowCamera(dt);
+            AnimateHinges(dt); SyncVisuals(false); ApplyDirectVisibility(); FollowCamera(dt); ApplyFloorVisibility();
             AnimateCuratedFixtures(dt);
             UpdateJuryMarker();
             gatherPoseTime = Mathf.Max(0, gatherPoseTime - dt);
             TickHouseAudio();
+            TickExperienceFeedbackV414(dt);
         }
 
         void LateUpdate()
         {
             if (!hero || !animator || Model.IsPaused || NotebookBlocksInput) return;
+            if (ApplyCinematicCharacterPoseV414()) return;
+            PanicCharacterArt.SetMotion(hero.gameObject, animator, WorkActive || InventoryOpen || InputLocked ? 0 : desiredVelocity.magnitude, controller.isGrounded, gravitySpeed, Time.deltaTime);
             string task = WorkActive ? Expedition.Work.IsWorldConstruction ? (workAction == "drain" ? "build-ground" : "build") : workAction : gatherPoseTime > 0 ? "gather" : IsMoving ? "carry" : "";
             PanicCharacterArt.SetTaskPose(hero.gameObject, animator, task, WorkActive ? Expedition.Work.Progress : 0);
             PanicCharacterArt.UpdateSecondary(hero.gameObject, desiredVelocity.magnitude, Time.deltaTime);
@@ -410,6 +416,7 @@ namespace TooLateToPanic
         {
             Vector3 forward = Flat(View.transform.forward).normalized, right = Flat(View.transform.right).normalized;
             float speed = Input.GetKey(KeyCode.LeftShift) ? RunSpeed : WalkSpeed;
+            speed *= FpsMovementMultiplierV414;
             Vector3 target = Vector3.ClampMagnitude(right * input.x + forward * input.y, 1) * speed;
             desiredVelocity = Vector3.SmoothDamp(desiredVelocity, target, ref smoothVelocity, .075f, 20, dt);
             if (controller.isGrounded && gravitySpeed < 0) gravitySpeed = -2;
@@ -609,6 +616,7 @@ namespace TooLateToPanic
         }
         void UpdateContext()
         {
+            if (UpdateUtilityContextV414()) return;
             UpdateResidenceContext();
         }
 
@@ -698,9 +706,10 @@ namespace TooLateToPanic
             SetFocus(target);
             workAction = action; workTarget = target; workAge = 0;
             Expedition.Work.Begin(action, target, Model.IsJuryDemo); InventoryOpen = false;
+            ResetManualWorkPointerV414();
             if (PositionOf(target, out var taskPosition)) { var toward = Flat(taskPosition-player.position); if (toward.sqrMagnitude>.01f) { facingYaw=Mathf.Atan2(toward.x,toward.z)*Mathf.Rad2Deg; hero.rotation=Quaternion.Euler(0,facingYaw,0); } }
             animator.SetBool("Working", true); animator.SetBool("Kneeling", action == "drain" || action == "anchorfloor");
-            var hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+            var hand = PanicCharacterArt.GetCharacterBone(hero.gameObject, animator, HumanBodyBones.RightHand);
             if (hand && action != "plant") { handTool = PanicCharacterArt.CreateHandTool(action == "fire" ? "build" : action); handTool.transform.SetParent(hand,false); handTool.transform.localRotation=Quaternion.Euler(0,180,0); }
             if (!Expedition.Work.IsWorldConstruction)
             { workRig = PanicWorkArt.CreateWorkRig(action); workRig.transform.position = new Vector3(100, 100, 100); LayerRecursive(workRig, 30); workCamera.enabled = true; }
@@ -710,8 +719,7 @@ namespace TooLateToPanic
         }
         void UpdateWork(float dt)
         {
-            float dir = (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) ? 1 : 0) - (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow) ? 1 : 0);
-            ProcessWorkInput(dt,dir,Input.GetKey(KeyCode.Space),Input.GetKeyDown(KeyCode.Return),Input.GetKeyDown(KeyCode.Space),Input.GetKeyDown(KeyCode.Backspace)||Input.GetKeyDown(KeyCode.Escape));
+            UpdateManualWorkV414(dt);
         }
         public void ProcessWorkInput(float dt,float direction,bool held,bool pressed,bool pulse,bool cancel)
         {
@@ -837,7 +845,7 @@ namespace TooLateToPanic
         }
         void ApplyFloorVisibility()
         {
-            bool cutawayInside = inside && !ResidenceCinematicExteriorView && !BagCameraOwnsView;
+            bool cutawayInside = (IntroStoryActiveV414 && residenceCinematicAge >= 3f) || inside && !ResidenceCinematicExteriorView && !BagCameraOwnsView;
             for (int i = 0; i < floorVisuals.Count; i++)
             {
                 int floor=i-1; bool shown = !cutawayInside || floor == ActiveFloor;
@@ -873,7 +881,7 @@ namespace TooLateToPanic
             if (!visibilityRenderers.TryGetValue(key, out var renderers))
                 visibilityRenderers[key] = renderers = root.GetComponentsInChildren<Renderer>(true);
             foreach (var renderer in renderers)
-                if (renderer && renderer.enabled != visible) renderer.enabled = visible;
+                if (renderer) { bool shown = visible && !renderer.GetComponent<PanicPermanentlyHiddenV414>(); if (renderer.enabled != shown) renderer.enabled = shown; }
         }
 
         void SyncVisuals(bool force)
@@ -951,9 +959,11 @@ namespace TooLateToPanic
         void OnGUI()
         {
             if(NotebookBlocksInput)return;
+            DrawGatherRewardsV414();
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}
             if (BagCameraOwnsView || !View || Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.GameOver || Model.Phase == PanicPhase.Success || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;
             DrawJuryWorldTarget();
+            DrawUtilityLabelsV414();
             if (!string.IsNullOrEmpty(ShortAction)&&FocusPosition(out var p) && CanInteract) DrawMarker(p + Vector3.up * 1.9f, "E  " + ShortAction, 110);
             if (Model.Phase == PanicPhase.Inspection)
             {

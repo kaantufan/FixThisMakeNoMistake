@@ -287,6 +287,7 @@ namespace TooLateToPanic
             EnsureStyles();
             _uiRects.Clear();
             _topLevelRegions.Clear();
+            DrawFpsVeilV414();
 
             Matrix4x4 oldMatrix = GUI.matrix;
             Color oldColor = GUI.color;
@@ -802,6 +803,7 @@ namespace TooLateToPanic
 
         void DrawWork()
         {
+            if (DrawManualWorkV414()) return;
             PanicWorkSession work = World.Expedition.Work;
             if (work.IsWorldConstruction) { DrawWorldConstruction(work); return; }
             Rect panel = new Rect(66, 164, 1468, 676);

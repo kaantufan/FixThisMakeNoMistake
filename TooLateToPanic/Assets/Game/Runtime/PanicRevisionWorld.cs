@@ -55,6 +55,7 @@ namespace TooLateToPanic
             if(Expedition==null)return;
             var pantry=Expedition.Sources.Find(s=>s.Id=="basement_pantry");
             if(pantry!=null)pantry.Position=new Vector3(-6.5f,-3.2f,3.8f);
+            PanicHouseLayoutV414.ConfigureSources(Expedition, Model);
         }
 
         void ResetRevisionWorld()
@@ -148,7 +149,7 @@ namespace TooLateToPanic
         static bool IsFullHeightPartition(string name)
         {
             return name == "solid_east_south" || name == "solid_east_north" || name == "solid_bath_west" ||
-                name == "solid_bath_south_left" || name == "solid_bath_south_right";
+                name == "solid_bath_south_left" || name == "solid_bath_south_right" || PanicHouseLayoutV414.IsPartition(name);
         }
 
         static bool HasParentNamed(Transform child, string name, Transform stop)

@@ -96,6 +96,7 @@ namespace TooLateToPanic
 
         void ResetBagPreparation()
         {
+            SuspendExperienceFeedbackV414();
             bool owned = BagCameraOwnsView;
             bagViewMode = BagViewMode.Isometric; bagViewAge = 0; bagHandAge = 10;
             if (bagHandsCamera) bagHandsCamera.enabled = false;
@@ -123,10 +124,10 @@ namespace TooLateToPanic
         public void StepBagLook(Vector2 mouseDelta)
         {
             if (!BagFirstPersonActive || InputLocked || Model.IsPaused || InventoryOpen || NotebookBlocksInput) return;
-            bagYaw += mouseDelta.x * 2f;
-            bagPitch = Mathf.Clamp(bagPitch - mouseDelta.y * 1.7f, -74, 78);
+            bagYaw += mouseDelta.x * 2f * FpsLookMultiplierV414;
+            bagPitch = Mathf.Clamp(bagPitch - mouseDelta.y * 1.7f * FpsLookMultiplierV414, -74, 78);
             facingYaw = bagYaw;
-            View.transform.rotation = Quaternion.Euler(bagPitch, bagYaw, 0);
+            ApplyBagPoseV414();
         }
 
         void UpdateBagPreparationCamera(float dt)
@@ -146,7 +147,7 @@ namespace TooLateToPanic
             }
             else if (BagFirstPersonActive)
             {
-                View.transform.SetPositionAndRotation(PlayerPosition + Vector3.up * 1.62f, Quaternion.Euler(bagPitch, bagYaw, 0));
+                ApplyBagPoseV414();
             }
             if (bagHandsCamera)
             {
@@ -159,6 +160,7 @@ namespace TooLateToPanic
                     bagHandClock += dt; bagHandAge += dt; bagOpenAge += dt;
                     float gather = bagHandAge < .65f ? Mathf.Clamp01(bagHandAge / .65f) : 0;
                     float open = bagOpenAge < .55f ? Mathf.Clamp01(bagOpenAge / .55f) : 0;
+                    PanicBagHandsArt.SetLocomotion(bagHands, desiredVelocity.magnitude, controller.isGrounded, gravitySpeed, dt);
                     PanicBagHandsArt.Animate(bagHands, bagHandClock, Mathf.Clamp01(desiredVelocity.magnitude / RunSpeed), gather, open);
                 }
             }

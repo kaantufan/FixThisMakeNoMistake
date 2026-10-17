@@ -123,6 +123,7 @@ namespace TooLateToPanic
         public List<PanicItem> Items;
         public List<HighscoreEntry> Highscores;
         public bool IsTutorial;
+        public PanicUtilitySafetyState UtilitySafety { get; } = new PanicUtilitySafetyState();
         public bool IsJuryDemo { get; private set; }
         public bool IsSimulation { get; private set; }
         public bool SimulationComplete { get; private set; }
@@ -617,6 +618,7 @@ namespace TooLateToPanic
 
         private void ResetRunState(bool tutorial)
         {
+            UtilitySafety.Reset();
             IsJuryDemo = false;
             IsSimulation = false;
             SimulationComplete = false;
@@ -846,6 +848,7 @@ namespace TooLateToPanic
                 float risk = baseRisk * severity * StableVariation(item.Id, Wave, Disaster, runSeed);
                 risk *= StructureMultiplier(item, Disaster);
                 risk *= AnchorMultiplier(item, Disaster);
+                risk *= UtilitySafety.DamageMultiplier(Disaster, item);
                 if (Disaster == DisasterType.Flood)
                 {
                     risk *= 1f - globalFloodGuard;

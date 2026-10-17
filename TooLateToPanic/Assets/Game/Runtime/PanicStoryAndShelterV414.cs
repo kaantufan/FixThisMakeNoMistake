@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace TooLateToPanic
 {
+    public sealed class PanicPermanentlyHiddenV414 : MonoBehaviour { }
     public sealed partial class PanicHomeWorld
     {
         public bool IntroStoryActiveV414 { get { return CinematicActive && CinematicKind == "Opening"; } }
