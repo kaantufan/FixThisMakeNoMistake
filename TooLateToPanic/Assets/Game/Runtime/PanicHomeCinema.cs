@@ -394,14 +394,16 @@ namespace TooLateToPanic
             float t = SmoothResidence01(detail ? (age - 6.2f) / 1.8f : (age - 4.7f) / 1.5f);
             if (Model.Disaster == DisasterType.Flood)
             {
-                camera = detail ? Vector3.Lerp(new Vector3(-28,9,-14),new Vector3(-25,8,-12),t) : Vector3.Lerp(new Vector3(-34,18,-25),new Vector3(-31,16,-22),t);
-                target = detail ? new Vector3(-15,.45f,-5) : new Vector3(-12,.5f,-4);
-                fov = detail ? 48 : 50;
+                // Keep the creek and actual home together, above the west neighbour roof/canopy.
+                camera = detail ? Vector3.Lerp(new Vector3(-27,22,-19),new Vector3(-25.5f,21,-17),t) : Vector3.Lerp(new Vector3(-29,23,-24),new Vector3(-27,22,-22),t);
+                target = detail ? new Vector3(-7.5f,.7f,-.5f) : new Vector3(-7,1,0);
+                fov = detail ? 56 : 52;
             }
             else if (Model.Disaster.ToString() == "Storm")
             {
-                camera = detail ? Vector3.Lerp(new Vector3(18,12,-19),new Vector3(16,10,-17),t) : Vector3.Lerp(new Vector3(26,18,-26),new Vector3(23,16,-23),t);
-                target = new Vector3(2,4.5f,0); fov = detail ? 47 : 51;
+                // The real funnel is west/north (-19.2,0..11.5,11), not above the house centre.
+                camera = detail ? Vector3.Lerp(new Vector3(23,20,-26),new Vector3(21,19,-24),t) : Vector3.Lerp(new Vector3(29,23,-30),new Vector3(27,22,-28),t);
+                target = detail ? new Vector3(-5.5f,5,4.5f) : new Vector3(-6,5.8f,4.5f); fov = detail ? 54 : 56;
             }
             else if (Model.Disaster == DisasterType.Fire)
             {

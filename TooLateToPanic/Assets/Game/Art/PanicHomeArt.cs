@@ -299,7 +299,7 @@ namespace TooLateToPanic
                 for(int col=0;col<8;col++)
                 {
                     float left=-8+col*2,right=left+2;
-                    bool tile=floor==0&&left>=2 || floor==1&&left>=2&&a>=1.75f;
+                    bool tile=floor==0&&left>=2 || floor==1&&left>=PanicHouseLayoutV414.UpperEastPartition&&a>=1.75f;
                     if(a<zn&&z>zs)
                     {
                         FloorFinish(b,left,Mathf.Min(right,-.9f),a,z,row,col,tile);FloorFinish(b,Mathf.Max(left,.9f),right,a,z,row,col,tile);
@@ -344,10 +344,10 @@ namespace TooLateToPanic
             else
             {
                 Segment(east,"east_full",true,8,-6,6,0,WallHeight,M.Plaster);
-                LayoutPartitionDoor(divisions,"parent",true,-2.2f,.8f,6,3.9f);
-                LayoutPartitionDoor(divisions,"child",true,-2.2f,-6,.8f,-3.2f);
-                LayoutPartition(divisions,"bedroom_divider",false,.8f,-8,-2.2f);
-                LayoutPartitionDoor(divisions,"study",true,2,-6,1.8f,-2.6f);
+                LayoutPartitionDoor(divisions,"parent",true,PanicHouseLayoutV414.UpperWestPartition,.8f,6,3.9f);
+                LayoutPartitionDoor(divisions,"child",true,PanicHouseLayoutV414.UpperWestPartition,-6,.8f,-3.2f);
+                LayoutPartition(divisions,"bedroom_divider",false,.8f,-8,PanicHouseLayoutV414.UpperWestPartition);
+                LayoutPartitionDoor(divisions,"study",true,PanicHouseLayoutV414.UpperEastPartition,-6,1.8f,-2.6f);
             }
             DirectionalTrim(north,"north",floor,true);DirectionalTrim(west,"west",floor,true);
             DirectionalTrim(south,"south",floor,true);DirectionalTrim(east,"east",floor,true);
@@ -415,8 +415,8 @@ namespace TooLateToPanic
             b.Box(new Vector3(-5.5f,.025f,-1.4f),new Vector3(2.5f,.025f,1.4f),M.FacadeSage,.04f);
             for(int i=0;i<5;i++)b.Box(new Vector3(-6.45f+i*.47f,.042f,-1.4f),new Vector3(.28f,.012f,.85f),i%2==0?M.SafetyAmber:M.Linen,.04f);
             // Original colored wooden blocks on the actual cabinet top, without a new collision target.
-            for(int i=0;i<4;i++)b.Box(new Vector3(-3.6f+i*.24f,1.06f,-5.25f),new Vector3(.18f,.20f,.18f),i%2==0?M.Red:M.SafetyAmber,.015f);
-            b.Box(new Vector3(-3.12f,1.25f,-5.25f),new Vector3(.18f,.18f,.18f),M.FacadeSage,.015f);
+            for(int i=0;i<4;i++)b.Box(new Vector3(-3.15f,1.06f,-.66f+i*.24f),new Vector3(.18f,.20f,.18f),i%2==0?M.Red:M.SafetyAmber,.015f);
+            b.Box(new Vector3(-3.15f,1.25f,-.18f),new Vector3(.18f,.18f,.18f),M.FacadeSage,.015f);
             // A colorful framed kite picture on the child's west wall identifies the room at a glance.
             b.Box(new Vector3(-7.84f,1.50f,-1.2f),new Vector3(.035f,.92f,.80f),M.WalnutLight,.01f);
             b.Box(new Vector3(-7.81f,1.50f,-1.2f),new Vector3(.018f,.80f,.68f),M.Linen,.004f);

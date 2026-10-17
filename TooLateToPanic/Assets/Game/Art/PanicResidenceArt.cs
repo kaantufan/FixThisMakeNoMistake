@@ -109,39 +109,36 @@ namespace TooLateToPanic
             return root;
         }
 
-        /// <summary>Upper bath localY0, x[2,8],z[1.8,6], direct west hall doorz4.6. Root is placed y3.2.</summary>
+        /// <summary>Upper bath localY0, x[UpperEastPartition,8],z[1.8,6], direct west hall doorz4.6.</summary>
         public static GameObject BuildBathroom()
         {
             Init(); var root=new GameObject("HomeV4_Bathroom");
             var floor=Group(root,"Floor"); var walls=Group(root,"Partitions");
             var high=Group(root,"FrontHighWalls"); Group(root,"Roof");
-            // V4.14 full-floor-plan decision: one direct west hall door, no entry through the study.
-            // West gapz[3.92,5.28] matches canonical bathroom_door center4.6/yaw90.
-            Solid(walls,"v414_partition_bath_west_south",V(2,.58f,2.86f),V(.13f,1.16f,2.12f),M.Cream);
-            Solid(walls,"v414_partition_bath_west_north",V(2,.58f,5.64f),V(.13f,1.16f,.72f),M.Cream);
-            Solid(walls,"v414_partition_bath_south",V(5,.58f,1.8f),V(6,1.16f,.13f),M.Cream);
-            Solid(high,"bath_west_jamb_south",V(2,1.12f,3.885f),V(.2f,2.24f,.07f),M.DarkWood);
-            Solid(high,"bath_west_jamb_north",V(2,1.12f,5.315f),V(.2f,2.24f,.07f),M.DarkWood);
-            Solid(high,"bath_west_lintel",V(2,2.74f,4.6f),V(.13f,.92f,1.36f),M.Cream);
+            float west=PanicHouseLayoutV414.UpperEastPartition,width=8-west,center=(8+west)*.5f;
+            // Wider hall preserves the direct north-landing door, gapz[3.92,5.28], yaw90.
+            Solid(walls,"v414_partition_bath_west_south",V(west,.58f,2.86f),V(.13f,1.16f,2.12f),M.Cream);
+            Solid(walls,"v414_partition_bath_west_north",V(west,.58f,5.64f),V(.13f,1.16f,.72f),M.Cream);
+            Solid(walls,"v414_partition_bath_south",V(center,.58f,1.8f),V(width,1.16f,.13f),M.Cream);
+            Solid(high,"bath_west_jamb_south",V(west,1.12f,3.885f),V(.2f,2.24f,.07f),M.DarkWood);
+            Solid(high,"bath_west_jamb_north",V(west,1.12f,5.315f),V(.2f,2.24f,.07f),M.DarkWood);
+            Solid(high,"bath_west_lintel",V(west,2.74f,4.6f),V(.13f,.92f,1.36f),M.Cream);
             var b=new Builder();
-            // One continuous pale field absorbs the former x[2,3] strip, with no border at old x=3.
-            b.Box(V(5,.009f,3.9f),V(6,.012f,4.2f),M.Paper,.002f);
-            for(int x=0;x<16;x++) for(int z=0;z<11;z++)
-                b.Box(V(2.22f+x*.36f,.018f,2.04f+z*.36f),V(.348f,.026f,.348f),
-                    x==0||x==15||z==0||z==10?M.Mint:M.Paper,.003f);
-            for(int x=0;x<22;x++) for(int y=0;y<4;y++)
+            b.Box(V(center,.009f,3.9f),V(width,.012f,4.2f),M.Paper,.002f);
+            for(int x=0;x<15;x++) for(int z=0;z<11;z++)
+                b.Box(V(west+.25f+x*.34f,.018f,2.04f+z*.36f),V(.328f,.026f,.348f),
+                    x==0||x==14||z==0||z==10?M.Mint:M.Paper,.003f);
+            for(int x=0;x<20;x++) for(int y=0;y<4;y++)
             {
-                float lo=2.02f+x*.272f,hi=lo+.26f;
+                float lo=west+.02f+x*(width-.04f)/20f,hi=lo+(width-.04f)/20f-.012f;
                 b.Box(V((lo+hi)*.5f,.14f+y*.25f,1.878f),V(hi-lo,.237f,.018f),y==2?M.Teal:M.Ceramic,.002f);
             }
-            b.Box(V(5,1.172f,1.8f),V(6,.045f,.16f),M.Honey,.006f);
-            b.Box(V(2,1.172f,2.86f),V(.16f,.045f,2.12f),M.Honey,.006f);
-            b.Box(V(2,1.172f,5.64f),V(.16f,.045f,.72f),M.Honey,.006f);
-            // The bath mat belongs beside the tub, outside the door swing and main crossing path.
+            b.Box(V(center,1.172f,1.8f),V(width,.045f,.16f),M.Honey,.006f);
+            b.Box(V(west,1.172f,2.86f),V(.16f,.045f,2.12f),M.Honey,.006f);
+            b.Box(V(west,1.172f,5.64f),V(.16f,.045f,.72f),M.Honey,.006f);
             b.Box(V(6.04f,.046f,4.2f),V(.48f,.024f,1.14f),M.Teal,.04f);
             b.Box(V(6.04f,.06f,4.2f),V(.4f,.004f,1.04f),M.Mint,.022f);
             for(int i=0;i<9;i++)b.Box(V(6.04f,.064f,3.75f+i*.112f),V(.35f,.004f,.014f),M.Linen,.001f);
-            // A slim shower rail and toiletries stay against the east wall, above the tub.
             b.Beam(V(7.32f,.82f,4.9f),V(7.32f,2.22f,4.9f),.025f,M.Chrome);
             b.Beam(V(7.32f,2.22f,4.9f),V(7.05f,2.22f,4.9f),.025f,M.Chrome);
             b.Cylinder(V(7.05f,2.205f,4.9f),.065f,.025f,M.Chrome,20);

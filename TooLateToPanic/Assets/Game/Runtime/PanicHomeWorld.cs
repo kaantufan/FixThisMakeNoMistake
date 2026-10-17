@@ -405,7 +405,7 @@ namespace TooLateToPanic
         {
             if (!hero || !animator || Model.IsPaused || NotebookBlocksInput) return;
             if (ApplyCinematicCharacterPoseV414()) return;
-            PanicCharacterArt.SetMotion(hero.gameObject, animator, WorkActive || InventoryOpen || InputLocked ? 0 : desiredVelocity.magnitude, controller.isGrounded, gravitySpeed, Time.deltaTime);
+            PanicCharacterArt.SetMotion(hero.gameObject, animator, WorkActive || InventoryOpen || InputLocked ? 0 : new Vector2(controller.velocity.x, controller.velocity.z).magnitude, controller.isGrounded, gravitySpeed, Time.deltaTime);
             string task = WorkActive ? Expedition.Work.IsWorldConstruction ? (workAction == "drain" ? "build-ground" : "build") : workAction : gatherPoseTime > 0 ? "gather" : IsMoving ? "carry" : "";
             PanicCharacterArt.SetTaskPose(hero.gameObject, animator, task, WorkActive ? Expedition.Work.Progress : 0);
             PanicCharacterArt.UpdateSecondary(hero.gameObject, desiredVelocity.magnitude, Time.deltaTime);

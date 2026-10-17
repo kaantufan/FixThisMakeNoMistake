@@ -8,6 +8,7 @@ namespace TooLateToPanic
     public static class PanicHouseLayoutV414
     {
         public const float StairSouth = -1f, StairNorth = 3.8f;
+        public const float UpperWestPartition = -2.65f, UpperEastPartition = 2.65f;
         public static readonly Vector3 BagPosition = new Vector3(1.55f, .035f, -2.3f);
         public static Vector3 StairOrigin(int level) { return new Vector3(0, level * 3.2f, StairSouth); }
         public static Bounds ShaftBounds(int level) { return new Bounds(new Vector3(0,level*3.2f,(StairSouth+StairNorth)*.5f),new Vector3(1.8f,.24f,StairNorth-StairSouth)); }
@@ -20,10 +21,10 @@ namespace TooLateToPanic
             new DoorSeat("door_inner_ground","Mutfak",3.35f,0,.8f),
             new DoorSeat("door_wc","Tuvalet",3.35f,0,-2.8f),
             new DoorSeat("door_pantry","Kiler",6.4f,0,-2.8f),
-            new DoorSeat("door_parent","Ebeveyn odası",-2.2f,3.2f,3.9f,90),
-            new DoorSeat("door_child","Çocuk odası",-2.2f,3.2f,-3.2f,90),
-            new DoorSeat("door_study","Çalışma odası",2,3.2f,-2.6f,90),
-            new DoorSeat("bathroom_door","Banyo",2f,3.2f,4.6f,90),
+            new DoorSeat("door_parent","Ebeveyn odası",UpperWestPartition,3.2f,3.9f,90),
+            new DoorSeat("door_child","Çocuk odası",UpperWestPartition,3.2f,-3.2f,90),
+            new DoorSeat("door_study","Çalışma odası",UpperEastPartition,3.2f,-2.6f,90),
+            new DoorSeat("bathroom_door","Banyo",UpperEastPartition,3.2f,4.6f,90),
             new DoorSeat("door_balcony","Balkon",0,3.2f,-6),
             new DoorSeat("door_garage_inner","Garaj iç kapısı",8.1f,0,2.2f,90)};
         public static System.Collections.Generic.IReadOnlyList<DoorSeat> Doors {get;}=Array.AsReadOnly(doors);
@@ -44,7 +45,7 @@ namespace TooLateToPanic
             Move(model,"fridge",new Vector3(6.75f,0,4.95f),0,"Buzdolabı");
             Move(model,"cabinet",new Vector3(4.65f,0,4.95f),0,"Mutfak dolabı");
             Move(model,"bed",new Vector3(-5.4f,3.2f,3.85f),0,"Ebeveyn yatağı");
-            Move(model,"up_cabinet",new Vector3(-3.25f,3.2f,5.18f),0,"Ebeveyn dolabı");
+            Move(model,"up_cabinet",new Vector3(-7.45f,3.2f,2.2f),270,"Ebeveyn dolabı");
             Move(model,"desk_upper",new Vector3(5.25f,3.2f,-4.9f),0,"Çalışma masası");
             Move(model,"up_bookshelf",new Vector3(7.35f,3.2f,-.25f),270,"Çalışma kitaplığı");
             // Reuse eight existing risk IDs. Every visible window now has exactly one Model target.

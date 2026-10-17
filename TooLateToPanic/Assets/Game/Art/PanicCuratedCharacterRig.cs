@@ -80,25 +80,73 @@ namespace TooLateToPanic
         }
         public void Sample(float metresPerSecond,bool grounded,float verticalSpeed,float dt)
         {
-            if(Bones==null||Bones.Length<19)return;dt=Mathf.Clamp(Finite(dt),0,.1f);float speed=Mathf.Max(0,Finite(metresPerSecond));
-            if(grounded&&!WasGrounded)Land=1;WasGrounded=grounded;Land=Mathf.MoveTowards(Land,0,dt*5);
-            Clock+=dt*Mathf.Lerp(4.2f,10.2f,Mathf.Clamp01(speed/6f));float gait=Mathf.Sin(Clock),other=-gait;
-            float moving=Mathf.Clamp01(speed/.8f),run=Mathf.Clamp01((speed-2.3f)/3f),stride=Mathf.Lerp(23,39,run)*moving;
+            if(Bones==null||Bones.Length<19)return;
+            dt=Mathf.Clamp(Finite(dt),0,.1f);float speed=Mathf.Clamp(Finite(metresPerSecond),0,12f);
+            if(grounded&&!WasGrounded)Land=1;WasGrounded=grounded;
+            Land=Mathf.MoveTowards(Land,0,dt*5);
+            float moving=Mathf.Clamp01(speed/.45f),run=Mathf.Clamp01((speed-2.3f)/3f);
+            // A complete left/right gait advances by travelled metres. No idle-time oscillator drives steps.
+            float stance=Mathf.Lerp(.60f,.54f,run),halfStride=Mathf.Lerp(.35f,.47f,run);
+            float cycleMetres=2f*halfStride/stance;
+            if(grounded&&speed>.015f)Clock=Mathf.Repeat(Clock+dt*speed/cycleMetres*Mathf.PI*2,Mathf.PI*2);
             for(int i=0;i<Bones.Length;i++){Bones[i].localPosition=BindPositions[i];Bones[i].localRotation=Quaternion.identity;}
-            // Original mesh is A pose; anatomical shoulders rotate down into a relaxed walk stance.
-            Bones[5].localRotation=Quaternion.Euler(gait*stride*.75f,0,41);Bones[8].localRotation=Quaternion.Euler(other*stride*.75f,0,-41);
-            Bones[6].localRotation=Quaternion.Euler(-9-run*38,0,0);Bones[9].localRotation=Quaternion.Euler(-9-run*38,0,0);
-            Bones[11].localRotation=Quaternion.Euler(gait*stride,0,0);Bones[15].localRotation=Quaternion.Euler(other*stride,0,0);
-            Bones[12].localRotation=Quaternion.Euler(Mathf.Max(0,-gait)*stride*1.2f,0,0);Bones[16].localRotation=Quaternion.Euler(Mathf.Max(0,gait)*stride*1.2f,0,0);
-            Bones[13].localRotation=Quaternion.Euler(-gait*stride*.3f,0,0);Bones[17].localRotation=Quaternion.Euler(gait*stride*.3f,0,0);
-            Bones[2].localRotation=Quaternion.Euler(run*5,0,gait*1.3f*moving);
-            Bones[0].localPosition+=Vector3.up*(Mathf.Cos(Clock*2)*.012f*moving-Land*.065f);
-            if(!grounded)
+            float gait=Mathf.Sin(Clock),other=-gait;
+            float hipDrop=grounded?(Mathf.Lerp(.10f,.17f,run)*moving+Land*.085f):0;
+            Bones[0].localPosition+=new Vector3(gait*.009f*moving,-hipDrop+Mathf.Cos(Clock*2)*.009f*moving,0);
+            Bones[2].localRotation=Quaternion.Euler((run*8+Land*13)*moving,gait*3.5f*moving,-gait*2f*moving);
+            Bones[4].localRotation=Quaternion.Euler(-run*3,0,gait*.7f*moving);
+            // Actual A-pose source shoulders lower first; elbows and wrists then counter-swing visibly.
+            float swing=Mathf.Lerp(27,43,run)*moving;
+            Bones[5].localRotation=Quaternion.Euler(gait*swing-Land*18,0,41-run*3);
+            Bones[8].localRotation=Quaternion.Euler(other*swing-Land*18,0,-41+run*3);
+            Bones[6].localRotation=Quaternion.Euler(-12-run*42-Mathf.Max(0,-gait)*8*moving,0,0);
+            Bones[9].localRotation=Quaternion.Euler(-12-run*42-Mathf.Max(0,gait)*8*moving,0,0);
+            Bones[7].localRotation=Quaternion.Euler(0,0,-3*run);Bones[10].localRotation=Quaternion.Euler(0,0,3*run);
+            if(grounded)
             {
-                float rise=Mathf.Clamp(Finite(verticalSpeed),-4,4);Bones[11].localRotation=Quaternion.Euler(-17-rise*2,0,0);Bones[15].localRotation=Quaternion.Euler(8-rise*2,0,0);
-                Bones[12].localRotation=Quaternion.Euler(32,0,0);Bones[16].localRotation=Quaternion.Euler(24,0,0);
-                Bones[5].localRotation=Quaternion.Euler(-18,0,24);Bones[8].localRotation=Quaternion.Euler(-18,0,-24);
+                // Each foot has an explicit planted backward stroke and a lifted recovery stroke.
+                // Two-bone IK keeps the sole near its ground plane while pelvis/knee heights change.
+                SampleStep(11,12,13,Clock/(Mathf.PI*2),stance,halfStride,moving,run);
+                SampleStep(15,16,17,Clock/(Mathf.PI*2)+.5f,stance,halfStride,moving,run);
             }
+            else
+            {
+                float rise=Mathf.Clamp(Finite(verticalSpeed)/5f,-1,1);
+                Bones[11].localRotation=Quaternion.Euler(-31-rise*10,0,0);Bones[15].localRotation=Quaternion.Euler(15-rise*12,0,0);
+                Bones[12].localRotation=Quaternion.Euler(60+rise*8,0,0);Bones[16].localRotation=Quaternion.Euler(38-rise*6,0,0);
+                Bones[13].localRotation=Quaternion.Euler(-18,0,0);Bones[17].localRotation=Quaternion.Euler(-12,0,0);
+                Bones[5].localRotation=Quaternion.Euler(-28-rise*10,0,27);Bones[8].localRotation=Quaternion.Euler(-28-rise*10,0,-27);
+                Bones[6].localRotation=Quaternion.Euler(-28,0,0);Bones[9].localRotation=Quaternion.Euler(-28,0,0);
+                Bones[2].localRotation=Quaternion.Euler(7-rise*4,0,0);
+            }
+        }
+        void SampleStep(int upperIndex,int lowerIndex,int footIndex,float phase,float stance,float halfStride,float moving,float run)
+        {
+            phase=Mathf.Repeat(phase,1f);float forward,lift,pitch;
+            if(phase<stance)
+            {
+                forward=Mathf.Lerp(halfStride,-halfStride,phase/stance);lift=0;pitch=0;
+            }
+            else
+            {
+                float swing=(phase-stance)/(1-stance),arc=Mathf.Sin(swing*Mathf.PI);
+                forward=Mathf.Lerp(-halfStride,halfStride,swing*swing*(3-2*swing));
+                lift=arc*Mathf.Lerp(.15f,.23f,run);pitch=-arc*22f;
+            }
+            float side=footIndex==13?-1:1;
+            Vector3 goal=transform.TransformPoint(new Vector3(side*.15f,.12f+lift*moving,forward*moving));
+            Transform upper=Bones[upperIndex],lower=Bones[lowerIndex],foot=Bones[footIndex];
+            Vector3 hip=upper.position,direction=goal-hip;
+            float a=Vector3.Distance(hip,lower.position),b=Vector3.Distance(lower.position,foot.position);
+            float distance=Mathf.Clamp(direction.magnitude,.08f,a+b-.001f);
+            direction=direction.sqrMagnitude>.000001f?direction.normalized:-transform.up;
+            Vector3 pole=Vector3.ProjectOnPlane(transform.forward,direction).normalized;
+            if(pole.sqrMagnitude<.000001f)pole=transform.right;
+            float along=(a*a-b*b+distance*distance)/(2*distance);
+            Vector3 knee=hip+direction*along+pole*Mathf.Sqrt(Mathf.Max(0,a*a-along*along));
+            upper.rotation=Quaternion.FromToRotation(lower.position-hip,knee-hip)*upper.rotation;
+            lower.rotation=Quaternion.FromToRotation(foot.position-lower.position,hip+direction*distance-lower.position)*lower.rotation;
+            foot.rotation=transform.rotation*Quaternion.Euler(pitch*moving,0,0);
         }
         public void SampleCinematic(string action,float phase)
         {

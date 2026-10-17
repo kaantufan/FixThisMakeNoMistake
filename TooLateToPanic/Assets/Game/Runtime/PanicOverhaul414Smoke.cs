@@ -33,6 +33,17 @@ namespace TooLateToPanic
             public bool reached, jump; public string mode;
         }
         [Serializable] public sealed class Fixture { public string kind, detail; public int frame; }
+        [Serializable] public sealed class GaitSample
+        {
+            public string label, mesh;public int phase,frame,vertices,changedVertices,changedBones;
+            public float secondsSinceWalkStart,secondsSincePrevious,actorTravel,peakLocalVertexDelta,rmsLocalVertexDelta,restRmsLocalVertexDelta;
+            public Vector3 actor;
+        }
+        sealed class GaitWindow
+        {
+            public SkinnedMeshRenderer Skin;public Vector3[] Rest,Previous;public Quaternion[] Bones;
+            public Vector3 ActorStart;public float Start,Next,PreviousTime;public int Captured;
+        }
         [Serializable] public sealed class Receipt
         {
             public string startedUtc, finishedUtc, error, dllSha256, realScoreBefore, realScoreAfter, scorePath;
@@ -42,6 +53,7 @@ namespace TooLateToPanic
             public int setupWarps, startGameCalls, simulationStarts, explicitTimerFixtures, directControllerProbeFrames, workApiSamples, modelFixtureTicks, runPoseFixtures, bagLookApiSamples;
             public List<Row> rows = new List<Row>(); public List<Fixture> fixtures = new List<Fixture>();
             public List<Route> routes = new List<Route>(); public List<Frame> frames = new List<Frame>();
+            public List<GaitSample> gaitSamples = new List<GaitSample>();
             public List<string> sections = new List<string>(), errors = new List<string>(), captures = new List<string>();
         }
         readonly Receipt report = new Receipt();
@@ -125,7 +137,7 @@ namespace TooLateToPanic
             direction.y=0;direction.Normalize();Vector3 f=w.View.transform.forward;f.y=0;f.Normalize();Vector3 r=w.View.transform.right;r.y=0;r.Normalize();
             return Vector2.ClampMagnitude(new Vector2(Vector3.Dot(direction,r),Vector3.Dot(direction,f)),1);
         }
-        IEnumerator Walk(string id,Vector3 target,float max=0,float tolerance=.27f,Action sample=null)
+        IEnumerator Walk(string id,Vector3 target,float max=0,float tolerance=.27f,Action sample=null,Func<IEnumerator> capture=null)
         {
             var route=new Route{id=id,start=w.PlayerPosition,target=target,highestY=w.PlayerPosition.y,lowestY=w.PlayerPosition.y,mode="production SmokeMove + real controller; no route warp"};
             float start=Time.realtimeSinceStartup,end=start+(max>0?max:Vector3.Distance(w.PlayerPosition,target)/PanicHomeWorld.WalkSpeed+2.2f);
@@ -135,7 +147,7 @@ namespace TooLateToPanic
                 if(planar<tolerance&&Mathf.Abs(d.y)<.42f){route.reached=true;break;}
                 w.SmokeMove(Axis(d),Dt);route.frames++;
                 route.highestY=Mathf.Max(route.highestY,w.PlayerPosition.y);route.lowestY=Mathf.Min(route.lowestY,w.PlayerPosition.y);
-                CountCollision(route,controller.collisionFlags);yield return null;if(sample!=null)sample();
+                CountCollision(route,controller.collisionFlags);yield return null;if(sample!=null)sample();if(capture!=null)yield return capture();
             }
             for(int i=0;i<3;i++){w.SmokeMove(Vector2.zero,Dt);yield return null;}
             route.end=w.PlayerPosition;route.seconds=Time.realtimeSinceStartup-start;report.routes.Add(route);lastReached=route.reached;
@@ -173,9 +185,10 @@ namespace TooLateToPanic
             float until=Time.realtimeSinceStartup+.6f;while(!File.Exists(path)&&Time.realtimeSinceStartup<until)yield return null;
             Check("capture.file."+label,File.Exists(path)&&new FileInfo(path).Length>1024,path,"NATIVE_CAPTURE_FILE");
         }
-        IEnumerator Photo(string label,Vector3 camera,Vector3 target,float size=0)
+        IEnumerator Photo(string label,Vector3 camera,Vector3 target,float size=0,Action captureSample=null)
         {
             yield return new WaitForEndOfFrame();
+            if(captureSample!=null)captureSample();
             if(!photoCamera){photoCamera=new GameObject("V414 QA separate capture camera").AddComponent<Camera>();photoCamera.enabled=false;}
             photoCamera.CopyFrom(w.View);photoCamera.enabled=false;photoCamera.transform.position=camera;photoCamera.transform.LookAt(target);
             photoCamera.orthographic=size>0;if(size>0)photoCamera.orthographicSize=size;else photoCamera.fieldOfView=42;
@@ -260,6 +273,31 @@ namespace TooLateToPanic
         }
         static Quaternion[] Pose(Transform[] bones){return bones.Select(t=>t?t.localRotation:Quaternion.identity).ToArray();}
         static int Changed(Quaternion[] a,Quaternion[] b){return a.Zip(b,(x,y)=>Quaternion.Angle(x,y)>.12f?1:0).Sum();}
+        static Vector3[] BakedLocalVertices(SkinnedMeshRenderer skin)
+        {
+            var mesh=new Mesh{name="V414 read-only actual gait bake"};
+            try{skin.BakeMesh(mesh);return mesh.vertices;}finally{Destroy(mesh);}
+        }
+        IEnumerator CaptureWalkingGait(GaitWindow gait)
+        {
+            if(gait.Captured>=6||Time.realtimeSinceStartup<gait.Next)yield break;
+            string label="02-walk-phase-"+(gait.Captured+1).ToString("D2")+"-front";
+            Vector3 facing=hero.forward;facing.y=0;facing.Normalize();
+            yield return Photo(label,w.PlayerPosition+facing*3.3f+Vector3.up*1.15f,w.PlayerPosition+Vector3.up*.95f,0,()=>
+            {
+                float now=Time.realtimeSinceStartup;Vector3[] current=BakedLocalVertices(gait.Skin),previous=gait.Previous??gait.Rest;
+                float sum=0,restSum=0,peak=0;int changed=0;bool same=current.Length==gait.Rest.Length&&current.Length==previous.Length;
+                if(same)for(int i=0;i<current.Length;i++)
+                {float delta=(current[i]-previous[i]).sqrMagnitude;sum+=delta;restSum+=(current[i]-gait.Rest[i]).sqrMagnitude;peak=Mathf.Max(peak,Mathf.Sqrt(delta));if(delta>.000025f)changed++;}
+                var sample=new GaitSample{label=label,mesh=gait.Skin.sharedMesh?gait.Skin.sharedMesh.name:"missing",phase=gait.Captured+1,frame=Time.frameCount,vertices=current.Length,
+                    changedVertices=changed,changedBones=Changed(gait.Bones,Pose(gait.Skin.bones)),secondsSinceWalkStart=now-gait.Start,secondsSincePrevious=now-gait.PreviousTime,
+                    actorTravel=Vector3.Distance(gait.ActorStart,w.PlayerPosition),peakLocalVertexDelta=peak,rmsLocalVertexDelta=same&&current.Length>0?Mathf.Sqrt(sum/current.Length):0,
+                    restRmsLocalVertexDelta=same&&current.Length>0?Mathf.Sqrt(restSum/current.Length):0,actor=w.PlayerPosition};report.gaitSamples.Add(sample);
+                Check("character.gait-live-baked-sample."+sample.phase,same&&current.Length>0&&gait.Skin.enabled&&gait.Skin.gameObject.activeInHierarchy&&!w.InputLocked&&sample.actorTravel>.02f,
+                    "Actual SMR.BakeMesh local vertices after root LateUpdate; phase="+sample.phase+" vertices="+sample.vertices+" changed="+sample.changedVertices+" peak="+sample.peakLocalVertexDelta+" rms="+sample.rmsLocalVertexDelta+" interval="+sample.secondsSincePrevious+" travel="+sample.actorTravel,"NATIVE_BAKED_SKIN_DEFORMATION");
+                gait.Previous=current;gait.PreviousTime=now;gait.Next=now+.12f;gait.Captured++;
+            });
+        }
         IEnumerator Character()
         {
             yield return Place(new Vector3(0,0,-18),"character-exterior-open-road");
@@ -273,8 +311,13 @@ namespace TooLateToPanic
             if(skin&&skin.sharedMesh)
             {
                 var weights=skin.sharedMesh.boneWeights;Check("character.weights-normalized",weights.Length==skin.sharedMesh.vertexCount&&weights.All(b=>b.boneIndex0>=0&&b.boneIndex0<19&&b.boneIndex1>=0&&b.boneIndex1<19&&Finite(b.weight0)&&Finite(b.weight1)&&Mathf.Abs(b.weight0+b.weight1-1)<.001f));
-                var before=Pose(skin.bones);Vector3 p=w.PlayerPosition;int walkDeltas=0;
-                yield return Walk("character-walk",p+Vector3.right*2.2f,2.5f,.27f,()=>{walkDeltas=Mathf.Max(walkDeltas,Changed(before,Pose(skin.bones)));});
+                var before=Pose(skin.bones);Vector3 p=w.PlayerPosition;int walkDeltas=0;float gaitStart=Time.realtimeSinceStartup;
+                var gait=new GaitWindow{Skin=skin,Rest=BakedLocalVertices(skin),Bones=before,ActorStart=p,Start=gaitStart,PreviousTime=gaitStart,Next=gaitStart+.10f};
+                FixtureNote("GAIT_REAL_MOTOR_CAPTURE","Six phase photos target.12s spacing during actual normal-clock SmokeMove on open road. Photo samples actual SMR.BakeMesh local vertices after root LateUpdate, so actor world translation is excluded. No pose, bone, rig-time, renderer or actor-transform write. Actual sample intervals are recorded; separate camera images are NATIVE_RENDER_CAMERA, not OS/UI frames.");
+                yield return Walk("character-walk",p+Vector3.right*4.4f,3f,.27f,()=>{walkDeltas=Mathf.Max(walkDeltas,Changed(before,Pose(skin.bones)));},()=>CaptureWalkingGait(gait));
+                Check("character.six-actual-walk-phase-captures",gait.Captured==6&&report.gaitSamples.Count==6,"Actual continuous route captures="+gait.Captured+"; phase PNGs and exact intervals are retained. No setup warp inside walk.","NATIVE_PHYSICS_ANIMATION");
+                Check("character.actual-baked-skin-walk-deforms",gait.Captured==6&&report.gaitSamples.Skip(1).Count(s=>s.rmsLocalVertexDelta>.001f&&s.changedVertices>=8)>=3&&report.gaitSamples.Skip(1).Any(s=>s.peakLocalVertexDelta>.01f),
+                    "Compare consecutive live local baked vertex arrays, excluding world translation: >=3 inter-phase RMS changes above1mm with >=8 vertices each, plus a >1cm peak. Bone-only change cannot satisfy this check.","NATIVE_BAKED_SKIN_DEFORMATION");
                 Check("character.motor-walk-deforms",!w.InputLocked&&Vector3.Distance(p,w.PlayerPosition)>1.5f&&walkDeltas>=4,"Normal clock/unlocked real SmokeMove -> root LateUpdate -> live joint changes sampled while walking; deltas="+walkDeltas,"NATIVE_PHYSICS_ANIMATION");
                 var motion=typeof(PanicCharacterArt).GetMethod("SetMotion",Static);
                 Check("character.run-motor-api",motion!=null);
@@ -301,8 +344,12 @@ namespace TooLateToPanic
             var windows=w.Model.Items.Where(i=>i.Kind==ItemKind.Window).ToArray();var windowRoots=Field<Dictionary<string,GameObject>>(w,"items");
             Check("layout.eight-real-model-window-identities",windows.Length==8&&windows.Select(i=>i.Id).Distinct().Count()==8&&windows.All(i=>i.Installed&&windowRoots!=null&&windowRoots.TryGetValue(i.Id,out var root)&&root&&root.GetComponentsInChildren<Renderer>(true).Length>0),"Exactly8 distinct installed Model windows with actual production mesh roots, including hidden upper-floor renderers; no visible-from-one-camera count.");
             Check("layout.new-room-door-targets",new[]{"door_wc","door_pantry","door_parent","door_child","door_study","bathroom_door","door_garage_inner"}.All(id=>w.Model.Items.Any(i=>i.Id==id&&i.Installed&&i.Kind==ItemKind.Door)));
+            Check("layout.spacious-canonical-partitions",Mathf.Abs(PanicHouseLayoutV414.UpperWestPartition+2.65f)<.001f&&Mathf.Abs(PanicHouseLayoutV414.UpperEastPartition-2.65f)<.001f,"Final spacious layout helper must expose west=-2.65/east=2.65; old narrow helper cannot silently redefine this oracle.");
+            string[] upperDoorIds={"door_parent","door_child","door_study","bathroom_door"};
+            var upperSeats=PanicHouseLayoutV414.Doors.Where(d=>upperDoorIds.Contains(d.Id)).ToArray();
+            Check("layout.spacious-four-canonical-door-models",upperSeats.Length==4&&upperSeats.All(d=>w.Model.Items.Any(i=>i.Id==d.Id&&i.Installed&&i.Kind==ItemKind.Door&&Vector3.Distance(i.Position,d.Position)<.01f&&Mathf.Abs(Mathf.DeltaAngle(i.Rotation,d.Yaw))<.1f)),"Actual four upper Model doors must match canonical helper positions and yaws; room reachability is separately walked with real controller.");
             var bathroomDoor=w.Model.Items.Find(i=>i.Id=="bathroom_door");
-            Check("layout.bath-west-door-contract",bathroomDoor!=null&&Vector3.Distance(bathroomDoor.Position,new Vector3(2,3.2f,4.6f))<.01f&&Mathf.Abs(Mathf.DeltaAngle(bathroomDoor.Rotation,90))<.1f,"Final root-approved west door at north landing z4.6, gap3.92..5.28; old south and earlier westz2.6 gaps must be closed.");
+            Check("layout.bath-west-door-contract",bathroomDoor!=null&&Vector3.Distance(bathroomDoor.Position,new Vector3(PanicHouseLayoutV414.UpperEastPartition,3.2f,4.6f))<.01f&&Mathf.Abs(Mathf.DeltaAngle(bathroomDoor.Rotation,90))<.1f,"Final spacious west door x2.65 at north landing z4.6, yaw90, gap3.92..5.28; old x2/south and earlier westz2.6 geometry must not be reused.");
             Check("layout.two-distinct-real-beds",new[]{"bed","bed_child"}.All(id=>w.Model.Items.Any(i=>i.Id==id&&i.Installed&&i.Kind==ItemKind.Furniture&&Mathf.Abs(i.Position.y-3.2f)<.01f)));
             var kitchen=FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).FirstOrDefault(t=>t.name=="HomeV4_Kitchen_v414"||t.name=="HomeV4_Kitchen_v414(Clone)"||t.name=="HomeV414_Kitchen");
             if(!kitchen)kitchen=FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).FirstOrDefault(t=>t.name=="KitchenCounterSinkHobDetails");
@@ -313,28 +360,32 @@ namespace TooLateToPanic
             yield return Walk("entry-foyer",new Vector3(0,0,-4.9f));yield return Walk("living-entry",new Vector3(-1.1f,0,-3.9f));
             yield return Walk("living-around-furniture",new Vector3(-2.5f,0,-.3f));yield return Walk("living-north",new Vector3(-4.1f,0,2.4f));
             yield return Place(new Vector3(3.35f,0,-.6f),"kitchen-door-approach");yield return Open("door_inner_ground");
-            foreach(var p in new[]{new Vector3(3.35f,0,1.6f),new Vector3(4.2f,0,2),new Vector3(4.6f,0,3.7f),new Vector3(5.5f,0,4.05f)})yield return Walk("kitchen-"+p.ToString("F1"),p);
+            FixtureNote("FINAL_SPACIOUS_KITCHEN_ROUTE","Dining table now(5,0,2.6), authored top x[4.225,5.775],z[2.13,3.07]. West solid counter ends atx3.25, beginsz2.45: x3.35 cannot take the original CC north. Use x3.7 between unchanged counter/table colliders, then north bandz3.7; all Walk tolerances/dimensions unchanged.");
+            foreach(var p in new[]{new Vector3(3.35f,0,1.6f),new Vector3(3.7f,0,1.6f),new Vector3(3.7f,0,3.7f),new Vector3(4.6f,0,3.7f),new Vector3(5.5f,0,4.05f)})yield return Walk("kitchen-"+p.ToString("F1"),p);
             yield return Photo("05-ground-room-overview",new Vector3(13,16,-16),new Vector3(0,.5f,0),12.5f);
             yield return Place(new Vector3(3.35f,0,-1.3f),"wc-door-approach");yield return Open("door_wc");yield return Walk("wc-entry",new Vector3(3.35f,0,-3.75f));yield return Walk("wc-interior",new Vector3(3.35f,0,-4.35f));
             yield return Place(new Vector3(6.4f,0,-1.3f),"pantry-door-approach");yield return Open("door_pantry");yield return Walk("pantry-entry",new Vector3(6.4f,0,-3.65f));yield return Walk("pantry-interior",new Vector3(6.25f,0,-4.35f));
-            yield return Place(new Vector3(4.4f,0,3.5f),"garage-route-approach");yield return Walk("garage-kitchen-passage",new Vector3(6.7f,0,3.15f));
-            yield return Walk("garage-east-of-dining-chair",new Vector3(7.5f,0,3.25f));yield return Walk("garage-inner-door-approach",new Vector3(7.5f,0,2.2f));yield return Open("door_garage_inner");
+            FixtureNote("FINAL_SPACIOUS_GARAGE_ROUTE","Existing dining group moved. Use canonical north kitchen band z3.7 and the existing E door path, not the old z3.15 shortcut; controller and Walk tolerance stay unchanged.");
+            yield return Place(new Vector3(4.4f,0,3.5f),"garage-route-approach");yield return Walk("garage-kitchen-north-band",new Vector3(4.4f,0,3.7f));
+            yield return Walk("garage-kitchen-passage",new Vector3(6.9f,0,3.7f));yield return Walk("garage-inner-door-approach",new Vector3(7.15f,0,2.2f));yield return Open("door_garage_inner");
             yield return Walk("garage-through-door",new Vector3(9.15f,0,2.2f));yield return Walk("garage-panel-passage",new Vector3(9.65f,0,3.5f));yield return Walk("garage-panel-approach",new Vector3(9.65f,0,5));
         }
         IEnumerator Stairs()
         {
+            float westHall=PanicHouseLayoutV414.UpperWestPartition+.85f,eastHall=PanicHouseLayoutV414.UpperEastPartition-.85f;
+            FixtureNote("FINAL_SPACIOUS_UPPER_ROUTES","Final canonical partitions +/-2.65 with real hall routes +/-1.8; retained bathroom entry x3.1 and z4.6 avoids its actual sink. No tolerance or collider changes.");
             yield return Place(new Vector3(0,0,-1.4f),"stairs-ground-approach");
             yield return Walk("stairs-upper-real-flight",new Vector3(0,3.2f,4.55f),5f);Check("stairs.upper-level-reached",lastReached&&w.IsGrounded&&w.ActiveFloor==1,"No warp in ascent route.","NATIVE_PHYSICS_ROUTE");
-            yield return Walk("upper-parent-hall",new Vector3(-1.55f,3.2f,4.55f));yield return Walk("upper-parent-door",new Vector3(-1.55f,3.2f,3.9f));yield return Open("door_parent");
+            yield return Walk("upper-parent-hall",new Vector3(westHall,3.2f,4.6f));yield return Walk("upper-parent-door",new Vector3(westHall,3.2f,3.9f));yield return Open("door_parent");
             yield return Walk("parent-entry",new Vector3(-3.1f,3.2f,3.9f));yield return Walk("parent-interior",new Vector3(-3.7f,3.2f,2.1f));
-            yield return Place(new Vector3(-1.55f,3.2f,4.55f),"upper-west-hall-approach");yield return Walk("west-hall-child-route",new Vector3(-1.55f,3.2f,-3.2f),4.5f);yield return Open("door_child");
-            yield return Walk("child-entry",new Vector3(-3.2f,3.2f,-3.2f));yield return Walk("child-interior",new Vector3(-3.85f,3.2f,-1.4f));
-            yield return Place(new Vector3(1.48f,3.2f,4.6f),"upper-east-hall-approach");yield return Walk("east-hall-study-route",new Vector3(1.48f,3.2f,-2.6f),4.5f);yield return Open("door_study");
+            yield return Place(new Vector3(westHall,3.2f,4.6f),"upper-west-hall-approach");yield return Walk("west-hall-child-route",new Vector3(westHall,3.2f,-3.2f),4.5f);yield return Open("door_child");
+            yield return Walk("child-entry",new Vector3(-3.2f,3.2f,-3.2f));yield return Walk("child-interior",new Vector3(-4,3.2f,-1.5f));
+            yield return Place(new Vector3(eastHall,3.2f,4.6f),"upper-east-hall-approach");yield return Walk("east-hall-study-route",new Vector3(eastHall,3.2f,-2.6f),4.5f);yield return Open("door_study");
             yield return Walk("study-entry",new Vector3(3.1f,3.2f,-2.6f));yield return Walk("study-interior",new Vector3(5.2f,3.2f,-3.6f));
-            yield return Place(new Vector3(1.48f,3.2f,4.6f),"bath-north-landing-approach");yield return Open("bathroom_door");yield return Walk("bath-west-entry",new Vector3(3.1f,3.2f,4.6f));yield return Walk("bath-interior",new Vector3(4,3.2f,3.5f));
+            yield return Place(new Vector3(eastHall,3.2f,4.6f),"bath-north-landing-approach");yield return Open("bathroom_door");yield return Walk("bath-west-entry",new Vector3(3.1f,3.2f,4.6f));yield return Walk("bath-interior",new Vector3(4,3.2f,3.5f));
             yield return Photo("06-upper-two-bedrooms-study-bath",new Vector3(13,19,-16),new Vector3(0,3.8f,0),12.5f);
             yield return Place(new Vector3(0,3.2f,-3.6f),"balcony-approach");yield return Walk("balcony-door-approach",new Vector3(0,3.2f,-5.1f));yield return Open("door_balcony");yield return Walk("balcony-outside",new Vector3(0,3.2f,-6.8f));
-            yield return Place(new Vector3(-1.5f,0,-2),"basement-ground-approach");yield return Walk("basement-west-hall",new Vector3(-1.5f,0,4.2f),4.5f);yield return Walk("basement-north-landing",new Vector3(0,0,4.2f));yield return Walk("basement-flight-entry",new Vector3(0,0,3.85f));
+            yield return Place(new Vector3(-1.5f,0,-2),"basement-ground-approach");yield return Walk("basement-west-hall",new Vector3(-1.5f,0,4.6f),4.5f);yield return Walk("basement-north-landing",new Vector3(0,0,4.45f));yield return Walk("basement-flight-entry",new Vector3(0,0,3.85f));
             yield return Walk("basement-real-descent",new Vector3(0,-3.2f,-1.5f),5f);Check("stairs.basement-level-reached",lastReached&&w.IsGrounded&&w.ActiveFloor==-1,"No warp in descent route.","NATIVE_PHYSICS_ROUTE");
             yield return Walk("basement-south-passage",new Vector3(-2.4f,-3.2f,-1.5f));yield return Walk("basement-shelter-approach",new Vector3(-4.4f,-3.2f,1.9f));
             yield return Shot("07-basement-approach");
