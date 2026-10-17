@@ -1,3 +1,5 @@
+> Latest source documentation snapshot: [20261017T144429Z](TooLateToPanic/Documentation/Publications/Snapshots/20261017T144429Z/snapshot-receipt.json). Updated R4 OS record and R5 candidate notes are source documentation; the playable release below is unchanged.
+
 # Too Late to Panic! — Home V4.12-r4 /0.4.12
 
 [Download Windows portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.12-r4). Extract the ZIP and run the EXE beside its data folders. Source project: TooLateToPanic/, Unity 6000.0.73f1 / Built-In.
