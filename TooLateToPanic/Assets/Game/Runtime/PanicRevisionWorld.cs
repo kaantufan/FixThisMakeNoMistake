@@ -34,10 +34,8 @@ namespace TooLateToPanic
 
         void AddPhysicalBagStation()
         {
-            // Reuse the model's bag station: one physical bag, one inventory, one interaction.
-            if(!items.TryGetValue("bagstation",out var root)||!root)return;
-            var pick=root.GetComponent<HomePick>();pick.Id="@bagstation";pick.Kind="bag";
-            residenceTargets["@bagstation"]=root;
+            // One carried Expedition bag; no physical station or collider.
+            residenceTargets.Remove("@bagstation");
         }
 
         GameObject NormalizeFixtureRoot(GameObject root,string id)

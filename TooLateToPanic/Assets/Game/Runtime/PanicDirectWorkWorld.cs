@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -64,9 +64,9 @@ namespace TooLateToPanic
             fireStation = PanicConstructionArt.CreateFireStation(ready);
             fireStation.name = "Fire equipment station";
             fireStation.transform.position = PanicJuryDemo.FireStationPosition;
-            fireStation.transform.rotation = Quaternion.Euler(0, 90, 0);
+            fireStation.transform.rotation = Quaternion.identity;
             var collider = fireStation.AddComponent<BoxCollider>();
-            collider.center = new Vector3(0, .75f, -.04f); collider.size = new Vector3(.40f, 1.5f, .30f);
+            collider.center = new Vector3(0, .48f, -.07f); collider.size = new Vector3(.42f, .96f, .28f);
             var pick = fireStation.AddComponent<HomePick>(); pick.Id = PanicItemActionRules.FireStationId; pick.Kind = "station";
             residenceTargets[PanicItemActionRules.FireStationId] = fireStation;
             floorItems.Add(fireStation);
@@ -117,7 +117,7 @@ namespace TooLateToPanic
             {
                 constructionPreview = PanicConstructionArt.CreateFireStation(true, false);
                 constructionPreview.transform.position = PanicJuryDemo.FireStationPosition;
-                constructionPreview.transform.rotation = Quaternion.Euler(0, 90, 0);
+                constructionPreview.transform.rotation = Quaternion.identity;
             }
             else
             {
@@ -199,6 +199,7 @@ namespace TooLateToPanic
         }
         void ApplyDirectVisibility()
         {
+            RefreshGardenMarkersV51();
             bool cutaway = inside && !ResidenceCinematicExteriorView;
             Vector3 side = View ? View.transform.position - PlayerPosition : new Vector3(11, 13, -15);
             foreach (var item in Model.Items)

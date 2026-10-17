@@ -42,10 +42,10 @@ namespace TooLateToPanic
             }
             Expedition.ClearRequirements();
             BeginBagPreparation(); RefreshPreparationVisibility();
-            Model.Notify(JuryActive ? "Son 45 saniye · suyunu al, işaretli güvenli alana geç." : "Son 45 saniye · bir su ve bir gıda al, bodrumdaki sığınağa gir.");
+            Model.Notify(JuryActive ? "Son 45 saniye · suyunu al, işaretli güvenli alana geç." : "Son 45 saniye · erzaklar çantana girer; " + Model.RequiredShelterDestinationV5 + " git.");
         }
         public Vector3 BagTransitionActorPosition { get { return bagTransitionActor; } }
-        public float BagCameraTransitionProgress { get { return Mathf.Clamp01(bagViewAge / 1.1f); } }
+        public float BagCameraTransitionProgress { get { return Mathf.Clamp01(bagViewAge / (bagViewMode == BagViewMode.Entering ? BagHandoffDurationV51 : 1.1f)); } }
 
         void InitBagPreparation()
         {
@@ -73,8 +73,8 @@ namespace TooLateToPanic
             bagShotTo = PlayerPosition + Vector3.up * 1.62f; bagRotationTo = Quaternion.Euler(bagPitch, bagYaw, 0);
             float distance = Mathf.Max(1, Vector3.Distance(View.transform.position, PlayerPosition + Vector3.up));
             bagShotFov = Mathf.Clamp(2 * Mathf.Atan(bagIsoSize / distance) * Mathf.Rad2Deg, 15, 95);
-            View.orthographic = false; View.fieldOfView = bagShotFov; View.nearClipPlane = .05f;
             bagViewAge = 0; bagViewMode = BagViewMode.Entering;
+            BeginBagHandoffDiagnosticsV51();
             desiredVelocity = smoothVelocity = Vector3.zero;
             SetFirstPersonPartitions(true); ClearPickupFocus();
             if (hero) hero.gameObject.SetActive(false);
@@ -97,6 +97,7 @@ namespace TooLateToPanic
         void ResetBagPreparation()
         {
             SuspendExperienceFeedbackV414();
+            fpsStressV414 = fpsStressClockV414 = 0; fpsPoseReadyV414 = false;
             bool owned = BagCameraOwnsView;
             bagViewMode = BagViewMode.Isometric; bagViewAge = 0; bagHandAge = 10;
             if (bagHandsCamera) bagHandsCamera.enabled = false;
@@ -134,8 +135,21 @@ namespace TooLateToPanic
         {
             if (BagCameraTransitionActive)
             {
-                bagViewAge += Mathf.Max(0, dt); float t = BagCameraTransitionProgress;
+                if (BagHandoffSuspendedV51) { UpdateBagCursor(); return; }
+                float previousAge = bagViewAge;
+                bagViewAge += float.IsNaN(dt) || float.IsInfinity(dt) ? 0 : Mathf.Clamp(dt, 0, .08f);
+                float t = BagCameraTransitionProgress;
                 float smooth = t * t * (3f - 2f * t);
+                if (bagViewMode == BagViewMode.Entering)
+                {
+                    RecordBagHandoffStepV51(previousAge, bagViewAge);
+                    // Preserve the actual previous view until fully black. The entire
+                    // camera trip then happens behind the opaque interval, at the actor.
+                    if (bagViewAge < BagHandoffFadeOutV51) { UpdateBagCursor(); return; }
+                    float travel = Mathf.InverseLerp(BagHandoffFadeOutV51, BagHandoffBlackEndV51, bagViewAge);
+                    smooth = travel * travel * (3f - 2f * travel);
+                    View.orthographic = false; View.nearClipPlane = .05f;
+                }
                 View.transform.SetPositionAndRotation(Vector3.Lerp(bagShotFrom, bagShotTo, smooth), Quaternion.Slerp(bagRotationFrom, bagRotationTo, smooth));
                 View.fieldOfView = bagViewMode == BagViewMode.Entering ? Mathf.Lerp(bagShotFov, 62, smooth) : Mathf.Lerp(62, bagShotFov, smooth);
                 if (t >= 1)
@@ -176,11 +190,10 @@ namespace TooLateToPanic
             RefreshBagRayFocus();
             if (Expedition.FindWorldSupply(focusId) != null) { TakeWorldSupply(); return; }
             if (!CanInteract) return;
-            if (focusId == "@bagstation") { hud.OpenPhysicalBag(); return; }
             if (focusId == "@bunker" || focusId == "bunker" || focusId=="@panicroom") { TryEnterActiveShelterV5(); return; }
             if (focusId != null && hinges.TryGetValue(focusId,out var hinge) && hinge.directionalDoor) { bagOpenAge=0;ToggleDoor();return; }
             if (focusId == "@garage") { if(Model.UtilitySafety.PowerOff){Notice("Ana şalter kapalı; garajın iç kapısını kullan.");return;}garageOpen=!garageOpen;bagOpenAge=0;effects.Play("garage",.45f);return; }
-            Notice("Açıktaki su ve gıdayı al; ardından "+Model.RequiredShelterDestinationV5+" git.");
+            Notice("Erzaklar otomatik çantana girer; ardından "+Model.RequiredShelterDestinationV5+" git. Tab · Çanta");
         }
 
         void UpdateBagCursor()
@@ -217,7 +230,7 @@ namespace TooLateToPanic
                 {
                     bool supply = Expedition.FindWorldSupply(pick.Id) != null;
                     bool door = hinges.TryGetValue(pick.Id, out var h) && h.directionalDoor;
-                    if (supply || door || pick.Id == "@bagstation" || pick.Id == "@garage" || pick.Id == "@bunker" || pick.Id == "bunker" || pick.Id == "@panicroom") return pick.Id;
+                    if (supply || door || pick.Id == "@garage" || pick.Id == "@bunker" || pick.Id == "bunker" || pick.Id == "@panicroom") return pick.Id;
                 }
                 // The first real wall/object stops the ray. There is no through-wall search.
                 return null;

@@ -18,8 +18,8 @@ namespace TooLateToPanic
 
         static readonly Dictionary<string, Cue> Cues = new Dictionary<string, Cue>
         {
-            { "jury_intro", new Cue("jury_intro", "Evi hazırla. Küçük önlemler fark yaratır.", 10, true, 5f, 0f) },
-            { "jury_bag_ready", new Cue("jury_bag_ready", "Çantan hazır. Şimdi bir eşyayı sabitle.", 20, true, 5f, 0f) },
+            { "jury_intro", new Cue("jury_intro", PanicKktcStoryV53.ShortFlowPremise(), 10, true, 5f, 0f) },
+            { "jury_bag_ready", new Cue("jury_bag_ready", "Çantan hazır. İşaretli güvenli noktaya geç.", 20, true, 5f, 0f) },
             { "jury_secured", new Cue("jury_secured", "Sabitleme tamam. Sağlam bir adım attın.", 25, true, 5f, 0f) },
             { "jury_quake_result", new Cue("jury_quake_result", "Hazırlığın farkını şimdi görebilirsin.", 40, true, 5f, 0f) },
             { "jury_flood", new Cue("jury_flood", "Suya karşı önlemini seç.", 30, true, 4f, 0f) },

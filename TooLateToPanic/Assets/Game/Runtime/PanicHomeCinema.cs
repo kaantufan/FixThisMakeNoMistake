@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -97,7 +97,7 @@ namespace TooLateToPanic
             if (to == PanicPhase.Disaster)
             {
                 BeginResidenceSession();
-                SetResidenceCinematic("Disaster", "Afet başladı", 8f);
+                SetResidenceCinematic("Disaster", Model.IsSimulation ? "Afet başladı" : PanicKktcStoryV53.HazardNarrative(Model.Disaster), 8f);
                 cinematicActorStart = player ? player.position : residenceReturnPosition;
                 cinematicHatchApproach = BunkerPosition + new Vector3(0f, .04f, -1.18f);
                 cinematicActorEnd = BunkerInteriorPosition + new Vector3(0f, .04f, -.42f);
@@ -122,7 +122,7 @@ namespace TooLateToPanic
             if (to == PanicPhase.Aftermath)
             {
                 BeginResidenceSession();
-                SetResidenceCinematic("Aftermath", "Hasar gezisi", 4f);
+                SetResidenceCinematic("Aftermath", Model.IsSimulation ? "Hasar gezisi" : PanicKktcStoryV53.AftermathNarrative(Model.Wave, Model.Disaster), 4f);
                 CinematicShowsActor = false;
                 if (player && residenceCinematicSession && !Model.IsSimulation && ShelterReachedForPresentationV5)
                     SetResidencePlayerPosition(ShelterWaitPositionV5);

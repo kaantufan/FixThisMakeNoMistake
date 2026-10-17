@@ -47,7 +47,7 @@ namespace TooLateToPanic
             player.position = cinematicActorStart;
             CinematicShowsActor = residenceCinematicAge < 4.7f;
             SetResidenceActorFlags(false, false, 0);
-            CinematicTitle = residenceCinematicAge < 4.7f ? "Üst kat panik odasına ulaştın. Selin geçmesini burada bekle." : "Sel mahallede yükseliyor. Evindeki önlemlerin etkisi değerlendiriliyor.";
+            CinematicTitle = residenceCinematicAge < 4.7f ? "Üst kat panik odasına ulaştın. Selin geçmesini burada bekle." : PanicKktcStoryV53.HazardNarrative(DisasterType.Flood);
         }
 
         bool TryShelterShotV5(out Vector3 camera, out Vector3 target, out float fov)

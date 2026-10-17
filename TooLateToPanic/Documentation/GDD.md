@@ -1,6 +1,12 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Sürüm 2.4 · 18 Ekim 2026 · Home V5**
+**Sürüm 2.7 · 18 Ekim 2026 · Home V5.3**
+
+Güncel hikâye KKTC · Güzelyurt · Kalkanlı'da geçer. Aile güvenli alanda, oyuncu aile evini hazırlar. Yer adı gerçektir; oyundaki kişiler ve afet olayları kurmacadır. Açılış, menü, defter ve kısa akış aynı katalogdan beslenir. Selde hazır çanta notu üst kat panik odasına yönlendirir. Önceki V5.2 mekanikleri korunur. Kesin yeni build/test kimliği [V5.3 teslimi](HOME-V5.3-KKTC-DELIVERY-2026-10-18.md) ve [LATEST](../LATEST-BUILD.json) içindedir.
+
+V5.2 öncelikli dalga ilerlemesi: kampanyada hasar çarpanı1=1.00,5=1.32,10=1.72,20=2.17,50=3.52.10.dalgaya kadar her dalgada mutlak+0.08, sonrasında+0.045; eski×1.25tavanı kaldırılmıştır. Önlem/ankraj/yükseltme indirimleri ve75%kayıp sınırı korunur. Aynı ev/afet için temel risk varyasyonu ilk dalga değerinde sabittir; küçük0..2.8puan tesisat RNG'si korunur. Toplam100'e orantılı doyar. Görsel/afet sesi şiddeti aynı modelden sınırlı1..1.65ölçeklenir; simülasyon/öğretici/kısa akış başlangıç ölçeğinde kalır. Kesin build/native kimliği [V5.2 teslimi](HOME-V5.2-DELIVERY-2026-10-18.md) ve [LATEST](../LATEST-BUILD.json) ile bağlıdır.
+
+V5.1 öncelikli geri bildirim kararı: ana E etkileşimi gerçek nesnenin üstündedir. Afet çantası görünmez biçimde hep taşınır; yedi erzak türü gerçek8yuva/stack/destek/pil kurallarına göre otomatik çantaya, taşan miktar envantere veya sonlu dünya stokuna gider. Yangın tüpü zeminde değil duvara montajlıdır. Mini oyunlarda gerçek hedefe bağlı kesintisiz çember/tek yön oku; F1aç/kapa küçük fiziksel klavye şeması vardır. F2geliştirici menüsü; F3aynı menü düğmesiyle kayıpsız/ödülsüz afet sinematiğine geçer, koşuyu skor dışı bırakır. Bahçe alanları sadece dışarıda görünür. FPS2sgeçişte0.58stam siyah bekleme vardır ve hazırlık saati durur; karakter/controller konumu korunur. Güncel kanıt [V5.1 teslimi](HOME-V5.1-DELIVERY-2026-10-18.md) ve [LATEST](../LATEST-BUILD.json) ile bağlıdır. Aşağıdaki eski ilk-erzak/zemin çantası/1.1sgeçiş anlatımları tarihsel tabandır.
 
 V5 öncelikli güncel kurallar:120sn izometrik önlem+45sn FPS çanta; selde üst kat panik odası, diğer afetlerde bodrum. Süreye yetişmemek gerçek konumda ayrı kayıptır; sığınmış gibi gösterilmez.14malzeme kaynağı/16açık erzak noktası her dalgada bir kez sonlu hafif RNG ile yenilenir. Tekrar dolap açmak loot üretmez. Ana elektrik şalteri ev devresini/ekranı/elektrikli garajı keser; açık tesisat afete göre tek küçük RNG ikincil hasara yol açabilir.1su+1gıda,75% kayıp, atomik maliyet ve ücretsiz iptal korunur. F1 küçük köşe tuş rehberi, J canlı verili spiral defterdir. V5 karakter/araç/meslek/raf/dolap sanatı ve pencere/deprem/oda kararları [teslimde](HOME-V5-DELIVERY-2026-10-18.md), kesin build/test kimliği [LATEST-BUILD.json](../LATEST-BUILD.json) içindedir. Aşağıdaki eski30sn ve yalnız-bodrum anlatımları tarihsel sürümlere aittir; bu paragraf güncel önceliktir.
 
@@ -171,3 +177,8 @@ Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zam
 ## Home V4.9 güncel iş sözleşmesi —17Ekim
 
 Son kullanıcı kararı eski A/D–Enter–Space Ratchet/Timing/Balance zorunluluğunu geçersiz kılar. Sabitlemede iki gerçek vida fareyle seçilir, her biri0,60sn otomatik takılır. Diğer uygun hedefler0,60sn dünya montajıdır. Duvar/pencere gerçek güçlendirme parçası ve karakter build hareketi; yangın tüpü yalnız fire_station;3bölge×4olgun ağaç; hareket×1,35. Yalnız geçerli/tamamlanmamış önlem seçeneği gösterilir. Malzeme/bütçe tamamlamada bir kez, iptal ücretsiz. Son karakter fork mesajıyla görünüm güzelleştirmesi iptal edildi; eskiV2 görünümü korunur, gerekli montaj hareketi kalır. FPS askıda korunur. YeniDLL kabulü LATEST ve HOME-V4.9-DELIVERY-2026-10-17.md ile bağlıdır: 44/44 direkt iş +141/141 kesintisiz rota,0runtime hata. OS/insan/tüm kampanya kabulü değildir. Eski sayılar yeniDLLkanıtı sayılmaz.
+
+
+## Home V5.3 —18Ekim2026
+
+Son kullanıcı düzeltmesiyle hikâye KKTC · Güzelyurt · Kalkanlı olarak uyarlandı. Yer gerçektir; kişiler ve afet olayları kurmacadır. Aile güvenli alanda, oyuncu aile evini hazırlar. Açılış16sn/dört4snçekim,120+45sn, dalgalarla artan V5.2 hasarı ve gerçek maliyet/fizik/skor kuralları korunur. Menü/sinematik/defter/kısa akış ortak katalog kullanır; selde hazır çanta defter notu üst panik odasını gösterir. Yeni konuşma/sağlayıcı işi yoktur. Güncel kimlik LATEST ve HOME-V5.3-KKTC-DELIVERY-2026-10-18.md'dir. Dar native hikâye/API/render kontrolü OS/insan/tüm kampanya kabulü değildir.

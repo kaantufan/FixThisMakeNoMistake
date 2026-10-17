@@ -43,6 +43,7 @@ namespace TooLateToPanic
     public sealed class PanicNotebookSnapshot
     {
         public string Phase, Disaster, Budget, Clock, Note, SelectedLabel, SelectedAction;
+        public string StoryLocation, StoryTitle, StoryNote;
         public int Wave, Floor, InventoryUsed, BagUsed, InventoryCapacity, BagCapacity, RequiredDays, PackedWater, PackedFood;
         public int[] Materials;
         public float Damage;
@@ -126,9 +127,10 @@ namespace TooLateToPanic
             var requirements = new PanicMaterialRequirement[sourceRequirements.Count];
             for (int i = 0; i < sourceRequirements.Count; i++) requirements[i] = sourceRequirements[i];
             bool timedJury = jury != null && jury.Active;
-            string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlemleri tamamla. Son 45 saniyede çanta hazırlığı başlayacak." : model.BagReady ? "Su ve gıda hazır. Bodrumdaki sığınağa git." :
+            string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlemleri tamamla. Son 45 saniyede çanta hazırlığı başlayacak." : model.BagReady ? model.Disaster == DisasterType.Flood ? "Su ve gıda hazır. Üst kat panik odasına git." : "Su ve gıda hazır. Bodrumdaki sığınağa git." :
                 "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Temel ihtiyaçlar doğrudan çantana eklenir.";
             return new PanicNotebookSnapshot {
+                StoryLocation = PanicKktcStoryV53.LocationBadge, StoryTitle = PanicKktcStoryV53.DiaryTitle, StoryNote = PanicKktcStoryV53.DiaryPersonalNote,
                 Phase = PhaseName(model.Phase), Disaster = DisasterName(model.Disaster), Wave = model.Wave,
                 Budget = model.InfiniteBudget ? "SINIRSIZ" : model.Budget.ToString("N0"), Damage = Mathf.Clamp(model.TotalDamage, 0, 100),
                 Clock = Clock(timedJury ? jury.StageRemainingSeconds : model.TimeRemaining), Note = note,

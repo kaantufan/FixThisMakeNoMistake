@@ -85,7 +85,7 @@ namespace TooLateToPanic
             bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
             bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
             if (Array.IndexOf(args, "--overhaul414-smoke") >= 0) Application.runInBackground = true;
-            if (Array.IndexOf(args, "--v5-smoke") >= 0) Application.runInBackground = true;
+            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0) Application.runInBackground = true;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
             if (fullFlowSmoke)
@@ -242,6 +242,8 @@ namespace TooLateToPanic
         {
             foreach (var item in Model.Items)
             {
+                // The carried bag has no world mesh, collider, light or floor interaction.
+                if (item.Id == "bagstation") continue;
                 GameObject go;
                 if (item.Kind == ItemKind.Wall)
                 {
@@ -358,7 +360,7 @@ namespace TooLateToPanic
             float dt = Mathf.Min(Time.deltaTime, .08f);
             ProcessBagPreparationInput(dt);
             if (!IntroStoryActiveV414) TickJuryDemo(InputLocked || LossAnnounced || CinematicActive || developerBlocksInput || BagCameraTransitionActive);
-            if (!InputLocked && !LossAnnounced && !developerBlocksInput && !IntroStoryActiveV414) Model.Tick(dt);
+            if (!InputLocked && !LossAnnounced && !developerBlocksInput && !IntroStoryActiveV414 && !BagHandoffPausesPreparationClockV51) Model.Tick(dt);
             if (Model.Wave != previousWave) { Expedition.OnNewWave(); previousWave = Model.Wave; }
             if (Model.Phase != previousPhase)
             {
@@ -645,7 +647,7 @@ namespace TooLateToPanic
             {
                 ToggleContainer(); return;
             }
-            if(focusId=="@bagstation") { if (BagFirstPersonActive) hud.OpenPhysicalBag(); else BeginBagPreparation(); return; }
+            if(focusId=="@bagstation") { ToggleInventory(); return; }
             if(focusId=="@radio") { ToggleRadio(); return; }
             if(focusId=="@fireplace") { ToggleHearth(); return; }
             if(focusId=="@computer") { ToggleComputer(); return; }
@@ -982,7 +984,7 @@ namespace TooLateToPanic
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}
             if (BagCameraOwnsView || !View || Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.GameOver || Model.Phase == PanicPhase.Success || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;
             DrawJuryWorldTarget();
-            // V5 compact HUD owns the single contextual E hint; no duplicate floating card.
+            DrawPrimaryInteractionV51();
             if (Model.Phase == PanicPhase.Inspection)
             {
                 foreach (var item in Model.Items.Where(i => i.Contribution > .1f && SameLevel(i.Position)).OrderByDescending(i => i.Contribution).Take(3))

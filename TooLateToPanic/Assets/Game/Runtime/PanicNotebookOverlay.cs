@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -44,7 +44,7 @@ namespace TooLateToPanic
         public bool InputBlockedThisFrame { get { return transitionFrame == Time.frameCount; } }
         public bool CanOpen { get { return isActiveAndEnabled && CanOpenNow(); } }
         public Rect LauncherScreenBounds { get { Layout(); return ScreenRect(LauncherRect); } }
-        public Rect BookScreenBounds { get { Layout(); return ScreenRect(new Rect(Book.x, Book.y - 65, Book.width + (compact ? 121 : 147), Book.height + 121)); } }
+        public Rect BookScreenBounds { get { Layout(); return ScreenRect(new Rect(Book.x, Book.y - 65, Book.width + (compact ? 121 : 147), Book.height + (compact ? 172 : 164))); } }
         public Rect CloseScreenBounds { get { Layout(); return ScreenRect(CloseRect); } }
         public Rect PageScreenBounds(PanicNotebookPage page) { Layout(); return ScreenRect(TabRect((int)page)); }
 
@@ -229,12 +229,14 @@ namespace TooLateToPanic
                     return;
                 }
                 if (snapshot == null) RefreshSnapshot();
+                if (snapshot == null) return;
                 float ease = animationState.OpenEase;
                 Fill(new Rect(-offset.x / scale, -offset.y / scale, Screen.width / scale, Screen.height / scale), new Color(.045f, .065f, .065f, .88f * ease));
                 GUI.color = new Color(1, 1, 1, Mathf.Max(.05f, ease));
                 Label(new Rect(Book.x, Book.y - 62, Book.width - 228, 38), "HAZIRLIK DEFTERİ", headingStyle, Paper);
                 DrawButton(CloseRect, "KAPAT  ·  J / ESC", Ink, Paper, true);
-                if (compact && snapshot != null) Label(new Rect(Book.x, 91, Book.width, 62), snapshot.Disaster + "  ·  " + snapshot.Clock + "     BÜTÇE  " + snapshot.Budget + "\nHASAR  %" + snapshot.Damage.ToString("0") + "     ÇANTA  " + snapshot.BagUsed + "/" + snapshot.BagCapacity, smallStyle, Paper);
+                Label(compact ? new Rect(Book.x, 17, Book.width, 24) : new Rect(Book.x + 320, Book.y - 49, Book.width - 548, 25), snapshot.StoryLocation, tinyStyle, Paper);
+                if (compact && snapshot != null) Label(new Rect(Book.x, 48, Book.width, 52), snapshot.Disaster + "  ·  " + snapshot.Clock + "     BÜTÇE  " + snapshot.Budget + "\nHASAR  %" + snapshot.Damage.ToString("0") + "     ÇANTA  " + snapshot.BagUsed + "/" + snapshot.BagCapacity, smallStyle, Paper);
                 Matrix4x4 oldBookMatrix = GUI.matrix;
                 GUI.matrix = canvasMatrix * Matrix4x4.TRS(new Vector3(Book.x, Book.y + 16 * (1 - ease), 0), Quaternion.identity, Vector3.one);
                 // V5 warm paper, cloth cover, punched holes and actual curved wire binding.
@@ -250,6 +252,7 @@ namespace TooLateToPanic
                 DrawTabs();
                 DrawButton(MotionRect, animationState.ReducedMotion ? "HAREKET: AZ" : "HAREKET: TAM", PaperBack, Ink, true);
                 Label(new Rect(Book.x + 256, Book.yMax + 25, Book.width - 255, 31), compact ? "← / →  SAYFA   ·   TAB  ÇANTA" : "← / →  SAYFA    ·    TAB  ÇANTAYI DÜZENLE    ·    DEFTER AÇIKKEN SÜRE DURUR", tinyStyle, Paper);
+                Label(new Rect(Book.x, Book.yMax + 63, Book.width, compact ? 42 : 34), snapshot.StoryNote, tinyStyle, Paper);
             }
             finally { GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.contentColor = oldContent; GUI.depth = oldDepth; }
         }
@@ -363,7 +366,7 @@ namespace TooLateToPanic
         {
             if (data == null) return;
             float x = PageWidth + 28, width = PageWidth - 56;
-            Label(new Rect(x, 25, width, 43), "DURUM KAYDI", titleStyle, Ink);
+            Label(new Rect(x, 25, width, 43), data.StoryTitle.ToUpperInvariant(), titleStyle, Ink);
             Label(new Rect(x, 74, width, 24), "DALGA " + data.Wave + "  ·  " + data.Disaster + "  ·  " + data.Phase, tinyStyle, Green);
             Fill(new Rect(x, 101, width, 2), Green);
             Stat(new Rect(x, 118, width, 97), "HASAR", "%" + data.Damage.ToString("0"), Alarm);

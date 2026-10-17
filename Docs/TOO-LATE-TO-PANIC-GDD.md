@@ -1,6 +1,6 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Güncel tasarım:** [GDD v2.4 / Home V5](../TooLateToPanic/Documentation/GDD.md) ve [V5 teslimi](../TooLateToPanic/Documentation/HOME-V5-DELIVERY-2026-10-18.md).120sn izometrik önlem, ardından45sn otomatik FPS çanta;1su+1gıda ve75% kayıp sınırı. Selde üst kat panik odası, diğer afetlerde bodrum kullanılır; yetişememe sahte giriş üretmez. Her dalgada gerçek sonlu loot hafif RNG ile yenilenir. Aynı aktif Model/Expedition/controller ve bağımsız eski FPS kaynak/kayıt koruması devam eder. Aşağıdaki Home V2 metni tarihsel tabandır; güncel kurallar bağlantıdaki proje belgesindedir.
+**Güncel tasarım:** [GDD v2.7 / Home V5.3](../TooLateToPanic/Documentation/GDD.md) ve [V5 teslimi](../TooLateToPanic/Documentation/HOME-V5-DELIVERY-2026-10-18.md).120sn izometrik önlem, ardından45sn otomatik FPS çanta;1su+1gıda ve75% kayıp sınırı. Selde üst kat panik odası, diğer afetlerde bodrum kullanılır; yetişememe sahte giriş üretmez. Her dalgada gerçek sonlu loot hafif RNG ile yenilenir. Aynı aktif Model/Expedition/controller ve bağımsız eski FPS kaynak/kayıt koruması devam eder. Aşağıdaki Home V2 metni tarihsel tabandır; güncel kurallar bağlantıdaki proje belgesindedir.
 
 **Sürüm 1.3 · 16 Ekim 2026 · Home V2**
 
@@ -121,3 +121,8 @@ Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zam
 ## Home V4.9 güncel iş sözleşmesi —17Ekim
 
 Son kullanıcı kararı eski A/D–Enter–Space Ratchet/Timing/Balance zorunluluğunu geçersiz kılar. Sabitlemede iki gerçek vida fareyle seçilir, her biri0,60sn otomatik takılır. Diğer uygun hedefler0,60sn dünya montajıdır. Duvar/pencere gerçek güçlendirme parçası ve karakter build hareketi; yangın tüpü yalnız fire_station;3bölge×4olgun ağaç; hareket×1,35. Yalnız geçerli/tamamlanmamış önlem seçeneği gösterilir. Malzeme/bütçe tamamlamada bir kez, iptal ücretsiz. Son karakter fork mesajıyla görünüm güzelleştirmesi iptal edildi; eskiV2 görünümü korunur, gerekli montaj hareketi kalır. FPS askıda korunur. YeniDLL kabulü LATEST ve HOME-V4.9-DELIVERY-2026-10-17.md ile bağlıdır: 44/44 direkt iş +141/141 kesintisiz rota,0runtime hata. OS/insan/tüm kampanya kabulü değildir. Eski sayılar yeniDLLkanıtı sayılmaz.
+
+
+## Home V5.3 —18Ekim2026
+
+Son kullanıcı düzeltmesiyle hikâye KKTC · Güzelyurt · Kalkanlı olarak uyarlandı. Yer gerçektir; kişiler ve afet olayları kurmacadır. Aile güvenli alanda, oyuncu aile evini hazırlar. Açılış16sn/dört4snçekim,120+45sn, dalgalarla artan V5.2 hasarı ve gerçek maliyet/fizik/skor kuralları korunur. Menü/sinematik/defter/kısa akış ortak katalog kullanır; selde hazır çanta defter notu üst panik odasını gösterir. Yeni konuşma/sağlayıcı işi yoktur. Güncel kimlik LATEST ve HOME-V5.3-KKTC-DELIVERY-2026-10-18.md'dir. Dar native hikâye/API/render kontrolü OS/insan/tüm kampanya kabulü değildir.

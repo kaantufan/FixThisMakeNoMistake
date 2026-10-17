@@ -148,7 +148,7 @@ namespace TooLateToPanic
             AddDecor("decor_entry_shoes","shoe_rack",new Vector3(1.25f,0,-4.4f));
             AddDecor("decor_coats","coat_rack",new Vector3(-1.8f,0,-4.5f));
             AddPhysicalBagStation();
-            AddBagStationGuideV414();
+            // The emergency bag is carried invisibly; there is no floor guide lamp.
             AddDecor("decor_bath_firstaid_table","sidetable",new Vector3(3.1f,3.2f,3.5f));
             // Loose floor lamps had no model/work contract; keep those walk areas clear.
             AddDecor("decor_lounge_rug","rug",new Vector3(-4.35f,.025f,-1.65f),0,false);
@@ -229,7 +229,7 @@ namespace TooLateToPanic
                 ContextHint=CanInteract?(BagFirstPersonActive?"E / F · Al · Temel ihtiyaç çantaya eklenir":"Çanta hazırlığı son 45 saniyede başlar"):"";
                 return;
             }
-            if(focusId=="@bagstation") {FocusLabel="Afet çantası";ShortAction=BagFinalStageActive?"Çantayı düzenle":"Son 45 sn";ContextHint=CanInteract?(BagFinalStageActive?"E · "+ShortAction:"Çanta hazırlığı son 45 saniyede başlar"):"";return;}
+            if(focusId=="@bagstation") {FocusLabel="Afet çantası";ShortAction="";ContextHint="TAB · Çantayı düzenle";return;}
             var s=NearestSource;var item=Selected;var site=gardenSites.Find(x=>x.id==focusId);
             FocusLabel=s!=null?s.Label:item!=null?item.Label:site!=null?site.label:focusId=="@radio"?"Radyo":focusId=="@computer"?"Bilgisayar":focusId=="@fireplace"?"Şömine":focusId=="@garage"?"Garaj":focusId=="@laundry"?"Çamaşır makinesi":focusId=="@toilet"?"Tuvalet":focusId=="@sink"?"Lavabo":"";
             ShortAction=s!=null?(s.Open?"Kapat":"Aç"):focusId=="@bunker"||item!=null&&item.Id=="bunker"?"Sığın":focusId=="@radio"?(RadioEnabled?"Kapat":"Aç"):focusId=="@garage"?(garageOpen?"Kapat":"Aç"):focusId=="@fireplace"?(hearthEnabled?"Söndür":"Yak"):focusId=="@computer"?(computerEnabled?"Kapat":"Aç"):focusId!=null&&hinges.ContainsKey(focusId)?(hinges[focusId].open?"Kapat":"Aç"):item!=null&&item.Kind==ItemKind.Door?"Aç / Kapat":site!=null&&!site.done?"Başla":"";

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -102,7 +102,7 @@ namespace TooLateToPanic
         GUIStyle _fittedStyle;
         readonly List<Rect> _topLevelRegions = new List<Rect>(16);
 
-        public string ThemeVersion { get { return "V5 / Compact live HUD"; } }
+        public string ThemeVersion { get { return "V5.1 / Compact keyboard HUD"; } }
         bool CampaignPrecautionTimer { get { return World && World.Model != null && !World.JuryActive &&
             !World.Model.IsJuryDemo && !World.Model.IsSimulation && !World.Model.IsTutorial &&
             World.Model.Phase == PanicPhase.Preparing && World.Model.TimeRemaining > PanicHomeWorld.BagPreparationSeconds; } }
@@ -146,6 +146,7 @@ namespace TooLateToPanic
             SynchronizeHudPhase();
             ProcessCompactControlsInputV5();
             if (ProcessFreeplayOnboardingHotkeysV414()) return;
+            if (Input.GetKeyDown(KeyCode.F3)) { RequestDeveloperWaveSkipV51(); return; }
             if (_developerMenuOpen && !string.IsNullOrEmpty(DeveloperUnavailableReason()))
                 SetDeveloperMenuOpen(false);
             if (_developerMenuOpen)
@@ -379,6 +380,8 @@ namespace TooLateToPanic
                 Label(new Rect(notice.x + 14, notice.y + 3, notice.width - 28, 24), _developerNotice, _small);
             }
 
+            // Single final blackout owner; the full opaque interval also covers HUD cards.
+            World.DrawBagBlackoutV51();
             GUI.matrix = oldMatrix;
             GUI.color = oldColor;
             GUI.contentColor = oldContent;
@@ -465,7 +468,7 @@ namespace TooLateToPanic
             Frame(new Rect(78, 78, 816, 744), new Color(.102f, .094f, .09f, .94f), Line, 1f);
             Region(new Rect(78, 78, 816, 744));
             DrawHazardStripe(new Rect(110, 111, 230, 6), Rust);
-            Label(new Rect(116, 132, 680, 28), "AFETE HAZIRLIK VE ÖNLEM", ColorText(_tiny, Brass));
+            Label(new Rect(116, 132, 680, 28), PanicKktcStoryV53.MenuLocation, ColorText(_tiny, Brass));
             // Brand logo from Documentation/HUD-Concept/logo; the text title stays as a fallback.
             if (!_brandLogo) _brandLogo = Resources.Load<Texture2D>("HUD/TltpLogo");
             if (_brandLogo)
@@ -476,8 +479,8 @@ namespace TooLateToPanic
                 Brush(new Rect(107, 310, 696, 116), Rust);
                 Label(new Rect(128, 294, 680, 136), "TO PANIC!", _logo);
             }
-            Label(new Rect(118, 453, 668, 32), "Panik için geç. Hazırlık için şimdi.", _body);
-            Label(new Rect(118, 492, 660, 26), "Asıl oyun: Serbest Oyna · Evi hazırla, çantanı topla.", _small);
+            FittedLabel(new Rect(118, 453, 668, 32), PanicKktcStoryV53.MenuPremise, _body, MainText, 18);
+            Label(new Rect(118, 492, 660, 26), PanicKktcStoryV53.FictionNotice, _small);
 
             Button(new Rect(118, 540, 664, 60), PrimaryPlayLabelV414, _menuChoice == 0, Brass, () => ActivateTitleChoiceV414(0));
             Button(new Rect(118, 612, 664, 60), TitleChoiceLabelV414(1), _menuChoice == 1, Sea, () => ActivateTitleChoiceV414(1));
@@ -922,7 +925,7 @@ namespace TooLateToPanic
             float band = Mathf.Lerp(62f, 84f, appear);
             Fill(new Rect(0, 0, CanvasWidth, band), new Color(.035f, .03f, .025f, .94f));
             Fill(new Rect(0, CanvasHeight - 150, CanvasWidth, 150), new Color(.035f, .03f, .025f, .94f));
-            Label(new Rect(32, 25, 900, 27), "TOO LATE TO PANIC!  ·  " + DisasterName(World.Model.Disaster), _tiny);
+            Label(new Rect(32, 25, 900, 27), PanicKktcStoryV53.LocationBadge + "  ·  " + DisasterName(World.Model.Disaster), _tiny);
             string title = string.IsNullOrEmpty(World.CinematicTitle) ? "Afetin ardından" : World.CinematicTitle;
             Label(new Rect(410, CanvasHeight - 135, 1140, 96), title, _story);
             DrawBar(new Rect(410, CanvasHeight - 25, 1140, 3), World.CinematicProgress, Brass);
@@ -1056,13 +1059,14 @@ namespace TooLateToPanic
                 Frame(budget, Panel, _developerChoice == 4 ? Brass : Line, 1f); Mark(budget);
                 Label(budget, "+$1.000 · Koşuda kullanılabilir", ColorText(_center, Muted));
             }
-            Label(new Rect(786, 610, 462, 42), World.Model.DeveloperAnyEnabled ? "HİLE SEÇENEĞİ AÇIK" : "TÜM SEÇENEKLER KAPALI", ColorText(_caps, World.Model.DeveloperAnyEnabled ? Brass : Muted));
+            if (World.CanDeveloperSkipWaveV51) Button(new Rect(786, 610, 462, 42), "DALGAYI GEÇ · F3", _developerChoice == 5, Brass, RequestDeveloperWaveSkipV51);
+            else { Frame(new Rect(786,610,462,42), Panel, Line,1); Label(new Rect(786,610,462,42), "F3 · SERBEST OYUNDA DALGA GEÇ", ColorText(_center, Muted)); }
             Label(new Rect(352, 665, 896, 27), World.Model.CheatedRun
                 ? "HİLELİ KOŞU · Seçenekleri kapatsan da skor kaydedilmez."
-                : "Bir hileyi açmak veya bütçe eklemek bu koşuyu hileli işaretler.", ColorText(_small, World.Model.CheatedRun ? Brass : Muted));
+                : "F3: afeti izle, kaybetmeden devam et. Dalga ödülü ve skor kaydı verilmez.", ColorText(_small, World.Model.CheatedRun ? Brass : Muted));
             DrawKeycap(new Rect(352, 716, 170, 42), "OKLAR", "SEÇ", Line);
             DrawKeycap(new Rect(534, 716, 284, 42), "ENTER / SPACE", "DEĞİŞTİR", Line);
-            Button(new Rect(914, 708, 334, 56), "KAPAT · F2 / ESC", _developerChoice == 5, Sea, () => SetDeveloperMenuOpen(false));
+            Button(new Rect(914, 708, 334, 56), "KAPAT · F2 / ESC", _developerChoice == 6, Sea, () => SetDeveloperMenuOpen(false));
             HandleDeveloperMenuEvent();
         }
 
@@ -1090,12 +1094,12 @@ namespace TooLateToPanic
             if (e.type != EventType.KeyDown) return;
             if (e.keyCode == KeyCode.UpArrow)
             {
-                _developerChoice = (_developerChoice + 5) % 6;
+                _developerChoice = (_developerChoice + 6) % 7;
                 e.Use();
             }
             else if (e.keyCode == KeyCode.DownArrow)
             {
-                _developerChoice = (_developerChoice + 1) % 6;
+                _developerChoice = (_developerChoice + 1) % 7;
                 e.Use();
             }
             else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter || e.keyCode == KeyCode.Space)
@@ -1105,7 +1109,8 @@ namespace TooLateToPanic
                 else if (_developerChoice == 2) World.Model.SetDeveloperOption(PanicDeveloperOption.FreezePreparationTime, !World.Model.Developer.FreezePreparationTime);
                 else if (_developerChoice == 3) World.Model.SetDeveloperOption(PanicDeveloperOption.NoLoss, !World.Model.Developer.NoLoss);
                 else if (_developerChoice == 4 && DeveloperBudgetAvailable()) World.Model.AddDeveloperBudget(1000);
-                else if (_developerChoice == 5) SetDeveloperMenuOpen(false);
+                else if (_developerChoice == 5) RequestDeveloperWaveSkipV51();
+                else if (_developerChoice == 6) SetDeveloperMenuOpen(false);
                 e.Use();
             }
         }

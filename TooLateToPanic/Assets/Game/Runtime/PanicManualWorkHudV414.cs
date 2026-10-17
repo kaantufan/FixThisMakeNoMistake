@@ -18,10 +18,18 @@ namespace TooLateToPanic
                 for(int n=0;n<work.RequiredStrokes;n++)
                 {
                     Rect nail=new Rect(480+n*108,704,94,42);bool done=n<work.CompletedStrokes,current=n==work.CompletedStrokes;
-                    if(current)Button(nail,"VUR",true,Brass,()=>{World.StrikeManualWorkV414();});
-                    else {Frame(nail,Night,done?Sea:Line,1);if(done)DrawCheck(new Rect(nail.center.x-10,nail.center.y-7,20,14),Sea);}
-                    DrawSegmentV414(new Vector2(nail.x+10,nail.y+9),new Vector2(nail.x+26,nail.y+9),done?Sea:MainText);
-                    DrawSegmentV414(new Vector2(nail.x+18,nail.y+9),new Vector2(nail.x+18,nail.y+28),done?Sea:MainText);
+                    Color accent=done?Sea:current?Brass:Muted;
+                    DrawManualRingV51(nail,1f,Night,7f);
+                    DrawManualRingV51(nail,1f,accent,current?4f:2f);
+                    if(done)DrawCheck(new Rect(nail.center.x-8,nail.center.y-6,16,12),Sea);
+                    else Label(new Rect(nail.center.x-18,nail.center.y-14,36,28),(n+1).ToString(),ColorText(_center,accent));
+                    if(current)
+                    {
+                        // Keep the original clickable target and one deliberate strike per press.
+                        Region(nail);
+                        if(MousePressed(nail)){World.StrikeManualWorkV414();World.PlayUiSound();}
+                        DrawManualArrowV51(new Vector2(nail.center.x+33,nail.y+5),new Vector2(nail.center.x+33,nail.yMax-5),Brass);
+                    }
                 }
                 Label(new Rect(480, 753, 432, 23), "Tıkla veya SPACE · Basılı tutmak tekrarlamaz.", _tiny);
                 DrawBar(new Rect(480, 788, 432, 8), work.Progress, Sea);
@@ -44,35 +52,32 @@ namespace TooLateToPanic
                 if (hit.width <= 0f) continue;
                 bool done = i < work.CompletedSteps, current = i == work.NextClickTarget;
                 Color accent = done ? Sea : current ? World.ManualWorkDraggingV414?Sea:Brass : Muted;
-                DrawRing(hit, 1f, accent, current ? 3 : 1);
+                DrawManualRingV51(hit, 1f, Night, current ? 8 : 5);
+                DrawManualRingV51(hit, 1f, accent, current ? 4 : 2);
                 if (done) DrawCheck(new Rect(hit.center.x - 10, hit.center.y - 7, 20, 14), Sea);
                 else if (current)
                 {
-                    DrawRing(new Rect(hit.x + 6, hit.y + 6, hit.width - 12, hit.height - 12), work.StageProgress, Sea, 4);
-                    Label(new Rect(hit.center.x - 72, hit.yMax + 9, 144, 28), work.Action=="poweroff"?"AŞAĞI ↓":work.IsUtility?"90° → KAPALI":"SAAT YÖNÜ", ColorText(_center, Brass));
+                    DrawManualRingV51(new Rect(hit.x + 9, hit.y + 9, hit.width - 18, hit.height - 18), work.StageProgress, Sea, 4);
+                    Label(new Rect(hit.center.x - 95, hit.yMax + 12, 190, 28), work.UsesLinearDrag?"AŞAĞI İNDİR":Mathf.RoundToInt(work.RequiredDegrees)+"° SAAT YÖNÜ", ColorText(_center, Brass));
                     if(work.IsUtility&&World.ManualWorkClosedGripV414(out Vector2 end))
                     {
-                        DrawRing(new Rect(end.x-10,end.y-10,20,20),1,Sea,2);
+                        DrawManualRingV51(new Rect(end.x-10,end.y-10,20,20),1,Sea,2);
                         Label(new Rect(end.x+15,end.y-14,150,28),"KAPALI KONUM",ColorText(_tiny,Sea));
-                        if(work.Action!="poweroff"&&World.ManualWorkPivotV414(out Vector2 pivot))DrawWorkDirectionV414(pivot,Mathf.Max(18,Vector2.Distance(hit.center,pivot)),true,Brass);
                     }
-                    else DrawWorkDirectionV414(hit.center,56,true,Brass,work.RequiredDegrees);
-                    if(World.ManualWorkDraggingV414)
-                    {
-                        Vector2 pointer=World.ManualWorkPointerV414;
-                        DrawRing(new Rect(pointer.x-6,pointer.y-6,12,12),1,Sea,2);
-                        DrawSegmentV414(hit.center,pointer,new Color(Sea.r,Sea.g,Sea.b,.6f));
-                    }
+                    // A single direction cue stays next to the actual selected grip/head.
+                    // Pointer trails and a second large orbit obscure the object in close-up.
+                    if(work.UsesLinearDrag)DrawManualArrowV51(new Vector2(hit.xMax+17,hit.center.y-23),new Vector2(hit.xMax+17,hit.center.y+23),Brass);
+                    else DrawWorkDirectionV414(hit.center,57,true,Brass);
                 }
             }
             const float x = 1122, w = 384;
             Brush(new Rect(x, 190, w, 38), Rust);
             Label(new Rect(x + 14, 190, w - 26, 36), work.IsUtility ? "TESİSAT GÜVENLİĞİ" : "MANUEL MONTAJ", _body);
             FittedLabel(new Rect(x, 248, w, 54), work.Label, _heading, MainText, 20);
-            Label(new Rect(x, 326, w, 50), work.Action=="poweroff"?"Kolu aşağı sürükle.":work.IsUtility?"Kolu çeyrek tur çevir.":"Vida başını tut ve çevir.", _heading);
-            Label(new Rect(x, 389, w, 80),work.Action=="poweroff"?"Yukarı: elektrik açık.\nAşağı: elektrik kesik.\nAlternatif: ↓ tuşunu basılı tut.":work.IsUtility?"Kol boruya paralel: açık.\nKol boruya dik: kapalı.\nAlternatif: → tuşunu basılı tut.":"Gerçek vida başını tut. Başın çevresinde saat yönünde döndükçe alet ve vida döner.\nAlternatif: → tuşunu basılı tut.",_wrap);
+            Label(new Rect(x, 326, w, 50), work.Action=="poweroff"?"Kolu aşağı sürükle.":work.IsUtility?"Kolu çeyrek tur çevir.":work.Action=="hose"?"Bağlantıyı tut ve çevir.":"Vida başını tut ve çevir.", _heading);
+            Label(new Rect(x, 389, w, 80),work.Action=="poweroff"?"Yukarı: elektrik açık.\nAşağı: elektrik kesik.\nAlternatif: ↓ tuşunu basılı tut.":work.IsUtility?"Kol boruya paralel: açık.\nKol boruya dik: kapalı.\nAlternatif: → tuşunu basılı tut.":work.Action=="hose"?"İşaretli bağlantıyı tut. Saat yönünde yarım tur çevir.\nAlternatif: → tuşunu basılı tut.":"Gerçek vida başını tut. Başın çevresinde saat yönünde döndükçe alet ve vida döner.\nAlternatif: → tuşunu basılı tut.",_wrap);
             Label(new Rect(x, 484, w, 90), work.IsUtility ? PanicUtilitySafetyV414.Effect(work.Action) :
-                "Bırakınca durur; yeniden tutup devam et.\nGeri hareket ilerlemeyi silmez.\nİki vida bitince eşya sabitlenir.", _wrap);
+                work.Action=="hose"?"Bırakınca durur; yeniden tutup devam et.\nGeri hareket ilerlemeyi silmez.":"Bırakınca durur; yeniden tutup devam et.\nGeri hareket ilerlemeyi silmez.\nİki vida bitince eşya sabitlenir.", _wrap);
             Label(new Rect(x, 591, w, 39), work.IsUtility || work.Action == "hose" ? Mathf.RoundToInt(work.Progress * 100) + "%" :
                 work.CompletedSteps + " / " + work.TotalSteps + " VİDA", _display);
             DrawBar(new Rect(x, 656, w, 9), work.Progress, Sea);
@@ -81,26 +86,50 @@ namespace TooLateToPanic
         }
         void DrawWorkDirectionV414(Vector2 center, float radius, bool clockwise, Color color, float degrees=90f)
         {
+            // Only one short arrow is needed to teach direction; required travel is
+            // already shown numerically and by the real session progress ring.
+            degrees=Mathf.Clamp(degrees,30f,90f);
             Vector2 last = Vector2.zero;
-            for (int k = 0; k <= Mathf.CeilToInt(degrees/18f); k++)
+            for (int k = 0; k <= Mathf.CeilToInt(degrees/6f); k++)
             {
-                float angle = (-90f + (clockwise ? 1 : -1) * Mathf.Min(degrees,k * 18f)) * Mathf.Deg2Rad;
+                float angle = (-60f + (clockwise ? 1 : -1) * Mathf.Min(degrees,k * 6f)) * Mathf.Deg2Rad;
                 Vector2 next = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
                 if (k > 0) DrawSegmentV414(last, next, color);
                 last = next;
             }
-            float end = (-90f + (clockwise ? 1 : -1) * degrees) * Mathf.Deg2Rad;
+            float end = (-60f + (clockwise ? 1 : -1) * degrees) * Mathf.Deg2Rad;
             Vector2 tangent = new Vector2(-Mathf.Sin(end), Mathf.Cos(end)) * (clockwise ? 1 : -1);
             Vector2 side = new Vector2(-tangent.y, tangent.x);
             DrawSegmentV414(last, last - tangent * 13 + side * 7, color);
             DrawSegmentV414(last, last - tangent * 13 - side * 7, color);
         }
+        void DrawManualRingV51(Rect rect,float value,Color color,float thickness)
+        {
+            const int pieces=96;
+            float amount=Mathf.Clamp01(value);if(amount<=0f)return;
+            Vector2 center=rect.center;
+            float radius=Mathf.Min(rect.width,rect.height)*.46f;
+            Vector2 last=center+Vector2.up*-radius;
+            int count=Mathf.CeilToInt(pieces*amount);
+            for(int i=1;i<=count;i++)
+            {
+                float angle=(Mathf.Min(i/(float)pieces,amount)*360f-90f)*Mathf.Deg2Rad;
+                Vector2 next=center+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*radius;
+                DrawLine(last,next,color,thickness);last=next;
+            }
+        }
+        void DrawManualArrowV51(Vector2 a,Vector2 b,Color color)
+        {
+            Vector2 direction=(b-a).normalized,side=new Vector2(-direction.y,direction.x);
+            DrawSegmentV414(a,b,color);
+            DrawSegmentV414(b,b-direction*10+side*6,color);
+            DrawSegmentV414(b,b-direction*10-side*6,color);
+        }
         void DrawSegmentV414(Vector2 a, Vector2 b, Color color)
         {
-            Matrix4x4 before = GUI.matrix; Color tint = GUI.color;
-            GUIUtility.RotateAroundPivot(Mathf.Atan2(b.y-a.y,b.x-a.x)*Mathf.Rad2Deg, a);
-            GUI.color = color; GUI.DrawTexture(new Rect(a.x, a.y-1.5f, Vector2.Distance(a,b), 3), Texture2D.whiteTexture);
-            GUI.color = tint; GUI.matrix = before;
+            // Shared DrawLine composes the logical segment after the incoming canvas
+            // scale/offset. RotateAroundPivot mixed these spaces at small resolutions.
+            DrawLine(a,b,color,3f);
         }
     }
 }

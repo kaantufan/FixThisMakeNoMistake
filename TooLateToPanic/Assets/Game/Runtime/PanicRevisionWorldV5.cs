@@ -284,6 +284,9 @@ namespace TooLateToPanic
         public int HouseCount {get{return houses.Count;}}
         public int MovingHouses {get;private set;}
         public float MaximumOffset {get;private set;}
+        public float PresentationScaleV52 {get;private set;} = 1f;
+        public float CurrentMaximumOffsetV52 {get;private set;}
+        public float CurrentMaximumTiltV52 {get;private set;}
         public void Bind(PanicHomeWorld owner,GameObject landscape)
         {
             world=owner;if(!landscape)return;
@@ -295,18 +298,21 @@ namespace TooLateToPanic
             if(!world||world.Model==null)return;
             if(world.Model.IsPaused||world.NotebookBlocksInput)return;
             bool active=world.QuakeReadabilityWindowV414;
+            PresentationScaleV52=PanicDisasterArt.ClampPresentationScaleV52(world.Model.DisasterPresentationScaleV52);
             float t=world.QuakeReadabilityAgeV414-4.7f;
             float envelope=active?Mathf.SmoothStep(0,1,t/.2f)*(1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(7.7f,8f,t+4.7f))):0;
-            MovingHouses=0;
+            MovingHouses=0;CurrentMaximumOffsetV52=CurrentMaximumTiltV52=0;
             for(int i=0;i<houses.Count;i++)
             {
                 var h=houses[i];if(!h)continue;
-                Vector3 shift=new Vector3(Mathf.Sin(t*27+i*.7f)*.07f,Mathf.Sin(t*35+i)*.018f,Mathf.Cos(t*24+i)*.045f)*envelope;
-                h.localPosition=origins[i]+shift;h.localRotation=Quaternion.Euler(Mathf.Sin(t*24+i)*.38f*envelope,0,Mathf.Cos(t*28+i)*.55f*envelope);
+                Vector3 shift=new Vector3(Mathf.Sin(t*27+i*.7f)*.07f,Mathf.Sin(t*35+i)*.018f,Mathf.Cos(t*24+i)*.045f)*envelope*PresentationScaleV52;
+                h.localPosition=origins[i]+shift;h.localRotation=Quaternion.Euler(Mathf.Sin(t*24+i)*.38f*envelope*PresentationScaleV52,0,Mathf.Cos(t*28+i)*.55f*envelope*PresentationScaleV52);
                 if(shift.sqrMagnitude>.000001f)MovingHouses++;
                 MaximumOffset=Mathf.Max(MaximumOffset,shift.magnitude);
+                CurrentMaximumOffsetV52=Mathf.Max(CurrentMaximumOffsetV52,shift.magnitude);
+                CurrentMaximumTiltV52=Mathf.Max(CurrentMaximumTiltV52,Quaternion.Angle(Quaternion.identity,h.localRotation));
             }
         }
-        void OnDisable(){for(int i=0;i<houses.Count;i++)if(houses[i]){houses[i].localPosition=origins[i];houses[i].localRotation=Quaternion.identity;}MovingHouses=0;}
+        void OnDisable(){for(int i=0;i<houses.Count;i++)if(houses[i]){houses[i].localPosition=origins[i];houses[i].localRotation=Quaternion.identity;}MovingHouses=0;CurrentMaximumOffsetV52=CurrentMaximumTiltV52=0;}
     }
 }

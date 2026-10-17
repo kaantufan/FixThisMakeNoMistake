@@ -23,6 +23,15 @@ namespace TooLateToPanic
         public int PlayedCount { get; private set; }
         public string LastPlayed { get; private set; }
         public Vector3 DisasterVisualImpulseV414 { get { return PanicDisasterArt.SampleVisualImpulse(weather); } }
+        // Actual rendered/audio values for the native V5.2 receipt; no gameplay mutation.
+        public float DisasterPresentationScaleV52 { get { return PanicDisasterArt.SamplePresentationScaleV52(weather); } }
+        public float DisasterEmissionRateV52 { get { return PanicDisasterArt.SampleEmissionRateV52(weather); } }
+        public float DisasterWaterLevelV52 { get { return PanicDisasterArt.SampleWaterLevelV52(weather); } }
+        public float DisasterWaterPeakHeightV52 { get { return PanicDisasterArt.SampleWaterPeakHeightV52(weather); } }
+        public float DisasterFlamePeakHeightV52 { get { return PanicDisasterArt.SampleFlamePeakHeightV52(weather); } }
+        public float DisasterAmbienceGainV52 { get { return 1f + .45f * (PresentationScaleV52 - 1f); } }
+        public float DisasterAmbienceVolumeV52 { get { return ambience ? ambience.volume : 0f; } }
+        float PresentationScaleV52 { get { return World && World.Model != null ? PanicDisasterArt.ClampPresentationScaleV52(World.Model.DisasterPresentationScaleV52) : 1f; } }
         void Awake()
         {
             oneShot = gameObject.AddComponent<AudioSource>(); oneShot.volume = .65f;
@@ -110,7 +119,7 @@ namespace TooLateToPanic
         void SetDisasterAmbienceVolume(float volume)
         {
             disasterAmbienceVolume = volume;
-            if (ambience) ambience.volume = volume * (World ? World.PresentationEffectsDuckFactor : 1f);
+            if (ambience) ambience.volume = volume * DisasterAmbienceGainV52 * (World ? World.PresentationEffectsDuckFactor : 1f);
         }
         static string HazardSoundId(DisasterType type)
         {
@@ -128,10 +137,10 @@ namespace TooLateToPanic
             if (suspended || World.Model.IsPaused || World.NotebookBlocksInput) return;
             age += Time.deltaTime;
             if (World.Model.Phase == PanicPhase.Preparing && World.Model.TimeRemaining <= 60 && !warned) { warned = true; Play("warning", .6f); }
-            if (weather) PanicDisasterArt.Animate(weather, age, World.Model.Phase == PanicPhase.Disaster || World.CinematicActive&&World.Model.Phase==PanicPhase.GameOver ? Mathf.Clamp01(age * .4f) : .35f);
+            if (weather) PanicDisasterArt.Animate(weather, age, World.Model.Phase == PanicPhase.Disaster || World.CinematicActive&&World.Model.Phase==PanicPhase.GameOver ? Mathf.Clamp01(age * .4f) : .35f, PresentationScaleV52);
             shelterMix=Mathf.MoveTowards(shelterMix,World.AudioShelterAmount,Time.unscaledDeltaTime/1.2f);
             if(hazardFilter)hazardFilter.cutoffFrequency=Mathf.Lerp(16000,World.AudioHatchOpen?1600:650,shelterMix);
-            if (ambience) ambience.volume = disasterAmbienceVolume * World.PresentationEffectsDuckFactor * Mathf.Lerp(1,.18f,shelterMix);
+            if (ambience) ambience.volume = disasterAmbienceVolume * DisasterAmbienceGainV52 * World.PresentationEffectsDuckFactor * Mathf.Lerp(1,.18f,shelterMix);
         }
     }
 }

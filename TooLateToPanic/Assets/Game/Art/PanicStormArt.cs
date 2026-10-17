@@ -53,17 +53,26 @@ namespace TooLateToPanic
             Animate(root,0,0);return root;
         }
         public static void Animate(GameObject root,float time,float strength)
+        {Animate(root,time,strength,1f);}
+
+        public static void Animate(GameObject root,float time,float strength,float presentationScale)
         {
             if(!root)return;var s=root.GetComponent<PanicStormArtState>();if(!s)return;
+            presentationScale=PanicDisasterArt.ClampPresentationScaleV52(presentationScale);
             strength=Mathf.Clamp01(strength);var motion=root.GetComponent<PanicStormMotionV414>();
             float dt=motion?time-motion.LastAge:0;if(dt<0||dt>.25f)dt=Mathf.Clamp(Time.deltaTime,0,.1f);
             if(motion){motion.LastAge=time;motion.Clock+=Mathf.Max(0,dt);time=motion.Clock;}
             float beat=Mathf.Pow(.5f+.5f*Mathf.Sin(time*1.08f+Mathf.Sin(time*.37f)*1.7f),2);
-            float gust=(.42f+.58f*beat)*strength;if(motion){motion.Gust=gust;AnimateFunnelV414(motion,strength);}
+            float gust=(.42f+.58f*beat)*strength,visualGust=gust*presentationScale;
+            if(motion){motion.PresentationScaleV52=presentationScale;motion.Gust=visualGust;motion.EmissionRateV52=0;AnimateFunnelV414(motion,strength);}
             for(int i=0;i<s.Emitters.Count;i++)
             {
-                var ps=s.Emitters[i];var emission=ps.emission;emission.rateOverTime=s.Rates[i]*gust;
+                var ps=s.Emitters[i];var emission=ps.emission;float rate=s.Rates[i]*visualGust;emission.rateOverTime=rate;
+                if(motion)motion.EmissionRateV52+=emission.rateOverTime.constant;
+                float sizeScale=1f+.35f*(presentationScale-1f);var main=ps.main;
+                main.startSize=i<4?new ParticleSystem.MinMaxCurve(.012f*sizeScale,.022f*sizeScale):ps.name.Contains("leaves")?new ParticleSystem.MinMaxCurve(.12f*sizeScale,.28f*sizeScale):new ParticleSystem.MinMaxCurve(1.1f*sizeScale,2.4f*sizeScale);
                 var velocity=ps.velocityOverLifetime;
+                // Keep maximum lifetime lateral drift unchanged: outside strips remain outside the house/garage.
                 if(i<4){velocity.x=-5.5f-4.0f*gust;velocity.y=-14;velocity.z=.6f+1.5f*gust;}
                 else if(ps.name.Contains("leaves")){velocity.x=-3.0f-1.8f*gust;velocity.y=.18f+.3f*gust;velocity.z=.7f+.5f*gust;}
                 else {velocity.x=-1.2f-.8f*gust;velocity.z=.25f+.3f*gust;}
@@ -71,7 +80,8 @@ namespace TooLateToPanic
             for(int j=0;j<s.Ribbons.Count;j++)
             {
                 var r=s.Ribbons[j];r.enabled=strength>.12f;
-                r.startColor=new Color(.72f,.77f,.73f,.06f*gust);r.endColor=new Color(.62f,.70f,.65f,.24f*gust);
+                r.widthMultiplier=.12f*(1f+.35f*(presentationScale-1f));
+                r.startColor=new Color(.72f,.77f,.73f,.06f*visualGust);r.endColor=new Color(.62f,.70f,.65f,.24f*visualGust);
                 for(int i=0;i<32;i++)
                 {
                     float q=i/31f,a=q*Mathf.PI*3+time*1.2f+j*2.09f,radius=.85f+q*1.9f;
@@ -114,7 +124,8 @@ namespace TooLateToPanic
         }
         static void AnimateFunnelV414(PanicStormMotionV414 s,float strength)
         {
-            float time=s.Clock;
+            float time=s.Clock*(1f+.35f*(s.PresentationScaleV52-1f));
+            float visualStrength=strength*s.PresentationScaleV52;
             for(int y=0;y<25;y++)for(int a=0;a<19;a++)
             {
                 float q=y/24f,angle=a/18f*Mathf.PI*2+time*(2.4f-q*.8f)+q*3.8f;
@@ -122,7 +133,7 @@ namespace TooLateToPanic
                 int v=y*19+a;float bend=q*q*.45f*Mathf.Sin(time*.28f);
                 s.Vertices[v]=new Vector3(-19.2f+bend+Mathf.Cos(angle)*radius,q*11.5f,11+Mathf.Sin(angle)*radius);
                 float band=.5f+.5f*Mathf.Sin(angle*3+q*21-time*1.8f);
-                float alpha=(.42f+.18f*band)*Mathf.Lerp(.68f,1,Mathf.Sin(q*Mathf.PI))*strength;
+                float alpha=(.42f+.18f*band)*Mathf.Lerp(.68f,1,Mathf.Sin(q*Mathf.PI))*visualStrength;
                 s.Colors[v]=new Color(.22f+.10f*band,.25f+.10f*band,.27f+.10f*band,alpha);
             }
             s.Funnel.vertices=s.Vertices;s.Funnel.colors=s.Colors;
@@ -134,12 +145,12 @@ namespace TooLateToPanic
                 float bend=.25f*Mathf.Sin(time*.28f);
                 s.CloudVertices[v]=new Vector3(-19.2f+bend+Mathf.Cos(angle)*radius,11.15f+q*2.55f,11+Mathf.Sin(angle)*radius);
                 float shade=.5f+.5f*Mathf.Sin(angle*3+q*9-time*.6f);
-                s.CloudColors[v]=new Color(.20f+.08f*shade,.23f+.08f*shade,.25f+.08f*shade,(.46f+.14f*shade)*strength);
+                s.CloudColors[v]=new Color(.20f+.08f*shade,.23f+.08f*shade,.25f+.08f*shade,(.46f+.14f*shade)*visualStrength);
                 angle=a/24f*Mathf.PI*2-time*2.1f+q*2.3f;
                 radius=(.68f+Mathf.Sin(q*Mathf.PI)*2.55f)*(1+.07f*Mathf.Sin(angle*4+time));
                 s.DustVertices[v]=new Vector3(-19.2f+Mathf.Cos(angle)*radius,.055f+q*1.85f,11+Mathf.Sin(angle)*radius);
                 float edge=Mathf.Sin(q*Mathf.PI);
-                s.DustColors[v]=new Color(.46f,.42f,.34f,(.18f+.28f*edge)*edge*strength);
+                s.DustColors[v]=new Color(.46f,.42f,.34f,(.18f+.28f*edge)*edge*visualStrength);
             }
             s.CloudBase.vertices=s.CloudVertices;s.CloudBase.colors=s.CloudColors;
             s.GroundDust.vertices=s.DustVertices;s.GroundDust.colors=s.DustColors;
@@ -148,7 +159,7 @@ namespace TooLateToPanic
                 float q=Mathf.Repeat(i/24f+time*.045f,.94f)+.025f,angle=i*2.399f+time*(3-q),radius=.8f+Mathf.Pow(q,1.7f)*3.05f;
                 Vector3 center=new Vector3(-19.2f+Mathf.Sin(time*.28f)*q*q*.45f+Mathf.Cos(angle)*radius,q*10.8f,11+Mathf.Sin(angle)*radius);
                 Quaternion rotate=Quaternion.Euler(time*83+i*17,time*127+i*53,time*61);
-                float size=(i%5==0?.46f:.20f)*strength;int v=i*4;
+                float size=(i%5==0?.46f:.20f)*strength*(1f+.2f*(s.PresentationScaleV52-1f));int v=i*4;
                 s.DebrisVertices[v]=center+rotate*new Vector3(-size,0,-size*.5f);s.DebrisVertices[v+1]=center+rotate*new Vector3(-size,.03f,size*.5f);s.DebrisVertices[v+2]=center+rotate*new Vector3(size,0,size*.5f);s.DebrisVertices[v+3]=center+rotate*new Vector3(size,-.02f,-size*.5f);
             }
             s.Debris.vertices=s.DebrisVertices;
@@ -181,6 +192,7 @@ namespace TooLateToPanic
     {
         public Mesh Funnel,Debris,CloudBase,GroundDust;public Vector3[] Vertices,DebrisVertices,CloudVertices,DustVertices;public Color[] Colors,CloudColors,DustColors;
         public float Clock,LastAge,Gust;
+        public float PresentationScaleV52=1f,EmissionRateV52;
         void OnDestroy(){if(Funnel)Destroy(Funnel);if(Debris)Destroy(Debris);if(CloudBase)Destroy(CloudBase);if(GroundDust)Destroy(GroundDust);}
     }
 }

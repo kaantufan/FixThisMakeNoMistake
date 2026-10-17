@@ -131,6 +131,7 @@ namespace TooLateToPanic
         public float CurrentHouseTilt { get; private set; }
         public float MaximumHouseOffset { get; private set; }
         public float MaximumHouseTilt { get; private set; }
+        public float CurrentPresentationScaleV52 { get; private set; } = 1f;
         public Bounds HouseRoofBounds { get; private set; }
         public Renderer[] OriginalHouseRenderers { get { return hidden.FindAll(entry => entry.House).ConvertAll(entry => entry.Renderer).ToArray(); } }
         public Renderer[] OriginalRoofRenderers { get { return hidden.FindAll(entry => entry.Roof).ConvertAll(entry => entry.Renderer).ToArray(); } }
@@ -172,6 +173,7 @@ namespace TooLateToPanic
             SampledFrames = SourceRendererCount = ProxyRendererCount = SecuredSubjects = LooseSubjects = 0;
             HouseRootCount = ExternalHouseProxyCount = RoofProxyCount = 0;
             MaximumHouseOffset = MaximumHouseTilt = CurrentHouseTilt = 0;
+            CurrentPresentationScaleV52 = Owner && Owner.Model != null ? PanicDisasterArt.ClampPresentationScaleV52(Owner.Model.DisasterPresentationScaleV52) : 1f;
             CurrentHouseOffset = Vector3.zero;
             claimed.Clear();
             HouseRoofBounds = new Bounds(new Vector3(0,7.45f,0),new Vector3(17.15f,2.2f,13.15f));
@@ -246,16 +248,17 @@ namespace TooLateToPanic
             if (!Active || !display) return;
             float age = Owner.QuakeReadabilityAgeV414, t = age - 4.7f;
             SampledAge = age; SampledFrames++; Shot = "roofed exterior";
+            CurrentPresentationScaleV52 = PanicDisasterArt.ClampPresentationScaleV52(Owner.Model.DisasterPresentationScaleV52);
             float envelope = Mathf.SmoothStep(0,1,t/.16f) * (1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(7.72f,8,age)));
             CurrentPulse = envelope * (.65f + .35f * Mathf.Pow(Mathf.Sin(t * 9), 2));
             if(housePivot)
             {
                 // One ground-level world pivot for ALL shell pieces: no roof/wall/garage seams.
-                // Large enough to read against the static ground/neighbours, bounded below1.4deg and16cm translation.
+                // Cosmetic proxy only; V5.2 bounds remain below2.3deg and26cm translation.
                 float wave=Mathf.Sin(t*18)*.72f+Mathf.Sin(t*31)*.28f,cross=Mathf.Sin(t*21+.7f);
-                CurrentHouseOffset=new Vector3(wave*.14f,Mathf.Sin(t*26)*.012f,cross*.065f)*envelope;
+                CurrentHouseOffset=new Vector3(wave*.14f,Mathf.Sin(t*26)*.012f,cross*.065f)*envelope*CurrentPresentationScaleV52;
                 housePivot.position=CurrentHouseOffset;
-                housePivot.rotation=Quaternion.Euler(cross*.4f*envelope,0,wave*1.25f*envelope);
+                housePivot.rotation=Quaternion.Euler(cross*.4f*envelope*CurrentPresentationScaleV52,0,wave*1.25f*envelope*CurrentPresentationScaleV52);
                 CurrentHouseTilt=Quaternion.Angle(Quaternion.identity,housePivot.rotation);
                 MaximumHouseOffset=Mathf.Max(MaximumHouseOffset,CurrentHouseOffset.magnitude);
                 MaximumHouseTilt=Mathf.Max(MaximumHouseTilt,CurrentHouseTilt);
@@ -266,11 +269,11 @@ namespace TooLateToPanic
                 float wave = Mathf.Sin(t * 17 + copy.Phase) * .7f + Mathf.Sin(t * 29 + copy.Phase) * .3f;
                 float height = Mathf.Clamp01(copy.Height / 2.1f);
                 float angle = (copy.Secured ? wave * .65f : wave * (7.5f + height * 3.5f) +
-                    Mathf.SmoothStep(0,1,t/.7f) * (3 + height * 3)) * envelope;
+                    Mathf.SmoothStep(0,1,t/.7f) * (3 + height * 3)) * envelope * CurrentPresentationScaleV52;
                 float shift = copy.Secured ? wave * .006f : wave * .12f + Mathf.SmoothStep(0,1,t/.9f) * .12f;
-                Vector3 offset = new Vector3(shift, 0, wave * (copy.Secured ? .003f : .055f)) * envelope;
+                Vector3 offset = new Vector3(shift, 0, wave * (copy.Secured ? .003f : .055f)) * envelope * CurrentPresentationScaleV52;
                 copy.Pivot.position = copy.Origin + offset;
-                copy.Pivot.rotation = Quaternion.Euler(angle, 0, wave * (copy.Secured ? .25f : 2.2f) * envelope);
+                copy.Pivot.rotation = Quaternion.Euler(angle, 0, wave * (copy.Secured ? .25f : 2.2f) * envelope * CurrentPresentationScaleV52);
                 if (copy.Secured) { MaximumSecuredOffset = Mathf.Max(MaximumSecuredOffset, offset.magnitude); MaximumSecuredTilt = Mathf.Max(MaximumSecuredTilt, Mathf.Abs(angle)); }
                 else { MaximumLooseOffset = Mathf.Max(MaximumLooseOffset, offset.magnitude); MaximumLooseTilt = Mathf.Max(MaximumLooseTilt, Mathf.Abs(angle)); }
             }
@@ -334,8 +337,8 @@ namespace TooLateToPanic
                         new Vector3(Mathf.Lerp(-7.7f,7.7f,along),.06f,edge==2?-6.3f:6.3f);
                 }
                 Vector3 p=origin+new Vector3(Mathf.Sin(t*3+i)*.13f,cycle*(roofDust?.65f:1.75f),Mathf.Cos(t*2+i)*.1f);
-                float size=(roofDust?.35f:.8f)+cycle*(roofDust?.60f:1.1f);
-                float alpha=Mathf.Sin(cycle*Mathf.PI)*(roofDust?.38f:.43f)*envelope;
+                float size=((roofDust?.35f:.8f)+cycle*(roofDust?.60f:1.1f))*(1f+.25f*(CurrentPresentationScaleV52-1f));
+                float alpha=Mathf.Sin(cycle*Mathf.PI)*(roofDust?.38f:.43f)*envelope*CurrentPresentationScaleV52;
                 Vector3 r=right*size,u=up*size*(roofDust?.55f:.7f);int v=i*4;
                 dustVertices[v]=p-r-u;dustVertices[v+1]=p-r+u;dustVertices[v+2]=p+r+u;dustVertices[v+3]=p+r-u;
                 Color color=new Color(.69f,.64f,.53f,alpha);

@@ -1,15 +1,15 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace TooLateToPanic
 {
     /// <summary>V5 presentation only. All values come from the active Model/Expedition.</summary>
     public sealed partial class PanicHomeHud
     {
-        bool compactControlsExpandedV5 = true;
+        bool compactControlsExpandedV5;
         int compactControlsInputFrameV5 = -1;
-        GUIStyle compactBodyV5, compactValueV5;
+        GUIStyle compactBodyV5, compactValueV5, compactKeyV51;
         public bool CompactControlsExpandedV5 { get { return compactControlsExpandedV5; } }
-        public Rect CompactControlsToggleBoundsV5 { get { return new Rect(24, 844, 244, 32); } }
+        public Rect CompactControlsToggleBoundsV5 { get { return new Rect(24, 844, 154, 32); } }
         bool CompactControlsAllowedV5 { get { return World && World.Model != null && !FreeplayOnboardingOpenV414 && !_developerMenuOpen && !_paused && !World.NotebookBlocksInput; } }
 
         public void ToggleCompactControlsV5()
@@ -29,6 +29,7 @@ namespace TooLateToPanic
             if (compactBodyV5 != null) return;
             compactBodyV5 = new GUIStyle(_small) { fontSize = 18, wordWrap = true };
             compactValueV5 = new GUIStyle(_heading) { fontSize = 25 };
+            compactKeyV51 = new GUIStyle(_small) { fontSize = 21, alignment = TextAnchor.MiddleCenter, wordWrap = false };
         }
 
         void DrawCompactStatusV5()
@@ -63,30 +64,125 @@ namespace TooLateToPanic
             EnsureCompactStylesV5();
             Rect toggle = CompactControlsToggleBoundsV5;
             Frame(toggle, Night, Line, 1); Region(toggle);
-            FittedLabel(new Rect(toggle.x + 10, toggle.y + 2, toggle.width - 20, toggle.height - 4), "F1  TUŞLAR  " + (compactControlsExpandedV5 ? "−" : "+"), _tiny, MainText, 14);
+            DrawCompactKeyV51(new Rect(toggle.x + 5, toggle.y + 4, 37, 24), "F1", 3);
+            FittedLabel(new Rect(toggle.x + 49, toggle.y + 2, toggle.width - 57, toggle.height - 4), (compactControlsExpandedV5 ? "−" : "+"), compactKeyV51, MainText, 14);
             if (MousePressed(toggle)) { ToggleCompactControlsV5(); World.PlayUiSound(); }
-            if (!compactControlsExpandedV5 || World.WorkActive || World.InventoryOpen) return;
-            string text;
-            if (World.CinematicActive || World.LossAnnounced) text = "ENTER  Sahneyi atla\nESC  Duraklat";
-            else if (World.IsMoving) text = "FARE  Yerleştir · SOL TIK  Bırak\nTEKER / R  Döndür\nSAĞ TIK / ESC  İptal";
-            else if (World.BagCameraOwnsView) text = "WASD  Yürü · SHIFT  Koş\nFARE  Bak · E / F  Al / Kullan\nTAB  Çanta · J  Defter · ESC  Duraklat";
-            else if (World.Model.Phase == PanicPhase.Inspection) text = "WASD  Yürü · Q  Hedef değiştir\nENTER  Sonraki hasar · N  Devam\nJ  Defter · ESC  Duraklat";
-            else if (World.Model.Phase == PanicPhase.Title) text = "OKLAR  Menüde seç\nENTER  Başlat · F1  Tuşları gizle";
-            else if (World.Model.Phase == PanicPhase.GameOver || World.Model.Phase == PanicPhase.Success) text = "FARE  Sonuç seçeneklerini kullan\nF1  Tuşları gizle";
-            else text = "WASD  Yürü · SHIFT  Koş · SPACE  Zıpla\nE  Kullan · Q  Hedef değiştir\nTAB  Çanta · J  Defter · ESC  Duraklat";
-            int rows = World.CinematicActive || World.LossAnnounced || World.Model.Phase == PanicPhase.Title || World.Model.Phase==PanicPhase.GameOver || World.Model.Phase==PanicPhase.Success ? 2 : 3;
-            Rect guide = new Rect(24, toggle.y - rows * 25 - 13, 352, rows * 25 + 7);
-            Frame(guide, Night, Line, 1); Region(guide);
-            Label(new Rect(guide.x + 12, guide.y + 5, guide.width - 24, guide.height - 8), text, ColorText(compactBodyV5, SoftText));
+            if (!compactControlsExpandedV5) return;
+            const float guideScale = .7f;
+            Rect guide = new Rect(0, 0, 440, 210);
+            Rect guideBounds = new Rect(24, toggle.y - 12 - guide.height * guideScale, guide.width * guideScale, guide.height * guideScale);
+            // Register the actual logical-canvas footprint before entering a local
+            // drawing space. PointerOverUi always works in the outer logical canvas.
+            Region(guideBounds);
+            int firstGuideMark = _uiRects.Count;
+            Matrix4x4 incoming = GUI.matrix;
+            GUI.matrix = incoming * Matrix4x4.TRS(new Vector3(guideBounds.x, guideBounds.y, 0),
+                Quaternion.identity, new Vector3(guideScale, guideScale, 1));
+            try { DrawCompactKeyboardBodyV51(guide); }
+            finally
+            {
+                GUI.matrix = incoming;
+                // Label/FittedLabel register local child marks. Convert only this
+                // guide's new marks so no invisible full-size hit rectangles remain.
+                for (int i = firstGuideMark; i < _uiRects.Count; i++)
+                {
+                    Rect child = _uiRects[i];
+                    _uiRects[i] = new Rect(guideBounds.x + child.x * guideScale, guideBounds.y + child.y * guideScale,
+                        child.width * guideScale, child.height * guideScale);
+                }
+            }
         }
 
+        void DrawCompactKeyboardBodyV51(Rect guide)
+        {
+            Frame(guide, Night, Line, 1);
+            // Physical key positions only. Empty dim caps preserve the silhouette;
+            // the separate full first-use onboarding owns all action explanations.
+            DrawCompactKeyboardKeyV51(new Rect(10, 9, 36, 24), "Esc");
+            DrawCompactKeyboardKeyV51(new Rect(60, 9, 28, 24), "F1");
+            DrawCompactKeyboardKeyV51(new Rect(94, 9, 28, 24), "F2");
+            DrawCompactKeyboardKeyV51(new Rect(128, 9, 28, 24), "F3");
+            DrawCompactKeyboardRowV51(40, 10, new[] { "1", "2", "3", "4", "", "", "", "", "", "" });
+            DrawCompactKeyboardKeyV51(new Rect(330, 40, 92, 26), "Back");
+            DrawCompactKeyboardKeyV51(new Rect(10, 70, 42, 26), "Tab");
+            DrawCompactKeyboardRowV51(70, 58, new[] { "Q", "W", "E", "R", "T", "", "", "", "", "" });
+            DrawCompactKeyboardKeyV51(new Rect(382, 70, 40, 56), "Enter");
+            DrawCompactKeyV51(new Rect(10, 100, 42, 26), "", 0);
+            DrawCompactKeyboardRowV51(100, 58, new[] { "A", "S", "D", "F", "", "", "J", "", "" });
+            DrawCompactKeyboardKeyV51(new Rect(10, 130, 66, 26), "Shift");
+            DrawCompactKeyboardRowV51(130, 82, new[] { "Z", "X", "", "", "B", "N", "" });
+            DrawCompactKeyV51(new Rect(314, 130, 40, 26), "", 0);
+            DrawCompactKeyV51(new Rect(10, 168, 42, 28), "", 0);
+            DrawCompactKeyV51(new Rect(58, 168, 42, 28), "", 0);
+            DrawCompactKeyboardKeyV51(new Rect(106, 168, 176, 28), "Space");
+            DrawCompactKeyV51(new Rect(288, 168, 30, 28), "", 0);
+            DrawCompactKeyboardKeyV51(new Rect(362, 134, 28, 26), "↑");
+            DrawCompactKeyboardKeyV51(new Rect(330, 168, 28, 28), "←");
+            DrawCompactKeyboardKeyV51(new Rect(362, 168, 28, 28), "↓");
+            DrawCompactKeyboardKeyV51(new Rect(394, 168, 28, 28), "→");
+        }
+
+        void DrawCompactKeyboardRowV51(float y, float x, string[] keys)
+        {
+            for (int i = 0; i < keys.Length; i++)
+                DrawCompactKeyboardKeyV51(new Rect(x + i * 32, y, 28, 26), keys[i]);
+        }
+
+        void DrawCompactKeyboardKeyV51(Rect rect, string key)
+        {
+            DrawCompactKeyV51(rect, key, CompactKeyboardFamilyV51(key));
+        }
+
+        int CompactKeyboardFamilyV51(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return 0;
+            if (key == "F1") return 3;
+            if (key == "F2") return string.IsNullOrEmpty(DeveloperUnavailableReason()) ? 3 : 0;
+            if (key == "F3") return World.CanDeveloperSkipWaveV51 ? 3 : 0;
+            if (World.CinematicActive || World.LossAnnounced) return key == "Enter" ? 4 : key == "Esc" ? 3 : 0;
+            if (World.WorkActive)
+            {
+                if (key == "Esc" || key == "Back") return 3;
+                var work = World.Expedition.Work;
+                return work.UsesHammer ? key == "Space" ? 2 : 0 : work.UsesLinearDrag ? key == "↓" ? 2 : 0 : key == "→" ? 2 : 0;
+            }
+            if (World.IsMoving) return key == "Esc" ? 3 : key == "R" ? 2 : 0;
+            bool arrows = key == "↑" || key == "←" || key == "↓" || key == "→";
+            if (World.InventoryOpen)
+            {
+                if (arrows) return 1;
+                if (key == "Enter") return 4;
+                if (key == "F") return 2;
+                return key == "Tab" || key == "B" || key == "Back" || key == "Esc" ? 3 : 0;
+            }
+            if (World.Model.Phase == PanicPhase.Title) return key == "↑" || key == "↓" ? 1 : key == "Enter" ? 4 : 0;
+            if (World.Model.Phase == PanicPhase.GameOver || World.Model.Phase == PanicPhase.Success) return 0;
+            if (arrows || key == "W" || key == "A" || key == "S" || key == "D" || key == "Shift") return 1;
+            if (key == "Space") return World.BagCameraOwnsView ? 0 : 1;
+            if (key == "J" || key == "Esc") return 3;
+            if (World.Model.Phase == PanicPhase.Inspection) return key == "Q" ? 2 : key == "Enter" || key == "N" ? 4 : 0;
+            if (key == "Tab" || key == "B") return 3;
+            if (key == "E" || key == "F") return 2;
+            if (World.BagCameraOwnsView) return 0;
+            if (key == "Q" || key == "T") return 2;
+            if (key == "Z" || key == "X") return World.LootVisible ? 2 : 0;
+            var selected = World.Selected;
+            if (selected == null || !World.CanInteract) return 0;
+            if (key == "4") return selected.Movable && !selected.Anchored ? 2 : 0;
+            int shortcut = PanicItemActionRules.CanReleaseAnchor(selected) ? 1 : World.Expedition.PrimaryShortcutV414(selected);
+            return shortcut > 0 && key == shortcut.ToString() ? 2 : 0;
+        }
+
+        void DrawCompactKeyV51(Rect rect, string key, int family)
+        {
+            Frame(rect, FreeplayKeyFillV414(family), FreeplayKeyEdgeV414(family), 1f);
+            FittedLabel(new Rect(rect.x + 3, rect.y + 1, rect.width - 6, rect.height - 2), key, compactKeyV51, family == 0 ? Muted : MainText, 13);
+        }
         void DrawCompactTargetV5()
         {
-            if (string.IsNullOrEmpty(World.FocusLabel) || World.LootVisible || World.IsMoving || World.WorkActive) return;
-            Rect target = new Rect(450, 800, 700, 72);
-            Frame(target, Night, Line, 1); Region(target);
-            FittedLabel(new Rect(target.x + 14, target.y + 6, target.width - 235, 27), World.FocusLabel, _body, MainText, 18);
-            FittedLabel(new Rect(target.x + 14, target.y + 37, target.width - 28, 26), World.CanInteract ? World.ContextHint : "Etkileşmek için yaklaş", _small, World.CanInteract ? Brass : Muted, 14);
+            // V5.1: the real object owns its projected primary marker again.
+            // DrawContext still keeps actual loot, placement and applicable-action controls.
+            // Do not repeat the same object label in a large bottom panel.
         }
 
         void DrawCompactRequirementsV5()

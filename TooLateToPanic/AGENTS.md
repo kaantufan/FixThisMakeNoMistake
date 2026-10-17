@@ -1,5 +1,13 @@
 # Too Late to Panic! — izometrik proje çalışma kuralları
 
+## Home V5.2 — dalga şiddeti
+
+Güncel sözleşme `../Evidence/GamejamOrchestra/TLTP-V52-20261018/CONTRACT.md`; teslim/kimlik yalnız güncel LATEST ve HOME-V5.2-DELIVERY-2026-10-18.md ile bağlıdır. Kampanya hasar çarpanı `PanicWaveDifficultyV52`:1/5/10/20/50dalga =1/1.32/1.72/2.17/3.52. İlk dalga varyasyonu sabit tutulur; sonraki temel risk aynı eşya/afet/önlem için artar. Toplam0..100orantılı katkı, kayıp75%. Önlem/ankraj/yükseltme, küçük memoize tesisat RNG'si korunur. Görsel/afet sesi1..1.65ile sınırlıdır ve aynı model eğrisinden gelir; simülasyon/öğretici/kısa akış1kalır. F3koruması tek dalga, ödülsüz ve skor dışıdır. Açık önceki player'a girdi/sonlandırma gönderilmez. Eski sonuçlar yeni DLLkanıtı değildir.
+
+## Home V5.1 —18Ekim geri bildirim düzeltmeleri
+
+Öncelikli sözleşme `../Evidence/GamejamOrchestra/TLTP-V51-20261018/CONTRACT.md`. Görünmez taşınan8yuvalı çanta ve yedi erzakta sonlu otomatik paketleme; gerçek pil/stack/destek/overflow kuralları korunur. Nesne üstünde ana E, duvar tüpü, temiz mini oyun çember/okları, F1minik klavye; F2menü/F3ödülsüz kayıpsız sinematik dalga geçişidir. F3tek model mutasyonu `TryDeveloperSkipToDisasterV51`, tek dalga koruması ve sticky skor dışı işaret; gerçek sığınak girişi uydurulmaz. FPS2sgeçişte0.58stam siyah, hazırlık saati durur. Siyah katmanın tek sahibi ana HUD son çizimidir; feedback component ikinci kez çizmez. Bahçe çizgileri sadece dışarıda görünür. Final DLL/native/build/ZIP kimliği yalnız LATEST ve HOME-V5.1-DELIVERY-2026-10-18.md ile kabul edilir; önceki sonuçlar yeni DLL kanıtı değildir. Başlangıçtaki V5-r5 sürecine girdi/sonlandırma gönderilmedi; sonrasında süreç görünmedi. FinalV5.1-r2testleri ve normal readylog sonrası yalnız eski V5binary/ZIPleri temizlendi, tarihsel reddedilmişV4hedefleri korunur.
+
 ## Home V5 —18Ekim güncel kapsam
 
 Öncelikli sözleşme `../Evidence/GamejamOrchestra/TLTP-V5-20261018/CONTRACT.md`; güncel DLL/build/ZIP yalnız `LATEST-BUILD.json` ve `Documentation/HOME-V5-DELIVERY-2026-10-18.md` ile doğrulanır. Sel üst fiziksel panik odası, diğer afetler bodrum; `TryEnterActiveShelterV5` gerçek kat/controller/ışın/yol kapısı ve `Model.ReachedShelterV5` tek giriş durumudur. Timeout/no-loss sahte giriş oynamaz.120+45sn,1su+1gıda,75% kayıp, atomik maliyet/ücretsiz iptal ve skor yalıtımı korunur. Her dalgada14kaynak/16erzak bir kez sonlu hafifRNG ile yenilenir. Yeni vana olayları gerçek küçük hasara bağlı, tek memoize çekimdir. Şalter ev ışık/emisyon/cihaz/garajını keser; bataryalı acil ışıklar ayrı devredir.
@@ -141,3 +149,8 @@ V4.12-r5 son kaynakları korunarak başlık logosu ve boyuta bağlı Windows amb
 ## Home V4.14-r8 son teslim kararı — 17 Ekim
 
 Son kullanıcı kararı: önlem120s + çanta45s =165s; önceki30s çanta sözleşmesi geçersizdir. İlk Serbest Oyna standart pause ile klavye şemalı rehber açar. Q klavyede vurgulu, açıklaması hedef değiştirmedir. Tam fiziksel OS turu odak/girdi betiği sorunları yüzünden tamamlanmadı; aday kullanıcı testine bırakılır, PASS değildir. Model.NormalPrecautionSeconds/NormalBagSeconds/NormalPreparationSeconds sürelerin tek kaynağıdır; kısa senaryo270+30s sınırını korur ve son45s çanta kapısı kullanır. Eski çalışan humanoid/UAL normal hareketin tek sahibidir; yeni sivil görünüm, ev, utility mini oyunları, kat duvar batch yükseltmesi, çatı colliderları, gerçek bunker sırası, afet/çevre/ses paketi entegredir. LATEST ve HOME-V4.14-DELIVERY-2026-10-17.md son DLL/kaynak/native/ZIP kimliğini ve OS turunun tamamlanmamış sınırını bağlar.50dalga tamamlandı ama normal havuz Storm içermediği için sequence.four_disasters FAIL açık; dört afet döngüsü diye sunulmaz. İnsan kabulü kullanıcı testidir. R6 gizli render denemesi INVALID_RENDER_SURFACE; yeni DLL kabulü değildir. Eski bağımsız FPS checkout/gerçek kayıtlar korunur; bu root yayın veya önceki reddedilmiş temizlik işlemi yapmadı.
+
+
+## Home V5.3 —18Ekim2026
+
+Son kullanıcı düzeltmesiyle hikâye KKTC · Güzelyurt · Kalkanlı olarak uyarlandı. Yer gerçektir; kişiler ve afet olayları kurmacadır. Aile güvenli alanda, oyuncu aile evini hazırlar. Açılış16sn/dört4snçekim,120+45sn, dalgalarla artan V5.2 hasarı ve gerçek maliyet/fizik/skor kuralları korunur. Menü/sinematik/defter/kısa akış ortak katalog kullanır; selde hazır çanta defter notu üst panik odasını gösterir. Yeni konuşma/sağlayıcı işi yoktur. Güncel kimlik LATEST ve HOME-V5.3-KKTC-DELIVERY-2026-10-18.md'dir. Dar native hikâye/API/render kontrolü OS/insan/tüm kampanya kabulü değildir.

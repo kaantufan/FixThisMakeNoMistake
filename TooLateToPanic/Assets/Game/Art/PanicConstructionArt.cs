@@ -287,21 +287,21 @@ namespace TooLateToPanic
             return new Bounds(new Vector3(0,2.10f,0),variant==2?new Vector3(length,4.30f,2.50f):new Vector3(2.50f,4.30f,length));
         }
 
-        /// <summary>Grounded wall station, front -Z, back +Z. No fire/model readiness is mutated.</summary>
+        /// <summary>Wall-mounted station, bottom pivot clear of floor, front -Z, back +Z. No fire/model readiness is mutated.</summary>
         public static GameObject CreateFireStation(bool ready, bool includeMount = true)
         {
             PanicConstructionArt s;var root=New("Dedicated_fire_equipment_station",out s);s.station=true;
             var palette=new[]{s.Material("Station folded steel",new Color(.31f,.36f,.35f),.35f,.65f),s.Material("Station rubber",new Color(.07f,.08f,.08f),.12f),s.Material("Safety warm red",new Color(.70f,.18f,.10f),.18f),s.Material("Safety pictogram cream",new Color(.91f,.85f,.69f),.13f)};
-            var stand=new Geo();stand.Box(new Vector3(0,.74f,.055f),new Vector3(.28f,1.46f,.035f),0);
-            stand.Box(new Vector3(0,.08f,-.035f),new Vector3(.27f,.055f,.23f),0);
-            stand.Box(new Vector3(0,.115f,-.035f),new Vector3(.20f,.022f,.15f),1);
-            for(int side=-1;side<=1;side+=2)stand.Box(new Vector3(side*.10f,.54f,0),new Vector3(.028f,.34f,.035f),0);
-            stand.Box(new Vector3(0,1.28f,.016f),new Vector3(.25f,.30f,.025f),2);
-            // A geometric extinguisher pictogram, not tiny provider text.
-            stand.Box(new Vector3(0,1.26f,-.004f),new Vector3(.063f,.125f,.009f),3);
-            stand.Box(new Vector3(.022f,1.34f,-.004f),new Vector3(.075f,.021f,.009f),3);
-            stand.Beam(new Vector3(.047f,1.325f,-.005f),new Vector3(.081f,1.25f,-.005f),.012f,.009f,3);
-            if(includeMount)s.AddPart(root.transform,"Fixed_station_mount",stand,palette,new Vector3(0,.08f,.03f));
+            var stand=new Geo();
+            stand.Box(new Vector3(0,.45f,.055f),new Vector3(.34f,.90f,.035f),0);
+            // Short wall cradle and retention strap; no plinth or floor legs.
+            stand.Box(new Vector3(0,.055f,-.035f),new Vector3(.27f,.035f,.23f),0);
+            for(int side=-1;side<=1;side+=2)stand.Box(new Vector3(side*.10f,.39f,0),new Vector3(.028f,.18f,.035f),0);
+            stand.Box(new Vector3(0,.85f,.016f),new Vector3(.25f,.20f,.025f),2);
+            stand.Box(new Vector3(0,.83f,-.004f),new Vector3(.063f,.115f,.009f),3);
+            stand.Box(new Vector3(.022f,.91f,-.004f),new Vector3(.075f,.021f,.009f),3);
+            stand.Beam(new Vector3(.047f,.895f,-.005f),new Vector3(.081f,.82f,-.005f),.012f,.009f,3);
+            if(includeMount)s.AddPart(root.transform,"Fixed_wall_cradle",stand,palette,Vector3.zero);
             // The branch fire cabinet replaces the old exposed cylinder presentation.
             // Its real contained item is visual only; readiness still comes from completion.
             var cabinet=PanicCuratedAssetArt.CreateDisplay("FireCabinet",.74f);

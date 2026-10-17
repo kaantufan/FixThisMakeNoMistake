@@ -29,6 +29,9 @@ namespace TooLateToPanic
         readonly List<PanicWorldSupply> worldSupplies = new List<PanicWorldSupply>();
         System.Random lootRandom;
         public int LastWorldSupplyCollectedCountV5 { get; private set; }
+        public int LastWorldSupplyPackedCountV51 { get; private set; }
+        public int LastWorldSupplyInventoryCountV51 { get; private set; }
+        public int LastWorldSupplyBatteryCostV51 { get; private set; }
         public static readonly string[] MaterialIds = { "screws", "bracket", "plank", "sandbag", "seedling", "hose", "extinguisher" };
         public IReadOnlyDictionary<string, int> Materials { get { return new ReadOnlyDictionary<string, int>(materials); } }
         public IReadOnlyList<PanicWorldSupply> WorldSupplies { get { return worldSupplies.AsReadOnly(); } }
@@ -43,6 +46,7 @@ namespace TooLateToPanic
             return id == "water" || id == "food" || id == "firstaid" || id == "flashlight" ||
                 id == "battery" || id == "radio" || id == "blanket";
         }
+        public static bool IsEmergencyBagItemV51(string id) { return IsSupply(id); }
         int MaterialCount(string id) { int count; return id != null && materials.TryGetValue(id, out count) ? count : 0; }
         void AddMaterial(string id, int count)
         { if (count > 0 && IsConstructionMaterial(id)) materials[id] = (int)Math.Min(int.MaxValue, (long)MaterialCount(id) + count); }
@@ -51,6 +55,7 @@ namespace TooLateToPanic
         {
             materials.Clear();
             LastWorldSupplyCollectedCountV5 = 0;
+            LastWorldSupplyPackedCountV51 = LastWorldSupplyInventoryCountV51 = LastWorldSupplyBatteryCostV51 = 0;
             lootRandom = new System.Random(Guid.NewGuid().GetHashCode());
             worldSupplies.Clear();
             // Positions are authored visible prop centers, not floor-projected container positions.
@@ -82,19 +87,32 @@ namespace TooLateToPanic
         public bool TryCollectWorldSupply(string id)
         {
             LastWorldSupplyCollectedCountV5 = 0;
+            LastWorldSupplyPackedCountV51 = LastWorldSupplyInventoryCountV51 = LastWorldSupplyBatteryCostV51 = 0;
             if (!CanPrepare()) return Fail("Erzakları hazırlıkta toplayabilirsin.");
             PanicWorldSupply supply = FindWorldSupply(id);
             if (supply == null || supply.Taken || !IsSupply(supply.ItemId)) return Fail("Bu eşya alınamıyor.");
             int amount = supply.Count;
-            // Essential supplies use actual bag slots first. Preflight both containers
-            // before publishing, so rejected collection cannot consume finite world stock.
+            // Every emergency item first uses the carried bag's real slots and limits.
+            // Candidates own both storage and device battery costs until one publication;
+            // overflow stays in inventory or in the finite world stack, never disappears.
             var candidateInventory = CloneSlots(Inventory);
             var candidateBag = CloneSlots(Bag);
-            int packed = supply.ItemId == "water" || supply.ItemId == "food"
-                ? Mathf.Min(amount, Mathf.Max(0, PanicModel.RequiredSupplyPerWave - CountSlots(Bag, supply.ItemId))) : 0;
+            int packed = AutoPackCapacityV51(candidateBag, supply.ItemId, amount);
+            int batteryCost = 0;
+            if (amount > 0 && IsPoweredBagDeviceV51(supply.ItemId) && CountSlots(candidateBag, supply.ItemId) == 0 && !Model.FreeMaterials)
+            {
+                // A final packed battery can free the eighth slot when installed.
+                if (TryConsumePackingBatteriesV51(candidateInventory, candidateBag, 1))
+                {
+                    packed = AutoPackCapacityV51(candidateBag, supply.ItemId, amount);
+                    if (packed > 0) batteryCost = 1;
+                    else { candidateInventory = CloneSlots(Inventory); candidateBag = CloneSlots(Bag); }
+                }
+                else packed = 0;
+            }
             string reason;
             if (packed > 0 && (!TryAddPartial(candidateBag, supply.ItemId, packed) || !ValidBag(candidateBag, out reason)))
-            { candidateBag = CloneSlots(Bag); packed = 0; }
+            { candidateInventory = CloneSlots(Inventory); candidateBag = CloneSlots(Bag); packed = 0; batteryCost = 0; }
             int loose = Mathf.Min(amount - packed, AvailableSupplyCapacityV5(candidateInventory, supply.ItemId));
             amount = packed + loose;
             if (amount <= 0) return Fail("Envanter dolu; eşya yerinde kaldı.");
@@ -108,11 +126,37 @@ namespace TooLateToPanic
             Model.SupportOwnedMask = SupportMask(Bag) | SupportMask(Inventory);
             supply.Count -= amount;
             LastWorldSupplyCollectedCountV5 = amount;
+            LastWorldSupplyPackedCountV51 = packed;
+            LastWorldSupplyInventoryCountV51 = loose;
+            LastWorldSupplyBatteryCostV51 = batteryCost;
             if (Model.IsJuryDemo && supply.ItemId == "water") JuryWaterGatheredCount += amount;
             Message = packed > 0 ? DisplayName(supply.ItemId) + " ×" + packed + " çantaya kondu." +
                 (loose > 0 ? " Kalan " + loose + " envanterde." : string.Empty) : DisplayName(supply.ItemId) + " ×" + amount + " alındı.";
             if (supply.Count > 0) Message += " Kalan " + supply.Count + " yerinde.";
             NotifyModel(); return true;
+        }
+
+        static bool IsPoweredBagDeviceV51(string id) { return id == "flashlight" || id == "radio"; }
+
+        static int AutoPackCapacityV51(List<SupplySlot> slots, string id, int requested)
+        {
+            int capacity = Mathf.Min(requested, AvailableSupplyCapacityV5(slots, id));
+            int maximum = id == "water" || id == "food" ? 3 :
+                id == "firstaid" || id == "flashlight" || id == "radio" || id == "blanket" ? 1 : int.MaxValue;
+            return Mathf.Min(capacity, Mathf.Max(0, maximum - CountSlots(slots, id)));
+        }
+
+        /// <summary>A charged device still costs one real battery. Packed batteries remain usable.
+        /// Preflight before either consume, including bag-to-inventory device swaps.</summary>
+        static bool TryConsumePackingBatteriesV51(List<SupplySlot> inventory, List<SupplySlot> bag, int count)
+        {
+            if (count <= 0) return true;
+            int loose = CountSlots(inventory, "battery"), carried = CountSlots(bag, "battery");
+            if ((long)loose + carried < count) return false;
+            int fromInventory = Mathf.Min(loose, count);
+            ConsumeFromSlots(inventory, "battery", fromInventory);
+            ConsumeFromSlots(bag, "battery", count - fromInventory);
+            return true;
         }
         string AutoCollectMaterials(LootSource source)
         {
@@ -197,14 +241,14 @@ namespace TooLateToPanic
                 if (requested!=moving.Count) return Fail("Farklı eşya ile yer değiştirmek için tüm yığını taşı.");
                 a[fromIndex]=target;b[toIndex]=moving;
             }
-            // Newly packed devices consume one loose battery each; moving inside bag consumes nothing.
+            // Newly packed devices consume one real battery each; moving inside bag consumes nothing.
             int batteries=0;
             if (fromBag!=toBag && !Model.FreeMaterials)
             {
                 batteries+=Mathf.Max(0,CountSlots(candidateBag,"flashlight")-CountSlots(Bag,"flashlight"));
                 batteries+=Mathf.Max(0,CountSlots(candidateBag,"radio")-CountSlots(Bag,"radio"));
-                if (CountSlots(candidateInventory,"battery")<batteries) return RequestRequirements("packbattery","battery");
-                ConsumeFromSlots(candidateInventory,"battery",batteries);
+                if (!TryConsumePackingBatteriesV51(candidateInventory,candidateBag,batteries))
+                    return RequestRequirements("packbattery","battery");
             }
             string reason;
             if (!ValidBag(candidateBag,out reason)) return Fail(reason);

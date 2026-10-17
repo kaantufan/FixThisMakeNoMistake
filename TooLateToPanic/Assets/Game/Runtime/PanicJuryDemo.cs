@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -100,7 +100,7 @@ namespace TooLateToPanic
         public static readonly Vector3 QuakeCoverPosition = new Vector3(-2.8f, .05f, -2.1f);
         public static readonly Vector3 FloodRefugePosition = new Vector3(0f, 3.25f, 5.15f);
         public static readonly Vector3 FireAssemblyPosition = new Vector3(-7f, .05f, -11.7f);
-        public static readonly Vector3 FireStationPosition = new Vector3(1.72f, .05f, -2.2f);
+        public static readonly Vector3 FireStationPosition = new Vector3(1.72f, .70f, 5.70f);
 
         internal PanicModel Model { get; }
         readonly PanicExpedition expedition;
@@ -375,7 +375,7 @@ namespace TooLateToPanic
             {
                 switch (Stage)
                 {
-                    case PanicJuryStage.Onboarding: return "Bir önlemle başla";
+                    case PanicJuryStage.Onboarding: return PanicKktcStoryV53.OpeningTitle;
                     case PanicJuryStage.Preparation: return !BagFinalStageActive ? ActualAnchoredHero() ? "Önlemini tamamladın" : "Bir eşyayı sabitle" : !Done("water_packed") ? "Çantanı hazırla" : "Güvenli noktaya geç";
                     case PanicJuryStage.Earthquake: return "Önlemin farkı";
                     case PanicJuryStage.EarthquakeResult: return "Deprem sonucu";
@@ -391,7 +391,7 @@ namespace TooLateToPanic
         {
             get
             {
-                if (Stage == PanicJuryStage.Onboarding) return "WASD / oklarla yürü. Önce eşyaları sabitle; son 45 saniyede çantanı hazırla.";
+                if (Stage == PanicJuryStage.Onboarding) return "Aile evini hazırla. WASD / oklarla yürü; çanta son 45 saniyede.";
                 if (Stage == PanicJuryStage.Preparation)
                 {
                     if (!BagFinalStageActive) return !ActualAnchoredHero() ?

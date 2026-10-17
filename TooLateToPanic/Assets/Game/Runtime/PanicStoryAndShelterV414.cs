@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -11,11 +11,7 @@ namespace TooLateToPanic
         {
             get
             {
-                if (residenceCinematicAge < 4) return "Vadidere'de afet uyarısı var. Ailen güvenli bir yerde; evin hazırlığı sana kaldı.";
-                if (residenceCinematicAge < 8) return "Önce " + PanicModel.NormalPrecautionSeconds.ToString("0") + " saniye önlem: E ile malzeme topla, Q ile hedef değiştir. Eşyaları sabitle, duvarları ve tesisatı güvene al.";
-                if (residenceCinematicAge < 12) return "Son " + PanicModel.NormalBagSeconds.ToString("0") + " saniyede kamera göz hizasına geçer. E / F ile bir su ve bir gıda al; gerekli ilk erzak doğrudan çantana gider.";
-                return UsesUpperPanicRoomV5 ? "Sel yükselmeden üst kat panik odasına çık. İşaretli yere yaklaş ve E ile korun; dalgadan sonra evini inceleyip hazırlığa devam et." :
-                    "Süre dolmadan bodrum sığınağına in. Kapağa yaklaş ve E ile gir. Sel dalgalarında ise üst kat panik odasına çık; her dalgadan sonra evini incele.";
+                return PanicKktcStoryV53.OpeningCaption(residenceCinematicAge, UsesUpperPanicRoomV5);
             }
         }
         public string BunkerSequenceStageV414 { get; private set; } = "idle";
@@ -51,7 +47,7 @@ namespace TooLateToPanic
         {
             if (Model == null || Model.IsSimulation || Model.IsTutorial) return;
             BeginResidenceSession();
-            SetResidenceCinematic("Opening", "Evin için hazırlık zamanı", 16f);
+            SetResidenceCinematic("Opening", PanicKktcStoryV53.OpeningTitle, 16f);
             CinematicShowsActor = false;
         }
 
@@ -88,7 +84,7 @@ namespace TooLateToPanic
             }
             else if (age < 12)
             {
-                Vector3 bag = Model.Items.Find(i => i.Id == "bagstation")?.Position ?? new Vector3(1.55f, 0, -2.3f);
+                Vector3 bag = new Vector3(4.5f, .3f, 4.7f); // Kitchen storage where emergency supplies become available in the final stage.
                 camera = bag + Vector3.Lerp(new Vector3(-1.3f, 1.4f, -1.8f), new Vector3(-.8f, 1.15f, -1.3f), SmoothResidence01((age - 8) / 4));
                 target = bag + Vector3.up * .35f; fov = 51;
             }
@@ -111,13 +107,7 @@ namespace TooLateToPanic
             CleanupBunkerBagV414();
             BunkerSequenceStageV414 = "open";
             BunkerBagReleasedV414 = bunkerSequenceResolvedV414 = false;
-            if (!PanicCuratedAssetArt.TryCreateFixture("emergencybackpack", out cinematicBagV414))
-                cinematicBagV414 = PanicResidenceArt.Create("bagstation");
-            cinematicBagV414.name = "Actual thrown emergency bag V414";
-            cinematicBagV414.transform.localScale *= .68f;
-            PrepareBunkerBagGripV414();
-            foreach (var c in cinematicBagV414.GetComponentsInChildren<Collider>(true)) c.enabled = false;
-            foreach (var body in cinematicBagV414.GetComponentsInChildren<Rigidbody>(true)) { body.isKinematic = true; body.detectCollisions = false; }
+            // Bag stays invisibly carried throughout the shelter sequence.
             BuildBunkerApproachRouteV414(cinematicActorStart, cinematicHatchApproach);
             SetBunkerLidPoseV414(0f);
         }
@@ -147,7 +137,7 @@ namespace TooLateToPanic
             }
             else if (age < 2.5f)
             {
-                BunkerSequenceStageV414 = "bagthrow";
+                BunkerSequenceStageV414 = "check_hatch";
                 CinematicShowsActor = true;
                 player.position = cinematicHatchApproach;
                 SetResidenceActorFlags(false, false, 0);
@@ -232,7 +222,7 @@ namespace TooLateToPanic
             if (CinematicKind == "Disaster" && !Model.IsSimulation && ShelterReachedForPresentationV5 && !UpperShelterPresentationV5)
             {
                 if (residenceCinematicAge >= 1f && residenceCinematicAge < 1.65f) PanicCharacterArt.SetTaskPose(hero.gameObject, animator, "gather", .5f);
-                else if (residenceCinematicAge >= 1.65f && residenceCinematicAge < 2.5f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "throw", Mathf.Clamp01((residenceCinematicAge - 1.65f) / .85f));
+                else if (residenceCinematicAge >= 1.65f && residenceCinematicAge < 2.5f) PanicCharacterArt.SetTaskPose(hero.gameObject, animator, "gather", .65f);
                 else if (residenceCinematicAge >= 2.5f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "jump", Mathf.Clamp01((residenceCinematicAge - 2.5f) / 1.55f));
                 // Sync the held cosmetic bag after this exact frame's evaluated hand pose, before real release.
                 if(residenceCinematicAge<1.85f)UpdateHeldBunkerBagV414();

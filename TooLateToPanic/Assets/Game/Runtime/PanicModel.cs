@@ -618,6 +618,7 @@ namespace TooLateToPanic
             IsSimulation = false;
             SimulationComplete = false;
             JuryActionScope = string.Empty;
+            ResetDeveloperWaveSkipProtectionV51();
             DeveloperNoLossUsedThisWave = false;
             DeveloperNoLossReason = string.Empty;
             IsTutorial = tutorial;
@@ -669,6 +670,7 @@ namespace TooLateToPanic
 
         private void BeginWave()
         {
+            ResetDeveloperWaveSkipProtectionV51();
             BeginWaveSystemsV5();
             DeveloperNoLossUsedThisWave = DeveloperNoLoss;
             DeveloperNoLossReason = DeveloperNoLoss ? "Bu dalgada kaybetmeme modu kullanıldı." : string.Empty;
@@ -746,7 +748,7 @@ namespace TooLateToPanic
                         ? "Öğretici afeti tamamlandı. Sonucu incele, sonra gerçek koşuya geç."
                         : "Öğretici sonucu: " + FailureReason + " Hasarı inceleyip hazırlığı tekrar deneyebilirsin.";
                 }
-                else if (DeveloperNoLoss || (DeveloperNoLossUsedThisWave && pendingSuccess))
+                else if (DeveloperNoLoss || DeveloperWaveSkipProtectionV51 || (DeveloperNoLossUsedThisWave && pendingSuccess))
                 {
                     BeginDeveloperNoLossInspection(FailureReason);
                 }
@@ -799,10 +801,10 @@ namespace TooLateToPanic
             Phase = PanicPhase.Aftermath;
             PhaseTime = 4f;
             Message = BuildDamageSummary();
-            if (DeveloperNoLoss)
+            if (DeveloperNoLoss || DeveloperWaveSkipProtectionV51)
             {
-                LatchDeveloperNoLoss(FailureReason);
-                Message += " Geliştirici kaybetmeme koruması açık; gerçek hasar değişmedi, bu geçişe ödül verilmez.";
+                if (DeveloperNoLoss) LatchDeveloperNoLoss(FailureReason);
+                Message += " Geliştirici dalga koruması açık; gerçek hasar ve erzak tüketimi korunur, bu geçişe ödül verilmez.";
             }
         }
 
@@ -828,7 +830,7 @@ namespace TooLateToPanic
                 globalFireProtection = Mathf.Min(0.42f,
                     fireProtectionCount * 0.08f + Mathf.Max(0, FireToolCount) * 0.11f);
 
-            float severity = Mathf.Min(1.25f, 1f + Mathf.Max(0, Wave - 1) * 0.008f);
+            float severity = DisasterSeverityV52;
             float sum = 0f;
             for (int i = 0; i < Items.Count; i++)
             {
@@ -874,10 +876,10 @@ namespace TooLateToPanic
                 normalizedTotal += item.Contribution;
             }
 
-            if (Disaster == DisasterType.Storm && normalizedTotal > 100f)
+            if (normalizedTotal > 100f)
             {
-                // The new wind roof/window risks can exceed one item's share of the
-                // excess. Scale only this new type to preserve a meaningful 0..100 total.
+                // Higher waves can saturate all hazards. Preserve every item's share
+                // and the exact 0..100 total rather than subtracting from just one item.
                 float scale = 100f / normalizedTotal;
                 for (int i = 0; i < Items.Count; i++)
                 {
@@ -886,20 +888,6 @@ namespace TooLateToPanic
                     Items[i].Damage = baseRisk <= 0f ? 0f : Mathf.Clamp01(Items[i].Contribution / baseRisk) * 100f;
                 }
                 normalizedTotal = 100f;
-            }
-            if (normalizedTotal > 100f)
-            {
-                float excess = normalizedTotal - 100f;
-                for (int i = 0; i < Items.Count; i++)
-                {
-                    if (Items[i].Contribution <= 0f) continue;
-                    Items[i].Contribution = Mathf.Max(0f, Items[i].Contribution - excess);
-                    float baseRisk = BaseRisk(Items[i], Disaster);
-                    Items[i].Damage = baseRisk <= 0f ? 0f : Mathf.Clamp01(Items[i].Contribution / baseRisk) * 100f;
-                    break;
-                }
-                normalizedTotal = 0f;
-                for (int i = 0; i < Items.Count; i++) normalizedTotal += Items[i].Contribution;
             }
             TotalDamage = normalizedTotal;
             ApplySecondaryDamageV5();
@@ -1051,7 +1039,7 @@ namespace TooLateToPanic
 
         private void AwardSuccessfulWaveOnce()
         {
-            if (IsSimulation || DeveloperNoLoss || DeveloperNoLossUsedThisWave) return;
+            if (IsSimulation || DeveloperNoLoss || DeveloperNoLossUsedThisWave || DeveloperWaveSkipProtectionV51) return;
             if (awardApplied) return;
             awardApplied = true;
             CompletedWaves = SaturatingAdd(CompletedWaves, 1);
@@ -1112,7 +1100,7 @@ namespace TooLateToPanic
                     " Afet yine uygulanıyor; çanta ve hasar değişmez, bu geçişe ödül verilmez.";
                 return;
             }
-            if (DeveloperNoLoss && !IsJuryDemo && Phase == PanicPhase.Aftermath)
+            if ((DeveloperNoLoss || DeveloperWaveSkipProtectionV51) && !IsJuryDemo && Phase == PanicPhase.Aftermath)
             {
                 BeginDeveloperNoLossInspection(reason);
                 return;
@@ -1474,7 +1462,8 @@ namespace TooLateToPanic
 
         private static float StableVariation(string itemId, int wave, DisasterType disaster, uint seed)
         {
-            uint hash = seed ^ (uint)(wave * 0x85EBCA6Bu) ^ ((uint)disaster * 0xC2B2AE35u);
+            // Keep household variation stable across waves: progression must not be hidden by a fresh risk roll.
+            uint hash = seed ^ 0x85EBCA6Bu ^ ((uint)disaster * 0xC2B2AE35u);
             if (itemId != null)
                 for (int i = 0; i < itemId.Length; i++)
                     hash = (hash ^ itemId[i]) * 16777619u;

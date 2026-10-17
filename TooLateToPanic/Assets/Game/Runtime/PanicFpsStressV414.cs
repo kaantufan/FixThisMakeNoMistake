@@ -14,14 +14,16 @@ namespace TooLateToPanic
         int fpsPoseFrameV414=-1;
         public float StressIntensityV414 { get { return fpsStressV414; } }
         public bool StressAudioActiveV414 { get { return FpsFeedbackAudioPlayingV414; } }
-        public float PoseSwayAmplitudeV414 { get { return FpsStressVisibleV414 ? .20f*fpsStressV414 : 0; } }
+        public float PoseSwayAmplitudeV414 { get { return FpsStressVisibleV414 ? .32f*fpsStressV414 : 0; } }
         public float FpsStressIntensityV414 { get { return fpsStressV414; } }
-        public float FpsVeilOpacityV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(.16f,.22f,fpsStressV414) : 0; } }
+        public float FpsVeilOpacityV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(.20f,.34f,fpsStressV414) : 0; } }
         public float FpsMovementMultiplierV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(1,.94f,fpsStressV414) : 1; } }
         public float FpsLookMultiplierV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(1,.94f,fpsStressV414) : 1; } }
         public float FpsStressClockV414 { get { return fpsStressClockV414; } }
         public Quaternion FpsDisplayedRotationV414 { get { return fpsPoseV414; } }
         public bool FpsFeedbackAudioPlayingV414 { get { return stressAudioV414!=null&&stressAudioV414.Playing; } }
+        public float FpsHeartVolumeV51 { get { return stressAudioV414 == null ? 0 : stressAudioV414.HeartVolume; } }
+        public float FpsBreathVolumeV51 { get { return stressAudioV414 == null ? 0 : stressAudioV414.BreathVolume; } }
         public Texture2D FpsVeilTextureV414 { get { return fpsVeilV414; } }
         public bool ExperienceFeedbackBlockedV414 { get { return Model==null||Model.IsPaused||NotebookBlocksInput||InventoryOpen||InputLocked||CinematicActive||LossAnnounced||WorkActive||
             hud&&(hud.DeveloperMenuOpen||hud.DeveloperInputBlockedThisFrame||hud.NotebookModalBlocked); } }
@@ -50,10 +52,14 @@ namespace TooLateToPanic
             if(!feedbackOwnerV414)InitExperienceFeedbackV414();
             dt=float.IsNaN(dt)||float.IsInfinity(dt)?0:Mathf.Clamp(dt,0,.1f);
             TickGatherFeedbackV414(dt);
-            if(!BagFirstPersonActive||!BagFinalStageActive)
+            if((!BagFirstPersonActive&&!BagHandoffActiveV51)||!BagFinalStageActive)
             {fpsStressV414=0;fpsStressClockV414=0;fpsPoseReadyV414=false;stressAudioV414.Stop();return;}
             if(ExperienceFeedbackBlockedV414||dt<=0){stressAudioV414.Stop();return;}
-            fpsStressV414=EvaluateDeadlineStressV414(Model.TimeRemaining);fpsStressClockV414+=dt;
+            fpsStressClockV414+=dt;
+            // Audible onset while the view is black, then sustained urgency that rises
+            // with the real remaining bag clock. No extra roll, FOV pulse or actor motion.
+            float onset = .68f * (1 - Mathf.SmoothStep(0, 1, fpsStressClockV414 / 5f));
+            fpsStressV414=Mathf.Max(.32f+.68f*EvaluateDeadlineStressV414(Model.TimeRemaining),onset);
             stressAudioV414.Tick(fpsStressV414);
         }
         public void SuspendExperienceFeedbackV414()
@@ -71,7 +77,7 @@ namespace TooLateToPanic
             if(!fpsPoseReadyV414){fpsPoseV414=Quaternion.Euler(bagPitch,bagYaw,0);fpsPoseReadyV414=true;fpsPoseFrameV414=-1;}
             if(fpsPoseFrameV414!=Time.frameCount&&!ExperienceFeedbackBlockedV414)
             {
-                float sway=.20f*fpsStressV414;
+                float sway=.32f*fpsStressV414;
                 Quaternion target=Quaternion.Euler(bagPitch+Mathf.Sin(fpsStressClockV414*1.73f)*sway,bagYaw+Mathf.Sin(fpsStressClockV414*1.21f+.8f)*sway,0);
                 float dt=Mathf.Clamp(Time.deltaTime,0,.08f);
                 fpsPoseV414=Quaternion.Slerp(fpsPoseV414,target,1-Mathf.Exp(-dt/.10f));fpsPoseFrameV414=Time.frameCount;
@@ -101,6 +107,8 @@ namespace TooLateToPanic
     {
         GameObject root;AudioSource heart,breath;AudioClip heartClip,breathClip;bool ownsHeart;
         public bool Playing { get { return heart&&heart.isPlaying||breath&&breath.isPlaying; } }
+        public float HeartVolume { get { return heart&&heart.isPlaying?heart.volume:0; } }
+        public float BreathVolume { get { return breath&&breath.isPlaying?breath.volume:0; } }
         public PanicStressAudioV414(Transform owner)
         {
             root=new GameObject("V414 local breath and heartbeat");root.transform.SetParent(owner,false);
@@ -113,8 +121,8 @@ namespace TooLateToPanic
         public void Tick(float urgency)
         {
             if(!heart||!breath)return;urgency=Mathf.Clamp01(urgency);
-            heart.volume=Mathf.Lerp(.055f,.13f,urgency);heart.pitch=Mathf.Lerp(.90f,1.25f,urgency);
-            breath.volume=Mathf.Lerp(.012f,.035f,urgency);breath.pitch=Mathf.Lerp(.90f,1.25f,urgency);
+            heart.volume=Mathf.Lerp(.10f,.23f,urgency);heart.pitch=Mathf.Lerp(1f,1.42f,urgency);
+            breath.volume=Mathf.Lerp(.035f,.075f,urgency);breath.pitch=Mathf.Lerp(.96f,1.30f,urgency);
             if(!heart.isPlaying)heart.Play();if(!breath.isPlaying)breath.Play();
         }
         public void Stop(){if(heart)heart.Stop();if(breath)breath.Stop();}
