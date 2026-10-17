@@ -5,8 +5,10 @@ namespace TooLateToPanic
     public sealed partial class PanicHomeWorld
     {
         public const float BagHandoffDurationV51 = 2f;
-        public const float BagHandoffFadeOutV51 = .24f;
-        public const float BagHandoffBlackEndV51 = .82f;
+        // The complete camera trip is concealed by an unmistakable, bounded black hold.
+        // Total handoff stays two seconds; the real preparation clock remains suspended.
+        public const float BagHandoffFadeOutV51 = .18f;
+        public const float BagHandoffBlackEndV51 = 1.02f;
         int bagBlackDrawFrameV51 = -1;
         public int BagHandoffStartedCountV51 { get; private set; }
         public int BagHandoffFullBlackDrawFramesV51 { get; private set; }

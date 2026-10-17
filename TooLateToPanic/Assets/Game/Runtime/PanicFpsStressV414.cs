@@ -11,12 +11,15 @@ namespace TooLateToPanic
         float fpsStressV414,fpsStressClockV414;
         Quaternion fpsPoseV414;
         bool fpsPoseReadyV414;
-        int fpsPoseFrameV414=-1;
+        public bool ReducedFpsMotionV54 { get; private set; }
+        // Locomotion reads the player's unmodified look, while selection uses View's
+        // displayed centre ray. Cosmetic roll cannot steer the CharacterController.
+        public Quaternion FpsInputRotationV54 { get { return Quaternion.Euler(bagPitch,bagYaw,0); } }
         public float StressIntensityV414 { get { return fpsStressV414; } }
         public bool StressAudioActiveV414 { get { return FpsFeedbackAudioPlayingV414; } }
-        public float PoseSwayAmplitudeV414 { get { return FpsStressVisibleV414 ? .32f*fpsStressV414 : 0; } }
+        public float PoseSwayAmplitudeV414 { get { return FpsStressVisibleV414&&!ReducedFpsMotionV54 ? Mathf.Lerp(.75f,1.4f,fpsStressV414) : 0; } }
         public float FpsStressIntensityV414 { get { return fpsStressV414; } }
-        public float FpsVeilOpacityV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(.20f,.34f,fpsStressV414) : 0; } }
+        public float FpsVeilOpacityV414 { get { return FpsStressVisibleV414 ? EvaluateFpsVeilOpacityV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54) : 0; } }
         public float FpsMovementMultiplierV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(1,.94f,fpsStressV414) : 1; } }
         public float FpsLookMultiplierV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(1,.94f,fpsStressV414) : 1; } }
         public float FpsStressClockV414 { get { return fpsStressClockV414; } }
@@ -31,17 +34,45 @@ namespace TooLateToPanic
         public static float EvaluateDeadlineStressV414(float seconds)
         { if(float.IsNaN(seconds)||float.IsInfinity(seconds))return 0;float t=1-Mathf.Clamp01(seconds/PanicModel.NormalBagSeconds);return t*t*(3-2*t); }
 
+        public void SetReducedFpsMotionV54(bool value)
+        { ReducedFpsMotionV54=value;fpsPoseReadyV414=false; }
+
+        // Low-frequency motion, no actor translation, input smoothing, random shake,
+        // or flashing. Reduced motion retains a steady vignette and urgency audio.
+        public static Vector3 EvaluateFpsSwayDegreesV54(float clock,float urgency,bool reducedMotion)
+        {
+            if(reducedMotion||float.IsNaN(clock)||float.IsInfinity(clock))return Vector3.zero;
+            urgency=FiniteUnitV54(urgency);
+            return new Vector3(Mathf.Sin(clock*1.37f)*Mathf.Lerp(.30f,.62f,urgency),
+                Mathf.Sin(clock*.93f+.8f)*Mathf.Lerp(.16f,.34f,urgency),
+                Mathf.Sin(clock*1.12f)*Mathf.Lerp(.75f,1.4f,urgency));
+        }
+        public static float EvaluateFpsFovV54(float clock,float urgency,bool reducedMotion)
+        {
+            if(reducedMotion||float.IsNaN(clock)||float.IsInfinity(clock))return 62;
+            return 62+Mathf.Sin(clock*1.66f)*Mathf.Lerp(.35f,.85f,FiniteUnitV54(urgency));
+        }
+        public static float EvaluateFpsVeilOpacityV54(float clock,float urgency,bool reducedMotion)
+        {
+            if(float.IsNaN(clock)||float.IsInfinity(clock))clock=0;
+            float breath=reducedMotion?0:(.5f+.5f*Mathf.Sin(clock*2.35f));
+            return .57f+.13f*FiniteUnitV54(urgency)+.045f*breath;
+        }
+        static float FiniteUnitV54(float value)
+        {return float.IsNaN(value)||float.IsInfinity(value)?0:Mathf.Clamp01(value);}
+
         void InitExperienceFeedbackV414()
         {
             if(feedbackOwnerV414)return;
             feedbackOwnerV414=gameObject.AddComponent<PanicExperienceFeedbackOwnerV414>();feedbackOwnerV414.Owner=this;
             stressAudioV414=new PanicStressAudioV414(transform);
-            fpsVeilV414=new Texture2D(96,96,TextureFormat.RGBA32,false,true){name="V414_LocalReadableFpsVeil",hideFlags=HideFlags.HideAndDontSave,wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};
+            fpsVeilV414=new Texture2D(96,96,TextureFormat.RGBA32,false,true){name="V54_ClearCentrePanicVignette",hideFlags=HideFlags.HideAndDontSave,wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};
             var pixels=new Color32[96*96];
             for(int y=0;y<96;y++)for(int x=0;x<96;x++)
             {
-                float nx=(x/95f-.5f)*2,ny=(y/95f-.5f)*2;float radial=Mathf.Clamp01((nx*nx+ny*ny-.12f)/1.35f);
-                byte alpha=(byte)Mathf.RoundToInt(Mathf.Lerp(.15f,1,radial*radial)*255);
+                float nx=(x/95f-.5f)*2,ny=(y/95f-.5f)*2;
+                float radial=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.28f,1.02f,Mathf.Sqrt(nx*nx+ny*ny)));
+                byte alpha=(byte)Mathf.RoundToInt(Mathf.Lerp(.025f,1,radial)*255);
                 pixels[y*96+x]=new Color32(6,9,13,alpha);
             }
             fpsVeilV414.SetPixels32(pixels);fpsVeilV414.Apply(false,true);
@@ -57,7 +88,8 @@ namespace TooLateToPanic
             if(ExperienceFeedbackBlockedV414||dt<=0){stressAudioV414.Stop();return;}
             fpsStressClockV414+=dt;
             // Audible onset while the view is black, then sustained urgency that rises
-            // with the real remaining bag clock. No extra roll, FOV pulse or actor motion.
+            // with the real remaining bag clock. Presentation is bounded separately;
+            // it never changes the controller, preparation timing or model outcome.
             float onset = .68f * (1 - Mathf.SmoothStep(0, 1, fpsStressClockV414 / 5f));
             fpsStressV414=Mathf.Max(.32f+.68f*EvaluateDeadlineStressV414(Model.TimeRemaining),onset);
             stressAudioV414.Tick(fpsStressV414);
@@ -74,13 +106,13 @@ namespace TooLateToPanic
         public void ApplyBagPoseV414()
         {
             if(!BagFirstPersonActive||!View)return;
-            if(!fpsPoseReadyV414){fpsPoseV414=Quaternion.Euler(bagPitch,bagYaw,0);fpsPoseReadyV414=true;fpsPoseFrameV414=-1;}
-            if(fpsPoseFrameV414!=Time.frameCount&&!ExperienceFeedbackBlockedV414)
+            if(!fpsPoseReadyV414||!ExperienceFeedbackBlockedV414)
             {
-                float sway=.32f*fpsStressV414;
-                Quaternion target=Quaternion.Euler(bagPitch+Mathf.Sin(fpsStressClockV414*1.73f)*sway,bagYaw+Mathf.Sin(fpsStressClockV414*1.21f+.8f)*sway,0);
-                float dt=Mathf.Clamp(Time.deltaTime,0,.08f);
-                fpsPoseV414=Quaternion.Slerp(fpsPoseV414,target,1-Mathf.Exp(-dt/.10f));fpsPoseFrameV414=Time.frameCount;
+                Vector3 sway=FpsStressVisibleV414?EvaluateFpsSwayDegreesV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54):Vector3.zero;
+                // Every same-frame look/ray request uses the new input immediately.
+                // The stress clock advances only in TickExperienceFeedbackV414.
+                fpsPoseV414=FpsInputRotationV54*Quaternion.Euler(sway);fpsPoseReadyV414=true;
+                View.fieldOfView=FpsStressVisibleV414?EvaluateFpsFovV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54):62;
             }
             View.transform.SetPositionAndRotation(PlayerPosition+Vector3.up*1.62f,fpsPoseV414);
         }

@@ -90,7 +90,7 @@ namespace TooLateToPanic
             }
         }
                 public static Vector3 SampleWind(GameObject root)
-        {var state=root?root.GetComponent<PanicStormMotionV414>():null;return state?new Vector3(-1,0,.27f)*state.Gust:Vector3.zero;}
+        {root=PanicDisasterArt.HazardRootV54(root,DisasterType.Storm);var state=root?root.GetComponent<PanicStormMotionV414>():null;return state?new Vector3(-1,0,.27f)*state.Gust:Vector3.zero;}
         static void CreateFunnelV414(GameObject root,PanicStormArtState owner,Material haze,Material leaves)
         {
             var s=root.AddComponent<PanicStormMotionV414>();

@@ -893,7 +893,7 @@ namespace TooLateToPanic
             Frame(cue, new Color(.22f, .08f, .055f, .96f), new Color(Ember.r, Ember.g, Ember.b, .7f), 1f); Region(cue);
             DrawWarning(new Rect(cue.x + 18, cue.y + 18, 34, 34), Ember);
             Label(new Rect(cue.x + 72, cue.y + 6, cue.width - 88, 23), "AFET BAŞLADI", ColorText(_tiny, new Color(.96f, .63f, .53f)));
-            Label(new Rect(cue.x + 72, cue.y + 28, cue.width - 88, 37), DisasterName(World.Model.Disaster), _heading);
+            Label(new Rect(cue.x + 72, cue.y + 28, cue.width - 88, 37), World.Model.ActiveDisasterLabelV54, _heading);
         }
 
         void DrawToast(string message)
@@ -925,7 +925,7 @@ namespace TooLateToPanic
             float band = Mathf.Lerp(62f, 84f, appear);
             Fill(new Rect(0, 0, CanvasWidth, band), new Color(.035f, .03f, .025f, .94f));
             Fill(new Rect(0, CanvasHeight - 150, CanvasWidth, 150), new Color(.035f, .03f, .025f, .94f));
-            Label(new Rect(32, 25, 900, 27), PanicKktcStoryV53.LocationBadge + "  ·  " + DisasterName(World.Model.Disaster), _tiny);
+            Label(new Rect(32, 25, 900, 27), PanicKktcStoryV53.LocationBadge + "  ·  " + World.Model.ActiveDisasterLabelV54, _tiny);
             string title = string.IsNullOrEmpty(World.CinematicTitle) ? "Afetin ardından" : World.CinematicTitle;
             Label(new Rect(410, CanvasHeight - 135, 1140, 96), title, _story);
             DrawBar(new Rect(410, CanvasHeight - 25, 1140, 3), World.CinematicProgress, Brass);
@@ -1018,6 +1018,7 @@ namespace TooLateToPanic
             Button(new Rect(924, 430, 496, 62), "YENİDEN BAŞLA", _pauseChoice == 2, Brass, RestartRun);
             Button(new Rect(924, 510, 496, 62), "BAŞLIĞA DÖN", _pauseChoice == 3, Rust, ReturnToMenu);
             Button(new Rect(924, 590, 496, 50), PanicBackgroundMusic.Enabled ? "MÜZİK · AÇIK" : "MÜZİK · KAPALI", _pauseChoice == 4, Sea, () => PanicBackgroundMusic.Enabled = !PanicBackgroundMusic.Enabled);
+            Button(new Rect(1160, 658, 260, 46), World.ReducedFpsMotionV54 ? "FPS HAREKETİ · AZ" : "FPS HAREKETİ · TAM", _pauseChoice == 5, Sea, () => World.SetReducedFpsMotionV54(!World.ReducedFpsMotionV54));
             DrawKeycap(new Rect(925, 662, 220, 42), "ESC", "DEVAM ET", Line);
             HandlePauseNavigation();
         }

@@ -85,7 +85,7 @@ namespace TooLateToPanic
             bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
             bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
             if (Array.IndexOf(args, "--overhaul414-smoke") >= 0) Application.runInBackground = true;
-            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0) Application.runInBackground = true;
+            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0 || Array.IndexOf(args, "--v54-smoke") >= 0) Application.runInBackground = true;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
             if (fullFlowSmoke)
@@ -156,6 +156,8 @@ namespace TooLateToPanic
             InitExperienceFeedbackV414();
             InitOverhaulV414();
             InitRevisionV5();
+            InitFloorFinishRepairV54();
+            InitGuidanceV54();
             previousPhase = Model.Phase; previousWave = Model.Wave;
             if (smoke) gameObject.AddComponent<PanicHomeSmoke>();
             if (Array.IndexOf(args, "--residence-smoke") >= 0) { Application.runInBackground=true; gameObject.AddComponent<PanicResidenceSmoke>(); }
@@ -405,6 +407,7 @@ namespace TooLateToPanic
             gatherPoseTime = Mathf.Max(0, gatherPoseTime - dt);
             TickHouseAudio();
             TickExperienceFeedbackV414(dt);
+            TickGuidanceV54();
         }
 
         void LateUpdate()
@@ -422,7 +425,8 @@ namespace TooLateToPanic
         static Vector3 Flat(Vector3 p) { return new Vector3(p.x, 0, p.z); }
         void MovePlayer(float dt, Vector2 input)
         {
-            Vector3 forward = Flat(View.transform.forward).normalized, right = Flat(View.transform.right).normalized;
+            Quaternion movementBasisV54 = BagFirstPersonActive ? FpsInputRotationV54 : View.transform.rotation;
+            Vector3 forward = Flat(movementBasisV54 * Vector3.forward).normalized, right = Flat(movementBasisV54 * Vector3.right).normalized;
             float speed = Input.GetKey(KeyCode.LeftShift) ? RunSpeed : WalkSpeed;
             speed *= FpsMovementMultiplierV414;
             Vector3 target = Vector3.ClampMagnitude(right * input.x + forward * input.y, 1) * speed;
@@ -979,6 +983,7 @@ namespace TooLateToPanic
         }
         void OnGUI()
         {
+            DrawGuidanceV54();
             if(NotebookBlocksInput)return;
             DrawGatherRewardsV414();
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}

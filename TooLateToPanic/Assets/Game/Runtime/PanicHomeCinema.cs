@@ -97,7 +97,7 @@ namespace TooLateToPanic
             if (to == PanicPhase.Disaster)
             {
                 BeginResidenceSession();
-                SetResidenceCinematic("Disaster", Model.IsSimulation ? "Afet başladı" : PanicKktcStoryV53.HazardNarrative(Model.Disaster), 8f);
+                SetResidenceCinematic("Disaster", Model.IsSimulation ? "Afet başladı" : CompoundHazardCaptionV54(), 8f);
                 cinematicActorStart = player ? player.position : residenceReturnPosition;
                 cinematicHatchApproach = BunkerPosition + new Vector3(0f, .04f, -1.18f);
                 cinematicActorEnd = BunkerInteriorPosition + new Vector3(0f, .04f, -.42f);
@@ -122,7 +122,7 @@ namespace TooLateToPanic
             if (to == PanicPhase.Aftermath)
             {
                 BeginResidenceSession();
-                SetResidenceCinematic("Aftermath", Model.IsSimulation ? "Hasar gezisi" : PanicKktcStoryV53.AftermathNarrative(Model.Wave, Model.Disaster), 4f);
+                SetResidenceCinematic("Aftermath", Model.IsSimulation ? "Hasar gezisi" : CompoundAftermathCaptionV54(), 4f);
                 CinematicShowsActor = false;
                 if (player && residenceCinematicSession && !Model.IsSimulation && ShelterReachedForPresentationV5)
                     SetResidencePlayerPosition(ShelterWaitPositionV5);
@@ -421,20 +421,20 @@ namespace TooLateToPanic
         {
             bool detail = age >= 6.2f;
             float t = SmoothResidence01(detail ? (age - 6.2f) / 1.8f : (age - 4.7f) / 1.5f);
-            if (Model.Disaster == DisasterType.Flood)
+            if (Model.HasActiveDisasterV54(DisasterType.Flood))
             {
                 // Keep the creek and actual home together, above the west neighbour roof/canopy.
                 camera = detail ? Vector3.Lerp(new Vector3(-27,22,-19),new Vector3(-25.5f,21,-17),t) : Vector3.Lerp(new Vector3(-29,23,-24),new Vector3(-27,22,-22),t);
                 target = detail ? new Vector3(-7.5f,.7f,-.5f) : new Vector3(-7,1,0);
                 fov = detail ? 56 : 52;
             }
-            else if (Model.Disaster.ToString() == "Storm")
+            else if (Model.HasActiveDisasterV54(DisasterType.Storm))
             {
                 // West-side two-subject frame: ground contact, full funnel/cloud and home below the letterbox.
                 camera = detail ? Vector3.Lerp(new Vector3(-20.5f,20,-26.5f),new Vector3(-19.5f,19.5f,-25),t) : Vector3.Lerp(new Vector3(-22,21,-29),new Vector3(-21,20.5f,-27.5f),t);
                 target = detail ? new Vector3(-6.7f,5.2f,4.8f) : new Vector3(-6.5f,5.1f,4.5f); fov = 56;
             }
-            else if (Model.Disaster == DisasterType.Fire)
+            else if (Model.HasActiveDisasterV54(DisasterType.Fire))
             {
                 if (detail)
                 {

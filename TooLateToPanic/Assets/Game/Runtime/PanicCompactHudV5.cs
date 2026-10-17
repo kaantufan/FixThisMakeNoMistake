@@ -41,7 +41,7 @@ namespace TooLateToPanic
             DrawDisasterSymbol(new Rect(wave.x + 14, wave.y + 18, 26, 28), model.Disaster, Brass);
             string stage = World.JuryActive ? "HAZIRLIK" : "DALGA " + model.Wave;
             Label(new Rect(wave.x + 53, wave.y + 8, wave.width - 65, 22), stage + "  ·  " + PhaseName(model.Phase), _tiny);
-            FittedLabel(new Rect(wave.x + 53, wave.y + 27, wave.width - 65, 30), DisasterName(model.Disaster), compactValueV5, MainText, 19);
+            FittedLabel(new Rect(wave.x + 53, wave.y + 27, wave.width - 65, 30), model.ActiveDisasterLabelV54, compactValueV5, MainText, 19);
 
             Rect timer = TimerCardBounds;
             bool preparing = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;

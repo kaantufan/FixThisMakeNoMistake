@@ -41,9 +41,9 @@ namespace TooLateToPanic
         }
         public static int NavigatePauseChoice(int choice, KeyCode key)
         {
-            if (key == KeyCode.W || key == KeyCode.A || key == KeyCode.UpArrow || key == KeyCode.LeftArrow) return (choice+4)%5;
-            if (key == KeyCode.S || key == KeyCode.D || key == KeyCode.DownArrow || key == KeyCode.RightArrow) return (choice+1)%5;
-            return Mathf.Clamp(choice,0,4);
+            if (key == KeyCode.W || key == KeyCode.A || key == KeyCode.UpArrow || key == KeyCode.LeftArrow) return (choice+5)%6;
+            if (key == KeyCode.S || key == KeyCode.D || key == KeyCode.DownArrow || key == KeyCode.RightArrow) return (choice+1)%6;
+            return Mathf.Clamp(choice,0,5);
         }
         void HandlePauseNavigation()
         {
@@ -62,6 +62,7 @@ namespace TooLateToPanic
                     case 2: RestartRun();break;
                     case 3: ReturnToMenu();break;
                     case 4: PanicBackgroundMusic.Enabled=!PanicBackgroundMusic.Enabled;break;
+                    case 5: World.SetReducedFpsMotionV54(!World.ReducedFpsMotionV54);break;
                 }
             }
         }

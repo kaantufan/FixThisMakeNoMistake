@@ -128,8 +128,8 @@ namespace TooLateToPanic
                 while(exteriorOutcomeCount<JuryDemo.Outcomes.Count)AddNeighborhoodAftermath(JuryDemo.Outcomes[exteriorOutcomeCount++].Disaster);
             }
             else if(Model.Phase==PanicPhase.Aftermath||Model.Phase==PanicPhase.Inspection&&Model.TotalDamage>0)
-                AddNeighborhoodAftermath(Model.Disaster);
-            bool flood=Model.Disaster==DisasterType.Flood&&(hazard||Model.Phase==PanicPhase.Inspection)||neighborhoodDamage.ContainsKey(DisasterType.Flood);
+            { for(int i=0;i<4;i++) if(Model.HasActiveDisasterV54((DisasterType)i)) AddNeighborhoodAftermath((DisasterType)i); }
+            bool flood=Model.HasActiveDisasterV54(DisasterType.Flood)&&(hazard||Model.Phase==PanicPhase.Inspection)||neighborhoodDamage.ContainsKey(DisasterType.Flood);
             PanicExteriorArt.AnimateLandscape(landscape,residenceTime,flood);
         }
     }

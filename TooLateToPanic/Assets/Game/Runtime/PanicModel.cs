@@ -141,10 +141,6 @@ namespace TooLateToPanic
         private bool scoresPersisted = true;
         private bool cheatedScoreRemovalPending;
         private HighscoreEntry recordedRunHighscore;
-        private DisasterType previousDisaster;
-        private DisasterType twoWavesAgoDisaster;
-        private bool hasPreviousDisaster;
-        private bool hasTwoWavesAgoDisaster;
         private uint runSeed;
 
         [Serializable]
@@ -653,11 +649,8 @@ namespace TooLateToPanic
             scoresPersisted = true;
             CheatedRun = false;
             recordedRunHighscore = null;
-            previousDisaster = DisasterType.Earthquake;
-            twoWavesAgoDisaster = DisasterType.Earthquake;
-            hasPreviousDisaster = false;
-            hasTwoWavesAgoDisaster = false;
             runSeed = 0x20261016u;
+            ResetCompoundDisastersV54();
             Items = CreateInitialItems();
         }
 
@@ -690,34 +683,7 @@ namespace TooLateToPanic
         }
 
         private void SelectDisasterForWave()
-        {
-            if (Wave <= 3)
-                Disaster = DisasterType.Earthquake;
-            else if (Wave <= 6)
-                Disaster = DisasterType.Flood;
-            else if (Wave <= 9)
-                Disaster = DisasterType.Fire;
-            else
-            {
-                uint state = runSeed ^ (uint)(Wave * 0x9E3779B9u);
-                DisasterType chosen;
-                do
-                {
-                    chosen = (DisasterType)(NextUInt(ref state) % 3u);
-                }
-                while (hasPreviousDisaster && hasTwoWavesAgoDisaster &&
-                       chosen == previousDisaster && previousDisaster == twoWavesAgoDisaster);
-                Disaster = chosen;
-            }
-
-            if (hasPreviousDisaster)
-            {
-                twoWavesAgoDisaster = previousDisaster;
-                hasTwoWavesAgoDisaster = true;
-            }
-            previousDisaster = Disaster;
-            hasPreviousDisaster = true;
-        }
+        { SelectCompoundDisastersV54(); }
 
         private void AdvanceTimedPhase()
         {
@@ -808,7 +774,7 @@ namespace TooLateToPanic
             }
         }
 
-        private void CalculateDamage()
+        private void CalculateSingleDisasterDamageV54(bool deferCapV54 = false)
         {
             float globalFloodGuard = 0f;
             float globalFireProtection = 0f;
@@ -876,7 +842,7 @@ namespace TooLateToPanic
                 normalizedTotal += item.Contribution;
             }
 
-            if (normalizedTotal > 100f)
+            if (normalizedTotal > 100f && !deferCapV54)
             {
                 // Higher waves can saturate all hazards. Preserve every item's share
                 // and the exact 0..100 total rather than subtracting from just one item.
@@ -890,7 +856,7 @@ namespace TooLateToPanic
                 normalizedTotal = 100f;
             }
             TotalDamage = normalizedTotal;
-            ApplySecondaryDamageV5();
+            ApplySecondaryDamageV5(deferCapV54);
         }
 
         private static float BaseRisk(PanicItem item, DisasterType disaster)
@@ -1295,7 +1261,7 @@ namespace TooLateToPanic
 
         private string BuildWaveBrief()
         {
-            return "Dalga " + Wave + " · " + DisasterName(Disaster) + " · Çantaya 1 su ve 1 gıda koy. Diğer ekipmanlar isteğe bağlı.";
+            return "Dalga " + Wave + " · " + ActiveDisasterLabelV54 + " · Çantaya 1 su ve 1 gıda koy. Diğer ekipmanlar isteğe bağlı.";
         }
 
         private void ClearWaveDamage()

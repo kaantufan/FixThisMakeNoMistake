@@ -169,6 +169,7 @@ namespace TooLateToPanic
                 bagHandsCamera.enabled = visible;
                 if(bagHandsFill)bagHandsFill.enabled=visible;
                 bagHandsCamera.transform.SetPositionAndRotation(View.transform.position, View.transform.rotation);
+                bagHandsCamera.fieldOfView = View.fieldOfView;
                 if (visible)
                 {
                     bagHandClock += dt; bagHandAge += dt; bagOpenAge += dt;

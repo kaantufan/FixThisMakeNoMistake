@@ -9,7 +9,7 @@ namespace TooLateToPanic
     public sealed partial class PanicHomeWorld
     {
         public static readonly Vector3 PanicRoomPositionV5 = new Vector3(4.2f, 3.2f, .55f);
-        public bool UsesUpperPanicRoomV5 { get { return Model != null && Model.Disaster == DisasterType.Flood; } }
+        public bool UsesUpperPanicRoomV5 { get { return Model != null && Model.HasActiveDisasterV54(DisasterType.Flood); } }
         public Vector3 ActiveShelterPositionV5 { get { return UsesUpperPanicRoomV5 ? PanicRoomPositionV5 : BunkerPosition; } }
         public string ActiveShelterLabelV5 { get { return UsesUpperPanicRoomV5 ? "Üst kat panik odası" : "Bodrum sığınağı"; } }
         public int MainsLightCountV5 { get { return mainsLightsV5.Count; } }
@@ -280,6 +280,7 @@ namespace TooLateToPanic
     {
         readonly List<Transform> houses=new List<Transform>();
         readonly List<Vector3> origins=new List<Vector3>();
+        readonly List<Quaternion> rotationsV54=new List<Quaternion>();
         PanicHomeWorld world;
         public int HouseCount {get{return houses.Count;}}
         public int MovingHouses {get;private set;}
@@ -289,14 +290,16 @@ namespace TooLateToPanic
         public float CurrentMaximumTiltV52 {get;private set;}
         public void Bind(PanicHomeWorld owner,GameObject landscape)
         {
+            RestoreNeighbourPosesV54();
+            houses.Clear();origins.Clear();rotationsV54.Clear();
             world=owner;if(!landscape)return;
             foreach(var t in landscape.GetComponentsInChildren<Transform>(true))
-                if(t.name.StartsWith("V5 Neighbour house ",StringComparison.Ordinal)){houses.Add(t);origins.Add(t.localPosition);}
+                if(t.name.StartsWith("V5 Neighbour house ",StringComparison.Ordinal)){houses.Add(t);origins.Add(t.localPosition);rotationsV54.Add(t.localRotation);}
         }
         void LateUpdate()
         {
-            if(!world||world.Model==null)return;
-            if(world.Model.IsPaused||world.NotebookBlocksInput)return;
+            if(!world||world.Model==null){RestoreNeighbourPosesV54();return;}
+            if(world.Model.IsPaused||world.NotebookBlocksInput){RestoreNeighbourPosesV54();return;}
             bool active=world.QuakeReadabilityWindowV414;
             PresentationScaleV52=PanicDisasterArt.ClampPresentationScaleV52(world.Model.DisasterPresentationScaleV52);
             float t=world.QuakeReadabilityAgeV414-4.7f;
@@ -306,13 +309,20 @@ namespace TooLateToPanic
             {
                 var h=houses[i];if(!h)continue;
                 Vector3 shift=new Vector3(Mathf.Sin(t*27+i*.7f)*.07f,Mathf.Sin(t*35+i)*.018f,Mathf.Cos(t*24+i)*.045f)*envelope*PresentationScaleV52;
-                h.localPosition=origins[i]+shift;h.localRotation=Quaternion.Euler(Mathf.Sin(t*24+i)*.38f*envelope*PresentationScaleV52,0,Mathf.Cos(t*28+i)*.55f*envelope*PresentationScaleV52);
+                h.localPosition=origins[i]+shift;h.localRotation=rotationsV54[i]*Quaternion.Euler(Mathf.Sin(t*24+i)*.38f*envelope*PresentationScaleV52,0,Mathf.Cos(t*28+i)*.55f*envelope*PresentationScaleV52);
                 if(shift.sqrMagnitude>.000001f)MovingHouses++;
                 MaximumOffset=Mathf.Max(MaximumOffset,shift.magnitude);
                 CurrentMaximumOffsetV52=Mathf.Max(CurrentMaximumOffsetV52,shift.magnitude);
-                CurrentMaximumTiltV52=Mathf.Max(CurrentMaximumTiltV52,Quaternion.Angle(Quaternion.identity,h.localRotation));
+                CurrentMaximumTiltV52=Mathf.Max(CurrentMaximumTiltV52,Quaternion.Angle(rotationsV54[i],h.localRotation));
             }
         }
-        void OnDisable(){for(int i=0;i<houses.Count;i++)if(houses[i]){houses[i].localPosition=origins[i];houses[i].localRotation=Quaternion.identity;}MovingHouses=0;CurrentMaximumOffsetV52=CurrentMaximumTiltV52=0;}
+        void RestoreNeighbourPosesV54()
+        {
+            for(int i=0;i<houses.Count;i++)if(houses[i])
+            {houses[i].localPosition=origins[i];houses[i].localRotation=rotationsV54[i];}
+            MovingHouses=0;CurrentMaximumOffsetV52=CurrentMaximumTiltV52=0;
+        }
+        void OnDisable(){RestoreNeighbourPosesV54();}
+        void OnDestroy(){RestoreNeighbourPosesV54();}
     }
 }

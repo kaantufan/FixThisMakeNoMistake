@@ -22,7 +22,7 @@ namespace TooLateToPanic
         PanicHomeWorld world;
         PanicPhase lastPhase;
         float clock,responseClock,hazardClock;
-        bool initialized,phaseLatch,responsePending;
+        bool initialized,phaseLatch,responsePending,observedFloodV54;
         int eventCount;
         public bool HasObservedDisaster {get;private set;}
         public DisasterType LastObservedDisaster {get;private set;}
@@ -53,7 +53,7 @@ namespace TooLateToPanic
         }
         public void ResetRun()
         {
-            clock=responseClock=hazardClock=0;eventCount=0;HasObservedDisaster=false;phaseLatch=responsePending=false;
+            clock=responseClock=hazardClock=0;observedFloodV54=false;eventCount=0;HasObservedDisaster=false;phaseLatch=responsePending=false;
             if(responseRoot){responseRoot.SetActive(false);Destroy(responseRoot);}responseRoot=null;response.Clear();zodiac=zodiacCrew=null;zodiacRig=null;zodiacAnimator=null;zodiacSpeed=0;
             for(int i=0;i<wrecks.Length;i++)if(wrecks[i]){wrecks[i].SetActive(false);Destroy(wrecks[i]);wrecks[i]=null;}
             residualSmoke.Clear();foreach(var c in traffic){c.Speed=0;if(c.Root)c.Root.SetActive(false);}
@@ -64,7 +64,7 @@ namespace TooLateToPanic
         public void ObserveDisaster(DisasterType type)
         {
             if(!world||world.Model==null||world.Model.Phase!=PanicPhase.Disaster||world.Model.Disaster!=type||phaseLatch)return;
-            phaseLatch=true;HasObservedDisaster=true;LastObservedDisaster=type;responsePending=true;eventCount++;hazardClock=0;
+            phaseLatch=true;observedFloodV54=world.Model.HasActiveDisasterV54(DisasterType.Flood);HasObservedDisaster=true;LastObservedDisaster=type;responsePending=true;eventCount++;hazardClock=0;
         }
         void Update(){Tick(Time.deltaTime);}
         public void Tick(float dt)
@@ -90,10 +90,10 @@ namespace TooLateToPanic
             {
                 var root=parked[i].Root;root.SetActive(phase!=PanicPhase.Title&&!wrecks[i]);
                 Vector3 p=ParkedPosition(i);float roll=0,pitch=0;
-                if(phase==PanicPhase.Disaster&&model.Disaster==DisasterType.Earthquake)
+                if(phase==PanicPhase.Disaster&&model.HasActiveDisasterV54(DisasterType.Earthquake))
                 {float kick=Mathf.Exp(-Mathf.Repeat(hazardClock+i*.18f,1.45f)*2.8f);roll=Mathf.Sin(hazardClock*24+i)*kick*1.8f;pitch=Mathf.Sin(hazardClock*31+i)*kick; p.y+=Mathf.Abs(Mathf.Sin(hazardClock*31))*kick*.035f;}
-                else if(phase==PanicPhase.Disaster&&model.Disaster==DisasterType.Storm)
-                {float gust=Mathf.Pow(.5f+.5f*Mathf.Sin(hazardClock*1.08f+Mathf.Sin(hazardClock*.37f)*1.7f),2);roll=-gust*2.4f;}
+                if(phase==PanicPhase.Disaster&&model.HasActiveDisasterV54(DisasterType.Storm))
+                {float gust=Mathf.Pow(.5f+.5f*Mathf.Sin(hazardClock*1.08f+Mathf.Sin(hazardClock*.37f)*1.7f),2);roll+=-gust*2.4f;}
                 root.transform.SetPositionAndRotation(p,Quaternion.Euler(pitch,90,roll));
             }
             foreach(var walker in civilians)
@@ -134,7 +134,7 @@ namespace TooLateToPanic
                 vehicle.AddComponent<PanicVehicleAudio>().Bind(world,new[]{"siren_police","siren_ambulance","siren_fire","siren_rescue"}[i]);
                 vehicle.transform.SetPositionAndRotation(new Vector3(38+i*8,.035f,-21.3f),PanicStreetLifeArtV414.VehicleHeading(Vector3.left,car.ModelFront));car.Previous=vehicle.transform.position;
             }
-            if(LastObservedDisaster==DisasterType.Flood)CreateFloodZodiac();
+            if(observedFloodV54)CreateFloodZodiac();
         }
         void AnimateResponse(float dt)
         {

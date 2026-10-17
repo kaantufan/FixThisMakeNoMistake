@@ -12,7 +12,7 @@ namespace TooLateToPanic
         internal bool QuakeReadabilityWindowV414
         {
             get { return isActiveAndEnabled && Model != null && !JuryActive && CinematicActive &&
-                CinematicKind == "Disaster" && Model.Disaster == DisasterType.Earthquake &&
+                CinematicKind == "Disaster" && Model.HasActiveDisasterV54(DisasterType.Earthquake) &&
                 residenceCinematicAge >= 4.7f && residenceCinematicAge < 8f; }
         }
 
@@ -67,7 +67,23 @@ namespace TooLateToPanic
             camera = new Vector3(19f, 12.2f, -24f);
             target = new Vector3(1.5f, 2.25f, .25f);
             fov = 50f;
-            CinematicTitle = "Deprem: ev sarsılıyor";
+            if (Model.ActiveDisasterCountV54 > 1)
+            {
+                CinematicTitle = Model.ActiveDisasterLabelV54 + ": ev sarsılıyor";
+                if (Model.HasActiveDisasterV54(DisasterType.Storm))
+                {
+                    // Preserve the same existing cinematic interval and motion, with room
+                    // for the west-side storm column and the shaking home in one frame.
+                    camera = new Vector3(-22f, 21f, -29f);
+                    target = new Vector3(-6.5f, 5.1f, 4.5f); fov = 56f;
+                }
+                else if (Model.HasActiveDisasterV54(DisasterType.Flood))
+                {
+                    camera = new Vector3(-26f, 21f, -24f);
+                    target = new Vector3(-5f, 2.25f, 0f); fov = 56f;
+                }
+            }
+            else CinematicTitle = "Deprem: ev sarsılıyor";
             float t = residenceCinematicAge - 4.7f;
             float envelope = Mathf.SmoothStep(0, 1, t / .18f) *
                 (1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(7.7f, 8f, residenceCinematicAge)));

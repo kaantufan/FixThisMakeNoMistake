@@ -22,7 +22,7 @@ namespace TooLateToPanic
         }
         public static GameObject Create()
         {
-            Init();var root=new GameObject("BagPreparationHands_AuthoredV414");root.layer=OverlayLayer;
+            Init();var root=new GameObject("BagPreparationHands_ClosedGauntletsV54");root.layer=OverlayLayer;
             var rig=new Rig();rig.Bob=Node(root.transform,"HandsBob",Vector3.zero);
             BuildArm(rig,0);BuildArm(rig,1);rigs.Add(root,rig);Animate(root,0,0,0,0);return root;
         }
@@ -112,12 +112,14 @@ namespace TooLateToPanic
             r.Upper[h]=Node(r.Bob,"UpperArm_"+label,Vector3.zero);b=new MeshBatch();
             b.Loft(Surface.Sleeve,new[]{0f,.15f,.31f},new[]{.078f,.074f,.062f},new[]{.067f,.061f,.053f},Vector3.zero,18);b.Flush(r.Upper[h],"RelaxedUpperSleeve");
             r.Hand[h]=Node(r.Bob,"Hand_"+label,Vector3.zero);b=new MeshBatch();
-            b.Loft(Surface.Leather,new[]{-.012f,.005f,.031f,.062f,.083f,.092f},new[]{.026f,.029f,.035f,.039f,.037f,.032f},new[]{.022f,.022f,.024f,.023f,.020f,.017f},Vector3.zero,20);
-            b.Ellipsoid(Surface.Palm,new Vector3(0,-.021f,.043f),new Vector3(.030f,.005f,.032f));
+            // One closed glove shell, extending four centimetres over the sleeve.
+            // The old dorsal ellipsoid intersected the shell and looked like an open
+            // chopped wrist. The coloured back panel now shares the shell's faces.
+            b.Loft(Surface.Leather,new[]{-.040f,-.016f,.006f,.031f,.058f,.079f,.090f,.095f},
+                new[]{.035f,.034f,.030f,.035f,.039f,.038f,.034f,.027f},
+                new[]{.030f,.029f,.024f,.024f,.025f,.023f,.020f,.016f},Vector3.zero,24,true);
             b.Ellipsoid(Surface.Leather,new Vector3(-side*.027f,-.009f,.035f),new Vector3(.019f,.018f,.026f));
-            b.Ellipsoid(Surface.Back,new Vector3(side*.002f,.020f,.045f),new Vector3(.032f,.005f,.034f));
-            b.Tube(Surface.Stitch,new[]{new Vector3(-.023f,.020f,.016f),new Vector3(-.029f,.023f,.045f),new Vector3(-.021f,.021f,.074f)},.0006f,5);
-            b.Tube(Surface.Stitch,new[]{new Vector3(.023f,.020f,.016f),new Vector3(.029f,.023f,.045f),new Vector3(.021f,.021f,.074f)},.0006f,5);
+            b.GlovePanelStitch(-1);b.GlovePanelStitch(1);
             b.Flush(r.Hand[h],"GlovePalmAndDorsum");
             float[] lengths={.071f,.079f,.074f,.059f};float[] widths={.010f,.0105f,.010f,.0085f};
             for(int d=0;d<5;d++)
@@ -154,17 +156,27 @@ namespace TooLateToPanic
             public MeshBatch(){for(int i=0;i<7;i++){v[i]=new List<Vector3>();t[i]=new List<int>();}}
             void Triangle(Surface s,Vector3 a,Vector3 b,Vector3 c)
             {int i=(int)s,n=v[i].Count;v[i].Add(a);v[i].Add(b);v[i].Add(c);t[i].Add(n);t[i].Add(n+1);t[i].Add(n+2);}
-            public void Loft(Surface s,float[] z,float[] rx,float[] ry,Vector3 p,int segments)
+            public void Loft(Surface s,float[] z,float[] rx,float[] ry,Vector3 p,int segments,bool glovePanel=false)
             {
                 for(int r=0;r<z.Length-1;r++)for(int j=0;j<segments;j++)
                 {float a=j*Mathf.PI*2/segments,b=(j+1)*Mathf.PI*2/segments;
                  Vector3 q=p+new Vector3(Mathf.Cos(a)*rx[r],Mathf.Sin(a)*ry[r],z[r]),w=p+new Vector3(Mathf.Cos(b)*rx[r],Mathf.Sin(b)*ry[r],z[r]);
                  Vector3 e=p+new Vector3(Mathf.Cos(a)*rx[r+1],Mathf.Sin(a)*ry[r+1],z[r+1]),f=p+new Vector3(Mathf.Cos(b)*rx[r+1],Mathf.Sin(b)*ry[r+1],z[r+1]);
-                 Triangle(s,q,w,e);Triangle(s,w,f,e);}
+                 Surface face=glovePanel&&r>=3&&r<5&&j>=2&&j<10?Surface.Back:s;
+                 Triangle(face,q,w,e);Triangle(face,w,f,e);}
                 for(int j=0;j<segments;j++)
                 {float a=j*Mathf.PI*2/segments,b=(j+1)*Mathf.PI*2/segments;int last=z.Length-1;
                  Triangle(s,p+new Vector3(0,0,z[0]),p+new Vector3(Mathf.Cos(b)*rx[0],Mathf.Sin(b)*ry[0],z[0]),p+new Vector3(Mathf.Cos(a)*rx[0],Mathf.Sin(a)*ry[0],z[0]));
                  Triangle(s,p+new Vector3(0,0,z[last]),p+new Vector3(Mathf.Cos(a)*rx[last],Mathf.Sin(a)*ry[last],z[last]),p+new Vector3(Mathf.Cos(b)*rx[last],Mathf.Sin(b)*ry[last],z[last]));}
+            }
+            public void GlovePanelStitch(int side)
+            {
+                // Raised by 0.8mm over the SAME shell rings: no coplanar patch mesh.
+                float a=side<0?Mathf.PI*5/6:Mathf.PI/6;
+                float[] z={.031f,.058f,.079f},rx={.035f,.039f,.038f},ry={.024f,.025f,.023f};
+                var path=new Vector3[3];
+                for(int k=0;k<3;k++)path[k]=new Vector3(Mathf.Cos(a)*(rx[k]+.0008f),Mathf.Sin(a)*(ry[k]+.0008f),z[k]);
+                Tube(Surface.Stitch,path,.0006f,5);
             }
             public void Ellipsoid(Surface s,Vector3 p,Vector3 radius)
             {

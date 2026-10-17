@@ -267,7 +267,7 @@ namespace TooLateToPanic
         {
             BeginResidenceCinematic(phase,from);
             OnPresentationPhase(phase,from);
-            if(phase==PanicPhase.Aftermath){if(aftermath)Destroy(aftermath);aftermath=PanicAtmosphereArt.CreateAftermath(Model.Disaster);StartRescue();QueueRadio("aftermath");}
+            if(phase==PanicPhase.Aftermath){if(aftermath)Destroy(aftermath);aftermath=CreateCompoundAftermathV54();StartRescue();QueueRadio("aftermath");}
             if(phase==PanicPhase.Preparing){minuteVoice=false;QueueRadio(DisasterVoiceId());if(aftermath)Destroy(aftermath);aftermath=null;}
         }
         void ResetResidenceLife()

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -44,36 +44,6 @@ namespace TooLateToPanic
                 Label(new Rect(556, 715, 488, 38), "AFET ÇANTASINI HAZIRLA", ColorText(_center, MainText));
                 return;
             }
-            // World positions and stock, never mock values.
-            Vector3 goal = World.ActiveShelterPositionV5;
-            string instruction = World.ActiveShelterLabelV5 + " · E ile gir";
-            if (World.JuryActive && World.Model.BagReady && World.JurySnapshot != null)
-            {
-                goal = World.JurySnapshot.TargetPosition;
-                instruction = "İşaretli güvenli alana geç · E ile korun";
-            }
-            if (!World.Model.BagReady)
-            {
-                float best = float.MaxValue;
-                foreach (var supply in World.Expedition.WorldSupplies)
-                {
-                    if (supply.Count <= 0 || supply.ItemId != "water" && supply.ItemId != "food") continue;
-                    if (supply.ItemId == "water" && World.Model.PackedWater > 0 || supply.ItemId == "food" && World.Model.PackedFood > 0) continue;
-                    float distance = Vector3.Distance(World.PlayerPosition, supply.Position);
-                    if (distance >= best) continue;
-                    best = distance; goal = supply.Position;
-                    instruction = (supply.ItemId == "water" ? "Suyu al" : "Gıdayı al") + " · E / F ile doğrudan çantana koy";
-                }
-            }
-            Rect guide = new Rect(24, 100, 380, 66);
-            Frame(guide, Night, Line, 1f); Region(guide);
-            FittedLabel(new Rect(38, 105, 352, 28), instruction, _body, MainText, 14);
-            float meters = Vector3.Distance(World.PlayerPosition, goal);
-            string level = goal.y < World.PlayerPosition.y - 1.6f ? " · alt katta" : goal.y > World.PlayerPosition.y + 1.6f ? " · üst katta" : " · bu katta";
-            Vector3 delta = goal - World.View.transform.position;
-            float side = Vector3.Dot(World.View.transform.right, delta.normalized);
-            string direction = Vector3.Dot(World.View.transform.forward, delta.normalized) < 0 ? "Arkanda" : side < -.28f ? "Solunda" : side > .28f ? "Sağında" : "Önünde";
-            Label(new Rect(38, 137, 352, 22), direction + " · " + meters.ToString("0.0") + " m" + level, ColorText(_tiny, Brass));
             Label(new Rect(788, 434, 24, 24), "+", ColorText(_center, MainText));
             if (!string.IsNullOrEmpty(World.FocusLabel))
             {

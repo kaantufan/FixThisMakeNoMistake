@@ -21,11 +21,11 @@ namespace TooLateToPanic
     public sealed partial class PanicModel
     {
         public PanicShelterKindV5 RequiredShelterV5
-        { get { return Disaster == DisasterType.Flood ? PanicShelterKindV5.PanicRoom : PanicShelterKindV5.Basement; } }
+        { get { return HasActiveDisasterV54(DisasterType.Flood) ? PanicShelterKindV5.PanicRoom : PanicShelterKindV5.Basement; } }
         public string RequiredShelterLabelV5
-        { get { return Disaster == DisasterType.Flood ? "üst kattaki panik odası" : "bodrum sığınağı"; } }
+        { get { return HasActiveDisasterV54(DisasterType.Flood) ? "üst kattaki panik odası" : "bodrum sığınağı"; } }
         public string RequiredShelterDestinationV5
-        { get { return Disaster == DisasterType.Flood ? "üst kattaki panik odasına" : "bodrum sığınağına"; } }
+        { get { return HasActiveDisasterV54(DisasterType.Flood) ? "üst kattaki panik odasına" : "bodrum sığınağına"; } }
         public PanicShelterKindV5 EnteredShelterV5 { get; private set; }
         public bool ReachedShelterV5 { get { return EnteredShelterV5 != PanicShelterKindV5.None; } }
         public float SecondaryDamageV5 { get; private set; }
@@ -43,7 +43,7 @@ namespace TooLateToPanic
             if (IsJuryDemo) return RefuseBool("İşaretli güvenli alanı kullan.");
             if (!CanPrepare()) return RefuseBool("Güvenli alana yalnızca hazırlık sırasında girebilirsin.");
             if (shelter != RequiredShelterV5)
-                return RefuseBool(Disaster == DisasterType.Flood ? "Sel için bodruma inme; üst kattaki panik odasına çık." : "Bu afet için bodrum sığınağını kullan.");
+                return RefuseBool(HasActiveDisasterV54(DisasterType.Flood) ? "Sel için bodruma inme; üst kattaki panik odasına çık." : "Bu afet için bodrum sığınağını kullan.");
             EnteredShelterV5 = shelter;
             BeginShelterDisasterV5();
             return true;
@@ -55,7 +55,7 @@ namespace TooLateToPanic
             PhaseTime = 8f;
             Phase = PanicPhase.Disaster;
             waveResolved = pendingSuccess = awardApplied = false;
-            Message = DisasterName(Disaster) + " başladı. Hazırlık ve alınan önlemler değerlendiriliyor.";
+            Message = ActiveDisasterLabelV54 + " başladı. Hazırlık ve alınan önlemler değerlendiriliyor.";
         }
 
         void BeginUnshelteredDisasterV5()
@@ -80,7 +80,7 @@ namespace TooLateToPanic
             SecondaryEventSummaryV5 = string.Empty;
         }
 
-        void ApplySecondaryDamageV5()
+        void ApplySecondaryDamageV5(bool deferCapV54 = false)
         {
             secondaryEventsV5.Clear();
             SecondaryDamageV5 = 0f;
@@ -96,7 +96,7 @@ namespace TooLateToPanic
             if (rolled == null || SecondaryEventPreventedV5(rolled.Kind)) return;
             PanicItem target = FindItem(rolled.TargetId);
             if (target == null || !target.Installed || BaseRisk(target, Disaster) <= 0f) return;
-            float points = Mathf.Min(rolled.DamagePoints, Mathf.Max(0f, 100f - TotalDamage));
+            float points = deferCapV54 ? rolled.DamagePoints : Mathf.Min(rolled.DamagePoints, Mathf.Max(0f, 100f - TotalDamage));
             if (points <= 0f) return;
             // Add actual item contribution after ordinary normalization. Never reduce
             // existing primary damage, prices, collision rules or the 75% loss boundary.

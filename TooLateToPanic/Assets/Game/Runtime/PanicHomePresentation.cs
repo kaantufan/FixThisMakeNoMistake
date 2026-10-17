@@ -175,7 +175,7 @@ namespace TooLateToPanic
                 reveal.Target.localScale = reveal.Scale * scale;
                 if (t >= 1f) { reveal.Target.localScale = reveal.Scale; hardwareReveals.RemoveAt(i); }
             }
-            if (Model.Phase == PanicPhase.Disaster && Model.Disaster == DisasterType.Earthquake)
+            if (Model.Phase == PanicPhase.Disaster && Model.HasActiveDisasterV54(DisasterType.Earthquake))
             {
                 quakePresentationAge += dt;
                 // SyncVisuals runs after HomeLife in World.Update. Capture on the next frame
@@ -225,7 +225,7 @@ namespace TooLateToPanic
             RestoreHeroReactions();
             if (presentationAudio) presentationAudio.CancelSpeech();
             if (phase == PanicPhase.Title) { ResetPresentation(); return; }
-            if (phase == PanicPhase.Disaster && Model.Disaster == DisasterType.Earthquake)
+            if (phase == PanicPhase.Disaster && Model.HasActiveDisasterV54(DisasterType.Earthquake))
             {
                 quakePresentationAge = 0f;
                 heroCaptureFrame = Time.frameCount;

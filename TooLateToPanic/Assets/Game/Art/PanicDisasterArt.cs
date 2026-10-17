@@ -26,6 +26,59 @@ namespace TooLateToPanic
             return root;
         }
 
+        // One immutable membership snapshot per cinematic/phase. No RNG or object creation in Animate.
+        // A single hazard retains the old root layout for existing simulation and QA callers.
+        public static GameObject CreateActiveV54(PanicModel model)
+        {
+            if (model == null) return null;
+            if (model.ActiveDisasterCountV54 <= 1) return Create(model.Disaster);
+            var root = new GameObject("Simultaneous disaster art V5.4");
+            var compound = root.AddComponent<PanicCompoundDisasterArtV54>();
+            for (int i = 0; i < compound.Hazards.Length; i++)
+            {
+                var type = (DisasterType)i;
+                if (!model.HasActiveDisasterV54(type)) continue;
+                var hazard = Create(type);
+                hazard.transform.SetParent(root.transform, false);
+                compound.Hazards[i] = hazard;
+            }
+            return root;
+        }
+
+        public static GameObject HazardRootV54(GameObject root, DisasterType type)
+        {
+            if (!root) return null;
+            int index = (int)type;
+            if (index < 0 || index >= 4) return null;
+            var compound = root.GetComponent<PanicCompoundDisasterArtV54>();
+            if (compound) return compound.Hazards[index];
+            var single = root.GetComponent<PanicDisasterArtState>();
+            if (single) return single.Type == type ? root : null;
+            return type == DisasterType.Storm && root.GetComponent<PanicStormArtState>() ? root : null;
+        }
+
+        public static int ActiveHazardCountV54(GameObject root)
+        {
+            if (!root) return 0;
+            var compound = root.GetComponent<PanicCompoundDisasterArtV54>();
+            if (!compound) return 1;
+            int count = 0;
+            for (int i = 0; i < compound.Hazards.Length; i++) if (compound.Hazards[i]) count++;
+            return count;
+        }
+
+        // Inspection removes only active fire/scorch from a compound event; settled water and
+        // the other hazard children retain their existing state until the normal phase cleanup.
+        public static void StopHazardV54(GameObject root, DisasterType type)
+        {
+            var hazard = HazardRootV54(root, type);
+            if (!hazard) return;
+            var compound = root.GetComponent<PanicCompoundDisasterArtV54>();
+            if (compound) compound.Hazards[(int)type] = null;
+            hazard.SetActive(false);
+            Object.Destroy(hazard);
+        }
+
         public static void Animate(GameObject root, float age, float intensity)
         { Animate(root, age, intensity, 1f); }
 
@@ -36,6 +89,15 @@ namespace TooLateToPanic
         {
             if (!root) return;
             presentationScale = ClampPresentationScaleV52(presentationScale);
+            var compound = root.GetComponent<PanicCompoundDisasterArtV54>();
+            if (compound)
+            {
+                // At most four retained children. Every child receives exactly the same age,
+                // phase envelope and bounded Model severity, even when it is not the primary.
+                for (int i = 0; i < compound.Hazards.Length; i++)
+                    if (compound.Hazards[i]) Animate(compound.Hazards[i], age, intensity, presentationScale);
+                return;
+            }
             PanicStormArt.Animate(root,age,intensity,presentationScale);
             var s = root.GetComponent<PanicDisasterArtState>();
             if (!s) return;
@@ -343,6 +405,7 @@ namespace TooLateToPanic
         // Optional presentation sample. The caller retains camera/house ownership.
         public static Vector3 SampleVisualImpulse(GameObject root)
         {
+            root = HazardRootV54(root, DisasterType.Earthquake);
             if(!root)return Vector3.zero;
             var s=root.GetComponent<PanicDisasterArtState>();
             if(!s||s.Type!=DisasterType.Earthquake)return Vector3.zero;
@@ -352,21 +415,37 @@ namespace TooLateToPanic
         public static float SamplePresentationScaleV52(GameObject root)
         {
             if(!root)return 1f;
+            var compound = root.GetComponent<PanicCompoundDisasterArtV54>();
+            if (compound)
+            {
+                float scale = 1f;
+                for (int i = 0; i < compound.Hazards.Length; i++)
+                    if (compound.Hazards[i]) scale = Mathf.Max(scale, SamplePresentationScaleV52(compound.Hazards[i]));
+                return scale;
+            }
             var s=root.GetComponent<PanicDisasterArtState>();if(s)return s.PresentationScaleV52;
             var storm=root.GetComponent<PanicStormMotionV414>();return storm?storm.PresentationScaleV52:1f;
         }
         public static float SampleEmissionRateV52(GameObject root)
         {
             if(!root)return 0f;
+            var compound = root.GetComponent<PanicCompoundDisasterArtV54>();
+            if (compound)
+            {
+                float rate = 0f;
+                for (int i = 0; i < compound.Hazards.Length; i++)
+                    if (compound.Hazards[i]) rate += SampleEmissionRateV52(compound.Hazards[i]);
+                return rate;
+            }
             var s=root.GetComponent<PanicDisasterArtState>();if(s)return s.EmissionRateV52;
             var storm=root.GetComponent<PanicStormMotionV414>();return storm?storm.EmissionRateV52:0f;
         }
         public static float SampleWaterLevelV52(GameObject root)
-        { var s=root?root.GetComponent<PanicDisasterArtState>():null;return s&&s.Type==DisasterType.Flood?s.WaterLevelV52:0f; }
+        { root=HazardRootV54(root,DisasterType.Flood);var s=root?root.GetComponent<PanicDisasterArtState>():null;return s?s.WaterLevelV52:0f; }
         public static float SampleWaterPeakHeightV52(GameObject root)
-        { var s=root?root.GetComponent<PanicDisasterArtState>():null;return s&&s.Type==DisasterType.Flood?s.WaterPeakHeightV52:0f; }
+        { root=HazardRootV54(root,DisasterType.Flood);var s=root?root.GetComponent<PanicDisasterArtState>():null;return s?s.WaterPeakHeightV52:0f; }
         public static float SampleFlamePeakHeightV52(GameObject root)
-        { var s=root?root.GetComponent<PanicDisasterArtState>():null;return s&&s.Type==DisasterType.Fire?s.FlamePeakHeightV52:0f; }
+        { root=HazardRootV54(root,DisasterType.Fire);var s=root?root.GetComponent<PanicDisasterArtState>():null;return s?s.FlamePeakHeightV52:0f; }
         static float QuakePulse(float t)
         {
             float power=0;
@@ -696,6 +775,12 @@ namespace TooLateToPanic
         }
 
         static float Hash(int value) { return Mathf.Repeat(Mathf.Sin(value * 127.17f + 31.73f) * 43758.5453f, 1); }
+    }
+
+    // Fixed four-slot container only. Each original child state owns and releases its own assets.
+    public sealed class PanicCompoundDisasterArtV54 : MonoBehaviour
+    {
+        public readonly GameObject[] Hazards = new GameObject[4];
     }
 
     // Per-instance state also owns every runtime-created material, texture and mesh.
