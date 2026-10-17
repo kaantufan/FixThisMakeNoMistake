@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -77,6 +77,9 @@ namespace TooLateToPanic
         public PanicWorkSession Work;
         public int JuryWaterGatheredCount { get; private set; }
         public string Message;
+        readonly List<PanicMaterialCost> lastGatherRewards = new List<PanicMaterialCost>();
+        public IReadOnlyList<PanicMaterialCost> LastGatherRewards { get { return lastGatherRewards.AsReadOnly(); } }
+        public int GatherSequence { get; private set; }
 
         public string RequirementAction { get { return requirementAction; } }
         public string RequirementTargetId { get { return requirementTargetId; } }
@@ -113,6 +116,7 @@ namespace TooLateToPanic
         public void Reset()
         {
             ResetRevisionStock();
+            lastGatherRewards.Clear(); GatherSequence = 0;
             JuryWaterGatheredCount = 0;
             Inventory = MakeEmptySlots(InventoryCapacity);
             Bag = MakeEmptySlots(BagCapacity);
@@ -184,7 +188,16 @@ namespace TooLateToPanic
             LootSource source = FindSource(id);
             if (source == null) return Fail("Kaynak bulunamadı.");
             source.Open = !source.Open;
+            lastGatherRewards.Clear();
+            var previousStock = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var materialId in MaterialIds) previousStock[materialId] = Count(materialId);
             Message = source.Open ? AutoCollectMaterials(source) : "Kapandı.";
+            if (source.Open) foreach (var materialId in MaterialIds)
+            {
+                int delta = Count(materialId) - previousStock[materialId];
+                if (delta > 0) lastGatherRewards.Add(new PanicMaterialCost(materialId, delta));
+            }
+            if (lastGatherRewards.Count > 0) GatherSequence++;
             NotifyModel();
             return true;
         }
@@ -299,6 +312,7 @@ namespace TooLateToPanic
                 case "drain": Model.DrainCount++; break;
                 case "fence": Model.FenceCount++; break;
                 case "hose": Model.FireToolCount++; break;
+                case "gasoff": case "wateroff": case "poweroff": Model.UtilitySafety.Complete(action); break;
             }
 
             if (IsFixedGardenSite(action)) committedWork.Add(action + "|" + targetId);
@@ -311,7 +325,7 @@ namespace TooLateToPanic
 
         private static bool IsFixedGardenSite(string action)
         {
-            return action == "plant" || action == "drain" || action == "fence" || action == "hose" || action == "fire";
+            return action == "plant" || action == "drain" || action == "fence" || action == "hose" || action == "fire" || PanicUtilitySafetyV414.IsAction(action);
         }
 
         private bool ValidateWorkTarget(string action, string targetId, out PanicItem item, out string resultMessage)
@@ -319,6 +333,13 @@ namespace TooLateToPanic
             item = FindItem(targetId);
             resultMessage = string.Empty;
             if (action == "fence") return Fail("Çit inşası kaldırıldı.");
+            if (PanicUtilitySafetyV414.IsAction(action))
+            {
+                if (!PanicUtilitySafetyV414.Allows(action, targetId) || item != null) return Fail("Bu tesisat işi bu hedefe uygulanmaz.");
+                if (Model.UtilitySafety.IsComplete(action) || IsWorkCommitted(action, targetId)) return Fail("Bu tesisat zaten güvenli duruma alındı.");
+                resultMessage = PanicUtilitySafetyV414.StateLabel(action, true) + " · " + PanicUtilitySafetyV414.Effect(action);
+                return true;
+            }
             if (!PanicItemActionRules.Allows(action, item, targetId)) return Fail("Bu hazırlık işi bu hedefe uygulanmaz.");
             if (string.IsNullOrEmpty(targetId)) return Fail("İş hedefi belirtilmedi.");
             if (IsFixedGardenSite(action) && committedWork.Contains(action + "|" + targetId))
@@ -684,15 +705,13 @@ namespace TooLateToPanic
 
     public enum PanicWorkMode { Ratchet, Timing, Balance }
 
-    /// <summary>Direct asset work. A click queues a short automatic installation; only the final commit spends stock.</summary>
+    /// <summary>Manual input work; elapsed time alone never installs anything. The final transaction owns spending.</summary>
     public sealed class PanicWorkSession
     {
-        const float Duration = .60f;
+        const int HammerStrokes = 4;
         bool juryFriendly, installing;
-        float installAge, stageProgress, toolMotion;
-
-        // Kept for source compatibility with retained work-art/test adapters. Keyboard
-        // values are deliberately inert; all current work is started through TryClick.
+        int completedStrokes;
+        float stageProgress, toolMotion;
         public bool Active;
         public string Action = string.Empty, TargetId = string.Empty, Label = string.Empty, Hint = string.Empty;
         public int CompletedSteps, TotalSteps;
@@ -700,28 +719,25 @@ namespace TooLateToPanic
         public bool Complete;
         public PanicWorkMode Mode { get; private set; }
         public bool JuryFriendly { get { return juryFriendly; } }
-        public bool UsesDirectClick { get { return true; } }
-        public bool IsWorldConstruction { get { return Action != "anchorwall" && Action != "anchorfloor"; } }
+        public bool UsesDirectClick { get { return UsesRotation; } }
+        public bool UsesRotation { get { return Action == "anchorwall" || Action == "anchorfloor" || PanicUtilitySafetyV414.IsAction(Action) || Action == "hose"; } }
+        public bool UsesHammer { get { return !UsesRotation; } }
+        public bool IsUtility { get { return PanicUtilitySafetyV414.IsAction(Action); } }
+        public bool IsWorldConstruction { get { return UsesHammer; } }
         public bool IsInstalling { get { return installing; } }
         public int NextClickTarget { get { return Active && !Complete ? CompletedSteps : -1; } }
-        public float InstallSeconds { get { return Duration; } }
-        public bool IsApplying { get { return installing; } }
-        public int RequiredStrokes { get { return 0; } }
-        public int CompletedStrokes { get { return 0; } }
-        public int ExpectedDirection { get { return 0; } }
+        public float InstallSeconds { get { return 0f; } }
+        public bool IsApplying { get { return installing && toolMotion > .001f; } }
+        public int RequiredStrokes { get { return UsesHammer ? HammerStrokes : 0; } }
+        public int CompletedStrokes { get { return completedStrokes; } }
+        // Positive is clockwise in the displayed work-camera image.
+        public int ExpectedDirection { get { return Action == "poweroff" ? -1 : 1; } }
+        public float RequiredDegrees { get { return Action == "poweroff" ? 90f : IsUtility || Action == "hose" ? 180f : 270f; } }
         public string StepHint { get { return Hint; } }
         public float StageProgress { get { return stageProgress; } }
         public float TargetWidth { get { return 0f; } }
         public float ToolMotion { get { return toolMotion; } }
-        public string StageName
-        {
-            get
-            {
-                if (!Active) return string.Empty;
-                if (Complete) return "Tamamlandı";
-                return IsWorldConstruction ? Label : "Vida " + (CompletedSteps + 1);
-            }
-        }
+        public string StageName { get { return !Active ? string.Empty : Complete ? "Tamamlandı" : IsUtility || Action == "hose" ? Label : UsesHammer ? "Montaj" : "Vida " + (CompletedSteps + 1); } }
 
         public void Begin(string action, string targetId) { Begin(action, targetId, false); }
         public void Begin(string action, string targetId, bool juryDemo)
@@ -729,60 +745,80 @@ namespace TooLateToPanic
             Cancel();
             if (!IsSupported(action) || string.IsNullOrEmpty(targetId)) return;
             Action = action; TargetId = targetId; juryFriendly = juryDemo;
-            Label = LabelFor(action); Mode = PanicWorkMode.Ratchet;
-            TotalSteps = IsWorldConstruction ? 1 : 2;
+            Label = LabelFor(action); Mode = UsesHammer ? PanicWorkMode.Timing : PanicWorkMode.Ratchet;
+            TotalSteps = action == "anchorwall" || action == "anchorfloor" ? 2 : 1;
             Quality = 1f; Active = true;
+            installing = UsesHammer;
             RefreshHint();
         }
 
-        /// <summary>Accepts one next screw/installation only. Repeated or future clicks cannot bypass its0.60s seating.</summary>
+        /// <summary>Select the current real screw/handle. Selection itself contributes no progress.</summary>
         public bool TryClick(int targetIndex)
         {
-            if (!Active || Complete || installing || targetIndex != CompletedSteps || targetIndex < 0 || targetIndex >= TotalSteps) return false;
-            installing = true; installAge = 0f; stageProgress = toolMotion = 0f;
-            RefreshHint();
-            return true;
+            if (!Active || Complete || targetIndex != CompletedSteps || targetIndex < 0 || targetIndex >= TotalSteps) return false;
+            installing = true; RefreshHint(); return true;
         }
 
+        /// <summary>Signed angular displacement from the held mouse in the actual work-camera image.</summary>
+        public bool ApplyRotation(float clockwiseDegrees, bool leftMouseHeld)
+        {
+            if (!Active || Complete || !UsesRotation || !installing || !leftMouseHeld ||
+                !Finite(clockwiseDegrees) || Mathf.Abs(clockwiseDegrees) > 75f || Mathf.Abs(clockwiseDegrees) < .05f) return false;
+            float signed = clockwiseDegrees * ExpectedDirection;
+            stageProgress = Mathf.Clamp01(stageProgress + signed / RequiredDegrees);
+            Cursor = stageProgress; toolMotion = signed > 0f ? 1f : .15f;
+            UpdateProgress();
+            if (stageProgress >= .99999f) FinishStep();
+            RefreshHint(); return true;
+        }
+        public bool PressHammer()
+        {
+            if (!Active || Complete || !UsesHammer) return false;
+            installing = true; completedStrokes++;
+            stageProgress = Mathf.Clamp01(completedStrokes / (float)HammerStrokes);
+            toolMotion = 1f; UpdateProgress();
+            if (completedStrokes >= HammerStrokes) FinishStep();
+            RefreshHint(); return true;
+        }
         public void Tick(float dt, float direction, bool held, bool pressed) { Tick(dt, direction, held, pressed, false); }
         public void Tick(float dt, float direction, bool held, bool pressed, bool pulse)
         {
-            if (!Active || Complete || !installing || float.IsNaN(dt) || float.IsInfinity(dt) || dt <= 0f) return;
-            // Keep the existing production hitch cap; an arbitrary large test delta
-            // cannot fabricate a completed installation in one frame.
-            installAge = Mathf.Min(Duration, installAge + Mathf.Min(dt, .1f));
-            stageProgress = Mathf.Clamp01(installAge / Duration);
-            toolMotion = Mathf.Sin(stageProgress * Mathf.PI);
-            Progress = Mathf.Clamp01((CompletedSteps + stageProgress) / Mathf.Max(1, TotalSteps));
-            if (installAge + .000001f >= Duration)
-            {
-                CompletedSteps++; installing = false; stageProgress = toolMotion = 0f;
-                Complete = CompletedSteps >= TotalSteps;
-                Progress = Complete ? 1f : CompletedSteps / (float)TotalSteps;
-            }
+            if (!Active || Complete || !Finite(dt) || dt <= 0f) return;
+            // Legacy direction/held/Enter adapters cannot synthesize mouse rotation.
+            toolMotion = Mathf.Max(0f, toolMotion - Mathf.Min(dt, .1f) * 8f);
+            if (UsesHammer && pulse) PressHammer();
             RefreshHint();
         }
-
+        void UpdateProgress() { Progress = Mathf.Clamp01((CompletedSteps + stageProgress) / Mathf.Max(1, TotalSteps)); }
+        void FinishStep()
+        {
+            CompletedSteps++; installing = false; stageProgress = 0f;
+            Complete = CompletedSteps >= TotalSteps;
+            Progress = Complete ? 1f : CompletedSteps / (float)TotalSteps;
+        }
         public void Cancel()
         {
             juryFriendly = installing = Active = Complete = false;
             Action = TargetId = Label = Hint = string.Empty;
-            CompletedSteps = TotalSteps = 0;
-            installAge = stageProgress = toolMotion = Cursor = Target = Progress = Quality = 0f;
+            completedStrokes = CompletedSteps = TotalSteps = 0;
+            stageProgress = toolMotion = Cursor = Target = Progress = Quality = 0f;
             Mode = PanicWorkMode.Ratchet;
         }
         void RefreshHint()
         {
-            Hint = Complete ? "Hazır!" : installing ? IsWorldConstruction ? "Kuruluyor..." : "Vida otomatik takılıyor..." :
-                IsWorldConstruction ? "Kurulumu başlat." : "Vidaya tıkla; kendiliğinden takılsın.";
+            Hint = Complete ? "Hazır!" : UsesHammer ? "SPACE tuşuna ayrı ayrı bas · " + completedStrokes + " / " + HammerStrokes :
+                (installing ? "Sol tuşu basılı tut, " : "İşaretli parçaya basılı tut, ") +
+                (ExpectedDirection > 0 ? "saat yönünde çevir." : "saatin tersine çevir.");
         }
+        static bool Finite(float v) { return !float.IsNaN(v) && !float.IsInfinity(v); }
         static bool IsSupported(string action)
         {
             return action == "anchorwall" || action == "anchorfloor" || action == "upgrade" || action == "flood" ||
-                action == "fire" || action == "plant" || action == "drain" || action == "fence" || action == "hose";
+                action == "fire" || action == "plant" || action == "drain" || action == "hose" || PanicUtilitySafetyV414.IsAction(action);
         }
         static string LabelFor(string action)
         {
+            if (PanicUtilitySafetyV414.IsAction(action)) return PanicUtilitySafetyV414.Label(action);
             switch (action)
             {
                 case "anchorwall": return "Duvara sabitle";
@@ -792,7 +828,6 @@ namespace TooLateToPanic
                 case "fire": return "Yangın tüpünü hazırla";
                 case "plant": return "Ağaç sırasını kur";
                 case "drain": return "Drenajı kur";
-                case "fence": return "Sel çitini kur";
                 case "hose": return "Hortumu bağla";
                 default: return "Hazırlık işi";
             }

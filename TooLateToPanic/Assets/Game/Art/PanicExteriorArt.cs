@@ -7,7 +7,7 @@ using M = TooLateToPanic.PanicHomeArt.M;
 
 namespace TooLateToPanic
 {
-    /// <summary>Authored scenery only; no collision, scores, forces, route AI or disaster evaluation.</summary>
+    /// <summary>Authored scenery and V4.14 creek safety barriers; no scores, forces, route AI or disaster evaluation.</summary>
     public static class PanicExteriorArt
     {
         public const float CreekLeft=-21.1f, CreekRight=-16.35f, CreekLength=76f;
@@ -133,11 +133,41 @@ namespace TooLateToPanic
                 b.Box(new Vector3((CreekLeft+CreekRight)*.5f,-.02f,z),new Vector3(CreekRight-CreekLeft,.14f,.20f),M.Concrete,.01f);
                 for(int side=-1;side<=1;side+=2)b.Box(new Vector3(side<0?CreekLeft+.17f:CreekRight-.17f,-.38f,z),new Vector3(.34f,.70f,.24f),M.Stone,.015f);
             }
+            BuildCreekSafetyV414(root,b);
             b.Attach(root,"CreekBanksRocksCulvert");
             var state=root.AddComponent<PanicExteriorStreamState>();state.Water=MakeWater(root,zs);state.Foam=MakeFoam(root);
             state.RuntimeOwned=Application.isPlaying;
             AnimateLandscape(root,0,false);return root;
         }
+
+        static void BuildCreekSafetyV414(GameObject root,B b)
+        {
+            const float height=1.65f;
+            float center=(CreekLeft+CreekRight)*.5f,width=CreekRight-CreekLeft;
+            // A real bridge deck preserves the street crossing. Rails close both water-facing edges.
+            SafetyBox(root,"Bridge deck",new Vector3(center,-.075f,(RoadNear+RoadFar)*.5f),new Vector3(width+.7f,.14f,RoadFar-RoadNear));
+            foreach(float z in new[]{RoadNear,RoadFar})
+            {
+                SafetyBox(root,"Bridge railing",new Vector3(center,height*.5f,z),new Vector3(width+.75f,height,.18f));
+                for(int i=0;i<10;i++)b.Box(new Vector3(CreekLeft-.32f+i*(width+.64f)/9,height*.5f,z),new Vector3(.065f,height,.065f),M.Steel,.007f);
+                foreach(float y in new[]{.22f,.86f,1.62f})b.Box(new Vector3(center,y,z),new Vector3(width+.75f,.065f,.09f),M.Charcoal,.009f);
+            }
+            // Continuous solid banks reject walking/jumping into the water from either side.
+            // All these colliders are on the landscape, so floor cutaway never disables them.
+            foreach(float x in new[]{CreekLeft-.16f,CreekRight+.16f})
+            {
+                for(int segment=0;segment<2;segment++)
+                {
+                    float start=segment==0?-CreekLength*.5f:RoadFar,end=segment==0?RoadNear:CreekLength*.5f;
+                    SafetyBox(root,"Creek bank guard",new Vector3(x,height*.5f,(start+end)*.5f),new Vector3(.18f,height,end-start+.18f));
+                    int count=Mathf.CeilToInt((end-start)/2.3f);
+                    for(int i=0;i<=count;i++)b.Box(new Vector3(x,height*.5f,Mathf.Lerp(start,end,(float)i/count)),new Vector3(.11f,height,.11f),M.WalnutDark,.012f);
+                    foreach(float y in new[]{.28f,.88f,1.60f})b.Box(new Vector3(x,y,(start+end)*.5f),new Vector3(.07f,.065f,end-start),M.Walnut,.009f);
+                }
+            }
+        }
+        static void SafetyBox(GameObject root,string name,Vector3 position,Vector3 size)
+        {var go=new GameObject("V414 "+name);go.transform.SetParent(root.transform,false);go.transform.localPosition=position;go.AddComponent<BoxCollider>().size=size;}
 
         static Mesh MakeWater(GameObject root,List<float> zs)
         {

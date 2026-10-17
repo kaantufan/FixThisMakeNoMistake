@@ -16,7 +16,7 @@ namespace TooLateToPanic
     {
         enum P { Ink, Steel, SteelDark, Copper, Walnut, WalnutLight, WalnutDark, Indigo,
             Taupe, Plaster, Olive, Leaf, Soil, Stone, Rubber, Red, Paper, Amber, Water, Glass }
-        enum Job { AnchorWall, AnchorFloor, Upgrade, Flood, Fire, Plant, Drain, Fence, Hose }
+        enum Job { AnchorWall, AnchorFloor, Upgrade, Flood, Fire, Plant, Drain, Fence, Hose, Gas, Water, Power }
         sealed class RigState
         {
             public GameObject Root;
@@ -55,9 +55,10 @@ namespace TooLateToPanic
                 case Job.Drain: DrainJob(t); break;
                 case Job.Fence: FenceJob(t); break;
                 case Job.Hose: HoseJob(t); break;
+                case Job.Gas: case Job.Water: case Job.Power: UtilityJob(t, job); break;
             }
             // Small practical objects provide scale without floating labels or UI geometry.
-            if (job != Job.Plant && job != Job.Drain)
+            if (job != Job.Plant && job != Job.Drain && job != Job.Gas && job != Job.Water && job != Job.Power)
             {
                 ScrewTray(t, new Vector3(-.62f, .095f, -.18f));
                 FoldedCloth(t, new Vector3(.61f, .087f, -.16f));
@@ -79,6 +80,13 @@ namespace TooLateToPanic
             {
                 s = ReadState(rig, JobFromName(rig.name));
                 rigs[rig.GetInstanceID()] = s;
+            }
+            if (s.Job == Job.Gas || s.Job == Job.Water || s.Job == Job.Power || s.Job == Job.Hose)
+            {
+                if (s.Valve) s.Valve.localRotation = Quaternion.Euler(0, 0, Mathf.Clamp01(progress) * (s.Job == Job.Power ? 180f : s.Job == Job.Water || s.Job == Job.Hose ? -180f : -90f));
+                if (s.Tool) s.Tool.gameObject.SetActive(false);
+                if (s.Flow) s.Flow.gameObject.SetActive(false);
+                s.LastProgress = Mathf.Clamp01(progress); return;
             }
             if (s.Job == Job.AnchorWall || s.Job == Job.AnchorFloor)
             {
@@ -181,6 +189,13 @@ namespace TooLateToPanic
                 if (direct.Job == Job.AnchorWall || direct.Job == Job.AnchorFloor)
                 { UpdateDirectAnchor(direct, progress, completedSteps); return; }
             }
+            if (rig)
+            {
+                RigState utility;
+                if (rigs.TryGetValue(rig.GetInstanceID(), out utility) &&
+                    (utility.Job == Job.Gas || utility.Job == Job.Water || utility.Job == Job.Power || utility.Job == Job.Hose))
+                { UpdateWorkRig(rig, progress, completedSteps, time); return; }
+            }
             // Progress may reach 1 during the final .25s stroke, before the fourth
             // stage is committed. Keep the tool visible until that real settling motion ends.
             float visualProgress = completedSteps < 4 ? Mathf.Min(progress, .9998f) : progress;
@@ -261,6 +276,11 @@ namespace TooLateToPanic
             RigState state;
             if (!rigs.TryGetValue(rig.GetInstanceID(), out state) || state.Root != rig)
             { state = ReadState(rig, JobFromName(rig.name)); rigs[rig.GetInstanceID()] = state; }
+            if (state.Job == Job.Gas || state.Job == Job.Water || state.Job == Job.Power || state.Job == Job.Hose)
+            {
+                if (index != 0 || !state.Valve) return false;
+                worldPosition = state.Valve.position; return true;
+            }
             if (state.Job != Job.AnchorWall && state.Job != Job.AnchorFloor || !state.Heads[index]) return false;
             worldPosition = state.Heads[index].position;
             return true;
@@ -277,7 +297,7 @@ namespace TooLateToPanic
                 float seated = i < done ? 1 : i == done ? activeProgress : 0;
                 float eased = Mathf.SmoothStep(0, 1, seated);
                 s.Screws[i].localPosition = s.ScrewSeats[i] + s.Screws[i].localRotation * new Vector3(0, 0, -.068f * (1 - eased));
-                if (s.Heads[i]) s.Heads[i].localRotation = Quaternion.Euler(0, 0, seated * 1080f);
+                if (s.Heads[i]) s.Heads[i].localRotation = Quaternion.Euler(0, 0, -seated * 270f);
             }
             if (s.Tool)
             {
@@ -286,7 +306,7 @@ namespace TooLateToPanic
                 if (done < 2 && s.Screws[done])
                 {
                     s.Tool.localPosition = s.Screws[done].localPosition + s.Screws[done].localRotation * new Vector3(0, 0, -.018f);
-                    s.Tool.localRotation = s.Screws[done].localRotation * Quaternion.Euler(8, -11, activeProgress * 1080f);
+                    s.Tool.localRotation = s.Screws[done].localRotation * Quaternion.Euler(8, -11, -activeProgress * 270f);
                 }
             }
             s.LastProgress = p;
@@ -746,6 +766,59 @@ namespace TooLateToPanic
             }
             return s;
         }
+        /// <summary>Same authored handle family in the actual world; no state or collider lives in art.</summary>
+        public static GameObject CreateUtilityStation(string action, bool closed)
+        {
+            Init(); Job job = Parse(action);
+            var root = new GameObject("Utility_station_" + job);
+            UtilityJob(root.transform, job);
+            Transform handle = root.transform.Find("ValveMotion");
+            if (handle) handle.localRotation = Quaternion.Euler(0, 0, closed ? job == Job.Power ? 180 : job == Job.Water ? -180 : -90 : 0);
+            // Large physical state lamps: unisolated amber, isolated green.
+            Sphere(root.transform, "Safety_state_indicator", new Vector3(.17f, 1.12f, -.075f), new Vector3(.035f,.035f,.025f), closed ? P.Leaf : P.Amber);
+            return root;
+        }
+        static void UtilityJob(Transform p, Job job)
+        {
+            if (job == Job.Power)
+            {
+                Box(p, "Electrical_enclosure", new Vector3(0,.68f,.025f), new Vector3(.44f,.72f,.12f), P.SteelDark);
+                Box(p, "Insulated_breaker_face", new Vector3(0,.68f,-.049f), new Vector3(.34f,.59f,.035f), P.Paper);
+                Box(p, "Breaker_travel_slot", new Vector3(0,.61f,-.073f), new Vector3(.09f,.37f,.02f), P.Ink);
+                var lever = New(p, "ValveMotion", new Vector3(0,.62f,-.10f));
+                Box(lever, "Breaker_lever", new Vector3(0,.11f,0), new Vector3(.072f,.25f,.052f), P.Rubber);
+                Box(lever, "Wide_insulated_grip", new Vector3(0,.22f,-.006f), new Vector3(.20f,.07f,.07f), P.Red);
+                for (int k=0;k<3;k++) Box(p, "Fuse_bank", new Vector3(-.10f+k*.10f,.87f,-.081f), new Vector3(.045f,.08f,.015f), P.Steel);
+                return;
+            }
+            P pipe = job == Job.Gas ? P.Copper : P.Steel;
+            Cyl(p, "Main_utility_pipe", new Vector3(0,.69f,.025f), .035f, .96f, pipe);
+            Cyl(p, "Valve_body", new Vector3(0,.62f,-.015f), .072f, .16f, pipe);
+            Cyl(p, "Valve_stem", new Vector3(0,.62f,-.09f), .032f,.13f,P.Steel,FrontAxis);
+            for (int side=-1;side<=1;side+=2)
+            {
+                Box(p,"Pipe_wall_clamp",new Vector3(0,.69f+side*.35f,.065f),new Vector3(.22f,.07f,.035f),P.SteelDark);
+                FixedScrew(p,new Vector3(side*.08f,.69f+side*.35f,.043f),Quaternion.identity,.5f);
+            }
+            var valve = New(p,"ValveMotion",new Vector3(0,.62f,-.17f));
+            if (job == Job.Gas)
+            {
+                Box(valve,"Yellow_gas_lever",new Vector3(.13f,0,0),new Vector3(.32f,.055f,.037f),P.Amber);
+                Cyl(valve,"Lever_hub",Vector3.zero,.045f,.035f,P.Steel,FrontAxis);
+            }
+            else
+            {
+                Ring(valve,"Blue_water_handwheel",Vector3.zero,Vector3.forward,.15f,.022f,P.Water);
+                for(int i=0;i<4;i++)
+                {
+                    float angle=i*Mathf.PI*.5f;
+                    Between(valve,"Handwheel_spoke",Vector3.zero,new Vector3(Mathf.Cos(angle),Mathf.Sin(angle),0)*.14f,.022f,.025f,P.Water);
+                }
+                Cyl(valve,"Handwheel_hub",Vector3.zero,.042f,.035f,P.Steel,FrontAxis);
+            }
+            Gauge(p,new Vector3(.13f,.96f,-.055f),.085f);
+        }
+
         static void TrimDeadStates()
         {
             List<int> dead = null;
@@ -756,6 +829,9 @@ namespace TooLateToPanic
         {
             switch ((action ?? "anchorwall").ToLowerInvariant())
             {
+                case "gasoff": return Job.Gas;
+                case "wateroff": return Job.Water;
+                case "poweroff": return Job.Power;
                 case "anchorfloor": return Job.AnchorFloor;
                 case "upgrade": return Job.Upgrade;
                 case "flood": return Job.Flood;
@@ -769,6 +845,9 @@ namespace TooLateToPanic
         }
         static Job JobFromName(string name)
         {
+            if (name.Contains("Gas")) return Job.Gas;
+            if (name.Contains("Water")) return Job.Water;
+            if (name.Contains("Power")) return Job.Power;
             if (name.Contains("AnchorFloor")) return Job.AnchorFloor;
             if (name.Contains("Upgrade")) return Job.Upgrade;
             if (name.Contains("Flood")) return Job.Flood;

@@ -39,17 +39,17 @@ namespace TooLateToPanic
 
         void ConfigureResidenceModel()
         {
-            // The upper bathroom opens directly onto the landing: no second passage door.
+            // V4.14 room graph uses one canonical set of door/item coordinates.
             Model.Items.RemoveAll(i=>i.Id=="door_inner_upper");
-            var upper=Model.Items.Find(i=>i.Id=="up_cabinet"); if(upper!=null)upper.Position=new Vector3(4.6f,3.2f,-4.5f);
             var loungeSofa=Model.Items.Find(i=>i.Id=="sofa"); if(loungeSofa!=null)loungeSofa.ArtId="sofa_indigo";
             var bunker=Model.Items.Find(i=>i.Id=="bunker");if(bunker!=null){bunker.ArtId="bunkerhatch";bunker.Position=BunkerPosition;}
-            var bag=Model.Items.Find(i=>i.Id=="bagstation");if(bag!=null){bag.Label="Afet çantası";bag.Position=new Vector3(-2.4f,.035f,-3.3f);bag.Size=new Vector3(.48f,.62f,.32f);}
-            var desk=Model.Items.Find(i=>i.Id=="desk_upper");if(desk!=null){desk.Size=new Vector3(1.75f,.805f,.8f);desk.Position=new Vector3(5.3f,3.2f,-2.5f);}
-            var bed=Model.Items.Find(i=>i.Id=="bed");if(bed!=null)bed.Position=new Vector3(-4.5f,3.2f,4.5f);
-            AddResidenceItem("door_balcony","Balkon", "door",ItemKind.Door,new Vector3(0,3.2f,-6),new Vector3(1.2f,2.25f,.2f));
-            AddResidenceItem("bathroom_door","Banyo", "door",ItemKind.Door,new Vector3(3.25f,3.2f,1.8f),new Vector3(1.1f,2.25f,.2f));
-            AddResidenceItem("door_garage_inner","Garaj iç kapısı","door",ItemKind.Door,new Vector3(8.1f,0,2.2f),new Vector3(1.2f,2.25f,.2f),90);
+            var bag=Model.Items.Find(i=>i.Id=="bagstation");if(bag!=null){bag.Label="Afet çantası";bag.Position=PanicHouseLayoutV414.BagPosition;bag.Size=new Vector3(.48f,.62f,.32f);}
+            var desk=Model.Items.Find(i=>i.Id=="desk_upper");if(desk!=null){desk.Size=new Vector3(1.75f,.805f,.8f);}
+            foreach(var door in PanicHouseLayoutV414.Doors)
+                AddResidenceItem(door.Id,door.Label,"door",ItemKind.Door,door.Position,new Vector3(1.2f,2.25f,.2f),door.Yaw);
+            AddResidenceItem("bed_child","Çocuk yatağı","bed",ItemKind.Furniture,new Vector3(-5.5f,3.2f,-3.85f),new Vector3(1.64f,1.42f,2.16f));
+            var child=Model.Items.Find(i=>i.Id=="bed_child");if(child!=null)child.Movable=true;
+            PanicHouseLayoutV414.ApplyModelLayout(Model);
             // The garage rolling door is presentation-driven, not a swinging house leaf.
             for(int side=0;side<4;side++) { string label=new[]{"Kuzey","Batı","Güney","Doğu"}[side]; string id=new[]{"north","west","south","east"}[side]; Vector3 p=side==0?new Vector3(0,-3.2f,5.91f):side==1?new Vector3(-7.91f,-3.2f,0):side==2?new Vector3(0,-3.2f,-5.91f):new Vector3(7.91f,-3.2f,0); AddResidenceItem("wall_"+id+"_basement","Bodrum "+label,"wall",ItemKind.Wall,p,new Vector3(side==1||side==3?12:16,3.2f,.2f),side==1?270:side==3?90:0); }
         }
@@ -59,12 +59,12 @@ namespace TooLateToPanic
         {
             var c=new GameObject("Collision_"+mf.name);c.transform.SetParent(owner,true);c.transform.position=mf.transform.TransformPoint(mf.sharedMesh.bounds.center);c.transform.rotation=mf.transform.rotation;
             var box=c.AddComponent<BoxCollider>();box.size=Vector3.Scale(mf.sharedMesh.bounds.size,mf.transform.lossyScale);
-            if(IsFullHeightPartition(mf.name)) { var size=box.size;size.y=3.2f;box.size=size;var p=c.transform.position;p.y=owner.position.y+1.6f;c.transform.position=p; }
+            if(IsFullHeightPartition(mf.name)||PanicHouseLayoutV414.IsPartition(mf.name)) { var size=box.size;size.y=3.2f;box.size=size;var p=c.transform.position;p.y=owner.position.y+1.6f;c.transform.position=p; }
             return box;
         }
         void BuildStairFlight(int level)
         {
-            var root=new GameObject("Stair flight "+level);root.transform.position=Vector3.up*(level*3.2f);var art=CreateVisual("stairs");art.transform.SetParent(root.transform,false);
+            var root=new GameObject("Stair flight "+level);root.transform.position=PanicHouseLayoutV414.StairOrigin(level);var art=CreateVisual("stairs");art.transform.SetParent(root.transform,false);
             // Only the art follows the floor cutaway. Steps and rails must remain physical
             // while ActiveFloor changes, including when the flight above is hidden.
             floorItems.Add(art);
@@ -113,9 +113,26 @@ namespace TooLateToPanic
             AddBox("Balcony walk surface",new Vector3(-2,3.13f,-7.5f),new Vector3(7,.14f,3));
             residenceBunkerRoom=Room("bunker_interior",PanicResidenceArt.BuildBunkerInterior,BunkerInteriorPosition);
             var lit=new GameObject("Bunker emergency lamp").AddComponent<Light>();lit.transform.position=BunkerInteriorPosition+new Vector3(0,2.2f,0);lit.type=LightType.Point;lit.color=new Color(1,.65f,.3f);lit.range=8;lit.intensity=2;
-            AddDecor("@fireplace","fireplace",new Vector3(-7.5f,0,-.2f),-90);
-            AddDecor("decor_radio_table","sidetable",new Vector3(1.25f,0,-3.3f));
-            AddDecor("@radio","radio",new Vector3(1.25f,.61f,-3.3f),0,false);
+            var kitchenDetails=Room("kitchen_v414",PanicHomeArt.BuildKitchenDetailsV414,Vector3.zero);floorItems.Add(kitchenDetails);
+            var childDetails=Room("child_v414",PanicHomeArt.BuildChildDetailsV414,Vector3.up*3.2f);floorItems.Add(childDetails);
+            AddDecor("decor_wc_toilet","toilet",new Vector3(2.9f,.035f,-5.52f),180);
+            AddDecor("decor_wc_sink","sink",new Vector3(4.05f,.035f,-5.52f),180);
+            AddDecor("decor_pantry_back","storagerack",new Vector3(6.3f,0,-5.4f),180);
+            AddDecor("decor_pantry_side","storagerack",new Vector3(7.42f,0,-4.15f),270);
+            AddDecor("decor_lounge_armchair","armchair",new Vector3(-6.45f,0,-1.75f),45);
+            AddDecor("decor_lounge_side","sidetable",new Vector3(-6.5f,0,2.8f));
+            AddDecor("decor_dining_table","table",new Vector3(5.7f,0,2.6f));
+            AddDecor("decor_dining_chair_a","chair",new Vector3(5.7f,0,1.55f));
+            AddDecor("decor_dining_chair_b","chair",new Vector3(6.85f,0,2.6f),90);
+            AddDecor("decor_child_books","books",new Vector3(-3.25f,4.17f,-5.45f),0,false);
+            AddDecor("decor_child_cabinet","cabinet",new Vector3(-3.2f,3.2f,-5.25f));
+            AddDecor("decor_parent_sidetable","sidetable",new Vector3(-6.9f,3.2f,4.05f));
+            AddDecor("decor_child_sidetable","sidetable",new Vector3(-6.9f,3.2f,-3.8f));
+            AddDecor("decor_basement_spare_crates","supplycrate",new Vector3(-6.7f,-3.2f,-1.6f));
+            AddDecor("decor_basement_seat","chair",new Vector3(5.8f,-3.2f,-3.65f),90);
+            AddDecor("@fireplace","fireplace",new Vector3(-7.5f,0,.3f),-90);
+            AddDecor("decor_radio_table","sidetable",new Vector3(-1.65f,0,4.95f));
+            AddDecor("@radio","radio",new Vector3(-1.65f,.61f,4.95f),0,false);
             AddDecor("@garage","garagedoor",new Vector3(11.7f,0,0));
             garageLeaf=residenceTargets["@garage"].GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="DoorLeaf"||t.name=="GarageDoor");if(garageLeaf)garageLeafClosed=garageLeaf.localPosition;
             AddDecor("decor_car","car",new Vector3(11.8f,0,3.5f));
@@ -131,11 +148,12 @@ namespace TooLateToPanic
             AddDecor("decor_entry_shoes","shoe_rack",new Vector3(1.25f,0,-4.4f));
             AddDecor("decor_coats","coat_rack",new Vector3(-1.8f,0,-4.5f));
             AddPhysicalBagStation();
+            AddBagStationGuideV414();
             AddDecor("decor_bath_firstaid_table","sidetable",new Vector3(3.1f,3.2f,4.7f));
             // Loose floor lamps had no model/work contract; keep those walk areas clear.
-            AddDecor("decor_lounge_rug","rug",new Vector3(-3.8f,.025f,-2),0,false);
-            AddDecor("decor_bed_rug","rug",new Vector3(-4.5f,3.225f,2.65f),0,false);floorItems[floorItems.Count-1].transform.localScale=new Vector3(.68f,1,.5f);
-            AddDecor("decor_kitchen_sideboard","storagerack",new Vector3(3.2f,0,5.25f));
+            AddDecor("decor_lounge_rug","rug",new Vector3(-4.35f,.025f,-1.65f),0,false);
+            AddDecor("decor_bed_rug","rug",new Vector3(-5.4f,3.225f,2.25f),0,false);floorItems[floorItems.Count-1].transform.localScale=new Vector3(.68f,1,.5f);
+
             AddDecor("decor_bath_plant","houseplant",new Vector3(7,3.2f,2.3f));
             foreach(var id in new[]{"table","desk_upper"})if(items.TryGetValue(id,out var table))
             {
@@ -143,9 +161,23 @@ namespace TooLateToPanic
                 if(id=="desk_upper"){residenceTargets["@computer"]=go;var pick=go.AddComponent<HomePick>();pick.Id="@computer";AddBoundsCollider(go);}
                 if(id=="table"){var lamp=CreateVisual("tablelamp");lamp.transform.SetParent(table.transform,false);lamp.transform.localPosition=new Vector3(.54f,1.05f,.1f);}
             }
-            foreach(var spot in new[]{new Vector3(-5,0,4.8f),new Vector3(3.7f,0,4.9f),new Vector3(-5,3.2f,-3.8f)})AddDecor("decor_books_"+spot,"books",spot+Vector3.up*.04f,0,false);
+
             AddDecor("decor_wallart","wallart",new Vector3(-2.7f,1.5f,5.78f),0,false);
             if(items.TryGetValue("bunker",out var bunker)){bunkerLeaf=bunker.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="DoorLeaf");if(bunkerLeaf)bunkerClosed=bunkerLeaf.localRotation;}
+        }
+        void AddBagStationGuideV414()
+        {
+            var mat=new Material(Shader.Find("Standard")){name="HomeV4_BagGuideAmber",color=new Color(.93f,.59f,.13f)};
+            mat.EnableKeyword("_EMISSION");mat.SetColor("_EmissionColor",new Color(.22f,.11f,.015f));
+            var root=new GameObject("Bag station floor guide");root.transform.position=PanicHouseLayoutV414.BagPosition;floorItems.Add(root);
+            for(int i=0;i<4;i++)
+            {
+                var bar=GameObject.CreatePrimitive(PrimitiveType.Cube);bar.name="Amber bag guide "+i;bar.transform.SetParent(root.transform,false);
+                bool across=i<2;bar.transform.localPosition=new Vector3(across?0:(i==2?-.42f:.42f),-.015f,across?(i==0?-.35f:.35f):0);
+                bar.transform.localScale=across?new Vector3(.88f,.012f,.035f):new Vector3(.035f,.012f,.74f);
+                var col=bar.GetComponent<Collider>();col.enabled=false;Destroy(col);bar.GetComponent<Renderer>().sharedMaterial=mat;
+            }
+            var lamp=new GameObject("Bag amber pin light").AddComponent<Light>();lamp.transform.SetParent(root.transform,false);lamp.transform.localPosition=new Vector3(0,.9f,0);lamp.type=LightType.Point;lamp.color=new Color(1,.65f,.24f);lamp.range=2.0f;lamp.intensity=.7f;
         }
         Vector3 ResidenceFocusPosition(GameObject target){var p=target.transform.position;p.y=Mathf.Round(p.y/3.2f)*3.2f;return p;}
         void AddDecor(string id,string art,Vector3 p,float rotation=0,bool collide=true)

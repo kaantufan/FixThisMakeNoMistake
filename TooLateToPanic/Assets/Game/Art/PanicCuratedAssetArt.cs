@@ -107,6 +107,9 @@ namespace TooLateToPanic
             return root;
         }
 
+        public static bool TryReplaceBunkerLid(GameObject existingHatch)
+        { return PanicCuratedBunkerLid.Install(existingHatch); }
+
         public static bool HasAnimatedMechanism(GameObject visual)
         { return visual && visual.GetComponentInChildren<PanicCuratedMechanism>(true); }
 
@@ -114,6 +117,7 @@ namespace TooLateToPanic
         public static void SyncVisualState(GameObject visual, bool open, bool safe, bool secured, float dt)
         {
             if (!visual) return;
+            var bunkerLid=visual.GetComponent<PanicCuratedBunkerLid>();if(bunkerLid)bunkerLid.Sample(open,dt);
             if(!VisualStates.TryGetValue(visual,out var state))
             {
                 var brackets=new List<Transform>();

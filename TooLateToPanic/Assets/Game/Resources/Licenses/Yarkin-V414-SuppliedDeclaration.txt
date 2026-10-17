@@ -1,0 +1,95 @@
+# Too Late to Panic! — Hazır Kaynak ve AI Beyan Kaydı (`Assets/_YarkinAssets`)
+
+Bu belge, **CIVIL GAME JAM 2026** Kural Kitapçığı **Madde 3.4, Madde 4.2 ve EK A.4 / A.5** şablonuna birebir uygun olarak tutulmaktadır.
+
+---
+
+## 1. Hazır Kaynak Beyanı (EK A.4 Şablonu)
+
+*(Not: `Assets/_YarkinAssets` altında dışarıdan hazır 3D model veya görsel indirilmemiştir; tüm 31 model, 256×256 semantik renk atlası, 28 materyal, eşya işlevini engellemeyen özel 3D sabitleme aparatları (`SecuredBracket`) ve 31 envanter ikonu etkinlik süresince prosedürel/script tabanlı olarak sıfırdan üretilmiştir. Ana projedeki karakter/ses kaynakları birleştirme aşamasında eklenecektir.)*
+
+| Kategori | Durum (Kullanıldı / Kullanılmadı) | Kaynak Adı & Üretici | Kaynak Bağlantısı | Lisans & Bağlantısı | Oyundaki Yeri & Yapılan Değişiklik | Paylaşım Kısıtı & Kurulum |
+|---|---|---|---|---|---|---|
+| **Görsel / 3D Model** | Kullanılmadı (`_YarkinAssets` içinde) | — | — | — | Tüm 31 adet 3D eşya modeli, `T_DisasterColorSwatch_256.png` renk atlası ve 2D envanter ikonları jam süresince Blender 5.1 + Unity 6 içinde üretilmiştir. | Kısıt yok, repoda tam kaynaklarıyla mevcuttur. |
+| **Ses** | Kullanılmadı (`_YarkinAssets` içinde) | — | — | — | — | — |
+| **Kod** | Kullanılmadı (`_YarkinAssets` içinde) | — | — | — | — | — |
+| **Metin / Font** | Kullanılmadı (`_YarkinAssets` içinde) | — | — | — | — | — |
+| **Diğer** | Kullanılmadı (`_YarkinAssets` içinde) | — | — | — | — | — |
+
+---
+
+## 2. Yapay Zeka (AI) Beyanı (EK A.5 Şablonu)
+
+| Kategori | Durum (Kullanıldı / Kullanılmadı) | Kullanılan AI Aracı | Kullanım Amacı | Oyundaki Kullanım Yeri |
+|---|---|---|---|---|
+| **Görsel** | Kullanıldı | Antigravity AI Agent (Blender Python & Unity Editor otomasyonu) | 31 adet afet hazırlık eşyasının ve tesisat/fikstür varlığının 3D izometrik mesh geometrisini (`SM_*.fbx`), semantik renk atlasını (`T_DisasterColorSwatch_256.png`), materyallerini (`M_*.mat`) ve 2D envanter ikonlarını (`T_Icon_*.png`) üreten scriptlerin oluşturulması | `Assets/_YarkinAssets/Art/Meshes`, `Materials`, `Textures/Packed`, `Icons` ve `Prefabs` altındaki 31 eşya |
+| **Ses** | Kullanılmadı (`_YarkinAssets` içinde) | — | — | — |
+| **Kod** | Kullanıldı | Antigravity AI Agent | `DisasterPrepItem.cs`, `IsometricItemMotion.cs`, `DisasterWaveEvaluator.cs`, `IsometricStylizedOutline.shader`, `YarkinAssetPipelineBuilder.cs` ve `generate_18_assets.py` scriptlerinin yazılması | `Assets/_YarkinAssets/Scripts/`, `Art/Materials/` ve `Tools~/` |
+| **Metin** | Kullanıldı | Antigravity AI Agent | Eşya Türkçe isimleri, kategorileri, İMO YOTA hazırlık puanları ve dokümantasyon/manifest tablolarının düzenlenmesi | `DisasterPrepItem` bileşen verileri ve bu belge |
+| **Diğer** | Kullanılmadı | — | — | — |
+
+---
+
+## 3. Üretilen 31 İzometrik 3D Asset Envanteri (`Assets/_YarkinAssets`)
+
+Tüm 31 model **İzometrik "Toy-Box" ölçek hiyerarşisi** ve **Chunky/Heroic silüet** prensipleriyle, **taban-merkez (bottom-center) pivotlu**, **4 kademeli Semantik Afet Renk Paletli (`M_*` + `T_DisasterColorSwatch_256.png`)**, **iki katmanlı collider mimarili** (Root fizik collider + Child `InteractionTrigger`) ve **işlevselliği engellemeyen çoklu görsel durum (`SecuredBracket`, `CabinetDoor_Hinge`, `ValveState`, `DamagedOrToppled`)** destekli olarak üretilmiştir.
+
+### Bölüm A: Yenilenmiş 18 Ana Afet Hazırlık Eşyası
+
+| # | Türkçe Adı | Prefab (`Prefabs/`) | FBX Mesh (`Art/Meshes/`) | İkon (`Art/Icons/`) | Kategori | Toy-Box Ölçek | Poligon | Toplanabilir | Sabitlenebilir (`SecuredBracket`) | Tetiklediği İkincil Afet |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | **Yangın Tüpü** *(Dolap İçinden Alınır)* | `PF_FireExtinguisher` | `SM_FireExtinguisher.fbx` | `T_Icon_FireExtinguisher.png` | `FireSafety` | 1.20x | 5,264 | **Evet** | Hayır *(Sabitlenen: `PF_FireCabinet`)* | `None` |
+| 2 | **Battaniye** | `PF_Blanket` | `SM_Blanket.fbx` | `T_Icon_Blanket.png` | `SurvivalGear` | 1.15x | 5,814 | Evet | Hayır | `None` |
+| 3 | **Snack Bar** | `PF_SnackBar` | `SM_SnackBar.fbx` | `T_Icon_SnackBar.png` | `FoodAndWater` | 1.75x | 2,064 | Evet | Hayır | `None` |
+| 4 | **Elma** | `PF_Apple` | `SM_Apple.fbx` | `T_Icon_Apple.png` | `FoodAndWater` | 1.60x | 1,632 | Evet | Hayır | `None` |
+| 5 | **Konserve** | `PF_CannedFood` | `SM_CannedFood.fbx` | `T_Icon_CannedFood.png` | `FoodAndWater` | 1.38x | 3,686 | Evet | Hayır | `None` |
+| 6 | **Su Şişesi** | `PF_WaterBottle` | `SM_WaterBottle.fbx` | `T_Icon_WaterBottle.png` | `FoodAndWater` | 1.42x | 3,690 | Evet | Hayır | `None` |
+| 7 | **Enerji İçeceği** | `PF_EnergyDrink` | `SM_EnergyDrink.fbx` | `T_Icon_EnergyDrink.png` | `FoodAndWater` | 1.48x | 2,078 | Evet | Hayır | `None` |
+| 8 | **Batarya İstasyonu** | `PF_PowerBattery` | `SM_PowerBattery.fbx` | `T_Icon_PowerBattery.png` | `PowerAndLight` | 1.22x | 1,764 | Evet | Hayır | `None` |
+| 9 | **İkili Kalem Pil** | `PF_SmallBattery` | `SM_SmallBattery.fbx` | `T_Icon_SmallBattery.png` | `PowerAndLight` | 1.80x | 1,712 | Evet | Hayır | `None` |
+| 10 | **El Telsizi** | `PF_WalkieTalkie` | `SM_WalkieTalkie.fbx` | `T_Icon_WalkieTalkie.png` | `Communication` | 1.50x | 2,014 | Evet | Hayır | `None` |
+| 11 | **Televizyon** | `PF_Television` | `SM_Television.fbx` | `T_Icon_Television.png` | `HouseholdFixture` | 1.00x | 1,450 | Hayır | **Evet (Yan Çerçeve Kelepçeleri + Arka Gergi Kolları — Ekran %100 Açık)** | `FallingTrauma` |
+| 12 | **Halı** | `PF_Rug` | `SM_Rug.fbx` | `T_Icon_Rug.png` | `HouseholdFixture` | 1.00x | 1,092 | Hayır | Hayır | `None` |
+| 13 | **Kıyafet** | `PF_FoldedClothes` | `SM_FoldedClothes.fbx` | `T_Icon_FoldedClothes.png` | `SurvivalGear` | 1.20x | 2,984 | Evet | Hayır | `None` |
+| 14 | **Afet Çantası** | `PF_EmergencyBackpack` | `SM_EmergencyBackpack.fbx` | `T_Icon_EmergencyBackpack.png` | `SurvivalGear` | 1.25x | 5,042 | Evet | Hayır | `None` |
+| 15 | **İlk Yardım Kiti** | `PF_FirstAidKit` | `SM_FirstAidKit.fbx` | `T_Icon_FirstAidKit.png` | `MedicalAndHygiene` | 1.30x | 3,124 | Evet | Hayır | `None` |
+| 16 | **El Feneri** | `PF_Flashlight` | `SM_Flashlight.fbx` | `T_Icon_Flashlight.png` | `PowerAndLight` | 1.50x | 1,996 | Evet | Hayır | `None` |
+| 17 | **Acil Durum Radyosu** | `PF_EmergencyRadio` | `SM_EmergencyRadio.fbx` | `T_Icon_EmergencyRadio.png` | `Communication` | 1.35x | 5,292 | Evet | Hayır | `None` |
+| 18 | **Duvar Kliması** | `PF_AirConditioner` | `SM_AirConditioner.fbx` | `T_Icon_AirConditioner.png` | `HouseholdFixture` | 1.00x | 2,856 | Hayır | **Evet (Sol/Sağ Yan L-Konsollar — Ön Menfez & LED %100 Açık)** | `FallingTrauma` |
+
+### Bölüm B: 13 KTMMOB İMO Afet & Zincirleme Dalga Varlığı
+
+| # | Türkçe Adı | Prefab (`Prefabs/`) | FBX Mesh (`Art/Meshes/`) | İkon (`Art/Icons/`) | Kategori | Toy-Box Ölçek | Poligon | Toplanabilir | Sabitleme / Vana / Dolap Mekaniği | Tetiklediği İkincil Afet |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 19 | **Doğalgaz Ana Vanası** | `PF_GasValve` | `SM_GasValve.fbx` | `T_Icon_GasValve.png` | `UtilityValve` | 1.25x | 4,146 | Hayır | **Vana (Açık/Kapalı)** | `FireWave` (Yangın Dalgası) |
+| 20 | **Su Kesme Vanası (Yana Bakan)** | `PF_WaterValve` | `SM_WaterValve.fbx` | `T_Icon_WaterValve.png` | `UtilityValve` | 1.25x | 4,916 | Hayır | **Vana (Açık/Kapalı — Yana Bakan Volan & Musluk)** | `FloodWave` (Sel Dalgası) |
+| 21 | **Elektrik Sigorta Panosu (Tek Büyük Ana Şalterli)**| `PF_BreakerBox` | `SM_BreakerBox.fbx` | `T_Icon_BreakerBox.png` | `UtilityValve` | 1.15x | 3,050 | Hayır | **Ana Şalter (Açık `-48°` Yukarı / Kapalı `+48°` Aşağı)** | `ElectricalShock` (Elektrik) |
+| 22 | **Büyük Ahşap Kitaplık (Dikey 2 Bölmeli, İçi Boş)** | `PF_Bookcase` | `SM_Bookcase.fbx` | `T_Icon_Bookcase.png` | `HouseholdFixture` | 1.00x | 1,350 | Hayır | **Evet (Üst Taç L-Gönyeler + Yan Dış Duvar Ankrajları — Ön Raflar %100 Açık)** | `CorridorBlockage` |
+| 23 | **Mutfak Buzdolabı** | `PF_Refrigerator` | `SM_Refrigerator.fbx` | `T_Icon_Refrigerator.png` | `HouseholdFixture` | 1.00x | 3,246 | Hayır | **Evet (Üst Tavan L-Braketler + Yan Gövde Gergi Kayışları — Ön Kapaklar %100 Açık)** | `CorridorBlockage` |
+| 24 | **Banyo Termosifonu** | `PF_WaterHeater` | `SM_WaterHeater.fbx` | `T_Icon_WaterHeater.png` | `HouseholdFixture` | 1.05x | 3,830 | Hayır | **Evet (Yan-Arka Deprem Çemberleri — Ön Termostat & Borular %100 Açık)** | `FloodWave` |
+| 25 | **Sağlam Masa (Yaşam Üçgeni)**| `PF_SturdyTable` | `SM_SturdyTable.fbx` | `T_Icon_SturdyTable.png` | `HouseholdFixture` | 1.00x | 968 | Hayır | **Evet (4 Ayak Zemin Sabitleme Pabuçları — Masa Altı Sığınak Alanı %100 Açık)** | `FallingTrauma` |
+| 26 | **Deprem Düdüğü** | `PF_EmergencyWhistle` | `SM_EmergencyWhistle.fbx`| `T_Icon_EmergencyWhistle.png`| `Communication` | 1.85x | 1,322 | Evet | Hayır | `None` |
+| 27 | **Ağır Hizmet Eldiveni** | `PF_WorkGloves` | `SM_WorkGloves.fbx` | `T_Icon_WorkGloves.png` | `SurvivalGear` | 1.45x | 3,528 | Evet | Hayır | `None` |
+| 28 | **Çok Amaçlı Pense/Çakı** | `PF_MultiTool` | `SM_MultiTool.fbx` | `T_Icon_MultiTool.png` | `SurvivalGear` | 1.65x | 968 | Evet | Hayır | `None` |
+| 29 | **Kırık Cam Tehlikesi** | `PF_ShatteredGlass` | `SM_ShatteredGlass.fbx` | `T_Icon_ShatteredGlass.png` | `EnvironmentalHazard`| 1.15x | 106 | Hayır | Çevresel Hasar | `None` |
+| 30 | **Dökülmüş Moloz Yığını (Parçacıklı Beton, Delikli Tuğla & İnşaat Demiri)** | `PF_RubblePile` | `SM_RubblePile.fbx` | `T_Icon_RubblePile.png` | `EnvironmentalHazard`| 1.12x | 3,502 | Hayır | Çevresel Hasar | `CorridorBlockage` |
+| 31 | **Yangın Tüpü Dolabı (Açılabilir Kapaklı + İçinde Tüplü)** | `PF_FireCabinet` | `SM_FireCabinet.fbx` | `T_Icon_FireCabinet.png` | `FireSafety` | 1.00x | 1,840 | Hayır *(İçindeki Tüp Alınabilir)* | **Evet (Yan ve Üst Duvar Ankraj Kulakları — Ön Kapak `CabinetDoor_Hinge` +105° Dışa Açılır)** | `FireWave` |
+| 32 | **Zemin Sığınak Kapağı (Ağır Yuvarlak Bunker Kapağı + 2.1m Karanlık Kuyu & Cutscene)** | `PF_BunkerHatch` | `SM_BunkerHatch.fbx` | `T_Icon_BunkerHatch.png` | `HouseholdFixture` | 1.00x | 38,172 | Hayır | **Ağır Menteşeli Zemin Kapağı (`240 kg`, `-108°` X Ekseni, 6 Kollu Merkez Kilit Volanı, Çift Hidrolik Amortisör & Stencil-Portal Karanlık Kuyu)** | `None` |
+
+---
+
+## 4. Gerçekçi Mekanik Açma-Kapama (Vana / Musluk / Sigorta / Kapak) Animasyon Mimarisi
+
+Tüm açma/kapama yapılan tesisat ve fikstür varlıkları, Blender 5.1 aşamasında **eş-eksenli mekanik mil pivotlarına (coaxial local origins)** sahip bağımsız alt-mesh hiyerarşileriyle dışa aktarılmış ve hem **Prosedürel Fizik Kinematik Motoru (`DisasterPrepItem.cs`)** hem de **Native Unity `AnimationClip` + `AnimatorController` (`Assets/_YarkinAssets/Art/Animations/`)** ile çift katmanlı olarak donatılmıştır:
+
+| Varlık (`Prefab`) | Hareketli Alt-Parçalar (`Visual/` Altında) | Fiziksel Mekanizma & Kinematik Eğri | Açık (Varsayılan / Tehlike) Durumu | Kapalı / İzole (Güvenli) Durumu | Üretilen Unity Animasyon Varlıkları (`Art/Animations/`) |
+|---|---|---|---|---|---|
+| **`PF_GasValve`** *(Doğalgaz Ana Vanası)* | `ValveHandle_Pivot`, `GaugeNeedle_Pivot` | **Çeyrek-Tur Küresel Vana (Quarter-Turn Ball Valve):** PTFE conta statik sürtünme kırılması (*breakaway torque*), akıcı orta strok ve `90°` pirinç tahdit tırnağına (*stop lug*) mekanik oturma; Bourdon tüplü manometre ibresinde sönümlü harmonik salınım ($\zeta \approx 0.42$). | Kol dikey boruyla **paralel** (`0°`, akış açık); manometre ibresi yeşil basınç bölgesinde (`-38°`). | Kol mil ekseni (`+Z`) etrafında saat yönünde **`+90°` dik** konuma döner; manometre ibresi `0 bar` (`+112°`) konumuna düşer. | `AC_GasValve.controller`, `Anim_GasValve_Open.anim`, `Anim_GasValve_Close.anim` |
+| **`PF_WaterValve`** *(Yana Bakan Su Kesme Vanası & Tahliye Musluğu)* | `ValveHandle_Pivot`, `FaucetTap_Pivot`, `MeterTurbine_Pivot`, `WaterDrop_Pivot` | **Yana Bakan Yükselen Milli Glob Vana (Sideways Rising-Stem Multi-Turn) + Tahliye Musluğu:** Sağ-el vida adımı ($\Delta z = -p \cdot \theta / 360^\circ$) ile yatay mil (`+Z`) etrafında çok turlu el çarkı dönüşü, yana bakan kelebek tahliye musluğu kapanışı, su sayacı çarkının hidrodinamik yavaşlaması ($Q \propto (1-s)^{1.6}$) ve alt musluk ağzındaki su damlasının yüzey gerilimiyle kopması. | El çarkı dışarıda (`0°`), pirinç tahliye musluğu açık (`0°`), sayaç çarkı döner, musluk ucunda su damlası asılıdır. | El çarkı yatay mil (`+Z`) etrafında **1.5 tam tur (`+540°`)** saat yönünde dönerken **`-15 mm` boruya doğru** vida adımıyla gömülür; pirinç musluk mandalı **`+90°`** döner ve `-3.5 mm` oturur; sayaç çarkı durur; damla kesilir. | `AC_WaterValve.controller`, `Anim_WaterValve_Open.anim`, `Anim_WaterValve_Close.anim` |
+| **`PF_BreakerBox`** *(Tek Büyük Ana Şalterli Elektrik Sigorta Panosu)* | `MainBreaker_Pivot`, `StatusLED_Pivot` | **Bistabil Yaylı Endüstriyel Ana Şalter (Over-Center Snap Main Breaker):** Oyuncunun izometrik kameradan anında doğrulayabilmesi için tek büyük T-kollu ana şalter (`MainBreaker_Pivot`) yatay mil (`X` ekseni) etrafında yay sıkışması, ölü-nokta (*toggle point* $u=0.38$) aşımı ve alt yuvaya mekanik geri sekme (*rebound*) ile hareket eder. | Büyük turuncu/sarı T-kol **`-48°` YUKARI (Yeşil `ON / I` Bölgesine)** bakar; üstteki büyük yeşil durum kubbesi parlak yanar. | Büyük ana şalter **`+48°` AŞAĞI (Kırmızı `OFF / O` Bölgesine, toplam `96°` yay)** konumuna şaklayarak iner; yeşil durum ışığı söner ve altındaki kırmızı `OFF` kubbesi görünür. | `AC_BreakerBox.controller`, `Anim_BreakerBox_Open.anim`, `Anim_BreakerBox_Close.anim` |
+| **`PF_WaterHeater`** *(Banyo Termosifonu)* | `ValveHandle_Pivot`, `ThermostatKnob_Pivot`, `StatusLED_Pivot` | **Soğuk Su Giriş Musluğu + Termostat Kapatma:** Alt borudaki kırmızı kelebek su giriş musluğu çeyrek tur (`+90°`) kapanır, ön termostat kadranı `-120°` sıfıra döner ve ısıtıcı LED'i söner. | Su giriş musluğu açık (`0°`), termostat aktif, LED yanar. | Su giriş musluğu `+90°` kapalı, termostat `-120°` kapalı, LED sönük + deprem çemberleri takılı. | `AC_WaterHeater.controller`, `Anim_WaterHeater_Open.anim`, `Anim_WaterHeater_Close.anim` |
+| **`PF_AirConditioner`** *(Duvar Kliması)* | `VentFlap_Pivot`, `StatusLED_Pivot` | **Motorlu Stepper Hava Kanatçığı (Louver Flap):** Ön üfleme kanatçığı yatay mil (`X`) etrafında `-48°` kapanarak yuvaya oturur, durum LED'i söner. | Hava kanatçığı açık (`0°`), yeşil çalışma LED'i aktif. | Hava kanatçığı `-48°` kapalı, LED sönük + yan L-konsollar takılı. | `AC_AirConditioner.controller`, `Anim_AirConditioner_Open.anim`, `Anim_AirConditioner_Close.anim` |
+| **`PF_FireCabinet`** *(Yangın Tüpü Dolabı)* | `CabinetDoor_Hinge` | **Sol Dikey Menteşeli Cam Kapak:** Manyetik mandal kurtulması, ataletli savrulma ve tam açılışta (`+105°`) menteşe esnemesi; içindeki `PF_FireExtinguisher` ile hiçbir açısal çarpışma yaşanmaz. | Kapak kapalı (`0°`). | Kapak sol menteşe (`+Y`) etrafında **`+105°` dışa doğru** açılır. | `AC_FireCabinet.controller`, `Anim_FireCabinet_Open.anim`, `Anim_FireCabinet_Close.anim` |
+| **`PF_Refrigerator`** *(Mutfak Buzdolabı)* | `CabinetDoor_Hinge`, `UpperDoor_Hinge` | **Sağ Dikey Menteşeli Çift Kapak (Manyetik Conta):** Alt soğutucu ve üst dondurucu kapakları sağ menteşe (`+Y`) etrafında `-95°` dışa doğru açılır; iç cam raflar görünür. | Her iki kapak kapalı (`0°`). | Alt ve üst kapaklar `0.08 sn` faz farkıyla **`-95°` dışa doğru** açılır. | `AC_Refrigerator.controller`, `Anim_Refrigerator_Open.anim`, `Anim_Refrigerator_Close.anim` |
+| **`PF_BunkerHatch`** *(Zemin Sığınak Kapağı & Karanlık Kuyu)* | `HatchLid_Hinge`, `LockWheel_Pivot`, `HydraulicPiston_Pivot`, `WellPortal_Disc`, `WellShaft_Deep` | **4 Fazlı 240 kg Ağır Zırhlı Sığınak Kapağı + Stencil-Portal Karanlık Kuyu:** (1) 6 kollu merkez kilit volanı `-360°` dönerek `+18 mm` yükselir ve 4 radyal çelik sürgüyü geri çeker; (2) EPDM kauçuk conta `-4.5°` vakum popuyla kurtulur ve yüksek eylemsizlik duraksaması ($I \approx 165\text{ kg}\cdot\text{m}^2$) yaşanır; (3) Ø90 mm çelik menteşe mili ve helisel torsiyon yayları etrafında `-111.5°` arka kauçuk stoperlere kadar ivmelenir; (4) arka döküm stoperde sönümlü sekme ile **`-108°` tam açık** konuma oturur. `BunkerPortalMask.shader` (`Stencil=17` + Far-Z Depth Clear) ve `BunkerDeepShaft.shader` sayesinde düz bir zemin (`y=0`) üzerine koyulduğunda bile zemini delerek 2.1 metre derinliğe inen, döküm kaburgalı ve çelik merdivenli zifiri karanlık bir kuyu oluşturur. `BunkerCutsceneController` ile 3 aşamalı kaçış cutscene'i (*Kapağı Aç -> Çanta At -> Kuyuya Atla*) tek çağrıyla çalışır. | Kapak kapalı ve kilitli (`0°`). | Kapak kalın arka menteşesinden **`-108°` geriye doğru** açılır; içteki 2.1 m derinlikteki karanlık kuyu ve merdiven basamakları ortaya çıkar. | `AC_BunkerHatch.controller`, `Anim_BunkerHatch_Open.anim`, `Anim_BunkerHatch_Close.anim` |
+

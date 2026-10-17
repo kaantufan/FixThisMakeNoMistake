@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -39,16 +39,19 @@ namespace TooLateToPanic
         public int InstalledMeasureRenderers(string id)
         { return hardware.TryGetValue(id, out var holder) && holder ? holder.GetComponentsInChildren<Renderer>(true).Length : 0; }
 
-        void InitDirectActions() { RefreshFireStation(true); }
+        void InitDirectActions() { InitUtilityStationsV414(); RefreshFireStation(true); }
         void ResetDirectActions()
         {
             constructionViewUntil = 0;
+            ResetManualWorkPointerV414();
+            RefreshUtilityStationsV414(true);
             CancelDirectConstruction();
             constructionOutdoor = false; constructionViewUntil = 0;
             if (fireStation) RefreshFireStation(true);
         }
         void RefreshFireStation(bool force = false)
         {
+            RefreshUtilityStationsV414(force);
             bool ready = Expedition != null && Expedition.IsWorkCommitted("fire", PanicItemActionRules.FireStationId);
             if (!force && fireStation && fireStationReady == ready) return;
             if (fireStation)

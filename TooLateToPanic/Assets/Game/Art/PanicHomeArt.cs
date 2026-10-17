@@ -156,6 +156,7 @@ namespace TooLateToPanic
         /// <summary>V3 true cuts the basement stair in ground floor and the balcony entry upstairs.</summary>
         public static GameObject BuildFloor(int floor, bool residenceV3)
         {
+            if(residenceV3)return BuildResidenceFloorV414(floor);
             Init();
             floor = floor <= 0 ? 0 : 1;
             var root = new GameObject("HomeV2_Floor" + floor);
@@ -274,6 +275,154 @@ namespace TooLateToPanic
                 baseMasonry.Attach(low, "brick_foundation");
             }
             return root;
+        }
+
+        // V4.14 residence: same structural shell, a relocated shaft, useful rooms and eight windows.
+        static GameObject BuildResidenceFloorV414(int floor)
+        {
+            Init();floor=floor<=0?0:1;
+            var root=new GameObject("HomeV414_Floor"+floor);
+            var deck=Group(root,"Floor");Group(root,"BackWalls");
+            Group(root,"FrontLowWalls");Group(root,"FrontHighWalls");
+            var divisions=Group(root,"Partitions");
+            var north=Group(root,"FacadeNorth");var west=Group(root,"FacadeWest");
+            var south=Group(root,"FacadeSouth");var east=Group(root,"FacadeEast");
+            float zs=PanicHouseLayoutV414.StairSouth,zn=PanicHouseLayoutV414.StairNorth;
+            Solid(deck,"floor_left",new Vector3(-4.45f,-.12f,0),new Vector3(7.1f,.204f,12),M.Concrete,.005f);
+            Solid(deck,"floor_right",new Vector3(4.45f,-.12f,0),new Vector3(7.1f,.204f,12),M.Concrete,.005f);
+            Solid(deck,"floor_front",new Vector3(0,-.12f,(-6+zs)*.5f),new Vector3(1.8f,.204f,zs+6),M.Concrete,.005f);
+            Solid(deck,"floor_landing",new Vector3(0,-.12f,(zn+6)*.5f),new Vector3(1.8f,.204f,6-zn),M.Concrete,.005f);
+            var b=new Builder();
+            for(int row=0;row<48;row++)
+            {
+                float a=-6+row*.25f,z=a+.25f;
+                for(int col=0;col<8;col++)
+                {
+                    float left=-8+col*2,right=left+2;
+                    bool tile=floor==0&&left>=2 || floor==1&&left>=2&&a>=1.75f;
+                    if(a<zn&&z>zs)
+                    {
+                        FloorFinish(b,left,Mathf.Min(right,-.9f),a,z,row,col,tile);FloorFinish(b,Mathf.Max(left,.9f),right,a,z,row,col,tile);
+                        if(a<zs)FloorFinish(b,Mathf.Max(left,-.9f),Mathf.Min(right,.9f),a,zs,row,col,tile);
+                        if(z>zn)FloorFinish(b,Mathf.Max(left,-.9f),Mathf.Min(right,.9f),zn,z,row,col,tile);
+                    }
+                    else FloorFinish(b,left,right,a,z,row,col,tile);
+                }
+            }
+            for(int side=-1;side<=1;side+=2)
+            {
+                b.Box(new Vector3(side*.943f,-.105f,(zs+zn)*.5f),new Vector3(.085f,.21f,zn-zs),M.WalnutDark,.01f);
+                for(int i=0;i<10;i++)b.Box(new Vector3(side*1.01f,.47f,zs+.1f+i*.52f),new Vector3(.043f,.94f,.043f),M.Charcoal,.008f);
+                b.Box(new Vector3(side*1.01f,.97f,(zs+zn)*.5f),new Vector3(.08f,.07f,zn-zs),M.Walnut,.018f);
+            }
+            if(floor==1)
+            {
+                for(int i=-2;i<=2;i++)b.Box(new Vector3(i*.505f,.47f,zs-.05f),new Vector3(.043f,.94f,.043f),M.Charcoal,.008f);
+                b.Box(new Vector3(0,.97f,zs-.05f),new Vector3(2.1f,.07f,.08f),M.Walnut,.018f);
+            }
+            b.Attach(deck,"floor_finish");
+            WallWithWindows(north,"north",false,6,-8,8,new[]{-4f,4f},0,WallHeight);
+            WallWithWindows(west,"west",true,-8,-6,6,new[]{-3f},0,WallHeight);
+            // South openings: living-room window below, study window above, retained front/balcony door.
+            float window=floor==0?-4:4;
+            WallWithWindows(south,"south_left",false,-6,-8,-.65f,window<0?new[]{window}:new float[0],0,WallHeight);
+            WallWithWindows(south,"south_right",false,-6,.65f,8,window>0?new[]{window}:new float[0],0,WallHeight);
+            Segment(south,"south_lintel",false,-6,-.65f,.65f,2.25f,WallHeight,M.Plaster);
+            if(floor==0)
+            {
+                Segment(east,"east_south",true,8,-6,1.55f,0,WallHeight,M.Plaster);
+                Segment(east,"east_garage_lintel",true,8,1.55f,2.85f,2.30f,WallHeight,M.Plaster);
+                Segment(east,"east_north",true,8,2.85f,6,0,WallHeight,M.Plaster);
+                // Kitchen is a room. A wide living-room/hall arch keeps central circulation open.
+                LayoutPartitionDoor(divisions,"kitchen",false,.8f,2,8,3.35f);
+                LayoutPartition(divisions,"kitchen_side",true,2,.8f,6);
+                LayoutPartitionDoor(divisions,"wc",false,-2.8f,2,4.8f,3.35f);
+                LayoutPartitionDoor(divisions,"pantry",false,-2.8f,4.8f,8,6.4f);
+                LayoutPartition(divisions,"service_side",true,2,-6,-2.8f);
+                LayoutPartition(divisions,"wc_pantry",true,4.8f,-6,-2.8f);
+            }
+            else
+            {
+                Segment(east,"east_full",true,8,-6,6,0,WallHeight,M.Plaster);
+                LayoutPartitionDoor(divisions,"parent",true,-2.2f,.8f,6,3.9f);
+                LayoutPartitionDoor(divisions,"child",true,-2.2f,-6,.8f,-3.2f);
+                LayoutPartition(divisions,"bedroom_divider",false,.8f,-8,-2.2f);
+                LayoutPartitionDoor(divisions,"study",true,2,-6,1.8f,-2.6f);
+            }
+            DirectionalTrim(north,"north",floor,true);DirectionalTrim(west,"west",floor,true);
+            DirectionalTrim(south,"south",floor,true);DirectionalTrim(east,"east",floor,true);
+            return root;
+        }
+
+        static void LayoutPartition(GameObject parent,string id,bool alongZ,float axis,float lo,float hi)
+        {
+            if(hi-lo<.01f)return;
+            Vector3 p=alongZ?new Vector3(axis,.48f,(lo+hi)*.5f):new Vector3((lo+hi)*.5f,.48f,axis);
+            Vector3 size=alongZ?new Vector3(.16f,.96f,hi-lo):new Vector3(hi-lo,.96f,.16f);
+            // Low render mesh is raised to3.2m only in FPS; the world always builds a full-height collider.
+            Partition(parent,"v414_partition_"+id,p,size);
+        }
+        static void LayoutPartitionDoor(GameObject parent,string id,bool alongZ,float axis,float lo,float hi,float door)
+        {
+            LayoutPartition(parent,id+"_a",alongZ,axis,lo,door-.68f);
+            LayoutPartition(parent,id+"_b",alongZ,axis,door+.68f,hi);
+            var b=new Builder();
+            for(int s=-1;s<=1;s+=2)
+            {
+                Vector3 p=alongZ?new Vector3(axis,1.12f,door+s*.66f):new Vector3(door+s*.66f,1.12f,axis);
+                b.Box(p,alongZ?new Vector3(.20f,2.24f,.045f):new Vector3(.045f,2.24f,.20f),M.WalnutDark,.006f);
+            }
+            // The lintel's collider belongs above the walk opening, never stretched down to the floor.
+            Segment(parent,"v414_lintel_"+id,alongZ,axis,door-.68f,door+.68f,2.28f,3.2f,M.Plaster);
+            b.Attach(parent,"v414_door_trim_"+id);
+        }
+
+        public static GameObject BuildKitchenDetailsV414()
+        {
+            Init();var root=new GameObject("HomeV414_Kitchen");var b=new Builder();
+            // L-shaped cabinetry is authored against the kitchen's west/north walls.
+            // One low collider per cabinet leaves the room's middle and door swing free.
+            Solid(root,"v414_counter_west",new Vector3(2.75f,.46f,3.80f),new Vector3(1.0f,.92f,2.7f),M.FacadeIvory,.018f);
+            Solid(root,"v414_counter_corner",new Vector3(3.33f,.46f,4.95f),new Vector3(1.15f,.92f,.67f),M.FacadeIvory,.018f);
+            b.Box(new Vector3(2.75f,.945f,3.80f),new Vector3(1.06f,.06f,2.76f),M.Stone,.018f);
+            b.Box(new Vector3(3.33f,.945f,4.95f),new Vector3(1.20f,.06f,.73f),M.Stone,.018f);
+            // Recessed stainless sink, lip and curved-looking segmented tap.
+            b.Box(new Vector3(2.75f,.982f,2.97f),new Vector3(.72f,.016f,.62f),M.Steel,.07f);
+            b.Box(new Vector3(2.75f,.992f,2.97f),new Vector3(.55f,.018f,.44f),M.Charcoal,.055f);
+            b.Box(new Vector3(2.75f,1.001f,2.97f),new Vector3(.43f,.008f,.32f),M.Steel,.04f);
+            b.Beam(new Vector3(2.35f,.98f,3.15f),new Vector3(2.35f,1.31f,3.15f),.035f,M.Steel);
+            b.Beam(new Vector3(2.35f,1.31f,3.15f),new Vector3(2.60f,1.31f,3.15f),.035f,M.Steel);
+            b.Beam(new Vector3(2.60f,1.31f,3.15f),new Vector3(2.60f,1.24f,3.15f),.035f,M.Steel);
+            // Four solid dark hob rings and an oven front define the cooking station.
+            b.Box(new Vector3(2.75f,.984f,4.38f),new Vector3(.78f,.024f,.66f),M.Charcoal,.025f);
+            for(int x=-1;x<=1;x+=2)for(int z=-1;z<=1;z+=2)
+            {b.Cylinder(new Vector3(2.75f+x*.20f,1.003f,4.38f+z*.17f),.12f,.016f,M.Steel,16);b.Cylinder(new Vector3(2.75f+x*.20f,1.014f,4.38f+z*.17f),.08f,.012f,M.Black,16);}
+            b.Box(new Vector3(3.261f,.48f,4.38f),new Vector3(.02f,.55f,.62f),M.Charcoal,.02f);
+            b.Box(new Vector3(3.278f,.48f,4.38f),new Vector3(.016f,.36f,.46f),M.Black,.012f);
+            b.Box(new Vector3(3.302f,.73f,4.38f),new Vector3(.045f,.035f,.48f),M.Steel,.009f);
+            // Door seams and handles follow the visible east cabinet front.
+            for(int i=0;i<3;i++)
+            {float z=2.75f+i*.65f;b.Box(new Vector3(3.257f,.45f,z),new Vector3(.014f,.78f,.016f),M.WalnutDark,.002f);b.Box(new Vector3(3.279f,.76f,z+.16f),new Vector3(.035f,.035f,.24f),M.Steel,.008f);}
+            // A backsplash stays below eye level and does not create a false room partition.
+            b.Box(new Vector3(2.10f,1.22f,3.8f),new Vector3(.025f,.44f,2.7f),M.FacadeSage,.008f);
+            b.Attach(root,"KitchenCounterSinkHobDetails");return root;
+        }
+
+        public static GameObject BuildChildDetailsV414()
+        {
+            Init();var root=new GameObject("HomeV414_ChildRoomDetails");var b=new Builder();
+            // A compact play mat stays north of the bed and away from the east door sweep.
+            b.Box(new Vector3(-5.5f,.025f,-1.4f),new Vector3(2.5f,.025f,1.4f),M.FacadeSage,.04f);
+            for(int i=0;i<5;i++)b.Box(new Vector3(-6.45f+i*.47f,.042f,-1.4f),new Vector3(.28f,.012f,.85f),i%2==0?M.SafetyAmber:M.Linen,.04f);
+            // Original colored wooden blocks on the actual cabinet top, without a new collision target.
+            for(int i=0;i<4;i++)b.Box(new Vector3(-3.6f+i*.24f,1.06f,-5.25f),new Vector3(.18f,.20f,.18f),i%2==0?M.Red:M.SafetyAmber,.015f);
+            b.Box(new Vector3(-3.12f,1.25f,-5.25f),new Vector3(.18f,.18f,.18f),M.FacadeSage,.015f);
+            // A colorful framed kite picture on the child's west wall identifies the room at a glance.
+            b.Box(new Vector3(-7.84f,1.50f,-1.2f),new Vector3(.035f,.92f,.80f),M.WalnutLight,.01f);
+            b.Box(new Vector3(-7.81f,1.50f,-1.2f),new Vector3(.018f,.80f,.68f),M.Linen,.004f);
+            b.Box(new Vector3(-7.79f,1.60f,-1.2f),new Vector3(.012f,.31f,.31f),M.Red,.008f,Quaternion.Euler(45,0,0));
+            b.Beam(new Vector3(-7.78f,1.42f,-1.2f),new Vector3(-7.78f,1.17f,-1.04f),.012f,M.Slate);
+            b.Attach(root,"ChildPlayMatBlocksKitePicture");return root;
         }
 
         public static GameObject BuildRoof()

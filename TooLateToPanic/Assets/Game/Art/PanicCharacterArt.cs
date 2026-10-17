@@ -18,8 +18,38 @@ namespace TooLateToPanic
         const float Tau = 6.28318530718f;
         static readonly ConditionalWeakTable<GameObject, PoseState> Poses = new ConditionalWeakTable<GameObject, PoseState>();
 
+        public static Transform GetCharacterBone(GameObject model,Animator animator,HumanBodyBones bone)
+        {
+            if(!model)return null;
+            if(animator&&animator.isHuman&&animator.avatar)return animator.GetBoneTransform(bone);
+            string name;
+            switch(bone)
+            {
+                case HumanBodyBones.Hips:name="pelvis";break;case HumanBodyBones.Chest:name="spine_02";break;
+                case HumanBodyBones.Neck:name="neck_01";break;case HumanBodyBones.Head:name="Head";break;
+                case HumanBodyBones.LeftHand:name="hand_l";break;case HumanBodyBones.RightHand:name="hand_r";break;
+                case HumanBodyBones.LeftFoot:name="foot_l";break;case HumanBodyBones.RightFoot:name="foot_r";break;
+                default:return null;
+            }
+            return Named(model.transform,name);
+        }
+
+        public static GameObject CreateCuratedCharacter() { return PanicCuratedCharacterRig.Create(); }
+
+        public static void SetCinematicPose(GameObject model, string action, float phase)
+        {
+            if(!model)return;ClearTaskPose(model);var rig=model.GetComponent<PanicCuratedCharacterRig>();if(rig)rig.SampleCinematic(action,phase);
+        }
+
+        public static void SetMotion(GameObject model, Animator animator, float speed, bool grounded, float verticalSpeed, float dt)
+        {
+            if(!model)return; ClearTaskPose(model);
+            var rig=model.GetComponent<PanicCuratedCharacterRig>();if(rig)rig.Sample(speed,grounded,verticalSpeed,dt);
+        }
+
         public static void Dress(GameObject existingModel, Animator humanoid)
         {
+            if(existingModel && existingModel.GetComponent<PanicCuratedCharacterRig>()) return;
             if (existingModel == null || existingModel.transform.Find(Tag) != null) return;
             Transform model = existingModel.transform;
             Transform hips = Bone(model, humanoid, HumanBodyBones.Hips, "pelvis");

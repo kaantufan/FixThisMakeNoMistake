@@ -16,40 +16,52 @@ namespace TooLateToPanic
         sealed class Rig
         {
             public Transform Bob;
+            public float Jump, Land, Run; public bool WasGrounded=true;
             public readonly Transform[] Hand=new Transform[2], Sleeve=new Transform[2], Upper=new Transform[2];
             public readonly Transform[,] MCP=new Transform[2,5], PIP=new Transform[2,5], DIP=new Transform[2,5];
         }
         public static GameObject Create()
         {
-            Init();var root=new GameObject("BagPreparationHands_AuthoredV411");root.layer=OverlayLayer;
+            Init();var root=new GameObject("BagPreparationHands_AuthoredV414");root.layer=OverlayLayer;
             var rig=new Rig();rig.Bob=Node(root.transform,"HandsBob",Vector3.zero);
             BuildArm(rig,0);BuildArm(rig,1);rigs.Add(root,rig);Animate(root,0,0,0,0);return root;
         }
 
         /// <param name="gather">Normalized action phase: 0 rest, .42 contact, 1 rest. Root advances it once per gather.</param>
         /// <param name="open">Normalized lid/door action phase: 0 rest, .5 grip, 1 rest. Root owns clock/pause.</param>
+        public static void SetLocomotion(GameObject model, float speed, bool grounded, float verticalSpeed, float dt)
+        {
+            var r=GetRig(model);if(r==null)return;
+            dt=Mathf.Clamp(Finite(dt),0,.1f);r.Run=Unit((speed-2.3f)/3f);
+            if(grounded&&!r.WasGrounded)r.Land=1; r.WasGrounded=grounded;
+            r.Land=Mathf.MoveTowards(r.Land,0,dt*5);r.Jump=grounded?0:Mathf.Clamp(Finite(verticalSpeed),-5,5)/5;
+        }
+
         public static void Animate(GameObject model,float clock,float move,float gather,float open)
         {
             if(!model)return;var r=GetRig(model);if(r==null)return;
             clock=Finite(clock);move=Unit(move);gather=Unit(gather);open=Unit(open);
             float gatherArc=Pulse(gather),openArc=Pulse(open);
             float reach=Mathf.Max(gatherArc,openArc),walk=move*(1-reach);
-            r.Bob.localPosition=new Vector3(Mathf.Sin(clock*8)*.002f*walk,Mathf.Cos(clock*16)*.002f*walk,0);
+            float stride=clock*Mathf.Lerp(8,11,r.Run);
+            r.Bob.localPosition=new Vector3(Mathf.Sin(stride)*.005f*walk,Mathf.Cos(stride*2)*.005f*walk-r.Jump*.016f-r.Land*.022f,0);
             for(int h=0;h<2;h++)
             {
                 float side=h==0?-1:1;bool active=h==1;
-                Vector3 p=new Vector3(side*.205f,-.235f,.42f);
+                Vector3 p=new Vector3(side*.195f,-.235f,.42f);
                 p+=new Vector3(side*Mathf.Sin(clock*8)*.003f,Mathf.Sin(clock*1.5f+h)*.0015f,Mathf.Sin(clock*8+h*Mathf.PI)*.006f*walk);
                 // Single right hand reaches; left hand remains low and well separated.
                 float extension=active?reach:reach*.10f;
                 p+=new Vector3(-side*.062f,.087f,.13f)*extension;
+                p+=new Vector3(side*.012f,-.013f,-.032f)*r.Run*walk;
+                p+=new Vector3(0,-r.Jump*.010f-r.Land*.018f,Mathf.Sin(stride+h*Mathf.PI)*.016f*walk);
                 if(active)p+=new Vector3(.012f,-.014f,-.025f)*Smooth(.58f,.95f,gather)*gatherArc;
                 Vector3 angle=new Vector3(12-extension*15,-side*(12-extension*8),side*(8-extension*9));
                 if(active)angle+=new Vector3(-openArc*9,openArc*4,-openArc*17);
                 r.Hand[h].localPosition=p;r.Hand[h].localRotation=Quaternion.Euler(angle);
-                Vector3 elbow=new Vector3(side*.37f,-.405f,-.025f);
+                Vector3 elbow=new Vector3(side*.29f,-.34f,.10f);
                 PointSleeve(r.Sleeve[h],elbow,p,.40f);
-                PointSleeve(r.Upper[h],new Vector3(side*.50f,-.55f,-.27f),elbow,.31f);
+                PointSleeve(r.Upper[h],new Vector3(side*.27f,-.24f,-.16f),elbow,.31f);
                 float contact=active?Mathf.Max(Contact(gather),Contact(open)*.83f):.06f*reach;
                 for(int d=0;d<4;d++)
                 {
@@ -100,14 +112,14 @@ namespace TooLateToPanic
             r.Upper[h]=Node(r.Bob,"UpperArm_"+label,Vector3.zero);b=new MeshBatch();
             b.Loft(Surface.Sleeve,new[]{0f,.15f,.31f},new[]{.078f,.074f,.062f},new[]{.067f,.061f,.053f},Vector3.zero,18);b.Flush(r.Upper[h],"RelaxedUpperSleeve");
             r.Hand[h]=Node(r.Bob,"Hand_"+label,Vector3.zero);b=new MeshBatch();
-            b.Loft(Surface.Leather,new[]{-.012f,.005f,.031f,.062f,.083f,.092f},new[]{.029f,.031f,.038f,.041f,.038f,.033f},new[]{.022f,.022f,.024f,.023f,.020f,.017f},Vector3.zero,20);
+            b.Loft(Surface.Leather,new[]{-.012f,.005f,.031f,.062f,.083f,.092f},new[]{.026f,.029f,.035f,.039f,.037f,.032f},new[]{.022f,.022f,.024f,.023f,.020f,.017f},Vector3.zero,20);
             b.Ellipsoid(Surface.Palm,new Vector3(0,-.021f,.043f),new Vector3(.030f,.005f,.032f));
             b.Ellipsoid(Surface.Leather,new Vector3(-side*.027f,-.009f,.035f),new Vector3(.019f,.018f,.026f));
             b.Ellipsoid(Surface.Back,new Vector3(side*.002f,.020f,.045f),new Vector3(.032f,.005f,.034f));
             b.Tube(Surface.Stitch,new[]{new Vector3(-.023f,.020f,.016f),new Vector3(-.029f,.023f,.045f),new Vector3(-.021f,.021f,.074f)},.0006f,5);
             b.Tube(Surface.Stitch,new[]{new Vector3(.023f,.020f,.016f),new Vector3(.029f,.023f,.045f),new Vector3(.021f,.021f,.074f)},.0006f,5);
             b.Flush(r.Hand[h],"GlovePalmAndDorsum");
-            float[] lengths={.073f,.081f,.076f,.061f};float[] widths={.010f,.0105f,.010f,.0085f};
+            float[] lengths={.071f,.079f,.074f,.059f};float[] widths={.010f,.0105f,.010f,.0085f};
             for(int d=0;d<5;d++)
             {
                 bool thumb=d==4;float len=thumb?.063f:lengths[d];float radius=thumb?.012f:widths[d];
