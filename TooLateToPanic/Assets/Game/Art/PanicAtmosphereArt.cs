@@ -151,6 +151,7 @@ namespace TooLateToPanic
             var soot=Mat(s,"Dry ash and charcoal",new Color(.065f,.065f,.06f),.07f);
             var mud=Mat(s,"Wet mud",new Color(.14f,.14f,.10f),.58f);
             var water=Mat(s,"Shallow settled puddles",new Color(.13f,.23f,.24f),.94f,.24f);
+            var leaves=Mat(s,"Wind scattered leaves",new Color(.27f,.31f,.14f),.12f);
             int count=type==DisasterType.Earthquake?62:34;
             for(int i=0;i<count;i++)
             {
@@ -165,6 +166,12 @@ namespace TooLateToPanic
                     Patch(b,p+Vector3.up*.017f,.36f+H(i+3)*.6f,.18f+H(i+7)*.28f,mud,i);
                     if(i%2==0) Patch(b,p+Vector3.up*.026f,.25f+H(i+16)*.8f,.2f+H(i+23)*.5f,water,i+51);
                     if(i%5==0) b.Box(p+Vector3.up*.075f,new Vector3(.1f,.06f,.52f),wood,Quaternion.Euler(4,H(i+19)*360,4));
+                }
+                else if(type==DisasterType.Storm)
+                {
+                    b.Box(p+Vector3.up*.045f,new Vector3(.27f,.018f,.1f),leaves,Quaternion.Euler(4,H(i+18)*360,7));
+                    if(i%3==0)b.Box(p+Vector3.up*.07f,new Vector3(.52f,.035f,.085f),wood,Quaternion.Euler(5,H(i+5)*360,3));
+                    if(i%7==0)b.Ellipsoid(p+Vector3.up*.04f,new Vector3(.22f,.045f,.16f),brick);
                 }
                 else
                 {

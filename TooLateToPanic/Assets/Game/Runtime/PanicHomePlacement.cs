@@ -40,6 +40,23 @@ namespace TooLateToPanic
 
         bool PlacementPickVisible(Collider collider)
         {
+            var pick=collider.GetComponentInParent<HomePick>();
+            if(pick)
+            {
+                var item=Model.Items.Find(i=>i.Id==pick.Id);
+                if(inside&&item!=null&&!SameLevel(item.Position))return false;
+                GameObject visual=null;
+                if(items.TryGetValue(pick.Id,out var itemVisual))visual=itemVisual;
+                else if(sourceObjects.TryGetValue(pick.Id,out var sourceVisual))visual=sourceVisual;
+                else if(residenceTargets.TryGetValue(pick.Id,out var decorVisual))visual=decorVisual;
+                if(visual)
+                {
+                    var renderers=visual.GetComponentsInChildren<Renderer>(true);
+                    bool visible=false;
+                    foreach(var renderer in renderers)if(renderer.enabled&&renderer.gameObject.activeInHierarchy){visible=true;break;}
+                    if(renderers.Length>0&&!visible)return false;
+                }
+            }
             // Cutaway wall colliders remain solid for the actor, but cannot hide visible picks.
             if(!collider.name.StartsWith("Collision_",StringComparison.Ordinal)||!collider.transform.parent)return true;
             string meshName=collider.name.Substring("Collision_".Length);

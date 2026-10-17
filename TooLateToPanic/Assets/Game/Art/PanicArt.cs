@@ -938,8 +938,8 @@ namespace TooLateToPanic
         {
             key=(key??"click").ToLowerInvariant();
             AudioClip existing;if(Sounds.TryGetValue(key,out existing)&&existing)return existing;
-            bool ambience=key=="earthquake"||key=="flood"||key=="fire";
-            float seconds=ambience?3f:(key=="success"?1f:(key=="fail"?.8f:(key=="warning"?.65f:.22f)));
+            bool ambience=key=="earthquake"||key=="flood"||key=="fire"||key=="storm";
+            float seconds=key=="storm"?6f:ambience?3f:(key=="success"?1f:(key=="fail"?.8f:(key=="warning"?.65f:.22f)));
             const int hz=22050;int count=Mathf.CeilToInt(seconds*hz);
             float[] samples=new float[count];var noise=new System.Random(709+key.Length*113);float low=0;
             for(int i=0;i<count;i++)
@@ -950,6 +950,7 @@ namespace TooLateToPanic
                 if(ambience)
                 {
                     value=key=="earthquake"?low*2.8f+Mathf.Sin(time*57)*.15f:(key=="flood"?low*1.6f+n*.06f:n*.12f+low*.8f);
+                    if(key=="storm")value=(low*2.4f+n*.055f)*(.62f+.3f*Mathf.Sin(time*1.3f)+.08f*Mathf.Sin(time*4.1f));
                     value*=Mathf.Min(1,time*4)*Mathf.Min(1,(seconds-time)*4);
                 }
                 else

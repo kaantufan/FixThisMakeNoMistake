@@ -23,9 +23,12 @@ namespace TooLateToPanic
         public bool WorkActive { get { return Expedition != null && Expedition.Work.Active; } }
         public bool IsMoving { get { return movingId != null; } }
         public bool InputLocked;
+        // Opt-in route QA owns semantic input only; production clocks and physics stay live.
+        public bool FullFlowScriptedInput { get; set; }
         public Camera View { get; private set; }
         public RenderTexture WorkTexture { get; private set; }
         public Vector3 PlayerPosition { get { return player ? player.position : Vector3.zero; } }
+        public bool PlayerControllerEnabled { get { return controller && controller.enabled; } }
         public bool CanInteract { get { return player && FocusPosition(out Vector3 p) && Vector3.Distance(p, player.position) < 2.4f && InteractionPathClear(focusId,p); } }
         public static readonly Vector3 BunkerPosition = new Vector3(11, 0, -7);
         public string EvidencePath { get; private set; }
@@ -40,6 +43,7 @@ namespace TooLateToPanic
         readonly List<GardenSite> gardenSites = new List<GardenSite>();
         readonly List<GameObject> floorVisuals = new List<GameObject>();
         readonly List<GameObject> floorItems = new List<GameObject>();
+        readonly Dictionary<int, Renderer[]> visibilityRenderers = new Dictionary<int, Renderer[]>();
         readonly List<string> focusCandidates = new List<string>();
         GameObject landscape, roof, workRig, handTool;
         Transform player, hero;
@@ -58,7 +62,6 @@ namespace TooLateToPanic
         LineRenderer moveOutline;
         GameObject ghost;
         Material outlineMaterial;
-        GUIStyle markerStyle;
         readonly Vector3 cameraOffset = new Vector3(11, 13, -15);
 
         void Awake()
@@ -71,8 +74,25 @@ namespace TooLateToPanic
             bool interactionSmoke = Array.IndexOf(args, "--interaction-smoke") >= 0;
             bool doorJamSmoke = Array.IndexOf(args, "--door-jam-smoke") >= 0;
             bool developerSmoke = Array.IndexOf(args, "--developer-smoke") >= 0;
+            bool hudConceptSmoke = Array.IndexOf(args, "--hud-concept-smoke") >= 0;
+            bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
+            bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
+            if (fullFlowSmoke)
+            {
+                if (string.IsNullOrEmpty(EvidencePath)) throw new InvalidOperationException("--fullflow-smoke requires --home-evidence <fresh isolated GUID directory>.");
+                if (Array.FindAll(args, a => a.EndsWith("-smoke", StringComparison.Ordinal)).Length != 1)
+                    throw new InvalidOperationException("Run only one opt-in smoke per process.");
+                Application.runInBackground = true;
+            }
+            if (jurySmoke)
+            {
+                if (string.IsNullOrEmpty(EvidencePath)) throw new InvalidOperationException("--jury-smoke requires --home-evidence <fresh isolated GUID directory>.");
+                if (smoke || bathroomSmoke || doorsStairsSmoke || interactionSmoke || doorJamSmoke || developerSmoke || hudConceptSmoke || Array.IndexOf(args, "--residence-smoke") >= 0 || Array.IndexOf(args, "--refinement-smoke") >= 0)
+                    throw new InvalidOperationException("Run only one opt-in smoke per process.");
+                Application.runInBackground = true;
+            }
             if (bathroomSmoke)
             {
                 if (string.IsNullOrEmpty(EvidencePath)) throw new InvalidOperationException("--bathroom-smoke requires --home-evidence <new isolated directory>.");
@@ -108,12 +128,20 @@ namespace TooLateToPanic
                     throw new InvalidOperationException("Run only one opt-in smoke per process.");
                 Application.runInBackground=true;
             }
+            if (hudConceptSmoke)
+            {
+                if (string.IsNullOrEmpty(EvidencePath)) throw new InvalidOperationException("--hud-concept-smoke requires --home-evidence <fresh GUID directory>.");
+                if (smoke || bathroomSmoke || doorsStairsSmoke || interactionSmoke || doorJamSmoke || developerSmoke || Array.IndexOf(args, "--residence-smoke") >= 0 || Array.IndexOf(args, "--refinement-smoke") >= 0)
+                    throw new InvalidOperationException("Run only one opt-in smoke per process.");
+                Application.runInBackground = true;
+            }
             if (smoke) Application.runInBackground = true;
             Model = new PanicModel(); ConfigureResidenceModel(); Expedition = new PanicExpedition(Model);
             BuildWorld();
             hud = gameObject.AddComponent<PanicHomeHud>(); hud.World = this;
             effects = gameObject.AddComponent<PanicHomeEffects>(); effects.World = this;
             InitResidenceLife();
+            InitExteriorLife();
             previousPhase = Model.Phase; previousWave = Model.Wave;
             if (smoke) gameObject.AddComponent<PanicHomeSmoke>();
             if (Array.IndexOf(args, "--residence-smoke") >= 0) { Application.runInBackground=true; gameObject.AddComponent<PanicResidenceSmoke>(); }
@@ -123,7 +151,10 @@ namespace TooLateToPanic
             if (interactionSmoke) gameObject.AddComponent<PanicInteractionSmoke>();
             if (doorJamSmoke) gameObject.AddComponent<PanicDoorJamSmoke>();
             if(developerSmoke)gameObject.AddComponent<PanicDeveloperSmoke>();
-            Debug.Log("HOME_V45_READY developerMenu=true cheatsExcludeScores=true safeDoorMotion=true partialReopenKeepsDirection=true clearEntrance=true mousePlacement=true materialRequirements=true bathroomSouthEntry=true physicalStairRails=true disasterAudioOnly=true offline=true");
+            if(hudConceptSmoke)gameObject.AddComponent<PanicHudConceptSmoke>();
+            if(jurySmoke)gameObject.AddComponent<PanicJurySmoke>();
+            if(fullFlowSmoke)gameObject.AddComponent<PanicFullFlowSmoke>();
+            Debug.Log("HOME_V48_READY juryDemo=true curatedYarkin=true shortPresentationCues=true offlineFonts=true safeDoorMotion=true offline=true");
         }
 
         public GameObject CreateVisual(string id)
@@ -178,6 +209,8 @@ namespace TooLateToPanic
             BuildGarden();
             var cam = new GameObject("Following isometric camera"); View = cam.AddComponent<Camera>();
             View.orthographic = true; View.orthographicSize = 11; View.nearClipPlane = .08f; View.farClipPlane = 170;
+            View.cullingMask &= ~(1 << 29);
+            ResetCameraOrbit();
             View.clearFlags = CameraClearFlags.Skybox; View.backgroundColor = new Color(.09f, .13f, .17f);
             View.allowHDR = true; View.cullingMask = ~(1 << 30);
             View.transform.position = new Vector3(0, 1, -2) + cameraOffset; View.transform.LookAt(new Vector3(0, 1, -2));
@@ -238,7 +271,7 @@ namespace TooLateToPanic
             AddSite("drain_west", "Drenaj kanalı aç", "drain", new Vector3(-5, 0, -8.5f));
             AddSite("drain_east", "Drenaj kanalı aç", "drain", new Vector3(5, 0, -8.5f));
             AddSite("fence_west", "Çit kur", "fence", new Vector3(-11, 0, -11));
-            AddSite("fence_east", "Çit kur", "fence", new Vector3(11, 0, -11));
+            AddSite("fence_east", "Çit kur", "fence", new Vector3(7.7f, 0, -11));
             AddSite("fence_north", "Çit kur", "fence", new Vector3(0, 0, 10));
             AddSite("hose_station", "Yangın hortumu kur", "hose", new Vector3(10, 0, 3));
         }
@@ -293,18 +326,22 @@ namespace TooLateToPanic
             if(hud)hud.ProcessDeveloperHotkeys();
             bool developerBlocksInput=hud&&(hud.DeveloperMenuOpen||hud.DeveloperInputBlockedThisFrame);
             float dt = Mathf.Min(Time.deltaTime, .08f);
+            TickJuryDemo(InputLocked || LossAnnounced || CinematicActive || developerBlocksInput);
             if (!InputLocked && !LossAnnounced && !developerBlocksInput) Model.Tick(dt);
             if (Model.Wave != previousWave) { Expedition.OnNewWave(); previousWave = Model.Wave; }
             if (Model.Phase != previousPhase)
             {
+                if (previousPhase == PanicPhase.Disaster && Model.Phase == PanicPhase.Aftermath)
+                    Expedition.SyncConsumedBagSupplies();
                 CancelMove(); CancelWork(); InventoryOpen = false;
                 if (effects) effects.OnPhase(Model.Phase);
-                OnResidencePhase(Model.Phase,previousPhase);
+                if (JuryActive) { ResetResidenceCinematic(); OnPresentationPhase(Model.Phase, previousPhase); }
+                else OnResidencePhase(Model.Phase,previousPhase);
                 previousPhase = Model.Phase;
                 Debug.Log("HOME_PHASE " + Model.Phase + " wave=" + Model.Wave + " floor=" + ActiveFloor);
             }
-            bool playable = Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial || Model.Phase == PanicPhase.Inspection;
-            if (playable && !InputLocked && !CinematicActive && !LossAnnounced && !developerBlocksInput)
+            bool playable = (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial || Model.Phase == PanicPhase.Inspection) && JuryAllowsMovement;
+            if (playable && !InputLocked && !CinematicActive && !LossAnnounced && !developerBlocksInput && !FullFlowScriptedInput)
             {
                 if (WorkActive) UpdateWork(dt);
                 else if (InventoryOpen) UpdateInventoryKeys();
@@ -313,9 +350,7 @@ namespace TooLateToPanic
                 {
                     MovePlayer(dt, ReadMove());
                     focusClock -= dt; if (focusClock <= 0) { focusClock = .12f; RefreshFocus(false); }
-                    foreach (var key in new[] { KeyCode.E, KeyCode.F, KeyCode.Q, KeyCode.T, KeyCode.Z, KeyCode.X, KeyCode.Space, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Tab, KeyCode.B, KeyCode.PageUp, KeyCode.PageDown }) if (Input.GetKeyDown(key)) HandleKey(key);
-                    if (Input.GetMouseButtonDown(0) && !IsMoving && !hud.PointerOverUi) PickMouse();
-                    if (Input.GetMouseButtonDown(1) && !IsMoving) BeginMousePlacement(Input.mousePosition,hud.PointerOverUi);
+                    DispatchWorldInput(new[] { KeyCode.E, KeyCode.F, KeyCode.Q, KeyCode.T, KeyCode.Z, KeyCode.X, KeyCode.Space, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Tab, KeyCode.B, KeyCode.PageUp, KeyCode.PageDown }.Where(Input.GetKeyDown), Input.GetMouseButtonDown(0), hud.PointerOverUi);
                     if (!IsMoving && Mathf.Abs(Input.mouseScrollDelta.y) > .1f && !hud.PointerOverUi) cameraSize = Mathf.Clamp(cameraSize - Input.mouseScrollDelta.y * .35f, 4, 10);
                 }
             }
@@ -324,7 +359,11 @@ namespace TooLateToPanic
             ActiveFloor = Mathf.Clamp(Mathf.FloorToInt((player.position.y + .65f) / 3.2f), -1, 1);
             inside = InResidence(player.position);
             UpdateResidenceLife(dt);
-            AnimateHinges(dt); ApplyFloorVisibility(); SyncVisuals(false); FollowCamera(dt);
+            TickExteriorLife(dt);
+            ObserveJuryPresentation();
+            UpdateCameraOrbitInput(hud && hud.PointerOverUi);
+            AnimateHinges(dt); SyncVisuals(false); ApplyFloorVisibility(); FollowCamera(dt);
+            UpdateJuryMarker();
             gatherPoseTime = Mathf.Max(0, gatherPoseTime - dt);
         }
 
@@ -385,6 +424,18 @@ namespace TooLateToPanic
             if (key == KeyCode.Alpha4) QuickAction(4);
         }
 
+        // One discrete world action owns a frame. A newly opened modal must not
+        // receive a second shortcut or a click that began in the world.
+        public void DispatchWorldInput(IEnumerable<KeyCode> keys, bool primaryClick, bool pointerOverUi)
+        {
+            bool playable = Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial || Model.Phase == PanicPhase.Inspection;
+            if (!playable || !JuryAllowsMovement || InputLocked || CinematicActive || LossAnnounced ||
+                WorkActive || InventoryOpen || IsMoving || CancelFrame == Time.frameCount ||
+                hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame)) return;
+            foreach (var key in keys) { HandleKey(key); return; }
+            if (primaryClick && !pointerOverUi) PickMouse();
+        }
+
         void RefreshFocus(bool cycle)
         {
             focusCandidates.Clear();
@@ -442,6 +493,7 @@ namespace TooLateToPanic
 
         public void Interact()
         {
+            if (TryJuryInteract()) return;
             if (!CanInteract || WorkActive || IsMoving) { Model.Notify("Etkileşmek için hedefe yaklaş."); return; }
             if (focusId == "@bunker" || Selected != null && Selected.Id == "bunker") { Model.EnterBunker(); return; }
             var source = NearestSource;
@@ -500,10 +552,13 @@ namespace TooLateToPanic
         public void BeginWork(string action, string target)
         {
             if (Model.Phase != PanicPhase.Preparing && Model.Phase != PanicPhase.Tutorial) return;
+            if (JuryActive && !CanInteract) return;
+            if (JuryActive && (!PositionOf(target, out var juryTaskPosition) || !SameLevel(juryTaskPosition) || Vector3.Distance(player.position, juryTaskPosition) > 2.7f || !InteractionPathClear(target, juryTaskPosition)))
+            { Model.Notify("İş için hedefe açık yoldan yaklaş."); return; }
             if (WorkActive || IsMoving) return;
             if (!Expedition.CanBeginWork(action,target)) return;
             workAction = action; workTarget = target; workAge = 0;
-            Expedition.Work.Begin(action, target); InventoryOpen = false;
+            Expedition.Work.Begin(action, target, Model.IsJuryDemo); InventoryOpen = false;
             if (PositionOf(target, out var taskPosition)) { var toward = Flat(taskPosition-player.position); if (toward.sqrMagnitude>.01f) { facingYaw=Mathf.Atan2(toward.x,toward.z)*Mathf.Rad2Deg; hero.rotation=Quaternion.Euler(0,facingYaw,0); } }
             animator.SetBool("Working", true); animator.SetBool("Kneeling", action == "plant" || action == "drain" || action == "anchorfloor");
             var hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
@@ -514,8 +569,12 @@ namespace TooLateToPanic
         void UpdateWork(float dt)
         {
             float dir = (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) ? 1 : 0) - (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow) ? 1 : 0);
-            StepWork(dt,dir,Input.GetKey(KeyCode.Space),Input.GetKeyDown(KeyCode.Return),Input.GetKeyDown(KeyCode.Space));
-            if (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape)) { CancelWork(); return; }
+            ProcessWorkInput(dt,dir,Input.GetKey(KeyCode.Space),Input.GetKeyDown(KeyCode.Return),Input.GetKeyDown(KeyCode.Space),Input.GetKeyDown(KeyCode.Backspace)||Input.GetKeyDown(KeyCode.Escape));
+        }
+        public void ProcessWorkInput(float dt,float direction,bool held,bool pressed,bool pulse,bool cancel)
+        {
+            if (cancel) { CancelWork(); return; }
+            StepWork(dt,direction,held,pressed,pulse);
         }
         public void StepWork(float dt,float direction,bool held,bool pressed,bool pulse)
         {
@@ -570,13 +629,14 @@ namespace TooLateToPanic
 
         public void StartGame(bool tutorial)
         {
+            ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation();
             CancelWork(); CancelMove();
             if (Model.Phase != PanicPhase.Title && Model.Phase != PanicPhase.GameOver) Model.ReturnToTitle();
             Model.StartRun(tutorial); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; focusId = null; InventoryOpen = false; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); effects.OnPhase(Model.Phase); QueueRadio(DisasterVoiceId());
         }
         public void FinishTutorial() { CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); QueueRadio(DisasterVoiceId()); }
-        public void FinishInspection() { Model.FinishInspection(); }
-        public void ReturnToMenu() { CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
+        public void FinishInspection() { if (JuryActive) AdvanceJuryDemo(); else if (Model.IsSimulation) ReturnToMenu(); else Model.FinishInspection(); }
+        public void ReturnToMenu() { if(hud)hud.CloseSimulationSelector(); ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation(); CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
         void ClearGarden() { foreach (var s in gardenSites) { s.done = false; s.marker.SetActive(true); if (s.built) Destroy(s.built); s.built = null; } }
         public void Warp(Vector3 p) { controller.enabled = false; player.position = p; controller.enabled = true; gravitySpeed = -2; desiredVelocity = Vector3.zero; }
         public void SmokeMove(Vector2 direction, float dt) { MovePlayer(dt, direction); }
@@ -608,21 +668,51 @@ namespace TooLateToPanic
         }
         void ApplyFloorVisibility()
         {
+            bool cutawayInside = inside && !ResidenceCinematicExteriorView;
             for (int i = 0; i < floorVisuals.Count; i++)
             {
-                int floor=i-1; bool shown = !inside || floor <= ActiveFloor; floorVisuals[i].SetActive(shown);
+                int floor=i-1; bool shown = !cutawayInside || floor == ActiveFloor;
+                SetResidenceRenderersVisible(floorVisuals[i], shown);
                 foreach (var t in floorVisuals[i].GetComponentsInChildren<Transform>(true))
-                    if (t.name == "FrontHighWalls") t.gameObject.SetActive(!inside);
+                    if (t.name == "FrontHighWalls") t.gameObject.SetActive(!cutawayInside);
+                if (shown && cutawayInside && View)
+                {
+                    Vector3 cameraSide = View.transform.position - player.position;
+                    foreach (var renderer in floorVisuals[i].GetComponentsInChildren<Renderer>(true))
+                    {
+                        Vector3 p = renderer.bounds.center;
+                        if ((cameraSide.x < -.1f && p.x < -7.6f) || (cameraSide.z > .1f && p.z > 5.6f)) renderer.enabled = false;
+                    }
+                }
             }
-            if (roof) roof.SetActive(!inside && Model.Phase != PanicPhase.Disaster && Model.Phase != PanicPhase.Aftermath);
-            UpdateResidenceVisibility();
+            if (roof) roof.SetActive(!cutawayInside && (Model.Disaster == DisasterType.Storm || Model.Phase != PanicPhase.Disaster && Model.Phase != PanicPhase.Aftermath));
+            UpdateResidenceVisibility(cutawayInside);
             foreach (var go in floorItems)
             {
                 if (!go || go.name == movingId) continue;
-                bool shown = !inside || go.transform.position.y < ActiveFloor * 3.2f + 2.6f;
+                int itemFloor = Mathf.Clamp(Mathf.FloorToInt((go.transform.position.y + .15f) / 3.2f), -1, 1);
+                bool stair = go.transform.parent && go.transform.parent.name.StartsWith("Stair flight ", StringComparison.Ordinal);
+                bool shown = !cutawayInside || itemFloor == ActiveFloor || stair && itemFloor + 1 == ActiveFloor;
                 var data = Model.Items.Find(x => x.Id == go.name);
-                go.SetActive(shown && (data == null || data.Installed));
+                if (shown && cutawayInside && data != null && data.Kind == ItemKind.Window && View)
+                {
+                    Vector3 cameraSide = View.transform.position - player.position;
+                    if (cameraSide.x < -.1f && data.Position.x < -7.6f || cameraSide.z > .1f && data.Position.z > 5.6f) shown = false;
+                }
+                go.SetActive(data == null || data.Installed);
+                SetResidenceRenderersVisible(go, shown);
             }
+            if (hearthLight) hearthLight.enabled = hearthEnabled && (!cutawayInside || ActiveFloor == 0);
+        }
+
+        void SetResidenceRenderersVisible(GameObject root, bool visible)
+        {
+            if (!root) return;
+            int key = root.GetInstanceID();
+            if (!visibilityRenderers.TryGetValue(key, out var renderers))
+                visibilityRenderers[key] = renderers = root.GetComponentsInChildren<Renderer>(true);
+            foreach (var renderer in renderers)
+                if (renderer && renderer.enabled != visible) renderer.enabled = visible;
         }
 
         void SyncVisuals(bool force)
@@ -658,7 +748,7 @@ namespace TooLateToPanic
             var holder = new GameObject("Applied measures"); holder.transform.SetParent(go.transform, false); hardware[item.Id] = holder;
             if (item.Anchored)
             {
-                GameObject attachment = item.AnchorSurface == "wall" ? PanicWorkArt.CreateWallAnchors(item.Size) : PanicAttachmentArt.CreateAnchors(item.Size);
+                GameObject attachment = PanicResidenceArt.CreateSecuredHardware(item.Size, item.AnchorSurface == "wall");
                 attachment.transform.SetParent(holder.transform, false);
             }
             if (item.FloodProtected) { var g = PanicAttachmentArt.CreateFloodGuard(1.82f, .85f); g.transform.SetParent(holder.transform, false); g.transform.localPosition = new Vector3(0, .8f, -.22f); }
@@ -668,7 +758,7 @@ namespace TooLateToPanic
                 var g = PanicWorkArt.CreateReinforcement(item.Tier); g.transform.SetParent(holder.transform, false); g.transform.localPosition = new Vector3(0, .7f, -.15f);
                 if (Mathf.Abs(item.Position.x) > 7) holder.transform.localRotation = Quaternion.Euler(0, item.Position.x < 0 ? 270 : 90, 0);
             }
-            if (item.Damage > 4)
+            if (item.Damage > 4 && item.Kind != ItemKind.Wall && item.Kind != ItemKind.Roof)
             {
                 float width = Mathf.Min(1.2f, item.Size.x * .7f), height = Mathf.Min(1.6f, item.Size.y * .8f);
                 var crack = MakeLine("Fresh damage fracture", new[] { new Vector3(-width*.4f,height*.85f,-.01f),new Vector3(-width*.1f,height*.62f,-.02f),new Vector3(-width*.2f,height*.42f,-.01f),new Vector3(width*.18f,height*.25f,-.01f),new Vector3(width*.12f,.09f,-.01f) }, new Color(.09f,.075f,.065f), .018f);
@@ -676,6 +766,8 @@ namespace TooLateToPanic
                 if (item.Kind == ItemKind.Window) crack.transform.localPosition = new Vector3(0,1.0f,-.18f);
                 if (item.Kind == ItemKind.Wall) { crack.transform.localPosition = new Vector3(0,.1f,-.14f); if (Mathf.Abs(item.Position.x)>7) holder.transform.localRotation=Quaternion.Euler(0,item.Position.x<0?270:90,0); }
             }
+            OnPresentationHardwareRebuilt(item, holder);
+            visibilityRenderers.Remove(items[item.Id].GetInstanceID());
         }
 
         void FollowCamera(float dt)
@@ -687,6 +779,7 @@ namespace TooLateToPanic
             float size = title ? 12.5f : cameraSize;
             if (Model.Phase == PanicPhase.Disaster || Model.Phase == PanicPhase.Aftermath) { aim = new Vector3(0, 1.5f, 0); size = 13; }
             Vector3 offset = cameraOffset;
+            ApplyCameraOrbit(ref offset);
             if (Model.Phase == PanicPhase.Disaster) { float t = Mathf.Clamp01(1-Model.PhaseTime/8f); offset=Quaternion.Euler(0,Mathf.Lerp(-5,7,t),0)*offset; size=Mathf.Lerp(13,11.5f,t); }
             Vector3 shake = Model.Phase == PanicPhase.Disaster && Model.Disaster == DisasterType.Earthquake ? new Vector3(Mathf.Sin(Time.time * 29), Mathf.Cos(Time.time * 31), 0) * .06f : Vector3.zero;
             View.transform.position = Vector3.Lerp(View.transform.position, aim + offset + shake, dt * 5);
@@ -695,16 +788,16 @@ namespace TooLateToPanic
         }
         void OnGUI()
         {
-            if (!View || Model.Phase == PanicPhase.Title || WorkActive || InventoryOpen || CinematicActive || (hud&&hud.DeveloperMenuOpen)) return;
-            if (markerStyle == null) { markerStyle = new GUIStyle(GUI.skin.box); markerStyle.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); markerStyle.fontSize = 13; markerStyle.alignment = TextAnchor.MiddleCenter; markerStyle.normal.textColor = new Color(.94f, .88f, .71f); }
+            if (!View || Model.Phase == PanicPhase.Title || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;
+            DrawJuryWorldTarget();
             if (!string.IsNullOrEmpty(ShortAction)&&FocusPosition(out var p) && CanInteract) DrawMarker(p + Vector3.up * 1.9f, "E  " + ShortAction, 110);
             if (Model.Phase == PanicPhase.Inspection)
             {
-                foreach (var item in Model.Items.Where(i => i.Contribution > .1f && SameLevel(i.Position)).OrderByDescending(i => i.Contribution).Take(8))
+                foreach (var item in Model.Items.Where(i => i.Contribution > .1f && SameLevel(i.Position)).OrderByDescending(i => i.Contribution).Take(3))
                     DrawMarker(item.Position + Vector3.up * Mathf.Max(.9f, item.Size.y), "!  +" + item.Contribution.ToString("F1") + "%", 90);
             }
         }
-        void DrawMarker(Vector3 p, string label, float width) { var s = View.WorldToScreenPoint(p); if (s.z > 0) GUI.Label(new Rect(s.x - width / 2, Screen.height - s.y, width, 26), label, markerStyle); }
+        void DrawMarker(Vector3 p, string label, float width) { if (hud) hud.DrawWorldMarker(p, label, width); }
         void AddBox(string name, Vector3 p, Vector3 size) { var go = new GameObject(name); go.transform.position = p; go.AddComponent<BoxCollider>().size = size; }
         void AddBoundsCollider(GameObject go)
         {

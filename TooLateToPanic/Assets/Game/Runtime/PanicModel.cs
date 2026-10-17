@@ -23,7 +23,8 @@ namespace TooLateToPanic
     {
         Earthquake,
         Flood,
-        Fire
+        Fire,
+        Storm = 3
     }
 
     public enum ItemKind
@@ -119,6 +120,10 @@ namespace TooLateToPanic
         public List<PanicItem> Items;
         public List<HighscoreEntry> Highscores;
         public bool IsTutorial;
+        public bool IsJuryDemo { get; private set; }
+        public bool IsSimulation { get; private set; }
+        public bool SimulationComplete { get; private set; }
+        internal string JuryActionScope { get; private set; } = string.Empty;
 
         private bool prepWarningShown;
         private bool waveResolved;
@@ -151,7 +156,10 @@ namespace TooLateToPanic
         public bool InfiniteBudget { get { return Developer != null && Developer.InfiniteBudget; } }
         public bool FreeMaterials { get { return Developer != null && Developer.FreeMaterials; } }
         public bool FreezePreparationTime { get { return Developer != null && Developer.FreezePreparationTime; } }
-        public bool DeveloperAnyEnabled { get { return InfiniteBudget || FreeMaterials || FreezePreparationTime; } }
+        public bool DeveloperNoLoss { get { return Developer != null && Developer.NoLoss; } }
+        public bool DeveloperNoLossUsedThisWave { get; private set; }
+        public string DeveloperNoLossReason { get; private set; } = string.Empty;
+        public bool DeveloperAnyEnabled { get { return InfiniteBudget || FreeMaterials || FreezePreparationTime || DeveloperNoLoss; } }
         public bool CheatedRun { get; private set; }
 
         public int SupportCount
@@ -200,6 +208,9 @@ namespace TooLateToPanic
         {
             if (Developer == null) Developer = new PanicDeveloperOptions();
             Developer.SetOption(option, enabled);
+            if (option == PanicDeveloperOption.NoLoss && enabled && !IsJuryDemo &&
+                (Phase == PanicPhase.Preparing || Phase == PanicPhase.Disaster || Phase == PanicPhase.Aftermath))
+                LatchDeveloperNoLoss("Bu dalgada kaybetmeme modu kullanıldı.");
             if (enabled && Phase != PanicPhase.Title)
                 MarkRunCheated();
         }
@@ -218,6 +229,9 @@ namespace TooLateToPanic
 
         public void Tick(float delta)
         {
+            // The bounded demo has its own unscaled clock; campaign phase transitions
+            // and score awards must never run alongside that controller.
+            if (IsJuryDemo || (IsSimulation && SimulationComplete && Phase == PanicPhase.Inspection)) return;
             if (float.IsNaN(delta) || float.IsInfinity(delta) || delta <= 0f)
                 return;
 
@@ -245,7 +259,7 @@ namespace TooLateToPanic
 
                     if (TimeRemaining <= 0f)
                     {
-                        FailRun("Hazırlık süresi doldu; bunkera zamanında ulaşamadın.");
+                        FailRun(IsSimulation ? "Hazırlık süresi doldu; önlemlerini zamanında tamamlayamadın." : "Hazırlık süresi doldu; bunkera zamanında ulaşamadın.");
                         transitions++;
                         continue;
                     }
@@ -450,6 +464,7 @@ namespace TooLateToPanic
 
         public bool EnterBunker()
         {
+            if (IsJuryDemo) { Notify("İşaretli güvenli alanı kullan."); return false; }
             if (Phase != PanicPhase.Preparing && Phase != PanicPhase.Tutorial)
                 return RefuseBool("Bunkera yalnızca hazırlık aşamasında girilebilir.");
 
@@ -463,8 +478,24 @@ namespace TooLateToPanic
             return true;
         }
 
+        public bool InspectSimulationDamage()
+        {
+            if (!IsSimulation || !SimulationComplete || Phase != PanicPhase.GameOver) return false;
+            // Retain the failed result and real damage; this only opens the walkable review.
+            Phase = PanicPhase.Inspection;
+            PhaseTime = TimeRemaining = 0f;
+            Message = "Hasar " + FormatPercent(TotalDamage) + ". " + FailureReason + " Önlemlerini inceleyip yeniden deneyebilirsin.";
+            return true;
+        }
+
         public void FinishInspection()
         {
+            if (IsSimulation)
+            {
+                if (Phase == PanicPhase.Inspection) { SimulationComplete = true; PhaseTime = 0f; }
+                return;
+            }
+            if (IsJuryDemo) { Notify("Devam düğmesini kullan."); return; }
             if (Phase != PanicPhase.Inspection)
             {
                 Refuse("Hasar incelemesi şu anda açık değil.");
@@ -491,9 +522,9 @@ namespace TooLateToPanic
         public void ReturnToTitle()
         {
             PersistPendingCheatedScoreRemoval();
-            if (!IsTutorial && CompletedWaves > 0 && !runResultRecorded)
+            if (!IsSimulation && !IsJuryDemo && !IsTutorial && CompletedWaves > 0 && !runResultRecorded)
                 RecordRunOnce();
-            else if (!CheatedRun && runResultRecorded && !scoresPersisted)
+            else if (!IsSimulation && !IsJuryDemo && !CheatedRun && runResultRecorded && !scoresPersisted)
                 scoresPersisted = SaveScoresAtomic();
 
             IsTutorial = false;
@@ -524,8 +555,85 @@ namespace TooLateToPanic
             Message = message ?? string.Empty;
         }
 
+        /// <summary>One selectable, unranked disaster using the real existing resolution path.</summary>
+        public bool StartSimulation(DisasterType type)
+        {
+            if (Phase != PanicPhase.Title && Phase != PanicPhase.GameOver) return false;
+            if (type != DisasterType.Earthquake && type != DisasterType.Flood && type != DisasterType.Fire && type != DisasterType.Storm) return false;
+            PersistPendingCheatedScoreRemoval();
+            ResetRunState(false);
+            IsSimulation = true;
+            Disaster = type;
+            Wave = 1;
+            RequiredDays = 1;
+            PackedWater = PackedFood = 1;
+            Phase = PanicPhase.Preparing;
+            TimeRemaining = PhaseTime = 90f;
+            DeveloperNoLossUsedThisWave = DeveloperNoLoss;
+            DeveloperNoLossReason = DeveloperNoLoss ? "Bu dalgada kaybetmeme modu kullanıldı." : string.Empty;
+            MarkRunCheatedIfOptionsEnabled();
+            Message = DisasterName(type) + " için hazırlan. Çantanda başlangıç suyu ve gıdası hazır.";
+            return true;
+        }
+
+        /// <summary>Starts an isolated, finite jury scenario. No campaign award is applied.</summary>
+        public bool StartJuryDemo()
+        {
+            if (Phase != PanicPhase.Title && Phase != PanicPhase.GameOver) return false;
+            PersistPendingCheatedScoreRemoval();
+            ResetRunState(false);
+            IsJuryDemo = true;
+            Wave = 1;
+            RequiredDays = 1;
+            Disaster = DisasterType.Earthquake;
+            Phase = PanicPhase.Preparing;
+            TimeRemaining = PhaseTime = 100f;
+            MarkRunCheatedIfOptionsEnabled();
+            Message = "Çantanda 1 gıda var; suyu bulup yerleştir.";
+            return true;
+        }
+
+        internal void SetJuryPresentation(PanicPhase phase, DisasterType disaster, float remaining, string message, string actionScope)
+        {
+            if (!IsJuryDemo) return;
+            Phase = phase;
+            Disaster = disaster;
+            TimeRemaining = PhaseTime = float.IsNaN(remaining) || float.IsInfinity(remaining) ? 0f : Mathf.Max(0f, remaining);
+            JuryActionScope = actionScope ?? string.Empty;
+            if (!string.IsNullOrEmpty(message)) Message = message;
+        }
+
+        internal void ResolveJuryDisaster(DisasterType disaster, bool consumeSupplies)
+        {
+            if (!IsJuryDemo) return;
+            Disaster = disaster;
+            ClearWaveDamage();
+            CalculateDamage();
+            if (consumeSupplies) ConsumeWaveSupplies();
+            LastReward = 0;
+            LastWaveScore = 0;
+            FailureReason = string.Empty;
+        }
+
+        internal bool CanBeginJuryWork(string action, string targetId)
+        {
+            if (!IsJuryDemo) return true;
+            if (JuryActionScope == "anchor")
+                return (action == "anchorwall" || action == "anchorfloor") &&
+                    (targetId == "bookshelf" || targetId == "fridge");
+            if (JuryActionScope == "drain")
+                return action == "drain" && (targetId == "drain_west" || targetId == "drain_east");
+            return JuryActionScope == "fire" && action == "fire";
+        }
+
         private void ResetRunState(bool tutorial)
         {
+            IsJuryDemo = false;
+            IsSimulation = false;
+            SimulationComplete = false;
+            JuryActionScope = string.Empty;
+            DeveloperNoLossUsedThisWave = false;
+            DeveloperNoLossReason = string.Empty;
             IsTutorial = tutorial;
             Wave = 1;
             CompletedWaves = 0;
@@ -574,6 +682,8 @@ namespace TooLateToPanic
 
         private void BeginWave()
         {
+            DeveloperNoLossUsedThisWave = DeveloperNoLoss;
+            DeveloperNoLossReason = DeveloperNoLoss ? "Bu dalgada kaybetmeme modu kullanıldı." : string.Empty;
             RequiredDays = Wave <= 3 ? 1 : (Wave <= 6 ? 2 : 3);
             LastWaveScore = 0;
             LastReward = 0;
@@ -629,6 +739,17 @@ namespace TooLateToPanic
 
             if (Phase == PanicPhase.Aftermath)
             {
+                if (IsSimulation)
+                {
+                    if (pendingSuccess)
+                    {
+                        if (DeveloperNoLoss || DeveloperNoLossUsedThisWave) BeginDeveloperNoLossInspection(FailureReason);
+                        else CompleteSimulationInspection();
+                    }
+                    else if (DeveloperNoLoss) BeginDeveloperNoLossInspection(FailureReason);
+                    else FailRun(FailureReason);
+                    return;
+                }
                 if (IsTutorial)
                 {
                     Phase = PanicPhase.Success;
@@ -636,6 +757,10 @@ namespace TooLateToPanic
                     Message = pendingSuccess
                         ? "Öğretici afeti tamamlandı. Sonucu incele, sonra gerçek koşuya geç."
                         : "Öğretici sonucu: " + FailureReason + " Hasarı inceleyip hazırlığı tekrar deneyebilirsin.";
+                }
+                else if (DeveloperNoLoss || (DeveloperNoLossUsedThisWave && pendingSuccess))
+                {
+                    BeginDeveloperNoLossInspection(FailureReason);
                 }
                 else if (pendingSuccess)
                 {
@@ -686,6 +811,11 @@ namespace TooLateToPanic
             Phase = PanicPhase.Aftermath;
             PhaseTime = 4f;
             Message = BuildDamageSummary();
+            if (DeveloperNoLoss)
+            {
+                LatchDeveloperNoLoss(FailureReason);
+                Message += " Geliştirici kaybetmeme koruması açık; gerçek hasar değişmedi, bu geçişe ödül verilmez.";
+            }
         }
 
         private void CalculateDamage()
@@ -755,6 +885,19 @@ namespace TooLateToPanic
                 normalizedTotal += item.Contribution;
             }
 
+            if (Disaster == DisasterType.Storm && normalizedTotal > 100f)
+            {
+                // The new wind roof/window risks can exceed one item's share of the
+                // excess. Scale only this new type to preserve a meaningful 0..100 total.
+                float scale = 100f / normalizedTotal;
+                for (int i = 0; i < Items.Count; i++)
+                {
+                    Items[i].Contribution *= scale;
+                    float baseRisk = BaseRisk(Items[i], Disaster);
+                    Items[i].Damage = baseRisk <= 0f ? 0f : Mathf.Clamp01(Items[i].Contribution / baseRisk) * 100f;
+                }
+                normalizedTotal = 100f;
+            }
             if (normalizedTotal > 100f)
             {
                 float excess = normalizedTotal - 100f;
@@ -775,6 +918,13 @@ namespace TooLateToPanic
         private static float BaseRisk(PanicItem item, DisasterType disaster)
         {
             if (item == null || !item.Installed || item.Id == "bunker" || item.Id == "bagstation") return 0f;
+            if (disaster == DisasterType.Storm)
+            {
+                if (item.Kind == ItemKind.Roof) return 12f;
+                if (item.Kind == ItemKind.Window) return 10f;
+                if (item.Kind == ItemKind.Door) return 7f;
+                if (item.Kind == ItemKind.Wall) return 4f;
+            }
             if (item.Kind == ItemKind.Wall)
                 return disaster == DisasterType.Earthquake ? 3.25f : disaster == DisasterType.Flood ? 6.25f : 3f;
             if (item.Kind == ItemKind.Door)
@@ -784,7 +934,25 @@ namespace TooLateToPanic
             if (item.Kind == ItemKind.Window)
                 return disaster == DisasterType.Earthquake ? 3.5f : disaster == DisasterType.Flood ? 8f : 5f;
 
-            switch (item.ArtId)
+            string riskArtId = CanonicalRiskArtId(item.ArtId);
+            if (disaster == DisasterType.Storm)
+            {
+                // Stylized game risk values, not structural engineering predictions.
+                switch (riskArtId)
+                {
+                    case "bookshelf": return 6f;
+                    case "sofa": return 3f;
+                    case "table": return 3f;
+                    case "chair": return 2f;
+                    case "fridge": return 4f;
+                    case "cabinet": return 5f;
+                    case "bed": return 2f;
+                    case "plant": return 5f;
+                    case "tvstand": return 3f;
+                    default: return 0f;
+                }
+            }
+            switch (riskArtId)
             {
                 case "bookshelf": return disaster == DisasterType.Earthquake ? 8f : disaster == DisasterType.Flood ? 2f : 6f;
                 case "sofa": return disaster == DisasterType.Earthquake ? 7f : disaster == DisasterType.Flood ? 2f : 8f;
@@ -799,10 +967,15 @@ namespace TooLateToPanic
             }
         }
 
+        private static string CanonicalRiskArtId(string artId)
+        {
+            return artId == "sofa_indigo" || artId == "sofa_olive" ? "sofa" : artId;
+        }
+
         private static float StructureMultiplier(PanicItem item, DisasterType disaster)
         {
             if (!IsStructure(item)) return 1f;
-            float perTier = disaster == DisasterType.Earthquake ? 0.22f :
+            float perTier = disaster == DisasterType.Storm ? 0.20f : disaster == DisasterType.Earthquake ? 0.22f :
                 disaster == DisasterType.Flood ? 0.14f : 0.12f;
             return Mathf.Max(0.35f, 1f - Mathf.Clamp(item.Tier, 0, 2) * perTier);
         }
@@ -814,6 +987,7 @@ namespace TooLateToPanic
             if (string.IsNullOrEmpty(item.AnchorSurface)) wallMounted = !item.Movable;
             if (disaster == DisasterType.Earthquake) return wallMounted ? 0.48f : 0.42f;
             if (disaster == DisasterType.Flood) return wallMounted ? 0.86f : 0.92f;
+            if (disaster == DisasterType.Storm && item.Kind == ItemKind.Furniture) return wallMounted ? 0.70f : 0.62f;
             return 1f;
         }
 
@@ -856,7 +1030,7 @@ namespace TooLateToPanic
             if (!string.IsNullOrEmpty(FailureReason))
                 summary.Append(" ").Append(FailureReason);
             else if (bagWasReadyForWave)
-                summary.Append(" Çanta bu wave için yeterli.");
+                summary.Append(IsSimulation ? " Çantadaki su ve gıda yeterliydi." : " Çanta bu wave için yeterli.");
             return summary.ToString();
         }
 
@@ -884,6 +1058,7 @@ namespace TooLateToPanic
 
         private void AwardSuccessfulWaveOnce()
         {
+            if (IsSimulation || DeveloperNoLoss || DeveloperNoLossUsedThisWave) return;
             if (awardApplied) return;
             awardApplied = true;
             CompletedWaves = SaturatingAdd(CompletedWaves, 1);
@@ -899,23 +1074,71 @@ namespace TooLateToPanic
             Budget = SaturatingAdd(Budget, LastReward);
         }
 
+        private void CompleteSimulationInspection()
+        {
+            SimulationComplete = true;
+            Phase = PanicPhase.Inspection;
+            TimeRemaining = PhaseTime = 0f;
+            LastReward = 0;
+            LastWaveScore = 0;
+            Message = "Sonuç hazır. Hasar " + FormatPercent(TotalDamage) + ". Önlemlerini inceleyebilirsin.";
+        }
+
+        private void LatchDeveloperNoLoss(string reason)
+        {
+            DeveloperNoLossUsedThisWave = true;
+            if (!string.IsNullOrEmpty(reason)) DeveloperNoLossReason = reason;
+            MarkRunCheated();
+        }
+
+        private void BeginDeveloperNoLossInspection(string reason)
+        {
+            LatchDeveloperNoLoss(reason);
+            LastWaveScore = 0;
+            LastReward = 0;
+            TimeRemaining = 0f;
+            Phase = PanicPhase.Inspection;
+            PhaseTime = IsSimulation ? 0f : 20f;
+            if (IsSimulation) SimulationComplete = true;
+            string explanation = !string.IsNullOrEmpty(reason) ? reason :
+                !string.IsNullOrEmpty(DeveloperNoLossReason) ? DeveloperNoLossReason : "Bu dalgada kaybetmeme modu kullanıldı.";
+            Message = "Geliştirici koruması: " + explanation + " Gerçek hasar " + FormatPercent(TotalDamage) +
+                ". İnceleme açık; bu geçiş başarı, skor veya bütçe ödülü sayılmaz.";
+        }
+
         private void FailRun(string reason)
         {
             if (Phase == PanicPhase.GameOver) return;
+            if (DeveloperNoLoss && !IsJuryDemo && Phase == PanicPhase.Preparing)
+            {
+                LatchDeveloperNoLoss(reason);
+                // Continue through the existing 8s disaster and real damage/supply
+                // resolution. No automatic bag completion or damage immunity.
+                EnterBunker();
+                Message = "Geliştirici koruması: " + reason +
+                    " Afet yine uygulanıyor; çanta ve hasar değişmez, bu geçişe ödül verilmez.";
+                return;
+            }
+            if (DeveloperNoLoss && !IsJuryDemo && Phase == PanicPhase.Aftermath)
+            {
+                BeginDeveloperNoLossInspection(reason);
+                return;
+            }
             FailureReason = string.IsNullOrEmpty(reason) ? "Koşu sona erdi." : reason;
             LastWaveScore = 0;
             LastReward = 0;
             Phase = PanicPhase.GameOver;
+            if (IsSimulation) SimulationComplete = true;
             PhaseTime = 4f;
             TimeRemaining = 0f;
-            Message = "Koşu sona erdi. " + FailureReason + " Tamamlanan wave: " + CompletedWaves + "; toplam puan: " + Score + ".";
+            Message = IsSimulation ? "Hazırlık tamamlanamadı. " + FailureReason + " Önlemlerini değiştirip yeniden deneyebilirsin." : "Koşu sona erdi. " + FailureReason + " Tamamlanan wave: " + CompletedWaves + "; toplam puan: " + Score + ".";
             if (!IsTutorial)
                 RecordRunOnce();
         }
 
         private void RecordRunOnce()
         {
-            if (IsTutorial || runResultRecorded) return;
+            if (IsSimulation || IsJuryDemo || IsTutorial || runResultRecorded) return;
             runResultRecorded = true;
             if (CheatedRun)
             {
@@ -942,6 +1165,7 @@ namespace TooLateToPanic
 
         private bool SaveScoresAtomic()
         {
+            if (IsSimulation || IsJuryDemo) return false;
             string path = GetScorePath();
             string tempPath = path + ".tmp";
             try
@@ -1206,6 +1430,7 @@ namespace TooLateToPanic
             {
                 case DisasterType.Earthquake: return "Deprem";
                 case DisasterType.Flood: return "Sel";
+                case DisasterType.Storm: return "Fırtına";
                 default: return "Yangın";
             }
         }

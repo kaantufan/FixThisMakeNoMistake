@@ -13,7 +13,7 @@ namespace TooLateToPanic
     public static class PanicResidenceArt
     {
         enum M { Walnut, Honey, DarkWood, Cream, Olive, Leaf, Terracotta, Indigo, Teal,
-            Linen, Mustard, Red, Steel, Chrome, Rubber, Ceramic, Glass, Glow, Screen, Concrete, Brick, Tile, Navy, Sky, Paper, Coral, Mint }
+            Linen, Mustard, Red, Steel, Chrome, Rubber, Ceramic, Glass, Glow, Screen, Concrete, Brick, Tile, Navy, Sky, Paper, Coral, Mint, SafetyOrange }
         static Material[] palette;
         static readonly Dictionary<string, Mesh> shapes = new Dictionary<string, Mesh>();
         static readonly Dictionary<string, Mesh> combined = new Dictionary<string, Mesh>();
@@ -191,7 +191,7 @@ namespace TooLateToPanic
                 case "toolbox": Toolbox(root,b); break;
                 case "cabinet": case "kitchencabinet": StorageCabinet(root,b,1.48f,.94f,.67f,true,false); break;
                 case "locker": StorageCabinet(root,b,.76f,2.08f,.63f,false,false); break;
-                case "bagstation": StorageCabinet(root,b,1.7f,1.52f,.76f,false,false); break;
+                case "bagstation": PreparednessStation(root,b); break;
                 case "medicinecabinet": StorageCabinet(root,b,.72f,.76f,.24f,false,true); break;
                 case "supplycrate": SupplyCrate(root,b); break;
                 case "radio": Radio(b,Vector3.zero,1); break;
@@ -216,9 +216,10 @@ namespace TooLateToPanic
                 case "wallart": WallArt(b); break;
                 case "garagedoor": GarageDoor(root,b); break;
                 case "sofa": case "sofa_olive": Sofa(b,M.Olive); break;
-                case "sofa_indigo": Sofa(b,M.Indigo); break;
+                case "sofa_indigo": TailoredSofa(b); break;
                 case "armchair": Armchair(b,M.Terracotta); break;
-                case "chair": case "balconychair": Chair(b,id=="balconychair"?M.Olive:M.Indigo); break;
+                case "chair": Chair(b,M.Indigo); break;
+                case "balconychair": BalconyChair(b); break;
                 case "sidetable": SideTable(b); break;
                 case "bed": Bed(b); break;
                 case "rug": Rug(b); break;
@@ -233,6 +234,7 @@ namespace TooLateToPanic
         public static GameObject CreatePickup(string supplyId)
         {
             Init(); string id=(supplyId??"water").ToLowerInvariant();
+            if(PanicCuratedAssetArt.TryCreatePickup(id,out var curated)) return curated;
             var root=new GameObject("Pickup_"+id); var b=new Builder();
             switch(id)
             {
@@ -326,6 +328,102 @@ namespace TooLateToPanic
             b.Attach(root,"Pickup_"+id); return root;
         }
 
+        /// <summary>Stable visual variety without changing the supply's identity, price or quantity.</summary>
+        public static GameObject CreatePickup(string supplyId,int variant)
+        {
+            var curated=PanicCuratedAssetArt.CreatePickupVariant(supplyId,variant);
+            return curated?curated:CreatePickup(supplyId);
+        }
+
+        /// <summary>
+        /// Visual-only hardware. Caller shows this only after a real completed anchoring job.
+        /// The strap is a thin exterior loop, never an opaque slab through the furniture.
+        /// Front is -Z. No collider, state mutation, passive task completion or hazard logic.
+        /// </summary>
+        public static GameObject CreateSecuredHardware(Vector3 size,bool wallAnchor)
+        {
+            Init(); var root=new GameObject("SecuredBracket"); var b=new Builder();
+            float w=Mathf.Clamp(size.x,.3f,3f),h=Mathf.Clamp(size.y,.3f,3f),d=Mathf.Clamp(size.z,.25f,2f);
+            float y=Mathf.Min(h*.84f,h-.06f),rear=d*.5f+.018f;
+            for(int s=-1;s<=1;s+=2)
+            {
+                float x=s*w*.32f;
+                if(wallAnchor)
+                {
+                    // Separate perpendicular flanges and triangular gusset communicate an L bracket.
+                    b.Box(V(x,y+.035f,rear),V(.10f,.15f,.018f),M.Steel,.006f);
+                    b.Box(V(x,y-.035f,rear-.065f),V(.10f,.018f,.15f),M.Steel,.004f);
+                    b.Beam(V(x,y+.07f,rear-.018f),V(x,y-.024f,rear-.12f),.018f,M.Chrome);
+                    b.Cylinder(V(x,y+.065f,rear+.013f),.019f,.014f,M.Chrome,12,Quaternion.Euler(90,0,0));
+                    b.Box(V(x,y+.065f,rear+.021f),V(.022f,.004f,.002f),M.Rubber,.0005f);
+                    // A short connection tether lies across the visible top edge, then down the rear.
+                    b.Box(V(x,h+.01f,0),V(.035f,.014f,d+.045f),M.SafetyOrange,.003f);
+                    b.Box(V(x,(h+y)*.5f,rear+.012f),V(.035f,h-y,.012f),M.SafetyOrange,.003f);
+                    b.Box(V(x,h-.045f,-d*.5f-.012f),V(.036f,.11f,.013f),M.SafetyOrange,.003f);
+                    b.Box(V(x,h-.065f,-d*.5f-.023f),V(.055f,.038f,.012f),M.Chrome,.004f);
+                    b.Box(V(x,h-.065f,-d*.5f-.03f),V(.033f,.019f,.006f),M.Rubber,.002f);
+                }
+                else
+                {
+                    // Floor shoes meet the base: no floating wall hardware on a floor anchor.
+                    for(int z=-1;z<=1;z+=2)
+                    {
+                        b.Box(V(x,.018f,z*d*.4f),V(.14f,.025f,.16f),M.Steel,.007f);
+                        b.Box(V(x,.065f,z*d*.4f),V(.09f,.10f,.018f),M.Steel,.004f);
+                        b.Cylinder(V(x,.037f,z*d*.4f+.04f),.019f,.012f,M.Chrome,12);
+                        b.Box(V(x,.12f,z*d*.4f),V(.036f,.12f,.016f),M.SafetyOrange,.003f);
+                    }
+                }
+            }
+            // Dimensions are part of the batch key because furniture envelopes differ.
+            b.Attach(root,"SecuredHardware_"+w.ToString("R")+"_"+h.ToString("R")+"_"+d.ToString("R")+"_"+wallAnchor);
+            return root;
+        }
+
+        static void PreparednessStation(GameObject root,Builder b)
+        {
+            // Preserve the original 1.74 x1.52 x.76 gameplay envelope and working DoorLeaf.
+            StorageCabinet(root,b,1.7f,.78f,.76f,false,false);
+            for(int s=-1;s<=1;s+=2)b.Box(V(s*.77f,1.1f,.33f),V(.045f,.79f,.045f),M.Walnut,.006f);
+            b.Box(V(0,1.47f,.33f),V(1.58f,.075f,.065f),M.Honey,.009f);
+            b.Box(V(-.48f,1.22f,.30f),V(.42f,.30f,.024f),M.Paper,.008f);
+            // Four pictograms make a prepared-home station readable without extra tutorial text.
+            for(int i=0;i<3;i++)
+            {
+                b.Box(V(-.52f,1.29f-i*.07f,.282f),V(.20f,.014f,.007f),M.Teal,.002f);
+                b.Cylinder(V(-.65f,1.29f-i*.07f,.277f),.017f,.008f,M.Olive,10,Quaternion.Euler(90,0,0));
+            }
+            var bag=PanicCuratedAssetArt.CreateDisplay("EmergencyBackpack",.63f);
+            if(bag)Place(root,bag,V(.30f,.805f,-.005f),0);
+            else
+            {
+                b.Box(V(.30f,1.08f,0),V(.44f,.55f,.25f),M.SafetyOrange,.07f);
+                b.Box(V(.30f,.98f,-.145f),V(.32f,.22f,.08f),M.Coral,.025f);
+                Cross(b,V(.30f,.98f,-.19f),.12f,.035f,M.Paper,false);
+                Handle(b,V(.30f,1.35f,0),.19f,.08f,M.Rubber);
+            }
+            var radio=PanicCuratedAssetArt.CreateDisplay("EmergencyRadio",.25f);
+            if(radio)Place(root,radio,V(-.53f,.805f,-.01f),0);
+            var pouch=PanicCuratedAssetArt.CreateDisplay("DocumentPouch",.25f);
+            if(pouch)Place(root,pouch,V(-.19f,.805f,-.09f),0);
+            // Slim counter lip keeps the display visually grounded without extra collision geometry.
+            b.Box(V(0,.79f,-.36f),V(1.68f,.018f,.035f),M.Honey,.004f);
+            // Shallow equipment bays and framed checklist, never a second collectible or task.
+            b.Box(V(.30f,.802f,.005f),V(.58f,.008f,.44f),M.Navy,.012f);
+            b.Box(V(-.53f,.802f,-.01f),V(.29f,.008f,.30f),M.Teal,.009f);
+            b.Box(V(-.19f,.802f,-.09f),V(.29f,.008f,.24f),M.Linen,.009f);
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Box(V(-.48f+s*.219f,1.22f,.298f),V(.018f,.332f,.03f),M.Walnut,.003f);
+                b.Box(V(-.48f,1.22f+s*.157f,.298f),V(.456f,.018f,.03f),M.Walnut,.003f);
+                b.Cylinder(V(s*.77f,1.447f,.301f),.012f,.008f,M.Steel,10,Quaternion.Euler(90,0,0));
+            }
+            // A simple floor-plan diagram occupies the paper's unused right edge.
+            b.Box(V(-.355f,1.22f,.282f),V(.10f,.16f,.006f),M.Sky,.002f);
+            b.Box(V(-.355f,1.22f,.277f),V(.008f,.135f,.005f),M.Paper,.001f);
+            b.Box(V(-.355f,1.225f,.276f),V(.085f,.008f,.005f),M.Paper,.001f);
+        }
+
         static void Fireplace(Builder b)
         {
             // An open firebox: there is no flat black cube over the opening.
@@ -412,8 +510,8 @@ namespace TooLateToPanic
                 b.Box(V(0,y,0),V(1.42f,.055f,.52f),M.Honey,.007f);
                 // Uneven groups, page blocks and bold spines are readable from the room view.
                 Books(b,V(-.37f,y+.03f,-.035f),1.14f);
-                if(level!=1)Books(b,V(.27f,y+.03f,-.035f),level==3?.93f:1.03f);
-                else
+                if(level==2)Books(b,V(.27f,y+.03f,-.035f),1.03f);
+                else if(level==1)
                 {
                     b.Box(V(.35f,y+.11f,-.015f),V(.43f,.16f,.34f),M.Linen,.02f);
                     b.Box(V(.35f,y+.11f,-.19f),V(.17f,.07f,.008f),M.Indigo,.004f);
@@ -425,7 +523,27 @@ namespace TooLateToPanic
             {
                 b.Box(V(.36f+i*.17f,1.92f,-.18f),V(.13f,.19f,.025f),M.DarkWood,.006f);
                 b.Box(V(.36f+i*.17f,1.92f,-.196f),V(.102f,.158f,.006f),i==0?M.Sky:M.Coral,.002f);
+                // Geometric portrait silhouettes read as family photos, without tiny text.
+                b.Cylinder(V(.36f+i*.17f,1.951f,-.202f),.021f,.006f,M.Honey,12,Quaternion.Euler(90,0,0));
+                b.Box(V(.36f+i*.17f,1.893f,-.202f),V(.056f,.052f,.006f),i==0?M.Indigo:M.Teal,.009f);
             }
+            // A low document box and visible shelf pins add construction detail within the old bounds.
+            b.Box(V(.38f,.34f,-.03f),V(.38f,.22f,.34f),M.Teal,.012f);
+            b.Box(V(.38f,.34f,-.205f),V(.17f,.07f,.012f),M.Paper,.003f);
+            b.Box(V(.38f,.34f,-.214f),V(.10f,.015f,.003f),M.Indigo,.001f);
+            for(int s=-1;s<=1;s+=2)for(int i=0;i<4;i++)
+            {
+                b.Cylinder(V(s*.682f,.20f+i*.53f,-.19f),.012f,.015f,M.Chrome,8,Quaternion.Euler(0,0,90));
+                b.Box(V(s*.73f,2.28f,-.19f),V(.023f,.035f,.018f),M.Honey,.002f);
+            }
+            // Exposed shelf noses, bookends and a hand-pull separate the storage layers.
+            for(int i=0;i<4;i++)b.Box(V(0,.17f+i*.53f,-.251f),V(1.39f,.018f,.014f),M.Walnut,.003f);
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Box(V(s*.59f,1.35f,-.065f),V(.018f,.18f,.23f),M.Teal,.004f);
+                b.Box(V(s*.55f,1.266f,-.065f),V(.09f,.014f,.23f),M.Teal,.003f);
+            }
+            b.Box(V(.38f,.366f,-.217f),V(.108f,.027f,.006f),M.DarkWood,.006f);
         }
         static void DiningTable(Builder b)
         {
@@ -460,6 +578,21 @@ namespace TooLateToPanic
             b.Quad(V(-.32f,.78f,.005f),V(.18f,1.1f,.005f),V(.7f,.96f,.005f),V(.7f,.78f,.005f),M.Mint);
             b.Cylinder(V(.66f,.735f,.017f),.008f,.008f,M.Glow,10,Quaternion.Euler(90,0,0));
             b.Box(V(.59f,.611f,-.17f),V(.19f,.023f,.07f),M.Rubber,.006f);
+            // Fine controls and speaker perforations stay on the existing console surface.
+            for(int i=0;i<5;i++)b.Box(V(.53f+i*.028f,.626f,-.17f),V(.012f,.004f,.018f),i==0?M.Coral:M.Paper,.001f);
+            for(int r=0;r<2;r++)for(int c=0;c<9;c++)
+                b.Cylinder(V(.22f+c*.04f,.305f+r*.035f,-.186f),.006f,.004f,M.Rubber,6,Quaternion.Euler(90,0,0));
+            // Console joinery, a recessed media drawer and a real cable path stay inside the old shell.
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Box(V(s*.80f,.37f,-.246f),V(.025f,.24f,.015f),M.Honey,.003f);
+                b.Box(V(s*.72f,.185f,-.247f),V(.08f,.025f,.015f),M.Walnut,.003f);
+            }
+            b.Box(V(.40f,.453f,.01f),V(.55f,.09f,.36f),M.Walnut,.009f);
+            b.Box(V(.40f,.453f,-.176f),V(.49f,.056f,.008f),M.Linen,.004f);
+            b.Box(V(.40f,.463f,-.183f),V(.15f,.012f,.008f),M.DarkWood,.003f);
+            Cable(b,new[]{V(.11f,.73f,.095f),V(.11f,.63f,.19f),V(.02f,.53f,.20f),V(.02f,.27f,.20f)},.012f,M.Rubber);
+            for(int i=0;i<7;i++)b.Box(V(-.26f+i*.085f,.736f,.023f),V(.045f,.008f,.005f),M.Rubber,.002f);
         }
         static void Toolbox(GameObject root,Builder b)
         {
@@ -481,12 +614,25 @@ namespace TooLateToPanic
             b.Beam(V(-.04f,.26f,-.12f),V(.04f,.26f,.13f),.018f,M.Chrome);
             b.Box(V(-.04f,.26f,-.11f),V(.06f,.045f,.13f),M.Indigo,.012f);
             b.Box(V(.24f,.28f,.01f),V(.19f,.1f,.23f),M.Mustard,.009f);
+            // Tray partitions keep the tools in physical compartments rather than a coloured pile.
+            for(int i=0;i<2;i++)b.Box(V(-.15f+i*.28f,.264f,.015f),V(.018f,.055f,.34f),M.Navy,.003f);
+            b.Box(V(.24f,.335f,.01f),V(.15f,.008f,.19f),M.Paper,.003f);
+            for(int i=0;i<3;i++)
+            {
+                b.Beam(V(.19f+i*.047f,.342f,-.04f),V(.19f+i*.047f,.342f,.055f),.009f,M.Steel);
+                b.Cylinder(V(.19f+i*.047f,.345f,-.045f),.014f,.006f,M.Chrome,8);
+            }
             var lid=Group(root,"Lid");lid.transform.localPosition=V(0,h,d*.5f);
             var l=new Builder();
             l.Box(V(0,.035f,-d*.5f),V(w+.015f,.1f,d+.015f),M.Coral,.025f);
             l.Box(V(0,.09f,-d*.5f),V(.38f,.025f,.18f),M.Navy,.009f);
             Handle(l,V(0,.1f,-d*.5f),.32f,.1f,M.Chrome);
             for(int side=-1;side<=1;side+=2)l.Box(V(side*.38f,.091f,-d*.5f),V(.04f,.025f,.4f),M.Paper,.003f);
+            for(int side=-1;side<=1;side+=2)
+            {
+                l.Cylinder(V(side*.29f,.015f,-.02f),.025f,.12f,M.Chrome,12,Quaternion.Euler(0,0,90));
+                l.Box(V(side*.29f,.06f,-d+.005f),V(.045f,.07f,.026f),M.Steel,.005f);
+            }
             l.Attach(lid,"ToolboxHingedLid");
         }
         static void StorageCabinet(GameObject root,Builder b,float w,float h,float d,bool kitchen,bool medical)
@@ -521,6 +667,26 @@ namespace TooLateToPanic
                 b.Box(V(0,.06f,.04f),V(w-.12f,.12f,d-.14f),M.DarkWood,.008f);
                 b.Cylinder(V(.46f,h+.12f,.1f),.08f,.12f,M.Terracotta,20);
                 b.Box(V(-.42f,h+.074f,.04f),V(.27f,.018f,.3f),M.Honey,.009f);
+                var apple=PanicCuratedAssetArt.CreateDisplay("Apple",.095f);
+                if(apple)Place(root,apple,V(-.42f,h+.085f,.04f),0);
+                // A cutting-board seam and a cup handle make this cabinet a distinct kitchen prop.
+                b.Box(V(-.42f,h+.085f,.12f),V(.23f,.003f,.004f),M.Walnut,.001f);
+                b.Torus(V(.55f,h+.12f,.1f),.045f,.011f,M.Terracotta,Quaternion.Euler(90,0,0));
+                // A divided utensil crock and a shallow tea tray establish a domestic kitchen role.
+                b.Cylinder(V(.46f,h+.178f,.10f),.067f,.004f,M.DarkWood,20);
+                for(int i=0;i<3;i++)
+                {
+                    float x=.425f+i*.034f;
+                    b.Beam(V(x,h+.10f,.10f),V(x+.012f,h+.153f,.09f),.012f,M.Honey);
+                    b.Ellipsoid(V(x+.012f,h+.16f,.09f),V(.014f,.018f,.008f),M.Honey);
+                }
+                b.Box(V(.03f,h+.073f,-.08f),V(.34f,.016f,.27f),M.Teal,.015f);
+                b.Cylinder(V(.03f,h+.086f,-.08f),.095f,.015f,M.Ceramic,24);
+                b.Cylinder(V(.03f,h+.122f,-.08f),.057f,.059f,M.Ceramic,20);
+                b.Cylinder(V(.03f,h+.153f,-.08f),.047f,.004f,M.DarkWood,20);
+                b.Torus(V(.094f,h+.124f,-.08f),.025f,.007f,M.Ceramic,Quaternion.Euler(90,0,0));
+                // Substantial edge band and toe-kick prevent a floating single-colour cabinet mass.
+                b.Box(V(0,h-.005f,-d*.5f-.018f),V(w-.03f,.026f,.012f),M.Honey,.003f);
             }
             else if(!medical)Legs(b,w-.14f,d-.14f,.1f,M.DarkWood,.07f);
             var leaf=Group(root,"DoorLeaf");leaf.transform.localPosition=V(-w*.5f+.045f,bottom,-d*.5f-.016f);
@@ -530,12 +696,30 @@ namespace TooLateToPanic
             {
                 f.Box(V(lw*.5f,lh*.5f,-.029f),V(lw-.11f,lh-.1f,.012f),M.Mint,.007f);
                 Cross(f,V(lw*.5f,lh*.52f,-.04f),.28f,.075f,M.Red,false);
+                f.Box(V(lw*.5f,lh*.20f,-.04f),V(lw-.19f,.045f,.008f),M.Paper,.004f);
+                for(int s=-1;s<=1;s+=2)f.Cylinder(V(lw*.5f+s*(lw*.5f-.05f),lh-.045f,-.029f),.01f,.008f,M.Chrome,10,Quaternion.Euler(90,0,0));
             }
             else
             {
                 f.Box(V(lw*.5f,lh*.5f,-.029f),V(lw-.13f,lh-.16f,.014f),kitchen?M.Mint:M.Navy,.009f);
                 if(!kitchen)for(int i=0;i<4;i++)f.Box(V(lw*.5f,lh-.2f-i*.058f,-.042f),V(lw*.56f,.019f,.009f),M.Sky,.003f);
                 else f.Box(V(lw*.5f,lh*.5f,-.04f),V(.012f,lh-.16f,.008f),M.Teal,.002f);
+            }
+            if(medical)
+            {
+                // Shelf lips and one clearly packaged dressing; these are decor, never duplicate loot.
+                b.Box(V(0,h*.50f,-d*.5f+.042f),V(w-.11f,.025f,.018f),M.Paper,.003f);
+                b.Box(V(-.16f,.14f,-.01f),V(.18f,.12f,.105f),M.Linen,.008f);
+                b.Box(V(-.16f,.14f,-.066f),V(.155f,.018f,.004f),M.Coral,.001f);
+                b.Box(V(.14f,.12f,.015f),V(.18f,.08f,.11f),M.Sky,.006f);
+                b.Box(V(.14f,.12f,-.045f),V(.10f,.023f,.006f),M.Paper,.002f);
+            }
+            if(kitchen)
+            {
+                // Door moulding is owned by DoorLeaf and therefore follows every open/close pose.
+                for(int s=-1;s<=1;s+=2)
+                    f.Box(V(lw*.5f+s*(lw*.5f-.064f),lh*.5f,-.037f),V(.018f,lh-.12f,.01f),M.Teal,.002f);
+                f.Box(V(lw*.5f,.064f,-.037f),V(lw-.12f,.018f,.01f),M.Teal,.002f);
             }
             Handle(f,V(lw-.075f,lh*.52f,-.045f),.055f,.065f,M.Chrome);
             for(int i=0;i<2;i++)f.Cylinder(V(.005f,.13f+i*Mathf.Max(.2f,lh-.26f),.012f),.018f,.085f,M.Chrome,10);
@@ -635,18 +819,34 @@ namespace TooLateToPanic
             b.Box(V(0,.4f,.04f),V(.75f,.03f,.38f),M.Honey,.004f);
             Bottle(b,V(-.19f,.43f,.04f),.64f,M.Terracotta);
             Legs(b,.68f,.34f,.12f,M.DarkWood,.04f);
-            b.Box(V(0,.86f,0),V(.94f,.08f,.63f),M.Ceramic,.028f);
-            b.Ellipsoid(V(0,.9f,-.025f),V(.32f,.017f,.205f),M.Teal);
-            b.Cylinder(V(0,.924f,-.025f),.025f,.01f,M.Chrome,16);
+            // Four solid rim sections enclose a genuinely recessed bowl instead of a flat teal disk.
+            for(int s=-1;s<=1;s+=2)b.Box(V(s*.3975f,.86f,0),V(.145f,.08f,.63f),M.Ceramic,.014f);
+            b.Box(V(0,.86f,-.2725f),V(.65f,.08f,.085f),M.Ceramic,.014f);
+            b.Box(V(0,.86f,.2475f),V(.65f,.08f,.135f),M.Ceramic,.014f);
+            b.Quad(V(-.325f,.90f,-.23f),V(.325f,.90f,-.23f),V(.24f,.828f,-.17f),V(-.24f,.828f,-.17f),M.Ceramic);
+            b.Quad(V(.325f,.90f,.18f),V(-.325f,.90f,.18f),V(-.24f,.828f,.12f),V(.24f,.828f,.12f),M.Ceramic);
+            b.Quad(V(-.325f,.90f,.18f),V(-.325f,.90f,-.23f),V(-.24f,.828f,-.17f),V(-.24f,.828f,.12f),M.Ceramic);
+            b.Quad(V(.325f,.90f,-.23f),V(.325f,.90f,.18f),V(.24f,.828f,.12f),V(.24f,.828f,-.17f),M.Ceramic);
+            b.Box(V(0,.822f,-.025f),V(.48f,.012f,.29f),M.Mint,.009f);
+            b.Cylinder(V(0,.831f,-.025f),.025f,.006f,M.Chrome,16);
+            for(int i=-1;i<=1;i++)b.Box(V(i*.011f,.835f,-.025f),V(.003f,.002f,.026f),M.DarkWood,.0005f);
             Faucet(b,V(0,.9f,.2f),.24f);
             var leaf=Group(root,"DoorLeaf"); leaf.transform.localPosition=V(-.385f,.15f,-.24f);
             var d=new Builder(); d.Box(V(.19f,.32f,0),V(.375f,.63f,.045f),M.Olive,.013f);
+            d.Box(V(.19f,.32f,-.025f),V(.30f,.53f,.007f),M.Mint,.009f);
             Handle(d,V(.29f,.39f,-.03f),.08f,.03f,M.Chrome); d.Attach(leaf,"VanityDoor");
             b.Box(V(.198f,.47f,-.245f),V(.37f,.63f,.045f),M.Olive,.013f);
+            b.Box(V(.198f,.47f,-.271f),V(.295f,.53f,.007f),M.Mint,.009f);
             Handle(b,V(.1f,.55f,-.275f),.08f,.03f,M.Chrome);
             b.Box(V(0,1.48f,.29f),V(.76f,.78f,.04f),M.DarkWood,.018f);
             b.Box(V(0,1.48f,.263f),V(.67f,.69f,.015f),M.Glass,.004f);
             Bottle(b,V(-.34f,.91f,.11f),.42f,M.Terracotta);
+            // Soap dispenser and a folded washcloth sit beside the basin, clear of the opening.
+            b.Box(V(.38f,.934f,.12f),V(.095f,.067f,.095f),M.Teal,.012f);
+            b.Beam(V(.38f,.97f,.12f),V(.38f,.99f,.12f),.015f,M.Chrome);
+            b.Beam(V(.38f,.99f,.12f),V(.345f,.99f,.12f),.014f,M.Chrome);
+            b.Box(V(-.37f,.909f,-.12f),V(.13f,.015f,.22f),M.Linen,.005f);
+            b.Box(V(-.37f,.919f,-.12f),V(.11f,.005f,.18f),M.Sky,.002f);
         }
         static void Bathtub(Builder b)
         {
@@ -722,6 +922,21 @@ namespace TooLateToPanic
             b.Beam(V(0,1.24f,-.368f),V(.035f,1.27f,-.368f),.008f,M.Red);
             b.Box(V(0,.74f,-.327f),V(.21f,.18f,.012f),M.Mustard,.006f);
             b.Torus(V(.32f,.48f,0),.06f,.009f,M.Red,Quaternion.Euler(90,0,0));
+            // Factory body seams and pipe unions do not imply the player's wall-anchoring action.
+            for(int i=0;i<2;i++)b.Torus(V(0,.29f+i*1.43f,0),.318f,.005f,M.Steel,Quaternion.identity);
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Cylinder(V(s*.16f,1.965f,0),.026f,.055f,M.Chrome,12);
+                b.Cylinder(V(s*.16f,2.015f,0),.024f,.014f,s<0?M.Sky:M.Coral,12);
+            }
+            // A broad service label and dial ticks remain readable in a close work view.
+            b.Box(V(0,.69f,-.336f),V(.155f,.045f,.004f),M.Paper,.002f);
+            for(int i=0;i<3;i++)b.Box(V(0,.76f+i*.028f,-.336f),V(.13f-i*.02f,.008f,.004f),M.Navy,.001f);
+            for(int i=0;i<5;i++)
+            {
+                float a=(35+i*27)*Mathf.Deg2Rad;
+                b.Beam(V(Mathf.Cos(a)*.047f,1.24f+Mathf.Sin(a)*.047f,-.363f),V(Mathf.Cos(a)*.057f,1.24f+Mathf.Sin(a)*.057f,-.363f),.004f,M.Navy);
+            }
         }
         static void StorageRack(Builder b)
         {
@@ -730,7 +945,10 @@ namespace TooLateToPanic
             for(int level=0;level<4;level++)
             {
                 float y=.12f+level*.57f;
-                b.Box(V(0,y,0),V(1.45f,.055f,.61f),M.Honey,.008f);
+                // Folded steel trays give the utility rack a different construction from wood furniture.
+                b.Box(V(0,y,0),V(1.45f,.055f,.61f),M.Steel,.008f);
+                b.Box(V(0,y+.028f,-.293f),V(1.42f,.045f,.018f),M.Indigo,.003f);
+                b.Box(V(0,y+.028f,.293f),V(1.42f,.045f,.018f),M.Indigo,.003f);
                 for(int i=0;i<5;i++)
                 {
                     float x=-.55f+i*.27f;
@@ -740,17 +958,26 @@ namespace TooLateToPanic
                         b.Cylinder(V(x,y+.14f,0),.1f,.23f,i%2==0?M.Terracotta:M.Olive,18);
                         b.Cylinder(V(x,y+.26f,0),.102f,.018f,M.Mustard,18);
                         b.Box(V(x,y+.14f,-.1f),V(.1f,.1f,.008f),M.Linen,.004f);
+                        b.Cylinder(V(x,y+.273f,0),.082f,.004f,M.Steel,18);
+                        b.Box(V(x,y+.277f,-.01f),V(.055f,.005f,.022f),M.Navy,.004f);
                     }
                     else if(level==2)
                     {
                         b.Box(V(x,y+.14f,0),V(.23f,.24f,.41f),i%2==0?M.Olive:M.Indigo,.013f);
                         b.Box(V(x,y+.15f,-.21f),V(.13f,.07f,.006f),M.Linen,.003f);
                         b.Box(V(x,y+.27f,0),V(.08f,.009f,.42f),M.Honey,.001f);
+                        b.Box(V(x,y+.18f,-.215f),V(.09f,.018f,.004f),M.Navy,.004f);
                     }
                     else Books(b,V(x,y+.03f,0),.36f);
                 }
             }
             b.Beam(V(-.65f,.2f,.28f),V(.65f,1.84f,.28f),.026f,M.Steel);
+            b.Beam(V(.65f,.2f,.28f),V(-.65f,1.84f,.28f),.026f,M.Steel);
+            for(int s=-1;s<=1;s+=2)
+            {
+                for(int i=0;i<8;i++)b.Box(V(s*.68f,.27f+i*.23f,-.285f),V(.013f,.026f,.005f),M.DarkWood,.002f);
+                for(int i=0;i<4;i++)b.Cylinder(V(s*.68f,.12f+i*.57f,-.288f),.013f,.009f,M.Chrome,10,Quaternion.Euler(90,0,0));
+            }
         }
         static void Car(Builder b)
         {
@@ -878,19 +1105,46 @@ namespace TooLateToPanic
             for(int i=0;i<4;i++)
             {
                 float x=-.61f+i*.36f;
-                b.Beam(V(x,.85f,-.075f),V(x,1.36f,-.075f),.035f,i%2==0?M.Indigo:M.Terracotta);
-                if(i==0) b.Box(V(x,1.4f,-.075f),V(.27f,.1f,.095f),M.Steel,.012f);
-                else if(i==1) b.Torus(V(x,1.43f,-.075f),.07f,.022f,M.Steel,Quaternion.Euler(90,0,0));
+                // Separate hooks, shafts and grips, with one readable silhouette per tool.
+                b.Beam(V(x,1.40f,-.04f),V(x,1.40f,-.087f),.015f,M.Chrome);
+                if(i==0)
+                {
+                    b.Beam(V(x,.85f,-.075f),V(x,1.39f,-.075f),.038f,M.Honey);
+                    b.Box(V(x,1.4f,-.075f),V(.27f,.1f,.095f),M.Steel,.012f);
+                    b.Box(V(x-.10f,1.4f,-.075f),V(.036f,.115f,.105f),M.Chrome,.006f);
+                    b.Box(V(x,.94f,-.077f),V(.052f,.16f,.043f),M.Indigo,.007f);
+                }
+                else if(i==1)
+                {
+                    b.Beam(V(x,.85f,-.075f),V(x,1.42f,-.075f),.034f,M.Steel);
+                    b.Torus(V(x,.88f,-.075f),.036f,.012f,M.Steel,Quaternion.Euler(90,0,0));
+                    b.Box(V(x,1.43f,-.075f),V(.115f,.052f,.035f),M.Steel,.008f);
+                    for(int s=-1;s<=1;s+=2)b.Beam(V(x+s*.043f,1.43f,-.075f),V(x+s*.059f,1.51f,-.075f),.028f,M.Chrome);
+                }
                 else if(i==2)
                 {
-                    b.Box(V(x,1.42f,-.075f),V(.08f,.13f,.035f),M.Steel,.004f);
-                    b.Box(V(x,1.48f,-.075f),V(.11f,.025f,.035f),M.Steel,.002f);
+                    for(int s=-1;s<=1;s+=2)
+                    {
+                        b.Beam(V(x+s*.055f,.86f,-.075f),V(x,1.25f,-.075f),.035f,M.Terracotta);
+                        b.Beam(V(x,1.25f,-.075f),V(x+s*.026f,1.44f,-.075f),.025f,M.Steel);
+                    }
+                    b.Cylinder(V(x,1.24f,-.096f),.022f,.012f,M.Chrome,12,Quaternion.Euler(90,0,0));
                 }
-                else b.Cone(V(x,1.4f,-.075f),.035f,.008f,.18f,M.Steel,10);
+                else
+                {
+                    b.Box(V(x,.98f,-.075f),V(.063f,.24f,.055f),M.Indigo,.014f);
+                    b.Beam(V(x,1.09f,-.075f),V(x,1.47f,-.075f),.018f,M.Chrome);
+                    b.Box(V(x,1.49f,-.075f),V(.034f,.048f,.012f),M.Steel,.003f);
+                    for(int j=0;j<3;j++)b.Box(V(x,.92f+j*.048f,-.105f),V(.04f,.009f,.005f),M.Rubber,.002f);
+                }
             }
             b.Box(V(0,.56f,-.11f),V(1.8f,.07f,.3f),M.DarkWood,.01f);
             b.Box(V(.47f,.68f,-.11f),V(.32f,.18f,.19f),M.Indigo,.014f);
             Handle(b,V(.47f,.78f,-.11f),.18f,.06f,M.Steel);
+            b.Box(V(-.39f,.623f,-.11f),V(.49f,.045f,.21f),M.Teal,.006f);
+            for(int i=0;i<3;i++)b.Box(V(-.53f+i*.14f,.652f,-.11f),V(.11f,.018f,.17f),i==1?M.Linen:M.Steel,.004f);
+            for(int s=-1;s<=1;s+=2)for(int r=0;r<2;r++)
+                b.Cylinder(V(s*.79f,.63f+r*1.04f,-.039f),.019f,.012f,M.Chrome,10,Quaternion.Euler(90,0,0));
         }
         static void Bicycle(Builder b)
         {
@@ -1049,6 +1303,64 @@ namespace TooLateToPanic
             for(int s=-1;s<=1;s+=2) b.Box(V(s*.42f,.59f,0),V(.2f,.4f,.9f),fabric,.065f);
             b.Box(V(0,.57f,-.06f),V(.67f,.16f,.66f),M.Mustard,.06f);
             b.Box(V(0,.87f,.17f),V(.4f,.36f,.15f),M.Indigo,.05f);
+        }
+        static void TailoredSofa(Builder b)
+        {
+            // A different two-seat silhouette with timber rails, tapered legs and a tufted back.
+            // Its envelope matches the existing sofa family; no wider arms enter walking routes.
+            for(int s=-1;s<=1;s+=2)for(int z=-1;z<=1;z+=2)
+                b.Beam(V(s*1.02f,.03f,z*.36f),V(s*.96f,.28f,z*.33f),.065f,M.Walnut);
+            b.Box(V(0,.26f,0),V(2.24f,.16f,.92f),M.Honey,.022f);
+            b.Box(V(0,.80f,.34f),V(2.24f,.67f,.23f),M.Indigo,.065f,Quaternion.Euler(-7,0,0));
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Box(V(s*1.08f,.59f,0),V(.18f,.44f,.94f),M.Indigo,.045f);
+                b.Box(V(s*1.09f,.82f,0),V(.21f,.055f,.94f),M.Honey,.015f);
+                b.Box(V(s*.49f,.48f,-.04f),V(.93f,.20f,.77f),M.Indigo,.065f);
+                b.Box(V(s*.49f,.572f,-.417f),V(.84f,.009f,.011f),M.Teal,.003f);
+                b.Box(V(s*.49f,.389f,-.417f),V(.84f,.008f,.011f),M.Navy,.002f);
+                b.Box(V(s*.96f,.29f,-.461f),V(.13f,.042f,.014f),M.Walnut,.004f);
+            }
+            Quaternion backRotation=Quaternion.Euler(-7,0,0);
+            // Tufts and seams follow the slanted upholstery, so they cannot float off its front.
+            for(int r=0;r<2;r++)for(int c=0;c<6;c++)
+                b.Cylinder(V(0,.80f,.34f)+backRotation*V(-.85f+c*.34f,-.08f+r*.20f,-.118f),.017f,.009f,M.Navy,10,backRotation*Quaternion.Euler(90,0,0));
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Beam(V(0,.80f,.34f)+backRotation*V(s*.019f,-.27f,-.117f),V(0,.80f,.34f)+backRotation*V(s*.019f,.27f,-.117f),.008f,M.Navy);
+                b.Box(V(s*1.09f,.846f,-.08f),V(.15f,.005f,.64f),M.Walnut,.002f);
+            }
+            b.Box(V(-.72f,.77f,.03f),V(.40f,.34f,.16f),M.Linen,.05f,Quaternion.Euler(-8,0,-16));
+            b.Box(V(.70f,.75f,.06f),V(.43f,.29f,.16f),M.Teal,.05f,Quaternion.Euler(-8,0,11));
+            // Folded side throw stays outside the seat seam and uses a different motif to the olive sofa.
+            b.Box(V(.86f,.60f,-.07f),V(.28f,.025f,.62f),M.Mustard,.012f);
+            for(int i=0;i<5;i++)b.Box(V(.75f+i*.054f,.618f,-.07f),V(.014f,.004f,.59f),M.Linen,.001f);
+            for(int i=0;i<5;i++)b.Beam(V(.756f+i*.052f,.614f,-.371f),V(.756f+i*.052f,.58f,-.391f),.008f,M.Linen);
+        }
+        static void BalconyChair(Builder b)
+        {
+            // Open folding frame and timber slats give a structural variant, not a recoloured dining chair.
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Beam(V(s*.22f,.02f,-.24f),V(s*.22f,.53f,.24f),.038f,M.Steel);
+                b.Beam(V(s*.22f,.02f,.24f),V(s*.22f,.53f,-.24f),.038f,M.Steel);
+                b.Beam(V(s*.22f,.48f,.18f),V(s*.22f,1.02f,.28f),.035f,M.Steel);
+                b.Cylinder(V(s*.243f,.28f,0),.022f,.012f,M.Chrome,12,Quaternion.Euler(0,0,90));
+                for(int z=-1;z<=1;z+=2)b.Box(V(s*.22f,.032f,z*.223f),V(.048f,.042f,.048f),M.Rubber,.007f);
+                b.Box(V(s*.22f,.48f,-.16f),V(.049f,.065f,.11f),M.Indigo,.005f);
+            }
+            for(int i=0;i<5;i++)b.Box(V(0,.50f,-.2f+i*.10f),V(.52f,.038f,.075f),i%2==0?M.Honey:M.Walnut,.008f);
+            for(int i=0;i<4;i++)b.Box(V(0,.65f+i*.105f,.22f+i*.018f),V(.51f,.072f,.035f),M.Honey,.008f,Quaternion.Euler(-9,0,0));
+            b.Beam(V(-.22f,.12f,.18f),V(.22f,.12f,.18f),.03f,M.Steel);
+            b.Box(V(0,.535f,-.02f),V(.40f,.035f,.36f),M.Olive,.018f);
+            // A restrained sewn border and two broad tie tabs; no cloth simulation or new rig.
+            for(int s=-1;s<=1;s+=2)
+            {
+                b.Box(V(s*.172f,.55f,-.02f),V(.006f,.004f,.29f),M.Linen,.001f);
+                b.Box(V(0,.55f,-.02f+s*.145f),V(.35f,.004f,.006f),M.Linen,.001f);
+                b.Box(V(s*.16f,.531f,.184f),V(.034f,.009f,.032f),M.Olive,.002f);
+                b.Cylinder(V(s*.213f,.75f,.216f),.008f,.009f,M.Chrome,10,Quaternion.Euler(90,0,0));
+            }
         }
         static void Chair(Builder b,M fabric)
         {
@@ -1265,7 +1577,7 @@ namespace TooLateToPanic
                 new Color(.85f,.85f,.77f),new Color(.19f,.32f,.35f,.72f),new Color(.98f,.74f,.36f),
                 new Color(.21f,.45f,.49f),new Color(.45f,.45f,.4f),new Color(.42f,.3f,.23f),new Color(.66f,.69f,.59f),
                 new Color(.105f,.17f,.23f),new Color(.34f,.61f,.71f),new Color(.94f,.9f,.79f),
-                new Color(.78f,.32f,.2f),new Color(.52f,.69f,.56f)};
+                new Color(.78f,.32f,.2f),new Color(.52f,.69f,.56f),new Color(.91f,.35f,.14f)};
             Shader shader=Shader.Find("Standard");if(!shader)shader=Shader.Find("Legacy Shaders/Diffuse");
             palette=new Material[colors.Length];
             for(int i=0;i<colors.Length;i++)
@@ -1273,7 +1585,11 @@ namespace TooLateToPanic
                 var mat=new Material(shader){name="HomeV4_"+(M)i,color=colors[i]};
                 bool metal=i==(int)M.Steel||i==(int)M.Chrome;
                 if(mat.HasProperty("_Metallic"))mat.SetFloat("_Metallic",metal?.72f:0);
-                if(mat.HasProperty("_Glossiness"))mat.SetFloat("_Glossiness",i==(int)M.Chrome?.64f:i==(int)M.Ceramic?.51f:i==(int)M.Glass?.62f:.23f);
+                // The same palette retains its colour identity, with material-specific light response.
+                float gloss=i==(int)M.Chrome?.64f:i==(int)M.Ceramic?.51f:i==(int)M.Glass?.62f:
+                    i==(int)M.Steel?.36f:i==(int)M.Rubber?.10f:i==(int)M.Linen||i==(int)M.Paper?.12f:
+                    i==(int)M.Honey||i==(int)M.Walnut?.28f:.23f;
+                if(mat.HasProperty("_Glossiness"))mat.SetFloat("_Glossiness",gloss);
                 if(i==(int)M.Glow||i==(int)M.Screen)
                 {mat.EnableKeyword("_EMISSION");if(mat.HasProperty("_EmissionColor"))mat.SetColor("_EmissionColor",colors[i]*(i==(int)M.Glow?1.2f:.45f));}
                 if(i==(int)M.Glass)

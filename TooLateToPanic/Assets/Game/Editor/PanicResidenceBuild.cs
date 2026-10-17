@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.IO;
 using System.Linq;
@@ -18,7 +18,7 @@ namespace TooLateToPanic
         const string HomeArt = "Assets/Game/Resources/HomeArt";
         const string ResidenceArt = "Assets/Game/Resources/ResidenceArt";
         const string ScenePath = "Assets/Game/Scenes/TooLateToPanicResidence.unity";
-        const string Version = "0.4.5";
+        const string Version = "0.4.9";
 
         // Every explicit Create case in the residence r1 package; no default/fallback IDs.
         static readonly string[] ResidenceIds =
@@ -31,7 +31,7 @@ namespace TooLateToPanic
             "laundrybasket", "pendantlamp", "bunkerhatch", "bookshelf", "table", "tvstand", "toolbox", "cabinet", "kitchencabinet", "locker", "bagstation", "medicinecabinet", "supplycrate"
         };
 
-        [MenuItem("Too Late to Panic/Build Home V4.5")]
+        [MenuItem("Too Late to Panic/Build Home V4.9")]
         public static void Build()
         {
             try
@@ -55,7 +55,7 @@ namespace TooLateToPanic
                 {
                     foreach(var path in new[]{HomeArt+"/floor0.prefab",HomeArt+"/floor1.prefab",ResidenceArt+"/garage.prefab",ResidenceArt+"/bunker_interior.prefab","Assets/Game/Resources/Player/SurvivorV2.prefab"})
                         if(!AssetDatabase.LoadAssetAtPath<GameObject>(path))throw new Exception("Cached V3 art missing: "+path);
-                    Debug.Log("HOME_V45_REUSE_ART previously baked current residence art; runtime-only repair");
+                    Debug.Log("HOME_V48_REUSE_ART previously baked current residence art; sources, audio and offline fonts imported separately");
                 }
                 else
                 {
@@ -85,12 +85,21 @@ namespace TooLateToPanic
                 }
 
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-                new GameObject("Too Late to Panic — Home V4.5").AddComponent<PanicHomeWorld>();
+                new GameObject("Too Late to Panic — Home V4.9").AddComponent<PanicHomeWorld>();
                 EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), ScenePath);
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
                 AssetDatabase.SaveAssets();
                 var project = Directory.GetParent(Application.dataPath).FullName;
-                var outputDir = Path.Combine(project, "Builds", "Home-V4.5-20261017");
+                var outputDir = Path.Combine(project, "Builds", "Home-V4.9-20261017");
+                var buildArgs = Environment.GetCommandLineArgs();
+                int auditOutput = Array.IndexOf(buildArgs, "-panicBuildDirectory");
+                if (auditOutput >= 0)
+                {
+                    if (auditOutput + 1 >= buildArgs.Length) throw new ArgumentException("Missing -panicBuildDirectory value");
+                    string buildsRoot = Path.GetFullPath(Path.Combine(project, "Builds")) + Path.DirectorySeparatorChar;
+                    outputDir = Path.GetFullPath(Path.Combine(project, "Builds", buildArgs[auditOutput + 1]));
+                    if (!outputDir.StartsWith(buildsRoot, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Candidate output must be within this project's Builds");
+                }
                 Directory.CreateDirectory(outputDir);
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
@@ -104,7 +113,7 @@ namespace TooLateToPanic
                     warnings = report.summary.totalWarnings, bytes = (long)report.summary.totalSize,
                     nativeObserved = false
                 }, true));
-                Debug.Log("HOME_V45_BUILD " + report.summary.result + " errors=" + report.summary.totalErrors + " bytes=" + report.summary.totalSize);
+                Debug.Log("HOME_V48_BUILD " + report.summary.result + " errors=" + report.summary.totalErrors + " bytes=" + report.summary.totalSize);
                 if (report.summary.result != BuildResult.Succeeded) EditorApplication.Exit(2);
             }
             catch (Exception ex) { Debug.LogException(ex); EditorApplication.Exit(3); }

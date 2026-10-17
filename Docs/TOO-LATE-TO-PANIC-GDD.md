@@ -113,3 +113,6 @@ Yeni insanların gelişi, buna bağlı oda açılışları, oda başına üç ki
 48 saatlik jam için test yaklaşımı: birleşik import/build, etkilenen akışlarda kısa native smoke ve görünür kare kontrolü. Uzun kampanya dengesi ile nihai sanat kabulü insan oynanışıyla ayrıca değerlendirilir. Dar derlemenin geçmesi bütün hedeflerin görsel olarak kabul edildiği anlamına gelmez.
 
 
+
+
+Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zamanlı kesintisiz rota + 189/189 regresyon,0runtime hata. Kısa akış49.67sn, dört doğal simülasyon; test Warp/Tick/hile0. Üretim API girdisi, OS/insan keyif kabulü değildir. LATEST ve HOME-V4.8-DELIVERY-2026-10-17.md yeniDLL/manifesti bağlar; eskiV4.7 açıkoyun korunur.

@@ -1,25 +1,29 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace TooLateToPanic
 {
     /// <summary>Compact Turkish HUD. World owns gameplay input; this class draws it and owns only UI keys.</summary>
-    public sealed class PanicHomeHud : MonoBehaviour
+    public sealed partial class PanicHomeHud : MonoBehaviour
     {
         const float CanvasWidth = 1600f;
         const float CanvasHeight = 900f;
 
-        static readonly Color Shade = new Color(.018f, .027f, .034f, .76f);
-        static readonly Color Night = new Color(.035f, .052f, .064f, .96f);
-        static readonly Color Panel = new Color(.058f, .081f, .091f, .98f);
-        static readonly Color Raised = new Color(.086f, .116f, .124f, .98f);
-        static readonly Color MainText = new Color(.93f, .94f, .89f, 1f);
-        static readonly Color SoftText = new Color(.76f, .81f, .79f, 1f);
-        static readonly Color Brass = new Color(.95f, .74f, .45f, 1f);
-        static readonly Color Sea = new Color(.50f, .82f, .72f, 1f);
-        static readonly Color Ember = new Color(.96f, .20f, .16f, 1f);
-        static readonly Color Line = new Color(.48f, .59f, .55f, .24f);
+        // Offline, authored palette from the approved HUD concept.
+        static readonly Color Shade = new Color(.07f, .06f, .055f, .65f);
+        static readonly Color Night = new Color(.102f, .094f, .090f, .97f);
+        static readonly Color Panel = new Color(.161f, .149f, .145f, .96f);
+        static readonly Color Raised = new Color(.205f, .189f, .177f, .98f);
+        static readonly Color MainText = new Color(.965f, .945f, .910f, 1f);
+        static readonly Color SoftText = new Color(.847f, .824f, .784f, 1f);
+        static readonly Color Muted = new Color(.765f, .737f, .690f, 1f);
+        static readonly Color Brass = new Color(.949f, .663f, .231f, 1f);
+        static readonly Color Sea = new Color(.373f, .702f, .667f, 1f);
+        static readonly Color Petrol = new Color(.145f, .416f, .424f, 1f);
+        static readonly Color Rust = new Color(.776f, .357f, .239f, 1f);
+        static readonly Color Ember = new Color(.894f, .278f, .176f, 1f);
+        static readonly Color Line = new Color(.847f, .824f, .784f, .19f);
         static readonly string[][] WalkControls = { new[] { "WASD", "YÜRÜ" }, new[] { "SHIFT", "KOŞ" }, new[] { "SPACE", "ZIPLA" }, new[] { "E", "KULLAN" }, new[] { "TAB", "ÇANTA" } };
         static readonly string[][] PrepareControls = { new[] { "WASD", "YÜRÜ" }, new[] { "SHIFT", "KOŞ" }, new[] { "SPACE", "ZIPLA" }, new[] { "E", "KULLAN" }, new[] { "TAB", "ÇANTA" }, new[] { "1", "SABİTLE" }, new[] { "2", "KORU" }, new[] { "3", "GÜÇLENDİR" }, new[] { "SAĞ TIK/4", "TAŞI" } };
         static readonly string[][] LootControls = { new[] { "Z/X", "SEÇ" }, new[] { "F", "AL" }, new[] { "E", "KAPAT" }, new[] { "TAB", "ÇANTA" } };
@@ -77,6 +81,40 @@ namespace TooLateToPanic
         GUIStyle _center;
         GUIStyle _caps;
         Texture2D _dotTexture;
+        GUIStyle _display;
+        GUIStyle _timer;
+        GUIStyle _mega;
+        GUIStyle _logo;
+        GUIStyle _wrap;
+        GUIStyle _right;
+        Font _displayFont;
+        Font _condensedFont;
+        Font _bodyFont;
+        int _timerWave = -1;
+        PanicPhase _timerPhase = (PanicPhase)(-1);
+        float _timerMaximum = 1f;
+        PanicHudSupplyPreview _supplyPreviews;
+        GUIStyle _fittedStyle;
+        readonly List<Rect> _topLevelRegions = new List<Rect>(16);
+
+        public string ThemeVersion { get { return "Home V4.7 / Polished supply HUD"; } }
+        public bool TimerAlarmActive { get { return World && !World.JuryActive && World.Model != null && !World.Model.IsSimulation &&
+            (World.Model.Phase == PanicPhase.Preparing || World.Model.Phase == PanicPhase.Tutorial) &&
+            World.Model.TimeRemaining <= 60f; } }
+        public Rect LogicalCanvasBounds { get { return new Rect(0, 0, CanvasWidth, CanvasHeight); } }
+        public Rect WaveCardBounds { get { return new Rect(24, 20, 430, 96); } }
+        public Rect TimerCardBounds { get { return new Rect(610, 14, 380, 114); } }
+        public Rect ResourceCardBounds { get { return new Rect(1100, 20, 476, 96); } }
+        public Rect RequirementCardBounds { get { int n = World && World.Expedition != null ?
+            Mathf.Min(3, World.Expedition.CurrentRequirements.Count) : 0;
+            return new Rect(1100, 170, 476, 104 + n * 82 +
+                (World && World.Expedition != null && World.Expedition.RequirementBudgetMissing > 0 ? 52 : 0)); } }
+        public float CanvasScale { get { return _scale; } }
+        public Vector2 CanvasOffset { get { return _offset; } }
+        public int SupplyPreviewCount { get { return _supplyPreviews == null ? 0 : _supplyPreviews.CachedPreviewCount; } }
+        public int SupplyPreviewRenderCount { get { return _supplyPreviews == null ? 0 : _supplyPreviews.RenderCount; } }
+        public IReadOnlyList<Rect> VisibleHudRegions { get { return _topLevelRegions; } }
+
 
         bool _developerMenuOpen;
         bool _developerPriorPaused;
@@ -135,8 +173,8 @@ namespace TooLateToPanic
                 _developerMenuOpen = false;
                 _helpVisible = _developerPriorHelp;
                 SetPaused(_developerPriorPaused);
-                // A phase owner may have acquired its own lock while the panel was visible.
-                if (World && (World.CinematicActive || World.LossAnnounced)) World.InputLocked = true;
+                // Cinema owns its movement gate through CinematicActive/LossAnnounced.
+                // Do not freeze the model/cinema clock with the HUD pause lock.
             }
             _developerTransitionFrame = Time.frameCount;
         }
@@ -164,7 +202,7 @@ namespace TooLateToPanic
             if (phase == _lastPhase) return;
             if (_developerMenuOpen) SetDeveloperMenuOpen(false);
             if (_paused) SetPaused(false);
-            if (World.CinematicActive || World.LossAnnounced) World.InputLocked = true;
+            // World already blocks movement for cinema. InputLocked is only a pause/UI lock.
             _inspectionStep = 0;
             _inspectionFocusId = null;
             _helpVisible = phase == PanicPhase.Tutorial && World.Model.IsTutorial;
@@ -229,6 +267,7 @@ namespace TooLateToPanic
             PrepareCanvas();
             EnsureStyles();
             _uiRects.Clear();
+            _topLevelRegions.Clear();
 
             Matrix4x4 oldMatrix = GUI.matrix;
             Color oldColor = GUI.color;
@@ -262,12 +301,19 @@ namespace TooLateToPanic
             }
             else if (World.WorkActive)
             {
+                DrawStatusStrip();
                 DrawWork();
             }
             else if (World.InventoryOpen)
             {
+                DrawStatusStrip();
                 DrawInventory();
                 if (RequirementsCardVisible) DrawInventoryRequirements();
+            }
+            else if (World.JuryActive)
+            {
+                DrawStatusStrip();
+                DrawJuryPanel();
             }
             else if (World.Model.Phase == PanicPhase.GameOver || World.Model.Phase == PanicPhase.Success)
             {
@@ -279,6 +325,8 @@ namespace TooLateToPanic
                 DrawStatusStrip();
                 if (World.Model.Phase == PanicPhase.Inspection) DrawInspection();
                 else DrawContext();
+                DrawSimulationActions();
+                DrawTutorialActions();
                 if (_helpVisible && !World.LootVisible && (World.Model.Phase == PanicPhase.Tutorial || World.Model.Phase == PanicPhase.Preparing))
                     DrawHelpCard();
                 if (World.Model.Phase == PanicPhase.Disaster) DrawDisasterCue();
@@ -286,13 +334,14 @@ namespace TooLateToPanic
                 if (World.NotificationVisible) DrawToast(World.ShortNotice);
             }
 
+            DrawPresentationSubtitle();
             if (World.Model.CheatedRun) DrawCheatedRunIndicator();
             if (!_developerMenuOpen && !string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)
             {
-                Rect notice = new Rect(410, 110, 780, 44);
+                Rect notice = new Rect(480, 132, 840, 30);
                 Frame(notice, Night, Brass, 1f);
                 Mark(notice);
-                Label(new Rect(notice.x + 14, notice.y + 5, notice.width - 28, 34), _developerNotice, _small);
+                Label(new Rect(notice.x + 14, notice.y + 3, notice.width - 28, 24), _developerNotice, _small);
             }
 
             GUI.matrix = oldMatrix;
@@ -304,6 +353,8 @@ namespace TooLateToPanic
         {
             if (_dotTexture) Destroy(_dotTexture);
             _dotTexture = null;
+            if (_supplyPreviews != null) _supplyPreviews.Dispose();
+            _supplyPreviews = null;
         }
 
         void OnDisable()
@@ -315,7 +366,7 @@ namespace TooLateToPanic
         {
             float sx = Screen.width / CanvasWidth;
             float sy = Screen.height / CanvasHeight;
-            _scale = Mathf.Max(.65f, Mathf.Min(sx, sy));
+            _scale = Mathf.Max(.01f, Mathf.Min(sx, sy));
             _offset = new Vector2((Screen.width - CanvasWidth * _scale) * .5f,
                 (Screen.height - CanvasHeight * _scale) * .5f);
         }
@@ -323,15 +374,29 @@ namespace TooLateToPanic
         void EnsureStyles()
         {
             if (_stylesReady) return;
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (!font) font = GUI.skin.font;
-            _title = MakeStyle(font, 34, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
-            _heading = MakeStyle(font, 23, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
-            _body = MakeStyle(font, 19, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
-            _small = MakeStyle(font, 16, FontStyle.Normal, SoftText, TextAnchor.MiddleLeft);
-            _tiny = MakeStyle(font, 13, FontStyle.Normal, SoftText, TextAnchor.MiddleLeft);
-            _center = MakeStyle(font, 17, FontStyle.Bold, MainText, TextAnchor.MiddleCenter);
-            _caps = MakeStyle(font, 14, FontStyle.Bold, MainText, TextAnchor.MiddleCenter);
+            Font fallback = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (!fallback) fallback = GUI.skin.font;
+            _displayFont = Resources.Load<Font>("HUD/Oswald");
+            _condensedFont = Resources.Load<Font>("HUD/BarlowCondensed");
+            _bodyFont = Resources.Load<Font>("HUD/Barlow");
+            if (!_displayFont) _displayFont = fallback;
+            if (!_condensedFont) _condensedFont = fallback;
+            if (!_bodyFont) _bodyFont = fallback;
+            _title = MakeStyle(_displayFont, 44, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
+            _heading = MakeStyle(_displayFont, 29, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
+            _display = MakeStyle(_displayFont, 32, FontStyle.Normal, MainText, TextAnchor.MiddleLeft);
+            _timer = MakeStyle(_displayFont, 64, FontStyle.Normal, MainText, TextAnchor.MiddleCenter);
+            _mega = MakeStyle(_displayFont, 142, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
+            _logo = MakeStyle(_displayFont, 116, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
+            _body = MakeStyle(_condensedFont, 23, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
+            _small = MakeStyle(_bodyFont, 18, FontStyle.Normal, SoftText, TextAnchor.MiddleLeft);
+            _tiny = MakeStyle(_condensedFont, 16, FontStyle.Bold, Muted, TextAnchor.MiddleLeft);
+            _center = MakeStyle(_condensedFont, 21, FontStyle.Bold, MainText, TextAnchor.MiddleCenter);
+            _caps = MakeStyle(_condensedFont, 16, FontStyle.Bold, MainText, TextAnchor.MiddleCenter);
+            _wrap = MakeStyle(_bodyFont, 18, FontStyle.Normal, SoftText, TextAnchor.UpperLeft);
+            _wrap.wordWrap = true;
+            _right = MakeStyle(_displayFont, 26, FontStyle.Normal, MainText, TextAnchor.MiddleRight);
+            _fittedStyle = new GUIStyle(_small);
             _stylesReady = true;
         }
 
@@ -357,60 +422,74 @@ namespace TooLateToPanic
 
         void DrawTitle()
         {
-            Fill(new Rect(0, 0, CanvasWidth, CanvasHeight), Shade);
-            Rect panel = new Rect(250, 142, 1100, 616);
-            Frame(panel, Night, Brass, 1.5f);
-            Label(new Rect(302, 178, 570, 24), "EVDEKİ SON HAZIRLIK", ColorText(_small, Brass));
-            Label(new Rect(298, 210, 540, 94), "TOO LATE\nTO PANIC!", _title);
-            Label(new Rect(302, 330, 490, 26), "DEPREM   SEL   YANGIN", ColorText(_small, Brass));
+            if (simulationSelectOpen) { DrawSimulationSelector(); return; }
+            Fill(LogicalCanvasBounds, new Color(.06f, .055f, .05f, .52f));
+            // The real house remains visible behind the title and scores.
+            Frame(new Rect(78, 78, 816, 744), new Color(.102f, .094f, .09f, .94f), Line, 1f);
+            Region(new Rect(78, 78, 816, 744));
+            DrawHazardStripe(new Rect(110, 111, 230, 6), Rust);
+            Label(new Rect(116, 132, 680, 28), "AFETE HAZIRLIK VE ÖNLEM", ColorText(_tiny, Brass));
+            Label(new Rect(110, 173, 730, 132), "TOO LATE", _logo);
+            Brush(new Rect(107, 310, 696, 116), Rust);
+            Label(new Rect(128, 294, 680, 136), "TO PANIC!", _logo);
+            Label(new Rect(118, 453, 668, 32), "Panik için geç. Hazırlık için şimdi.", _body);
+            Label(new Rect(118, 492, 660, 26), "Evi güçlendir. Çantanı hazırla. Sığınağa yetiş.", _small);
 
-            Button(new Rect(302, 408, 450, 54), "Oyuna başla", _menuChoice == 0, Sea, StartRun);
-            Button(new Rect(302, 472, 450, 54), "Öğretici", _menuChoice == 1, Brass, StartTutorial);
-            Button(new Rect(302, 536, 450, 54), "Geliştirici · F2", _menuChoice == 2, Brass, ToggleDeveloperMenu);
-            Button(new Rect(302, 600, 450, 54), "Çıkış", _menuChoice == 3, SoftText, () => Application.Quit());
-            DrawKeycap(new Rect(302, 684, 126, 34), "↑ ↓", "SEÇ", Brass);
-            DrawKeycap(new Rect(438, 684, 160, 34), "ENTER", "AÇ", Sea);
+            Button(new Rect(118, 540, 664, 60), "HAZIRLIĞA BAŞLA", _menuChoice == 0, Brass, StartJuryRun);
+            Button(new Rect(118, 612, 664, 60), "FELAKET SİMÜLASYONU OYNA", _menuChoice == 1, Sea, OpenSimulationSelector);
+            Button(new Rect(118, 684, 320, 52), "SERBEST OYUN", _menuChoice == 2, Sea, StartRun);
+            Button(new Rect(450, 684, 332, 52), "NASIL OYNANIR", _menuChoice == 3, Sea, StartTutorial);
+            Button(new Rect(118, 748, 320, 52), "ÇIKIŞ", _menuChoice == 4, Rust, () => Application.Quit());
+            DrawKeycap(new Rect(464, 754, 150, 36), "OKLAR", "SEÇ", Line);
+            DrawKeycap(new Rect(626, 754, 156, 36), "ENTER", "AÇ", Line);
 
-            Rect scores = new Rect(835, 184, 456, 500);
-            Frame(scores, Panel, Line, 1f);
-            Label(new Rect(866, 204, 388, 34), "YEREL SKORLAR", ColorText(_body, Brass));
+            Rect scores = new Rect(1040, 222, 472, 532);
+            Frame(scores, Night, Line, 1f);
+            Region(scores);
+            Brush(new Rect(1063, 244, 258, 42), Petrol);
+            Label(new Rect(1082, 243, 384, 43), "YEREL SKORLAR", _heading);
+            Label(new Rect(1068, 305, 150, 25), "EN İYİ KOŞULAR", _tiny);
+            Label(new Rect(1360, 305, 122, 25), "PUAN", ColorText(_caps, Muted));
             List<HighscoreEntry> entries = World.Model.Highscores;
             if (entries == null || entries.Count == 0)
             {
-                Label(new Rect(866, 260, 380, 30), "Henüz skor yok", _small);
+                DrawBagIcon(new Rect(1227, 403, 54, 60), Muted);
+                Label(new Rect(1080, 488, 392, 32), "İLK KOŞUNU TAMAMLA", ColorText(_center, MainText));
+                Label(new Rect(1080, 531, 392, 28), "Skorların bu bilgisayarda saklanır.", ColorText(_caps, Muted));
             }
             else
             {
-                int count = Mathf.Min(7, entries.Count);
+                int count = Mathf.Min(6, entries.Count);
                 for (int i = 0; i < count; i++)
                 {
                     HighscoreEntry entry = entries[i];
-                    float y = 260 + i * 48;
-                    Label(new Rect(866, y, 40, 28), (i + 1).ToString("00"), ColorText(_small, Brass));
-                    Label(new Rect(916, y, 170, 28), entry.waves + " dalga", _small);
-                    Label(new Rect(1085, y, 166, 28), entry.score.ToString("N0"), _small);
-                    Label(new Rect(916, y + 23, 335, 18), entry.date ?? "", _tiny);
+                    float y = 346 + i * 60;
+                    if (i == 0) Frame(new Rect(1062, y - 4, 428, 54), new Color(.145f, .416f, .424f, .20f), new Color(Sea.r, Sea.g, Sea.b, .35f), 1f);
+                    Label(new Rect(1074, y, 45, 32), (i + 1).ToString("00"), ColorText(_display, i == 0 ? Brass : Muted));
+                    Label(new Rect(1138, y, 144, 28), entry.waves + " DALGA", _body);
+                    Label(new Rect(1290, y - 1, 184, 32), entry.score.ToString("N0"), ColorText(_right, i == 0 ? Brass : MainText));
+                    Label(new Rect(1138, y + 28, 320, 18), entry.date ?? "", _tiny);
                 }
             }
-
             Event e = Event.current;
             if (DeveloperMenuOpen || DeveloperInputBlockedThisFrame) return;
             if (e.type != EventType.KeyDown) return;
             if (e.keyCode == KeyCode.UpArrow || e.keyCode == KeyCode.W)
             {
-                _menuChoice = (_menuChoice + 3) % 4;
+                _menuChoice = (_menuChoice + 4) % 5;
                 e.Use();
             }
             else if (e.keyCode == KeyCode.DownArrow || e.keyCode == KeyCode.S)
             {
-                _menuChoice = (_menuChoice + 1) % 4;
+                _menuChoice = (_menuChoice + 1) % 5;
                 e.Use();
             }
             else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
             {
-                if (_menuChoice == 0) StartRun();
-                else if (_menuChoice == 1) StartTutorial();
-                else if (_menuChoice == 2) ToggleDeveloperMenu();
+                if (_menuChoice == 0) StartJuryRun();
+                else if (_menuChoice == 1) OpenSimulationSelector();
+                else if (_menuChoice == 2) StartRun();
+                else if (_menuChoice == 3) StartTutorial();
                 else Application.Quit();
                 e.Use();
             }
@@ -418,35 +497,31 @@ namespace TooLateToPanic
 
         void DrawStatusStrip()
         {
+            if (World.JuryActive) { DrawJuryStatusStrip(); return; }
             PanicModel model = World.Model;
-            Rect bar = new Rect(24, 18, 1552, 72);
-            Frame(bar, Night, Line, 1f);
-            Label(new Rect(44, 26, 116, 24), "DALGA " + model.Wave.ToString("00"), ColorText(_body, Brass));
-            Label(new Rect(166, 26, 24, 24), "◆", ColorText(_body, Ember));
-            Label(new Rect(194, 26, 146, 24), DisasterName(model.Disaster), _body);
-            Label(new Rect(354, 27, 116, 22), FormatTime(model.TimeRemaining), ColorText(_body,
-                model.TimeRemaining < 60 ? Ember : MainText));
-            Label(new Rect(483, 29, 112, 20), model.Developer.InfiniteBudget ? "Sınırsız ₺" : model.Budget.ToString("N0") + " ₺", _small);
+            bool preparation = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
+            Color accent = model.Phase == PanicPhase.Disaster ? Ember : Rust;
+            Rect wave = WaveCardBounds;
+            Frame(wave, Night, Line, 1f); Region(wave);
+            DrawRing(new Rect(37, 31, 72, 72), 1f, accent, 3f);
+            Label(new Rect(37, 29, 72, 72), model.Wave.ToString("00"), ColorText(_center, MainText));
+            Label(new Rect(126, 27, 290, 22), "DALGA  /  " + PhaseName(model.Phase), _tiny);
+            DrawDisasterSymbol(new Rect(126, 57, 30, 30), model.Disaster, accent);
+            Label(new Rect(168, 49, 260, 42), DisasterName(model.Disaster), _display);
+            Label(new Rect(126, 91, 303, 18), DisasterHint(model.Disaster), ColorText(_tiny, Brass));
 
-            DrawStatusIcon(new Rect(620, 27, 26, 26), "water", model.PackedWater);
-            DrawStatusIcon(new Rect(694, 27, 26, 26), "food", model.PackedFood);
-            DrawBagIcon(new Rect(770, 26, 28, 28), model.BagReady ? Sea : SoftText);
-            Label(new Rect(802, 28, 56, 22), model.BagReady ? "HAZIR" : "ÇANTA", ColorText(_tiny, model.BagReady ? Sea : SoftText));
-
-            if (World.RadioEnabled)
+            DrawTimerCard();
+            DrawResourceCard();
+            if (preparation && !World.WorkActive && !World.InventoryOpen)
             {
-                Label(new Rect(870, 27, 86, 22), World.RadioSpeaking ? "RADYO · SES" : "RADYO · AÇIK",
-                    ColorText(_tiny, World.RadioSpeaking ? Sea : Brass));
-                Label(new Rect(962, 27, 332, 24), Clip(World.RadioHeadline, 42), _tiny);
+                Rect ticker = new Rect(24, 126, 430, 34);
+                Frame(ticker, Night, Line, 1f); Region(ticker);
+                Fill(new Rect(25, 127, 82, 32), Petrol);
+                Label(new Rect(29, 128, 73, 27), "HEDEF", _caps);
+                Label(new Rect(119, 130, 321, 25), model.BagReady ? "Çanta hazır · Evi güvene al" : "Su ve gıdayı çantana koy", _tiny);
+                DrawKeycap(new Rect(1364, 128, 104, 30), "TAB", "ÇANTA", Line);
+                DrawKeycap(new Rect(1478, 128, 98, 30), "H", "YARDIM", Line);
             }
-            else if (World.Model.Phase == PanicPhase.Preparing || World.Model.Phase == PanicPhase.Tutorial)
-            {
-                Label(new Rect(870, 27, 500, 24), World.Model.Phase == PanicPhase.Tutorial ? "HAZIRLIK" : "EVİ HAZIRLA", _tiny);
-            }
-
-            DrawKeycap(new Rect(1304, 25, 122, 34), "TAB", "ÇANTA", Line);
-            if (model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial)
-                DrawKeycap(new Rect(1434, 25, 118, 34), "H", "YARDIM", Line);
         }
 
         void DrawStatusIcon(Rect rect, string id, int count)
@@ -468,11 +543,25 @@ namespace TooLateToPanic
         void DrawContext()
         {
             if (!World.IsMoving && World.LootVisible && World.OpenSource != null) DrawLootStrip();
-
-            string shortAction = World.IsMoving ? Clip(World.PlacementMessage, 100) : Clip(World.ShortAction, 32);
-            if (!string.IsNullOrEmpty(shortAction))
-                Label(new Rect(34, 788, 1532, 22), shortAction, ColorText(_small, World.IsMoving && !World.PlacementValid ? Brass : MainText));
+            // The projected E marker already identifies nearby actions. Reserve a fixed card for placement feedback.
+            if (World.IsMoving && !string.IsNullOrEmpty(World.PlacementMessage))
+            {
+                Rect context = new Rect(404, 780, 792, 43);
+                Color accent = World.PlacementValid ? Sea : Brass;
+                Frame(context, Night, accent, 1f); Region(context);
+                DrawDot(new Rect(context.x + 16, context.y + 18, 7, 7), accent);
+                FittedLabel(new Rect(context.x + 36, context.y + 3, context.width - 48, 36), World.PlacementMessage, _center, MainText, 14);
+            }
             DrawControls(ContextControls());
+            if (TimerAlarmActive && !World.LootVisible && !World.IsMoving)
+            {
+                Rect check = new Rect(24, 190, 282, 178);
+                Frame(check, Night, new Color(Ember.r, Ember.g, Ember.b, .50f), 1f); Region(check);
+                Label(new Rect(42, 204, 242, 27), "SIĞINAĞA HAZIR MISIN?", ColorText(_body, Brass));
+                DrawBagCheck(new Rect(42, 246, 242, 38), "water", "SU", World.Model.PackedWater, World.Model.RequiredDays);
+                DrawBagCheck(new Rect(42, 293, 242, 38), "food", "GIDA", World.Model.PackedFood, World.Model.RequiredDays);
+                DrawHazardStripe(new Rect(42, 348, 242, 4), Ember);
+            }
         }
 
         void DrawRequirements()
@@ -480,63 +569,51 @@ namespace TooLateToPanic
             PanicExpedition expedition = World.Expedition;
             IReadOnlyList<PanicMaterialRequirement> requirements = expedition.CurrentRequirements;
             int count = Mathf.Min(3, requirements.Count);
-            bool budgetMissing = expedition.RequirementBudgetMissing > 0;
-            Rect panel = new Rect(1050, 112, 516, 48 + count * 94 + (budgetMissing ? 48 : 0));
-            Frame(panel, Night, Brass, 1.5f);
-            Mark(panel); // Empty card space also belongs to the HUD, never world placement.
-            Label(new Rect(panel.x + 18, panel.y + 9, panel.width - 36, 27), RequirementTitle(expedition.RequirementAction), ColorText(_small, Brass));
+            Rect panel = RequirementCardBounds;
+            Frame(panel, Night, new Color(Brass.r, Brass.g, Brass.b, .55f), 1f);
+            Region(panel);
+            Brush(new Rect(panel.x + 14, panel.y + 17, panel.width - 28, 36), Rust);
+            Label(new Rect(panel.x + 28, panel.y + 18, panel.width - 54, 32), RequirementTitle(expedition.RequirementAction), _body);
+            Label(new Rect(panel.x + 110, panel.y + 61, 137, 20), "MALZEME", _tiny);
+            Label(new Rect(panel.x + 250, panel.y + 61, 58, 20), "VAR", ColorText(_caps, Muted));
+            Label(new Rect(panel.x + 310, panel.y + 61, 64, 20), "GEREK", ColorText(_caps, Muted));
+            Label(new Rect(panel.x + 378, panel.y + 61, 78, 20), "EKSİK", ColorText(_caps, Brass));
             for (int i = 0; i < count; i++)
             {
                 PanicMaterialRequirement requirement = requirements[i];
-                Rect row = new Rect(panel.x + 12, panel.y + 42 + i * 94, panel.width - 24, 88);
-                Frame(row, Panel, requirement.Missing > 0 ? Line : Sea, 1f);
-                DrawIcon(new Rect(row.x + 5, row.y + 4, 80, 80), requirement.Id);
-                Label(new Rect(row.x + 99, row.y + 6, row.width - 108, 25),
-                    SlotName(new SupplySlot(requirement.Id, 1)), ColorText(_body, MainText));
-                Label(new Rect(row.x + 99, row.y + 34, 150, 25),
-                    "Eksik " + requirement.Missing, ColorText(_body, requirement.Missing > 0 ? Brass : Sea));
-                Label(new Rect(row.x + 99, row.y + 61, row.width - 108, 21),
-                    "Var " + requirement.Owned + " / Gerek " + requirement.Required, _small);
+                Rect row = new Rect(panel.x + 12, panel.y + 88 + i * 82, panel.width - 24, 74);
+                DrawRequirementRow(row, requirement);
             }
-            if (budgetMissing)
+            if (expedition.RequirementBudgetMissing > 0)
             {
-                float y = panel.y + 42 + count * 94;
-                Label(new Rect(panel.x + 18, y + 3, panel.width - 36, 24),
-                    "Bütçe: Eksik " + expedition.RequirementBudgetMissing + " ₺", ColorText(_body, Brass));
-                Label(new Rect(panel.x + 18, y + 27, panel.width - 36, 21),
-                    "Var " + expedition.RequirementBudgetOwned + " / Gerek " + expedition.RequirementBudgetCost + " ₺", _small);
+                float y = panel.y + 90 + count * 82;
+                Fill(new Rect(panel.x + 20, y, panel.width - 40, 1), Line);
+                Label(new Rect(panel.x + 26, y + 12, 196, 30), "BÜTÇE  ·  $", ColorText(_body, Brass));
+                Label(new Rect(panel.x + 250, y + 12, 58, 30), expedition.RequirementBudgetOwned.ToString(), _center);
+                Label(new Rect(panel.x + 310, y + 12, 64, 30), expedition.RequirementBudgetCost.ToString(), _center);
+                Label(new Rect(panel.x + 378, y + 12, 78, 30), expedition.RequirementBudgetMissing.ToString(), ColorText(_center, Brass));
             }
         }
 
         void DrawInventoryRequirements()
         {
-            // The empty lower-right part of the bag panel keeps slots and all three actions usable.
             PanicExpedition expedition = World.Expedition;
             IReadOnlyList<PanicMaterialRequirement> requirements = expedition.CurrentRequirements;
             int count = Mathf.Min(3, requirements.Count);
-            Rect panel = new Rect(792, 542, 560, 110);
-            Frame(panel, Panel, Brass, 1f);
-            Mark(panel);
-            string title = expedition.RequirementBudgetMissing > 0 ?
-                "Bütçe: Eksik " + expedition.RequirementBudgetMissing + " ₺ · Var " + expedition.RequirementBudgetOwned + " / Gerek " + expedition.RequirementBudgetCost :
-                RequirementTitle(expedition.RequirementAction);
-            Label(new Rect(panel.x + 10, panel.y + 3, panel.width - 20, 23), title, ColorText(_tiny, Brass));
+            Rect panel = new Rect(824, 647, 660, 100);
+            Frame(panel, Night, new Color(Brass.r, Brass.g, Brass.b, .45f), 1f); Mark(panel);
+            Label(new Rect(panel.x + 14, panel.y + 4, 632, 24), RequirementTitle(expedition.RequirementAction) +
+                (expedition.RequirementBudgetMissing > 0 ? "  ·  Bütçe eksik " + expedition.RequirementBudgetMissing + " $" : ""), ColorText(_tiny, Brass));
             if (count == 0) return;
-            float cellWidth = (panel.width - 16) / count;
+            float cellWidth = (panel.width - 24) / count;
             for (int i = 0; i < count; i++)
             {
-                PanicMaterialRequirement requirement = requirements[i];
-                float x = panel.x + 8 + i * cellWidth;
-                float iconSize = count > 2 ? 52 : 70;
-                DrawIcon(new Rect(x, panel.y + 31, iconSize, iconSize), requirement.Id);
-                float textX = x + iconSize + 6;
-                float textWidth = cellWidth - iconSize - 10;
-                Label(new Rect(textX, panel.y + 27, textWidth, 24),
-                    SlotName(new SupplySlot(requirement.Id, 1)), _tiny);
-                Label(new Rect(textX, panel.y + 51, textWidth, 24),
-                    "Eksik " + requirement.Missing, ColorText(_small, requirement.Missing > 0 ? Brass : Sea));
-                Label(new Rect(textX, panel.y + 77, textWidth, 22),
-                    "Var " + requirement.Owned + " / Gerek " + requirement.Required, _tiny);
+                PanicMaterialRequirement r = requirements[i];
+                float x = panel.x + 12 + i * cellWidth;
+                DrawIcon(new Rect(x, panel.y + 31, 48, 48), r.Id);
+                Label(new Rect(x + 54, panel.y + 28, cellWidth - 58, 22), SlotName(new SupplySlot(r.Id, 1)), ColorText(_tiny, MainText));
+                Label(new Rect(x + 54, panel.y + 51, cellWidth - 58, 20), "Var " + r.Owned + " / Gerek " + r.Required, _tiny);
+                Label(new Rect(x + 54, panel.y + 73, cellWidth - 58, 20), "Eksik " + r.Missing, ColorText(_tiny, r.Missing > 0 ? Brass : Sea));
             }
         }
 
@@ -563,27 +640,25 @@ namespace TooLateToPanic
             LootSource source = World.OpenSource;
             if (source == null || source.Contents == null) return;
             int visible = 0;
-            for (int i = 0; i < source.Contents.Count; i++)
-                if (HasStock(source.Contents[i])) visible++;
+            for (int i = 0; i < source.Contents.Count; i++) if (HasStock(source.Contents[i])) visible++;
             int count = Mathf.Min(10, visible);
-            const float cellWidth = 110f;
-            float width = count == 0 ? 590f : Mathf.Max(530f, count * (cellWidth + 8f) + 204f);
+            const float cellWidth = 100f;
+            float width = count == 0 ? 650f : Mathf.Max(570f, count * 108f + 202f);
             float x = (CanvasWidth - width) * .5f;
-            Rect panel = new Rect(x, 625, width, 150);
-            Frame(panel, Night, Brass, 1f);
-            Label(new Rect(x + 18, 634, width - 36, 24), Clip(source.Label, 36), ColorText(_small, Brass));
-            float startX = x + 18;
-            const float y = 668;
+            Rect panel = new Rect(x, 608, width, 148);
+            Frame(panel, Night, new Color(Sea.r, Sea.g, Sea.b, .48f), 1f); Region(panel);
+            Label(new Rect(x + 18, 617, width - 160, 24), Clip(source.Label, 48).ToUpperInvariant(), ColorText(_tiny, Brass));
+            Label(new Rect(x + width - 156, 617, 138, 24), count == 0 ? "TAMAMLANDI" : "Z / X  SEÇ", ColorText(_caps, Muted));
+            float startX = x + 16;
+            const float y = 650;
             if (count == 0)
             {
-                // One explicit empty state, rather than a row of anonymous dash slots.
-                Frame(new Rect(startX, y + 9, 68, 52), Panel, Line, 2f);
-                Fill(new Rect(startX + 8, y + 3, 52, 8), Brass);
-                Label(new Rect(startX + 84, y + 2, 280, 28), "BOŞ", ColorText(_heading, MainText));
-                Label(new Rect(startX + 84, y + 38, 280, 24), "Malzemeler alındı", _small);
-                Rect closeEmpty = new Rect(x + width - 112, y + 17, 94, 46);
-                DrawKeycap(closeEmpty, "E", "KAPAT", Brass);
-                Mark(closeEmpty);
+                Frame(new Rect(startX + 2, y + 5, 66, 66), Panel, Line, 1f);
+                DrawBagIcon(new Rect(startX + 17, y + 14, 36, 43), Muted);
+                Label(new Rect(startX + 91, y + 3, 340, 32), "BÜTÜN MALZEMELER ALINDI", _body);
+                Label(new Rect(startX + 91, y + 39, 320, 25), "Bu depo artık boş.", _small);
+                Rect closeEmpty = new Rect(x + width - 140, y + 20, 120, 42);
+                DrawKeycap(closeEmpty, "E", "KAPAT", Sea);
                 if (MousePressed(closeEmpty)) World.ToggleContainer();
                 return;
             }
@@ -592,24 +667,24 @@ namespace TooLateToPanic
             {
                 SupplySlot slot = source.Contents[i];
                 if (!HasStock(slot)) continue;
-                Rect cell = new Rect(startX + drawn * (cellWidth + 8f), y, cellWidth, 94);
+                Rect cell = new Rect(startX + drawn * 108f, y, cellWidth, 91);
                 bool selected = i == World.LootIndex;
-                Frame(cell, selected ? Raised : Panel, selected ? Sea : Line, selected ? 2f : 1f);
-                DrawIcon(new Rect(cell.x + 22, cell.y + 3, 66, 64), slot.Id);
-                Frame(new Rect(cell.xMax - 36, cell.y + 4, 31, 23), Night, selected ? Sea : Line, 1f);
-                Label(new Rect(cell.xMax - 35, cell.y + 3, 30, 23), "×" + slot.Count, ColorText(_tiny, Brass));
-                Label(new Rect(cell.x + 5, cell.y + 67, cell.width - 10, 22), SlotName(slot), ColorText(_tiny, selected ? Sea : MainText));
+                Frame(cell, selected ? new Color(.145f, .416f, .424f, .35f) : Panel, selected ? Sea : Line, selected ? 2f : 1f);
+                if (selected) Fill(new Rect(cell.x + 18, cell.yMax - 3, cell.width - 36, 2), Sea);
+                DrawIcon(new Rect(cell.x + 16, cell.y + 3, 64, 59), slot.Id);
+                Frame(new Rect(cell.xMax - 34, cell.y + 5, 29, 24), Night, Line, 1f);
+                Label(new Rect(cell.xMax - 34, cell.y + 4, 29, 24), slot.Count.ToString(), ColorText(_caps, Brass));
+                Label(new Rect(cell.x + 4, cell.y + 62, cell.width - 8, 22), SlotName(slot), ColorText(_caps, selected ? Sea : MainText));
                 Mark(cell);
                 int index = i;
                 if (MousePressed(cell)) World.SelectLoot(index);
                 drawn++;
             }
-            float actionsX = startX + count * (cellWidth + 8f) + 7f;
-            Rect take = new Rect(actionsX, y + 2, 150, 40);
-            Rect close = new Rect(actionsX, y + 50, 150, 40);
-            DrawKeycap(take, "F", "AL", Sea);
+            float actionsX = startX + count * 108f + 6f;
+            Rect take = new Rect(actionsX, y + 1, 152, 39);
+            Rect close = new Rect(actionsX, y + 48, 152, 39);
+            DrawKeycap(take, "F", "SEÇİLİYİ AL", Sea);
             DrawKeycap(close, "E", "KAPAT", Line);
-            Mark(take); Mark(close);
             if (MousePressed(take)) World.TakeLoot();
             if (MousePressed(close)) World.ToggleContainer();
         }
@@ -621,148 +696,177 @@ namespace TooLateToPanic
 
         void DrawInventory()
         {
-            Rect panel = new Rect(176, 96, 1248, 706);
-            Frame(panel, Night, Brass, 1.5f);
-            Label(new Rect(212, 118, 470, 34), "ENVANTER", ColorText(_heading, Brass));
-            Label(new Rect(214, 158, 520, 24), "12 YUVA", _tiny);
-            Label(new Rect(792, 158, 560, 24), "AFET ÇANTASI  ·  8 YUVA", _tiny);
-            Fill(new Rect(768, 158, 1, 490), Line);
-
+            Fill(LogicalCanvasBounds, new Color(.055f, .05f, .045f, .42f));
+            Rect panel = new Rect(90, 176, 1420, 654);
+            Frame(panel, Night, Line, 1f); Region(panel);
+            Brush(new Rect(114, 195, 228, 42), Rust);
+            Label(new Rect(132, 191, 560, 46), "ENVANTER", _heading);
+            Brush(new Rect(810, 195, 283, 42), Petrol);
+            Label(new Rect(828, 191, 480, 46), "AFET ÇANTASI", _heading);
+            Fill(new Rect(786, 254, 1, 480), Line);
             List<SupplySlot> inventory = World.Expedition == null ? null : World.Expedition.Inventory;
+            List<SupplySlot> bag = World.Expedition == null ? null : World.Expedition.Bag;
+            Label(new Rect(126, 246, 594, 23), "EVDE TOPLADIKLARIN   /   " + UsedSlots(inventory) + " · 12 YUVA", _tiny);
+            Label(new Rect(824, 246, 622, 23), (World.JuryActive || World.Model.IsSimulation ? "HAZIRLIK ÇANTASI" : "SIĞINAK İÇİN") + "   /   " + UsedSlots(bag) + " · 8 YUVA", _tiny);
             for (int i = 0; i < 12; i++)
             {
-                int col = i % 4;
-                int row = i / 4;
-                Rect cell = new Rect(212 + col * 132, 198 + row * 116, 120, 104);
+                int col = i % 4, row = i / 4;
+                Rect cell = new Rect(126 + col * 156, 286 + row * 113, 144, 101);
                 SupplySlot slot = inventory != null && i < inventory.Count ? inventory[i] : null;
                 bool selected = i == World.InventoryIndex;
-                Frame(cell, selected ? Raised : Panel, selected ? Sea : Line, selected ? 2f : 1f);
+                Frame(cell, selected ? new Color(.145f, .416f, .424f, .36f) : Panel, selected ? Sea : Line, selected ? 2f : 1f);
                 DrawSlot(cell, slot, selected);
+                if (selected) Fill(new Rect(cell.x + 18, cell.yMax - 3, cell.width - 36, 2), Sea);
                 Mark(cell);
                 int index = i;
                 if (MousePressed(cell)) World.InventorySelect(index);
             }
-
-            List<SupplySlot> bag = World.Expedition == null ? null : World.Expedition.Bag;
             for (int i = 0; i < 8; i++)
             {
-                int col = i % 4;
-                int row = i / 4;
-                Rect cell = new Rect(792 + col * 138, 198 + row * 138, 126, 126);
+                Rect cell = new Rect(824 + (i % 4) * 168, 286 + (i / 4) * 113, 156, 101);
                 SupplySlot slot = bag != null && i < bag.Count ? bag[i] : null;
                 Frame(cell, Panel, Line, 1f);
-                DrawSlot(cell, slot, false);
-                Mark(cell);
+                DrawSlot(cell, slot, false); Mark(cell);
             }
-
             PanicModel model = World.Model;
-            DrawStatusIcon(new Rect(796, 500, 28, 28), "water", model.PackedWater);
-            Label(new Rect(830, 501, 115, 24), model.PackedWater + "/" + model.RequiredDays, _tiny);
-            DrawStatusIcon(new Rect(952, 500, 28, 28), "food", model.PackedFood);
-            Label(new Rect(986, 501, 115, 24), model.PackedFood + "/" + model.RequiredDays, _tiny);
-            Label(new Rect(1128, 501, 205, 24), "DESTEK " + model.SupportCount + "/4", ColorText(_tiny, model.BagReady ? Sea : SoftText));
-
-            SupplySlot selectedSlot = inventory != null && World.InventoryIndex < inventory.Count ? inventory[World.InventoryIndex] : null;
-            string selectedName = SlotName(selectedSlot);
-            Label(new Rect(212, 572, 520, 30), "SEÇİLİ  " + selectedName, ColorText(_body, MainText));
-            DrawKeycap(new Rect(212, 666, 132, 42), "ENTER", "ÇANTAYA", Sea);
-            DrawKeycap(new Rect(354, 666, 104, 42), "F", "ÜRET", Brass);
-            DrawKeycap(new Rect(468, 666, 142, 42), "BACKSPACE", "GERİ", Line);
-            Rect pack = new Rect(212, 666, 132, 42);
-            Rect craft = new Rect(354, 666, 104, 42);
-            Rect back = new Rect(468, 666, 142, 42);
-            if (MousePressed(pack)) World.InventoryUse();
-            if (MousePressed(craft)) World.CraftFirstAid();
-            if (MousePressed(back)) World.ToggleInventory();
-            Label(new Rect(792, 666, 560, 26), model.BagReady ? "ÇANTA HAZIR" : "SU · GIDA · DESTEK", ColorText(_tiny, model.BagReady ? Sea : Brass));
+            DrawInventoryMeter(new Rect(824, 523, 207, 76), "water", "SU", model.PackedWater, model.RequiredDays);
+            DrawInventoryMeter(new Rect(1044, 523, 207, 76), "food", "GIDA", model.PackedFood, model.RequiredDays);
+            DrawInventoryMeter(new Rect(1264, 523, 220, 76), "firstaid", "DESTEK", model.SupportCount, 4);
+            DrawDot(new Rect(827, 620, 9, 9), model.BagReady ? Sea : Brass);
+            string readyHint = World.JuryActive ? "ÇANTA HAZIR · Kapat ve sıradaki önleme geç" : model.IsSimulation ? "ÇANTA HAZIR · Önlemini seç, afeti başlat" : "ÇANTA HAZIR · Sığınağa geçebilirsin";
+            Label(new Rect(846, 607, 630, 30), model.BagReady ? readyHint :
+                "Her biri " + model.RequiredDays + " günlük su ve gıda gerekli", ColorText(_body, model.BagReady ? Sea : Brass));
+            SupplySlot selectedSlot = inventory != null && World.InventoryIndex >= 0 && World.InventoryIndex < inventory.Count ? inventory[World.InventoryIndex] : null;
+            Label(new Rect(126, 643, 600, 22), "SEÇİLİ MALZEME", _tiny);
+            Label(new Rect(126, 672, 600, 32), SlotName(selectedSlot), ColorText(_display, MainText));
+            if (!RequirementsCardVisible)
+            {
+                Rect craft = new Rect(824, 647, 660, 100);
+                Frame(craft, Panel, Line, 1f);
+                DrawIcon(new Rect(838, 668, 50, 54), "bandage");
+                Label(new Rect(896, 674, 54, 32), "2 ×", _body);
+                Label(new Rect(947, 674, 36, 32), "+", ColorText(_display, Muted));
+                DrawIcon(new Rect(989, 668, 50, 54), "antiseptic");
+                Label(new Rect(1047, 674, 54, 32), "1 ×", _body);
+                Label(new Rect(1103, 674, 44, 32), "=", ColorText(_display, Muted));
+                DrawIcon(new Rect(1155, 668, 54, 54), "firstaid");
+                Label(new Rect(1225, 663, 240, 28), "İLK YARDIM SETİ", ColorText(_body, Brass));
+                Label(new Rect(1225, 696, 240, 24), "F ile üret", _tiny);
+            }
+            Rect packButton = new Rect(126, 762, 212, 44);
+            Rect craftButton = new Rect(350, 762, 172, 44);
+            Rect backButton = new Rect(534, 762, 216, 44);
+            DrawKeycap(packButton, "ENTER", "ÇANTAYA KOY", Sea);
+            DrawKeycap(craftButton, "F", "İLK YARDIM", Brass);
+            DrawKeycap(backButton, "BACKSPACE", "GERİ", Line);
+            if (MousePressed(packButton)) World.InventoryUse();
+            if (MousePressed(craftButton)) World.CraftFirstAid();
+            if (MousePressed(backButton)) World.ToggleInventory();
+            Label(new Rect(824, 767, 650, 32), "OKLAR  Seç     ·     TAB / ESC  Kapat", _tiny);
         }
 
         void DrawSlot(Rect cell, SupplySlot slot, bool selected)
         {
-            if (slot == null || slot.Count <= 0 || string.IsNullOrEmpty(slot.Id)) return;
-            DrawIcon(new Rect(cell.x + 9, cell.y + 8, cell.width - 18, cell.height - 34), slot.Id);
-            Label(new Rect(cell.x + 5, cell.yMax - 25, cell.width - 10, 20), "×" + slot.Count, ColorText(_tiny, selected ? Sea : Brass));
+            if (!HasStock(slot))
+            {
+                Label(new Rect(cell.x, cell.y + 20, cell.width, 52), "·", ColorText(_center, new Color(Muted.r, Muted.g, Muted.b, .35f)));
+                return;
+            }
+            DrawIcon(new Rect(cell.x + 35, cell.y + 5, cell.width - 70, cell.height - 31), slot.Id);
+            Frame(new Rect(cell.xMax - 36, cell.y + 7, 28, 24), Night, Line, 1f);
+            Label(new Rect(cell.xMax - 36, cell.y + 6, 28, 24), slot.Count.ToString(), ColorText(_caps, selected ? Sea : Brass));
+            Label(new Rect(cell.x + 5, cell.yMax - 27, cell.width - 10, 21), SlotName(slot), ColorText(_caps, selected ? Sea : SoftText));
         }
 
         void DrawWork()
         {
             PanicWorkSession work = World.Expedition.Work;
-            Rect panel = new Rect(90, 72, 1420, 748);
-            Frame(panel, Night, Brass, 1.5f);
-            Rect image = new Rect(124, 108, 1010, 636);
-            Fill(image, new Color(.025f, .035f, .04f, 1f));
+            Rect panel = new Rect(66, 164, 1468, 676);
+            Frame(panel, Night, new Color(Brass.r, Brass.g, Brass.b, .45f), 1f); Region(panel);
+            Rect image = new Rect(88, 186, 1010, 632);
+            Frame(image, new Color(.07f, .065f, .06f, 1f), Line, 1f);
             if (World.WorkTexture)
-                GUI.DrawTexture(new Rect(image.x + 3, image.y + 3, image.width - 6, image.height - 6), World.WorkTexture, ScaleMode.ScaleToFit, false);
+                GUI.DrawTexture(new Rect(image.x + 2, image.y + 39, image.width - 4, image.height - 78), World.WorkTexture, ScaleMode.ScaleToFit, false);
+            DrawDot(new Rect(image.x + 16, image.y + 16, 8, 8), new Color(Ember.r, Ember.g, Ember.b, .55f + .45f * Mathf.Sin(Time.unscaledTime * 4f)));
+            Label(new Rect(image.x + 34, image.y + 5, 440, 30), "AKTİF İŞ  /  " + WorkModeName(work.Mode), _tiny);
+            string costHint = World.Model.FreeMaterials && World.Model.InfiniteBudget ? "Geliştirici: bu işte malzeme ve bütçe harcanmaz." :
+                World.Model.FreeMaterials ? "Geliştirici: malzeme harcanmaz; bütçe iş bitince düşer." :
+                World.Model.InfiniteBudget ? "Geliştirici: bütçe harcanmaz; malzeme iş bitince düşer." :
+                "İşi bitirdiğinde malzeme ve bütçe harcanır. İptal etmek ücretsizdir.";
+            Label(new Rect(image.x + 22, image.yMax - 33, 960, 28), costHint, _tiny);
+            DrawCorners(new Rect(image.x + 11, image.y + 49, image.width - 22, image.height - 98), Brass);
             Mark(image);
-            Label(new Rect(1160, 110, 310, 30), Clip(work.Label.ToUpperInvariant(), 24), ColorText(_small, Brass));
-            Label(new Rect(1160, 146, 280, 24), (work.CompletedSteps + 1) + " / " + work.TotalSteps + "  ·  " + work.StageName, ColorText(_small, MainText));
-            for (int i = 0; i < work.TotalSteps; i++)
-            {
-                Rect step = new Rect(1160 + i * 68, 190, 54, 36);
-                bool done = i < work.CompletedSteps;
-                Frame(step, done ? new Color(.10f, .25f, .21f, 1f) : Panel, done ? Sea : i == work.CompletedSteps ? Brass : Line, 1f);
-                Label(step, done ? "✓" : (i + 1).ToString(), ColorText(_center, done ? Sea : MainText));
-            }
 
-            string meter = !work.IsApplying ? "HEDEFLE" : work.Mode == PanicWorkMode.Timing ? "DOĞRU AN" : work.Mode == PanicWorkMode.Balance ? "BASINÇ" : "ÇEVİR";
-            Label(new Rect(1160, 256, 274, 24), meter, ColorText(_tiny, SoftText));
+            const float x = 1122f; const float w = 384f;
+            Brush(new Rect(x, 190, w, 38), Rust);
+            Label(new Rect(x + 14, 190, w - 26, 36), Clip(work.Label, 32).ToUpperInvariant(), _body);
+            Label(new Rect(x, 242, w, 30), (Mathf.Min(work.CompletedSteps + 1, work.TotalSteps)) + " / " + work.TotalSteps + "  ·  " + work.StageName, ColorText(_body, MainText));
+            int steps = Mathf.Max(1, work.TotalSteps);
+            float stepWidth = Mathf.Min(72f, (w - (steps - 1) * 10f) / steps);
+            for (int i = 0; i < steps; i++)
+            {
+                Rect step = new Rect(x + i * (stepWidth + 10f), 285, stepWidth, 43);
+                bool done = i < work.CompletedSteps;
+                Frame(step, done ? Petrol : Panel, done ? Sea : i == work.CompletedSteps ? Brass : Line, 1f);
+                if (done) DrawCheck(new Rect(step.center.x - 10, step.center.y - 7, 20, 14), MainText);
+                else Label(step, (i + 1).ToString("00"), ColorText(_center, i == work.CompletedSteps ? Brass : Muted));
+            }
+            string meter = !work.IsApplying ? "HİZALA VE KİLİTLE" : work.Mode == PanicWorkMode.Timing ? "DOĞRU ANI BEKLE" : work.Mode == PanicWorkMode.Balance ? "BASINCI DENGELE" : "DÖNÜŞÜMLÜ ÇEVİR";
+            Label(new Rect(x, 351, w, 25), meter, ColorText(_tiny, Muted));
+            bool aligned = Mathf.Abs(work.Cursor - work.Target) <= work.TargetWidth;
             if (work.IsApplying && work.Mode == PanicWorkMode.Ratchet)
             {
-                for (int i = 0; i < 3; i++)
+                float turnWidth = (w - (work.RequiredStrokes - 1) * 12f) / work.RequiredStrokes;
+                for (int i = 0; i < work.RequiredStrokes; i++)
                 {
-                    Rect turn = new Rect(1160 + i * 92, 294, 82, 60);
-                    bool done = work.StageProgress >= (i + 1) * .25f;
-                    bool current = !done && work.StageProgress >= i * .25f;
-                    Frame(turn, done ? Raised : Panel, done ? Sea : current ? Brass : Line, current ? 2f : 1f);
+                    Rect turn = new Rect(x + i * (turnWidth + 12f), 393, turnWidth, 61);
+                    bool done = work.CompletedStrokes > i;
+                    bool current = work.CompletedStrokes == i;
+                    Frame(turn, done ? new Color(Petrol.r, Petrol.g, Petrol.b, .4f) : Panel, done ? Sea : current ? Brass : Line, current ? 2f : 1f);
                     int direction = (work.CompletedSteps + i) % 2 == 0 ? -1 : 1;
-                    Label(turn, direction < 0 ? "A  ←" : "D  →", ColorText(_center, done ? Sea : current ? Brass : SoftText));
+                    if (done) DrawCheck(new Rect(turn.center.x - 12, turn.center.y - 8, 24, 16), Sea);
+                    else Label(turn, direction < 0 ? "A  SOL" : "D  SAĞ", ColorText(_center, current ? Brass : Muted));
                 }
-                if (work.ExpectedDirection == 0)
-                    Label(new Rect(1160, 364, 274, 28), "SON DOKUNUŞ", ColorText(_small, Sea));
+                Label(new Rect(x, 468, w, 28), work.ExpectedDirection == 0 ? "SON DOKUNUŞ · SPACE" : work.ExpectedDirection < 0 ? "A İLE SOLA ÇEVİR" : "D İLE SAĞA ÇEVİR", ColorText(_body, work.ExpectedDirection == 0 ? Sea : Brass));
             }
             else
             {
-                Rect track = new Rect(1160, 302, 274, 34);
-                Fill(track, new Color(.022f, .035f, .04f, 1f));
+                Rect track = new Rect(x, 398, w, 40);
+                Frame(track, new Color(.07f, .065f, .06f, 1f), Line, 1f);
                 float low = Mathf.Clamp01(work.Target - work.TargetWidth);
                 float high = Mathf.Clamp01(work.Target + work.TargetWidth);
-                Fill(new Rect(track.x + low * track.width, track.y, (high - low) * track.width, track.height), new Color(.20f, .52f, .39f, .95f));
+                Fill(new Rect(track.x + low * track.width, track.y + 2, (high - low) * track.width, track.height - 4), Petrol);
                 float targetX = track.x + work.Target * track.width;
-                Fill(new Rect(targetX - 2, track.y - 4, 4, track.height + 8), Brass);
+                Fill(new Rect(targetX - 2, track.y - 5, 4, track.height + 10), Brass);
                 float cursorX = track.x + Mathf.Clamp01(work.Cursor) * track.width;
-                bool aligned = Mathf.Abs(work.Cursor - work.Target) <= work.TargetWidth;
-                Fill(new Rect(cursorX - 5, track.y - 9, 10, track.height + 18), aligned ? Sea : MainText);
-                if (work.IsApplying && work.Mode == PanicWorkMode.Timing)
-                    Label(new Rect(1160, 354, 274, 28), aligned ? "ŞİMDİ!  SPACE" : "YEŞİLİ BEKLE", ColorText(_small, aligned ? Sea : SoftText));
-                if (work.IsApplying && work.Mode == PanicWorkMode.Balance)
-                {
-                    DrawBar(new Rect(1160, 363, 274, 13), work.StageProgress, Sea);
-                    Label(new Rect(1160, 386, 274, 24), "A / D dengele + Space", ColorText(_tiny, aligned ? Sea : Brass));
-                }
+                Frame(new Rect(cursorX - 5, track.y - 9, 10, track.height + 18), aligned ? Sea : MainText, aligned ? MainText : SoftText, 1f);
+                string hint = !work.IsApplying ? aligned ? "HİZALANDI · ENTER" : "A / D İLE HEDEFLE" : work.Mode == PanicWorkMode.Timing ? aligned ? "ŞİMDİ!  SPACE" : "YEŞİL BÖLGEYİ BEKLE" : "A / D + SPACE BASILI TUT";
+                Label(new Rect(x, 460, w, 30), hint, ColorText(_body, aligned ? Sea : Brass));
+                if (work.IsApplying && work.Mode == PanicWorkMode.Balance) DrawBar(new Rect(x, 501, w, 8), work.StageProgress, Sea);
             }
-
+            Label(new Rect(x, 533, w, 55), work.StepHint, _wrap);
             bool aim = !work.IsApplying;
-            DrawKeycap(new Rect(1158, 440, 130, 46), "A / D", aim ? "HEDEFLE" : work.Mode == PanicWorkMode.Ratchet ? "ÇEVİR" : "DENGELE", aim || work.Mode != PanicWorkMode.Timing ? Brass : Line);
-            DrawKeycap(new Rect(1295, 440, 130, 46), "ENTER", "YERLEŞTİR", aim ? Sea : Line);
-            string spaceAction = work.Mode == PanicWorkMode.Balance ? "BASILI TUT" : work.Mode == PanicWorkMode.Ratchet ? "OTURT" : "DOKUN";
-            DrawKeycap(new Rect(1158, 500, 267, 48), "SPACE", spaceAction, work.IsApplying ? Sea : Line);
-            Label(new Rect(1158, 572, 280, 58), work.StepHint, ColorText(_small, MainText));
-            DrawBar(new Rect(1158, 652, 267, 9), work.Progress, Sea);
-            DrawKeycap(new Rect(1158, 692, 267, 42), "ESC", "İPTAL", Line);
+            DrawKeycap(new Rect(x, 607, 184, 43), "A / D", aim ? "HİZALA" : work.Mode == PanicWorkMode.Ratchet ? "ÇEVİR" : "DENGELE", Brass);
+            DrawKeycap(new Rect(x + 196, 607, 188, 43), "ENTER", "KİLİTLE", aim ? Sea : Line);
+            string spaceAction = work.Mode == PanicWorkMode.Balance ? "BASILI TUT" : work.Mode == PanicWorkMode.Ratchet ? "OTURT" : "DOĞRU ANDA DOKUN";
+            DrawKeycap(new Rect(x, 662, w, 45), "SPACE", spaceAction, work.IsApplying ? Sea : Line);
+            DrawBar(new Rect(x, 734, w, 8), work.Progress, Sea);
+            Label(new Rect(x, 748, 170, 22), "TOPLAM İLERLEME", _tiny);
+            Label(new Rect(x + w - 94, 746, 94, 25), Mathf.RoundToInt(work.Progress * 100f) + "%", ColorText(_caps, Sea));
+            DrawKeycap(new Rect(x, 784, w, 35), "ESC", "İPTAL ET", Line);
         }
 
         void DrawControls(string[][] controls)
         {
-            float width = 147f;
-            float gap = 8f;
+            float width = controls.Length > 7 ? 155f : controls.Length > 5 ? 168f : 176f;
+            const float gap = 8f;
             float total = controls.Length * width + Mathf.Max(0, controls.Length - 1) * gap;
             float x = (CanvasWidth - total) * .5f;
             for (int i = 0; i < controls.Length; i++)
             {
                 string[] pair = controls[i];
-                Rect key = new Rect(x + i * (width + gap), 822, width, 46);
+                Rect key = new Rect(x + i * (width + gap), 836, width, 40);
                 DrawKeycap(key, pair[0], pair[1], i == 0 ? Sea : Line);
-                Mark(key);
             }
         }
 
@@ -780,57 +884,90 @@ namespace TooLateToPanic
 
         void DrawHelpCard()
         {
-            Rect panel = new Rect(34, 638, 390, 142);
-            Frame(panel, Night, Sea, 1f);
-            Label(new Rect(52, 648, 345, 24), "KONTROLLER", ColorText(_tiny, Brass));
-            Label(new Rect(52, 676, 346, 24), "WASD Yürü   ·   Space Zıpla", _tiny);
-            Label(new Rect(52, 700, 346, 24), "E Aç   ·   F Al   ·   Tab Çanta", _tiny);
-            Label(new Rect(52, 724, 346, 24), "H Kapat", ColorText(_tiny, Sea));
+            Rect panel = new Rect(24, 402, 378, 180);
+            Frame(panel, Night, new Color(Sea.r, Sea.g, Sea.b, .5f), 1f); Region(panel);
+            Brush(new Rect(38, 419, 177, 30), Petrol);
+            Label(new Rect(52, 418, 318, 32), "HIZLI HAZIRLIK", _body);
+            Label(new Rect(44, 463, 336, 27), "E ile aç · F ile seçiliyi al", _small);
+            Label(new Rect(44, 497, 336, 27), "Tab ile çantaya su ve gıda koy", _small);
+            Label(new Rect(44, 531, 336, 27), "1 / 2 / 3 ile önlem al · H kapat", ColorText(_tiny, Sea));
         }
 
         void DrawDisasterCue()
         {
-            Rect cue = new Rect(574, 116, 452, 42);
-            Frame(cue, new Color(.22f, .055f, .045f, .94f), Ember, 1f);
-            Label(new Rect(cue.x + 12, cue.y + 3, cue.width - 24, cue.height - 6), DisasterName(World.Model.Disaster), ColorText(_center, Ember));
+            float pulse = .45f + .25f * Mathf.Sin(Time.unscaledTime * 5f);
+            Fill(new Rect(0, 0, CanvasWidth, 5), new Color(Ember.r, Ember.g, Ember.b, pulse));
+            Fill(new Rect(0, 0, 5, CanvasHeight), new Color(Ember.r, Ember.g, Ember.b, pulse * .65f));
+            Fill(new Rect(CanvasWidth - 5, 0, 5, CanvasHeight), new Color(Ember.r, Ember.g, Ember.b, pulse * .65f));
+            Rect cue = new Rect(548, 156, 504, 72);
+            Frame(cue, new Color(.22f, .08f, .055f, .96f), new Color(Ember.r, Ember.g, Ember.b, .7f), 1f); Region(cue);
+            DrawWarning(new Rect(cue.x + 18, cue.y + 18, 34, 34), Ember);
+            Label(new Rect(cue.x + 72, cue.y + 6, cue.width - 88, 23), "AFET BAŞLADI", ColorText(_tiny, new Color(.96f, .63f, .53f)));
+            Label(new Rect(cue.x + 72, cue.y + 28, cue.width - 88, 37), DisasterName(World.Model.Disaster), _heading);
         }
 
         void DrawToast(string message)
         {
             if (string.IsNullOrEmpty(message)) return;
-            Rect toast = new Rect(518, 612, 564, 42);
-            Frame(toast, Panel, Brass, 1f);
-            Label(new Rect(toast.x + 14, toast.y + 6, toast.width - 28, 28), Clip(message, 56), _small);
+            float x = World.Model.IsSimulation ? 24 : World.Model.Phase == PanicPhase.Inspection ? 568 : 460;
+            Rect toast = new Rect(x, World.LootVisible ? 546 : 684, 680, 52);
+            Frame(toast, Night, Line, 1f); Region(toast);
+            Fill(new Rect(toast.x + 1, toast.y + 9, 3, toast.height - 18), Brass);
+            FittedLabel(new Rect(toast.x + 21, toast.y + 8, toast.width - 42, 36), message, _small, SoftText, 14);
         }
 
         void DrawLossReveal()
         {
-            Fill(new Rect(0, 0, CanvasWidth, CanvasHeight), new Color(.13f, .006f, .008f, .94f));
-            Fill(new Rect(0, 0, CanvasWidth, 8), Ember);
-            Fill(new Rect(0, CanvasHeight - 8, CanvasWidth, 8), Ember);
-            Label(new Rect(180, 348, 1240, 120), "SIĞINAĞA YETİŞEMEDİN", ColorText(_title, Color.white));
-            Label(new Rect(180, 482, 1240, 34), "KOŞU BİTTİ", ColorText(_small, new Color(1f, .74f, .71f)));
+            Fill(LogicalCanvasBounds, new Color(.13f, .025f, .018f, .83f));
+            DrawHazardStripe(new Rect(0, 0, CanvasWidth, 9), Ember);
+            DrawHazardStripe(new Rect(0, CanvasHeight - 9, CanvasWidth, 9), Ember);
+            DrawWarning(new Rect(753, 211, 94, 94), Ember);
+            bool deadline = World.CinematicKind == "Deadline";
+            bool bagFailure = World.CinematicKind == "BagFailure";
+            Label(new Rect(180, 337, 1240, 40), deadline ? "HAZIRLIK SÜRESİ DOLDU" : bagFailure ? "ÇANTADA EKSİK VAR" : "EVDE AĞIR HASAR VAR", ColorText(_center, Brass));
+            Brush(new Rect(226, 400, 1148, 102), Rust);
+            Label(new Rect(250, 391, 1100, 119), deadline ? World.Model.IsSimulation ? "SÜRE DOLDU" : "SIĞINAĞA YETİŞEMEDİN" : bagFailure ? "ERZAK YETMEDİ" : "ÖNLEM YETERSİZ", ColorText(_timer, MainText));
+            Label(new Rect(180, 548, 1240, 35), World.Model.IsSimulation ? "SİMÜLASYON BİTTİ" : "KOŞU BİTTİ", ColorText(_center, SoftText));
+            Region(new Rect(180, 211, 1240, 390));
         }
 
         void DrawCinematic()
         {
-            Fill(new Rect(0, 0, CanvasWidth, 150), new Color(.005f, .008f, .012f, .93f));
-            Fill(new Rect(0, CanvasHeight - 160, CanvasWidth, 160), new Color(.005f, .008f, .012f, .93f));
+            float appear = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(World.CinematicProgress * 5f));
+            float band = Mathf.Lerp(90f, 132f, appear);
+            Fill(new Rect(0, 0, CanvasWidth, band), new Color(.035f, .03f, .025f, .97f));
+            Fill(new Rect(0, CanvasHeight - band - 18, CanvasWidth, band + 18), new Color(.035f, .03f, .025f, .97f));
+            DrawDot(new Rect(64, 53, 9, 9), Ember);
+            Label(new Rect(88, 42, 900, 31), "TOO LATE TO PANIC!  /  " + DisasterName(World.Model.Disaster), _tiny);
             string title = string.IsNullOrEmpty(World.CinematicTitle) ? "KURTARMA" : Clip(World.CinematicTitle, 70);
-            Label(new Rect(90, CanvasHeight - 116, 1420, 50), title, ColorText(_heading, MainText));
-            DrawBar(new Rect(90, CanvasHeight - 42, 1420, 3), World.CinematicProgress, Brass);
+            Brush(new Rect(72, CanvasHeight - 116, 24, 68), Rust);
+            Label(new Rect(116, CanvasHeight - 120, 1394, 73), title, _title);
+            DrawBar(new Rect(78, CanvasHeight - 29, 1444, 4), World.CinematicProgress, Brass);
+            Region(new Rect(0, 0, CanvasWidth, band));
+            Region(new Rect(0, CanvasHeight - band - 18, CanvasWidth, band + 18));
+            Button(new Rect(1250, 38, 282, 52), "SAHNEYİ ATLA · ENTER", false, Brass, World.SkipResidenceCinematic);
+            if (!DeveloperInputBlockedThisFrame && World.CancelFrame != Time.frameCount && Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter))
+            { World.SkipResidenceCinematic(); Event.current.Use(); }
         }
 
         void DrawInspection()
         {
             BuildInspectionList();
-            Rect panel = new Rect(34, 720, 500, 82);
-            Frame(panel, Night, Brass, 1f);
+            Rect panel = new Rect(24, 636, 504, 174);
+            Frame(panel, Night, Line, 1f); Region(panel);
             int total = Mathf.Max(1, _inspectionItems.Count);
             int step = Mathf.Clamp(_inspectionStep, 0, total - 1);
-            string target = _inspectionItems.Count > 0 ? Clip(_inspectionItems[step].Label, 26) : "EV";
-            Label(new Rect(52, 730, 460, 24), "HASAR " + Mathf.Min(step + 1, total) + "/" + total + "   " + target, ColorText(_small, Brass));
-            Label(new Rect(52, 758, 460, 22), "HASAR " + World.Model.TotalDamage.ToString("0.#") + "%", _tiny);
+            string target = _inspectionItems.Count > 0 ? Clip(_inspectionItems[step].Label, 36) : "EV";
+            if (_inspectionItems.Count > 0)
+            {
+                int targetFloor = Mathf.Clamp(Mathf.FloorToInt((_inspectionItems[step].Position.y + .65f) / 3.2f), -1, 1);
+                if (targetFloor != World.ActiveFloor) target += targetFloor > World.ActiveFloor ? " · ÜST KAT" : " · ALT KAT";
+            }
+            Brush(new Rect(39, 651, 246, 33), Rust);
+            Label(new Rect(54, 648, 450, 39), "HASAR GEZİSİ  " + Mathf.Min(step + 1, total) + "/" + total, _body);
+            Label(new Rect(45, 700, 460, 32), target, _display);
+            Label(new Rect(45, 751, 232, 25), "TOPLAM HASAR", _tiny);
+            Label(new Rect(293, 740, 208, 45), World.Model.TotalDamage.ToString("0.#") + "%", ColorText(_right, World.Model.TotalDamage >= 50f ? Brass : Sea));
             DrawControls(ContextControls());
             HandleInspectionEvent();
         }
@@ -879,16 +1016,22 @@ namespace TooLateToPanic
 
         void DrawPause()
         {
-            Fill(new Rect(0, 0, CanvasWidth, CanvasHeight), new Color(.015f, .025f, .03f, .58f));
-            Rect panel = new Rect(500, 210, 600, 480);
-            Frame(panel, Night, Brass, 1.5f);
-            Mark(panel);
-            Label(new Rect(548, 244, 500, 50), "DURAKLATILDI", _title);
-            Button(new Rect(548, 322, 500, 54), "Devam et", true, Sea, () => SetPaused(false));
-            Button(new Rect(548, 390, 500, 54), "Geliştirici · F2", false, Brass, ToggleDeveloperMenu);
-            Button(new Rect(548, 458, 500, 54), "Yeniden başla", false, Brass, RestartRun);
-            Button(new Rect(548, 526, 500, 54), "Başlık", false, SoftText, ReturnToMenu);
-            DrawKeycap(new Rect(548, 604, 132, 34), "ESC", "GERİ", Line);
+            Fill(LogicalCanvasBounds, new Color(.055f, .05f, .045f, .57f));
+            Rect panel = new Rect(96, 176, 1408, 612);
+            Frame(panel, Night, Line, 1f); Region(panel);
+            Label(new Rect(156, 224, 634, 30), World.JuryActive ? "KONTROLLER DURDU · SÜRE DEVAM EDİYOR" : "KISA BİR MOLA", ColorText(_tiny, Brass));
+            Label(new Rect(152, 262, 700, 74), World.JuryActive ? "KISA BİR MOLA" : "DURAKLATILDI", _timer);
+            DrawWatch(new Rect(157, 379, 94, 112), Rust);
+            Brush(new Rect(148, 509, 624, 51), Rust);
+            Label(new Rect(277, 346, 520, 176), FormatTime(World.Model.TimeRemaining), ColorText(_mega, Brass));
+            Frame(new Rect(161, 588, 236, 36), new Color(Petrol.r, Petrol.g, Petrol.b, .3f), Sea, 1f);
+            Label(new Rect(174, 590, 210, 30), World.JuryActive ? "II   GİRDİ DURDU" : "II   OYUN DURDU", ColorText(_caps, Sea));
+            Label(new Rect(161, 660, 600, 56), World.JuryActive ? "Hazırlık süresi devam ediyor.\nHazır olduğunda devam et veya yeniden başla." : "Sıradaki adım: su ve gıdayı çantana koy,\nsonra evini afet için güçlendir.", _wrap);
+            Button(new Rect(912, 263, 508, 68), "DEVAM ET", true, Brass, () => SetPaused(false));
+            Button(new Rect(924, 350, 496, 62), "GELİŞTİRİCİ · F2", false, Sea, ToggleDeveloperMenu);
+            Button(new Rect(924, 430, 496, 62), "YENİDEN BAŞLA", false, Brass, RestartRun);
+            Button(new Rect(924, 510, 496, 62), "BAŞLIĞA DÖN", false, Rust, ReturnToMenu);
+            DrawKeycap(new Rect(925, 662, 220, 42), "ESC", "DEVAM ET", Line);
         }
 
         bool DeveloperBudgetAvailable()
@@ -900,55 +1043,54 @@ namespace TooLateToPanic
 
         void DrawDeveloperMenu()
         {
-            Fill(new Rect(0, 0, CanvasWidth, CanvasHeight), new Color(.012f, .022f, .028f, .84f));
-            Mark(new Rect(0, 0, CanvasWidth, CanvasHeight));
-            Rect panel = new Rect(350, 124, 900, 652);
-            Frame(panel, Night, Brass, 1.5f);
-            Label(new Rect(388, 148, 640, 44), "GELİŞTİRİCİ", ColorText(_title, Brass));
-            Label(new Rect(388, 199, 820, 28), "Seçenekleri tek tek açıp kapatabilirsin.", _body);
+            Fill(LogicalCanvasBounds, new Color(.05f, .045f, .04f, .78f));
+            Mark(LogicalCanvasBounds);
+            _topLevelRegions.Clear(); // Underlying status is dimmed by this modal.
+            Rect panel = new Rect(314, 108, 972, 696);
+            Frame(panel, Night, Line, 1f); Region(panel);
+            Brush(new Rect(338, 130, 352, 46), Petrol);
+            Label(new Rect(358, 124, 820, 53), "GELİŞTİRİCİ", _title);
+            Label(new Rect(352, 195, 876, 30), "Hazırlığı kendi hızında dene.", _body);
             string state = World.Model.Phase == PanicPhase.Title
                 ? "Seçimler sonraki koşuya uygulanır. Menüyü açmak skoru etkilemez."
-                : "Oyun duraklatıldı. Bir hileyi açarsan bu koşunun skoru kaydedilmez.";
-            Label(new Rect(388, 232, 820, 26), state, _small);
-
-            DrawDeveloperToggle(new Rect(388, 278, 824, 80), PanicDeveloperOption.InfiniteBudget,
+                : World.JuryActive ? "Kontroller durdu; süre devam ediyor. Seçenekler skoru etkiler." : "Oyun durdu. Bir hileyi açarsan bu koşunun skoru kaydedilmez.";
+            Label(new Rect(352, 234, 884, 30), state, _small);
+            DrawDeveloperToggle(new Rect(352, 284, 896, 70), PanicDeveloperOption.InfiniteBudget,
                 "Sınırsız bütçe", "İş ve yükseltmeler bütçeyi azaltmaz.", World.Model.Developer.InfiniteBudget, 0);
-            DrawDeveloperToggle(new Rect(388, 368, 824, 80), PanicDeveloperOption.FreeMaterials,
+            DrawDeveloperToggle(new Rect(352, 364, 896, 70), PanicDeveloperOption.FreeMaterials,
                 "Malzeme harcama", "Gerekli malzemeler aranmaz ve tüketilmez.", World.Model.Developer.FreeMaterials, 1);
-            DrawDeveloperToggle(new Rect(388, 458, 824, 80), PanicDeveloperOption.FreezePreparationTime,
-                "Hazırlık süresini durdur", "Hazırlık sayacı ilerlemez.", World.Model.Developer.FreezePreparationTime, 2);
-
+            DrawDeveloperToggle(new Rect(352, 444, 896, 70), PanicDeveloperOption.FreezePreparationTime,
+                "Hazırlık süresini durdur", "Yalnız hazırlık sayacı durur.", World.Model.Developer.FreezePreparationTime, 2);
+            DrawDeveloperToggle(new Rect(352, 524, 896, 70), PanicDeveloperOption.NoLoss,
+                "Kaybetmeme", "Afetler ve hasar sürer; kayıp ve dalga ödülü uygulanmaz.", World.Model.Developer.NoLoss, 3);
             bool canAdd = DeveloperBudgetAvailable();
-            Rect budget = new Rect(388, 558, 394, 52);
-            if (canAdd)
-                Button(budget, "+1.000 ₺ bütçe", _developerChoice == 3, Sea, () => World.Model.AddDeveloperBudget(1000));
+            Rect budget = new Rect(352, 610, 408, 42);
+            if (canAdd) Button(budget, "+$1.000 BÜTÇE", _developerChoice == 4, Sea, () => World.Model.AddDeveloperBudget(1000));
             else
             {
-                Frame(budget, Panel, _developerChoice == 3 ? Brass : Line, 1f);
-                Mark(budget);
-                Label(budget, "+1.000 ₺ · Koşuda kullanılabilir", ColorText(_center, SoftText));
+                Frame(budget, Panel, _developerChoice == 4 ? Brass : Line, 1f); Mark(budget);
+                Label(budget, "+$1.000 · Koşuda kullanılabilir", ColorText(_center, Muted));
             }
-            string activeState = World.Model.DeveloperAnyEnabled ? "HİLE SEÇENEĞİ AÇIK" : "TÜM SEÇENEKLER KAPALI";
-            Label(new Rect(808, 562, 404, 42), activeState, ColorText(_tiny, World.Model.DeveloperAnyEnabled ? Brass : SoftText));
-            Label(new Rect(388, 628, 824, 26), World.Model.CheatedRun
+            Label(new Rect(786, 610, 462, 42), World.Model.DeveloperAnyEnabled ? "HİLE SEÇENEĞİ AÇIK" : "TÜM SEÇENEKLER KAPALI", ColorText(_caps, World.Model.DeveloperAnyEnabled ? Brass : Muted));
+            Label(new Rect(352, 665, 896, 27), World.Model.CheatedRun
                 ? "HİLELİ KOŞU · Seçenekleri kapatsan da skor kaydedilmez."
-                : "Bir hileyi açmak veya bütçe eklemek koşuyu hileli işaretler.", ColorText(_small, World.Model.CheatedRun ? Brass : SoftText));
-            Button(new Rect(918, 686, 294, 48), "Kapat · F2 / Esc", _developerChoice == 4, Sea, () => SetDeveloperMenuOpen(false));
-            DrawKeycap(new Rect(388, 690, 190, 38), "↑ ↓", "SEÇ", Line);
-            DrawKeycap(new Rect(590, 690, 250, 38), "ENTER / SPACE", "DEĞİŞTİR", Line);
+                : "Bir hileyi açmak veya bütçe eklemek bu koşuyu hileli işaretler.", ColorText(_small, World.Model.CheatedRun ? Brass : Muted));
+            DrawKeycap(new Rect(352, 716, 170, 42), "OKLAR", "SEÇ", Line);
+            DrawKeycap(new Rect(534, 716, 284, 42), "ENTER / SPACE", "DEĞİŞTİR", Line);
+            Button(new Rect(914, 708, 334, 56), "KAPAT · F2 / ESC", _developerChoice == 5, Sea, () => SetDeveloperMenuOpen(false));
             HandleDeveloperMenuEvent();
         }
 
         void DrawDeveloperToggle(Rect rect, PanicDeveloperOption option, string title, string description, bool enabled, int choice)
         {
             bool selected = _developerChoice == choice;
-            Frame(rect, enabled ? new Color(.08f, .15f, .14f, .98f) : Panel, selected ? Brass : enabled ? Sea : Line, selected ? 2f : 1f);
+            Frame(rect, enabled ? new Color(Petrol.r, Petrol.g, Petrol.b, .24f) : Panel, selected ? Brass : enabled ? Sea : Line, selected ? 2f : 1f);
             Mark(rect);
-            Label(new Rect(rect.x + 18, rect.y + 10, rect.width - 170, 30), title, ColorText(_body, enabled ? Sea : MainText));
-            Label(new Rect(rect.x + 18, rect.y + 43, rect.width - 170, 25), description, _small);
-            Rect toggle = new Rect(rect.xMax - 124, rect.y + 20, 104, 40);
-            Frame(toggle, enabled ? new Color(.14f, .30f, .24f, 1f) : Raised, enabled ? Sea : Line, 1f);
-            Label(toggle, enabled ? "AÇIK" : "KAPALI", ColorText(_center, enabled ? Sea : SoftText));
+            Label(new Rect(rect.x + 20, rect.y + 6, rect.width - 190, 29), title, ColorText(_body, MainText));
+            Label(new Rect(rect.x + 20, rect.y + 36, rect.width - 190, 25), description, _small);
+            Rect toggle = new Rect(rect.xMax - 132, rect.y + 23, 108, 38);
+            Frame(toggle, enabled ? Petrol : Night, enabled ? Sea : Line, 1f);
+            Label(toggle, enabled ? "AÇIK" : "KAPALI", ColorText(_caps, enabled ? MainText : Muted));
             if (MousePressed(rect))
             {
                 _developerChoice = choice;
@@ -963,12 +1105,12 @@ namespace TooLateToPanic
             if (e.type != EventType.KeyDown) return;
             if (e.keyCode == KeyCode.UpArrow)
             {
-                _developerChoice = (_developerChoice + 4) % 5;
+                _developerChoice = (_developerChoice + 5) % 6;
                 e.Use();
             }
             else if (e.keyCode == KeyCode.DownArrow)
             {
-                _developerChoice = (_developerChoice + 1) % 5;
+                _developerChoice = (_developerChoice + 1) % 6;
                 e.Use();
             }
             else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter || e.keyCode == KeyCode.Space)
@@ -976,29 +1118,51 @@ namespace TooLateToPanic
                 if (_developerChoice == 0) World.Model.SetDeveloperOption(PanicDeveloperOption.InfiniteBudget, !World.Model.Developer.InfiniteBudget);
                 else if (_developerChoice == 1) World.Model.SetDeveloperOption(PanicDeveloperOption.FreeMaterials, !World.Model.Developer.FreeMaterials);
                 else if (_developerChoice == 2) World.Model.SetDeveloperOption(PanicDeveloperOption.FreezePreparationTime, !World.Model.Developer.FreezePreparationTime);
-                else if (_developerChoice == 3 && DeveloperBudgetAvailable()) World.Model.AddDeveloperBudget(1000);
-                else if (_developerChoice == 4) SetDeveloperMenuOpen(false);
+                else if (_developerChoice == 3) World.Model.SetDeveloperOption(PanicDeveloperOption.NoLoss, !World.Model.Developer.NoLoss);
+                else if (_developerChoice == 4 && DeveloperBudgetAvailable()) World.Model.AddDeveloperBudget(1000);
+                else if (_developerChoice == 5) SetDeveloperMenuOpen(false);
                 e.Use();
             }
         }
 
         void DrawCheatedRunIndicator()
         {
-            Rect badge = new Rect(24, 875, 524, 22);
-            Frame(badge, Night, Brass, 1f);
-            Label(badge, "HİLELİ KOŞU · Skor kaydedilmez", ColorText(_tiny, Brass));
+            Rect badge = new Rect(24, 879, 395, 20);
+            Fill(badge, Night);
+            Fill(new Rect(24, 879, 3, 20), Brass);
+            Label(new Rect(36, 878, 377, 22), "HİLELİ KOŞU  /  SKOR KAYDEDİLMEZ", ColorText(_tiny, Brass));
         }
 
         void DrawEndCard()
         {
-            Fill(new Rect(0, 0, CanvasWidth, CanvasHeight), new Color(.015f, .025f, .03f, .66f));
+            Fill(LogicalCanvasBounds, new Color(.055f, .05f, .045f, .66f));
             bool won = World.Model.Phase == PanicPhase.Success;
-            Rect panel = new Rect(390, 248, 820, 404);
-            Frame(panel, Night, won ? Sea : Ember, 1.5f);
-            Label(new Rect(444, 292, 720, 42), won ? "EV GÜVENDE" : "KOŞU BİTTİ", ColorText(_heading, won ? Sea : Ember));
-            Label(new Rect(444, 348, 720, 36), "DALGA " + World.Model.CompletedWaves + "   ·   PUAN " + World.Model.Score.ToString("N0"), _body);
-            Button(new Rect(444, 430, 330, 54), "Yeniden başla", true, Sea, RestartRun);
-            Button(new Rect(792, 430, 330, 54), "Başlık", false, Brass, ReturnToMenu);
+            Color accent = won ? Sea : Ember;
+            Rect panel = new Rect(276, 220, 1048, 536);
+            Frame(panel, Night, Line, 1f); Region(panel);
+            DrawHazardStripe(new Rect(306, 250, 240, 5), accent);
+            Label(new Rect(316, 278, 968, 29), won ? "HAZIRLIĞIN İŞE YARADI" : "BİR SONRAKİ KOŞUYA HAZIRLAN", ColorText(_tiny, accent));
+            Brush(new Rect(306, 331, 968, 72), won ? Petrol : Rust);
+            Label(new Rect(332, 321, 924, 92), won ? "EV GÜVENDE" : "KOŞU BİTTİ", _timer);
+            Label(new Rect(318, 442, 265, 24), "TAMAMLANAN DALGA", _tiny);
+            Label(new Rect(318, 474, 265, 57), World.Model.CompletedWaves.ToString("00"), _title);
+            Label(new Rect(646, 442, 290, 24), "TOPLAM PUAN", _tiny);
+            Label(new Rect(646, 474, 290, 57), World.Model.Score.ToString("N0"), ColorText(_title, Brass));
+            Label(new Rect(1000, 442, 260, 24), "EVDEKİ HASAR", _tiny);
+            Label(new Rect(1000, 474, 260, 57), World.Model.TotalDamage.ToString("0.#") + "%", ColorText(_title, accent));
+            string detail = World.Model.CheatedRun ? "Hileli koşu · Bu skor kaydedilmez." : won ? "Afete hazırlık evini korudu." : World.Model.FailureReason;
+            Label(new Rect(318, 558, 942, 46), Clip(detail, 130), _wrap);
+            if (World.Model.IsSimulation && World.Model.SimulationComplete)
+            {
+                Button(new Rect(318, 650, 300, 58), "HASARI İNCELE", true, Brass, () => { _inspectionStep = 0; World.InspectSimulationDamage(); });
+                Button(new Rect(632, 650, 300, 58), "TEKRAR DENE", false, Sea, RestartRun);
+                Button(new Rect(946, 650, 314, 58), "ANA MENÜ", false, Line, ReturnToMenu);
+            }
+            else
+            {
+                Button(new Rect(318, 650, 454, 58), "YENİDEN BAŞLA", true, Brass, RestartRun);
+                Button(new Rect(790, 650, 470, 58), "BAŞLIĞA DÖN", false, Sea, ReturnToMenu);
+            }
         }
 
         void StartRun()
@@ -1019,6 +1183,8 @@ namespace TooLateToPanic
 
         void RestartRun()
         {
+            if (World.JuryActive) { StartJuryRun(); return; }
+            if (World.Model.IsSimulation) { StartSelectedSimulation(World.Model.Disaster); return; }
             if (_paused) SetPaused(false);
             _helpVisible = false;
             _inspectionStep = 0;
@@ -1027,6 +1193,7 @@ namespace TooLateToPanic
 
         void ReturnToMenu()
         {
+            simulationSelectOpen=false;
             if (_paused) SetPaused(false);
             _helpVisible = false;
             World.ReturnToMenu();
@@ -1034,9 +1201,17 @@ namespace TooLateToPanic
 
         void Button(Rect rect, string text, bool selected, Color accent, Action action)
         {
-            Frame(rect, selected ? new Color(.11f, .17f, .17f, .98f) : Raised,
-                selected ? accent : Line, selected ? 1.6f : 1f);
-            Label(rect, text, ColorText(_center, selected ? accent : MainText));
+            bool hover = rect.Contains(LogicalPointer());
+            Frame(rect, selected ? accent : hover ? Raised : Panel, selected || hover ? accent : Line, 1f);
+            if (selected) Fill(new Rect(rect.x - 6, rect.y + 7, 4, rect.height - 14), Petrol);
+            Label(new Rect(rect.x + 22, rect.y + 2, rect.width - 50, rect.height - 4), text,
+                ColorText(_body, selected ? Night : MainText));
+            if (selected || hover)
+            {
+                float cx = rect.xMax - 25;
+                DrawLine(new Vector2(cx - 5, rect.center.y - 6), new Vector2(cx + 1, rect.center.y), selected ? Night : accent, 2f);
+                DrawLine(new Vector2(cx + 1, rect.center.y), new Vector2(cx - 5, rect.center.y + 6), selected ? Night : accent, 2f);
+            }
             Mark(rect);
             if (!_developerMenuOpen && DeveloperInputBlockedThisFrame) return;
             if (MousePressed(rect) && action != null) action();
@@ -1044,26 +1219,32 @@ namespace TooLateToPanic
 
         void DrawKeycap(Rect rect, string key, string action, Color accent)
         {
-            Frame(rect, Panel, accent, 1f);
-            float keyWidth = Mathf.Max(_caps.CalcSize(new GUIContent(key)).x + 10f,key.Length*9f+12f);
-            float actionWidth = _caps.CalcSize(new GUIContent(action)).x + 10f;
-            var keyColor=accent.a<.5f?SoftText:new Color(accent.r,accent.g,accent.b,1f);
-            if(keyWidth+actionWidth+10f>rect.width)
-            {
-                Label(new Rect(rect.x+3,rect.y+1,rect.width-6,rect.height*.5f),key,ColorText(_tiny,keyColor));
-                Label(new Rect(rect.x+3,rect.y+rect.height*.5f-1,rect.width-6,rect.height*.5f),action,_caps);
-            }
-            else
-            {
-                Label(new Rect(rect.x + 4, rect.y + 1, keyWidth, rect.height - 2), key, ColorText(_caps, keyColor));
-                Label(new Rect(rect.x + keyWidth + 5, rect.y + 1, rect.width - keyWidth - 9, rect.height - 2), action, _caps);
-            }
+            Frame(rect, Night, accent.a > .5f ? new Color(accent.r, accent.g, accent.b, .50f) : Line, 1f);
+            Mark(rect);
+            float desiredKey = _caps.CalcSize(new GUIContent(key)).x + 16f;
+            float actionWidth = _caps.CalcSize(new GUIContent(action)).x;
+            float keyWidth = Mathf.Clamp(desiredKey, 28f, Mathf.Max(28f, rect.width - Mathf.Min(actionWidth, rect.width * .55f) - 28f));
+            float keyHeight = Mathf.Min(28f, rect.height - 10f);
+            Rect cap = new Rect(rect.x + 6, rect.center.y - keyHeight * .5f - 1f, keyWidth, keyHeight);
+            bool hot = accent.a > .5f;
+            Color capColor = hot ? accent : SoftText;
+            RoundFill(new Rect(cap.x, cap.y + 3, cap.width, cap.height), hot ? new Color(accent.r * .5f, accent.g * .5f, accent.b * .5f, 1f) : new Color(.4f, .37f, .33f, 1f));
+            RoundFill(cap, capColor);
+            FittedLabel(cap, key, _caps, Night, 11);
+            Rect label = new Rect(cap.xMax + 9, rect.y + 1, rect.xMax - cap.xMax - 15, rect.height - 2);
+            FittedLabel(label, action, _caps, MainText, 11);
         }
 
         void DrawIcon(Rect rect, string id)
         {
             if (string.IsNullOrEmpty(id)) return;
-            Texture2D icon = PanicResidenceArt.Icon(id);
+            Texture icon = null;
+            if (id == "water" || id == "food")
+            {
+                if (_supplyPreviews == null) _supplyPreviews = new PanicHudSupplyPreview();
+                icon = _supplyPreviews.Get(id);
+            }
+            if (!icon) icon = PanicResidenceArt.Icon(id);
             if (icon) GUI.DrawTexture(rect, icon, ScaleMode.ScaleToFit, true);
         }
 
@@ -1096,18 +1277,41 @@ namespace TooLateToPanic
 
         void DrawBar(Rect rect, float value, Color color)
         {
-            Fill(rect, new Color(.02f, .035f, .04f, 1f));
-            Fill(new Rect(rect.x, rect.y, rect.width * Mathf.Clamp01(value), rect.height), color);
+            RoundFill(rect, new Color(.035f, .03f, .025f, .9f));
+            float width = rect.width * Mathf.Clamp01(value);
+            if (width > 0f) RoundFill(new Rect(rect.x, rect.y, width, rect.height), color);
         }
 
         bool MousePressed(Rect rect)
         {
             Event e = Event.current;
-            Vector2 mouse = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
-            Vector2 point = (mouse - _offset) / _scale;
-            if (e.type != EventType.MouseDown || e.button != 0 || !rect.Contains(point)) return false;
+            // IMGUI already transforms event coordinates through GUI.matrix. Use the
+            // position belonging to this click, even if the physical cursor moved.
+            if (e.type != EventType.MouseDown || e.button != 0 || !rect.Contains(e.mousePosition)) return false;
             e.Use();
             return true;
+        }
+
+        void DrawTutorialActions()
+        {
+            if (!World.Model.IsTutorial || World.Model.Phase != PanicPhase.Tutorial ||
+                World.LootVisible || World.WorkActive || World.InventoryOpen || World.IsMoving) return;
+            Button(new Rect(1120, 754, 456, 54), "ÖĞRETİCİYİ BİTİR · N", false, Sea, FinishTutorialRun);
+            Event e = Event.current;
+            if (!DeveloperInputBlockedThisFrame && World.CancelFrame != Time.frameCount &&
+                e.type == EventType.KeyDown && e.keyCode == KeyCode.N)
+            { FinishTutorialRun(); e.Use(); }
+        }
+
+        void FinishTutorialRun()
+        {
+            if (!World || World.Model == null || !World.Model.IsTutorial ||
+                World.Model.Phase != PanicPhase.Tutorial || World.WorkActive ||
+                World.InventoryOpen || World.IsMoving || World.CinematicActive ||
+                World.LossAnnounced || _paused || DeveloperMenuOpen || DeveloperInputBlockedThisFrame ||
+                World.CancelFrame == Time.frameCount) return;
+            _helpVisible = false; _inspectionStep = 0; _inspectionFocusId = null;
+            World.FinishTutorial();
         }
 
         void Label(Rect rect, string text, GUIStyle style)
@@ -1128,11 +1332,366 @@ namespace TooLateToPanic
 
         static void Frame(Rect rect, Color fill, Color edge, float thickness)
         {
-            Fill(rect, fill);
-            Fill(new Rect(rect.x, rect.y, rect.width, thickness), edge);
-            Fill(new Rect(rect.x, rect.yMax - thickness, rect.width, thickness), edge);
-            Fill(new Rect(rect.x, rect.y, thickness, rect.height), edge);
-            Fill(new Rect(rect.xMax - thickness, rect.y, thickness, rect.height), edge);
+            RoundFill(new Rect(rect.x, rect.y + 4, rect.width, rect.height), new Color(0f, 0f, 0f, .18f));
+            // Blend the translucent fill against the dark panel, rather than the full bright outline underneath.
+            Color opaqueFill = Color.Lerp(new Color(Night.r, Night.g, Night.b, 1f), new Color(fill.r, fill.g, fill.b, 1f), fill.a);
+            RoundFill(rect, edge);
+            Rect inner = new Rect(rect.x + thickness, rect.y + thickness, rect.width - thickness * 2, rect.height - thickness * 2);
+            RoundFill(inner, opaqueFill);
+            if (rect.width > 80 && rect.height > 32)
+                Fill(new Rect(rect.x + 9, rect.y + thickness + 1, rect.width - 18, 1), new Color(1f, .95f, .85f, .035f));
+        }
+
+
+        // World calls this from its own OnGUI; screen projection stays tied to the live camera.
+        // Markers never register a UI hit rectangle, so they cannot eat the world's mouse input.
+        public void DrawWorldMarker(Vector3 worldPosition, string label, float width, bool guidance = false)
+        {
+            if (!World || !World.View || _paused || DeveloperMenuOpen || DeveloperInputBlockedThisFrame ||
+                World.InventoryOpen || World.WorkActive || World.CinematicActive || World.LossAnnounced) return;
+            Vector3 projected = World.View.WorldToScreenPoint(worldPosition);
+            if (projected.z <= 0f) return;
+            PrepareCanvas(); EnsureStyles();
+            Matrix4x4 priorMatrix = GUI.matrix;
+            Color priorColor = GUI.color;
+            GUI.matrix = Matrix4x4.TRS(new Vector3(_offset.x, _offset.y, 0), Quaternion.identity, new Vector3(_scale, _scale, 1));
+            GUI.color = Color.white;
+            Vector2 logical = (new Vector2(projected.x, Screen.height - projected.y) - _offset) / _scale;
+            string text = label ?? "";
+            string key = text.StartsWith("E  ", StringComparison.Ordinal) ? "E" : text.StartsWith("!", StringComparison.Ordinal) ? "!" : "";
+            if (key == "E") text = text.Substring(3);
+            else if (key == "!") text = text.Substring(1).Trim();
+            float desired = Mathf.Max(width, _small.CalcSize(new GUIContent(text)).x + (key.Length > 0 ? 70f : 28f));
+            desired = Mathf.Clamp(desired, 112f, 430f);
+            Rect rect = new Rect(Mathf.Clamp(logical.x - desired * .5f, 12f, CanvasWidth - desired - 12f),
+                Mathf.Clamp(logical.y, 142f, CanvasHeight - 110f), desired, 41f);
+            rect = ClearWorldMarkerBounds(rect);
+            if (guidance && rect.Overlaps(JuryObjectiveBounds))
+                rect.x = JuryObjectiveBounds.xMax + 14f;
+            if (World.JuryActive && (rect.Overlaps(JuryObjectiveBounds) || (World.LootVisible && rect.yMax > 600f))) { GUI.matrix = priorMatrix; GUI.color = priorColor; return; }
+            Frame(rect, Night, new Color(Brass.r, Brass.g, Brass.b, .55f), 1f);
+            if (key.Length > 0)
+            {
+                Rect cap = new Rect(rect.x + 7, rect.y + 7, 27, 27);
+                RoundFill(cap, key == "!" ? Rust : Brass);
+                GUI.Label(cap, key, ColorText(_caps, key == "!" ? MainText : Night));
+            }
+            GUI.Label(new Rect(rect.x + (key.Length > 0 ? 44 : 14), rect.y + 6, rect.width - (key.Length > 0 ? 53 : 28), 29), text, ColorText(_small, MainText));
+            DrawDot(new Rect(rect.center.x - 3, rect.yMax + 7, 6, 6), Brass);
+            GUI.matrix = priorMatrix;
+            GUI.color = priorColor;
+        }
+
+        void DrawTimerCard()
+        {
+            PanicModel model = World.Model;
+            bool preparation = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
+            bool timed = preparation || model.Phase == PanicPhase.Disaster || model.Phase == PanicPhase.Aftermath || model.Phase == PanicPhase.Inspection;
+            float value = preparation ? model.TimeRemaining : timed ? model.PhaseTime : 0f;
+            if (_timerWave != model.Wave || _timerPhase != model.Phase)
+            {
+                _timerWave = model.Wave;
+                _timerPhase = model.Phase;
+                _timerMaximum = Mathf.Max(1f, value);
+            }
+            _timerMaximum = Mathf.Max(_timerMaximum, value);
+            Color accent = TimerAlarmActive ? Ember : Sea;
+            Rect timer = TimerCardBounds;
+            if (TimerAlarmActive)
+            {
+                float pulse = .12f + .12f * (.5f + .5f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f));
+                RoundFill(new Rect(timer.x - 4, timer.y - 4, timer.width + 8, timer.height + 8), new Color(Ember.r, Ember.g, Ember.b, pulse));
+            }
+            Frame(timer, Night, TimerAlarmActive ? new Color(Ember.r, Ember.g, Ember.b, .7f) : Line, 1f);
+            Region(timer);
+            DrawWatch(new Rect(630, 32, 45, 53), TimerAlarmActive ? Ember : Rust);
+            string digits = timed ? FormatTime(value) : "--:--";
+            Label(new Rect(687, 13, 187, 80), digits, ColorText(_timer, TimerAlarmActive ? Ember : MainText));
+            string phase = _paused ? "DURDU" : preparation && model.FreezePreparationTime ? "DONDU" : preparation ? "HAZIRLIK" : PhaseName(model.Phase);
+            FittedLabel(new Rect(876, 35, 100, 25), phase, _tiny, accent, 12);
+            Label(new Rect(876, 60, 100, 22), preparation ? TimerAlarmActive ? "SON 60 SN" : "KALAN SÜRE" : "DURUM", _tiny);
+            Rect track = new Rect(635, 99, 330, 6);
+            DrawBar(track, value / _timerMaximum, accent);
+            if (preparation && _timerMaximum > 60f)
+            {
+                float notch = track.x + track.width * (60f / _timerMaximum);
+                Fill(new Rect(notch - 1, track.y - 3, 2, 12), Brass);
+            }
+            if (TimerAlarmActive && !_paused && !World.InventoryOpen && !World.WorkActive &&
+                (string.IsNullOrEmpty(_developerNotice) || Time.unscaledTime >= _developerNoticeUntil))
+            {
+                Rect banner = new Rect(588, 140, 424, 44);
+                Frame(banner, new Color(.24f, .075f, .05f, .96f), new Color(Ember.r, Ember.g, Ember.b, .55f), 1f);
+                DrawWarning(new Rect(601, 151, 20, 20), Ember);
+                Label(new Rect(632, 144, 367, 35), model.IsSimulation ? "ÖNLEMİNİ BİTİR · AFETİ BAŞLAT" : "AZ KALDI · SIĞINAĞA YETİŞ!", ColorText(_center, MainText));
+                Region(banner);
+            }
+        }
+
+        void DrawRequirementRow(Rect row, PanicMaterialRequirement requirement)
+        {
+            bool enough = requirement.Missing <= 0;
+            Frame(row, enough ? new Color(Petrol.r, Petrol.g, Petrol.b, .20f) : Panel,
+                enough ? new Color(Sea.r, Sea.g, Sea.b, .45f) : Line, 1f);
+            DrawIcon(new Rect(row.x + 7, row.y + 5, 63, 63), requirement.Id);
+            Label(new Rect(row.x + 97, row.y + 7, 138, 30), SlotName(new SupplySlot(requirement.Id, 1)), _body);
+            int pips = Mathf.Min(6, Mathf.Max(1, requirement.Required));
+            for (int i = 0; i < pips; i++)
+                Fill(new Rect(row.x + 98 + i * 17, row.y + 48, 12, 6), i < requirement.Owned ? Sea : new Color(Muted.r, Muted.g, Muted.b, .25f));
+            Label(new Rect(row.x + 238, row.y + 15, 58, 43), requirement.Owned.ToString(), ColorText(_center, enough ? Sea : SoftText));
+            Label(new Rect(row.x + 298, row.y + 15, 64, 43), requirement.Required.ToString(), ColorText(_center, SoftText));
+            Frame(new Rect(row.x + 370, row.y + 18, 64, 39), enough ? Petrol : new Color(.30f, .16f, .07f, .95f), enough ? Sea : new Color(Brass.r, Brass.g, Brass.b, .45f), 1f);
+            Label(new Rect(row.x + 370, row.y + 17, 64, 39), requirement.Missing.ToString(), ColorText(_center, enough ? MainText : Brass));
+        }
+
+        void DrawBagCheck(Rect row, string icon, string title, int count, int required)
+        {
+            DrawIcon(new Rect(row.x, row.y - 1, 37, 37), icon);
+            Label(new Rect(row.x + 48, row.y + 1, 96, 30), title, _body);
+            Label(new Rect(row.x + 145, row.y + 1, 66, 30), count + "/" + required, ColorText(_center, count >= required ? Sea : Ember));
+            if (count >= required) DrawCheck(new Rect(row.xMax - 22, row.y + 11, 16, 12), Sea);
+            else DrawWarning(new Rect(row.xMax - 23, row.y + 10, 17, 17), Ember);
+        }
+
+        void DrawInventoryMeter(Rect rect, string icon, string title, int count, int required)
+        {
+            bool enough = count >= required;
+            Frame(rect, Panel, Line, 1f);
+            DrawIcon(new Rect(rect.x + 9, rect.y + 4, 48, 51), icon);
+            Label(new Rect(rect.x + 65, rect.y + 8, rect.width - 155, 24), title, _tiny);
+            Label(new Rect(rect.xMax - 86, rect.y + 4, 72, 35), count + "/" + required, ColorText(_right, enough ? Sea : Brass));
+            DrawBar(new Rect(rect.x + 13, rect.yMax - 18, rect.width - 26, 5), required > 0 ? (float)count / required : 1f, enough ? Sea : Brass);
+        }
+
+        void FittedLabel(Rect rect, string text, GUIStyle source, Color color, int minimumSize)
+        {
+            if (_fittedStyle == null) _fittedStyle = new GUIStyle(source);
+            _fittedStyle.font = source.font;
+            _fittedStyle.fontStyle = source.fontStyle;
+            _fittedStyle.alignment = source.alignment;
+            _fittedStyle.wordWrap = false;
+            _fittedStyle.fontSize = source.fontSize;
+            _fittedStyle.normal.textColor = color;
+            _fittedStyle.hover.textColor = color;
+            _fittedStyle.active.textColor = color;
+            _fittedStyle.focused.textColor = color;
+            float width = source.CalcSize(new GUIContent(text ?? "")).x;
+            if (width > rect.width && width > 0f)
+                _fittedStyle.fontSize = Mathf.Clamp(Mathf.FloorToInt(source.fontSize * rect.width / width), minimumSize, source.fontSize);
+            Label(rect, text, _fittedStyle);
+        }
+
+        Rect ClearWorldMarkerBounds(Rect original)
+        {
+            if (WorldMarkerClear(original)) return original;
+            Rect best = original;
+            float distance = float.PositiveInfinity;
+            for (int i = 0; i < _topLevelRegions.Count; i++)
+            {
+                Rect obstacle = _topLevelRegions[i];
+                if (obstacle.width * obstacle.height > CanvasWidth * CanvasHeight * .65f) continue;
+                if (!original.Overlaps(obstacle)) continue;
+                for (int edge = 0; edge < 4; edge++)
+                {
+                    Rect candidate = original;
+                    if (edge == 0) candidate.y = obstacle.yMin - candidate.height - 10f;
+                    else if (edge == 1) candidate.y = obstacle.yMax + 10f;
+                    else if (edge == 2) candidate.x = obstacle.xMin - candidate.width - 10f;
+                    else candidate.x = obstacle.xMax + 10f;
+                    if (candidate.xMin < 12 || candidate.xMax > CanvasWidth - 12 || candidate.yMin < 142 || candidate.yMax > CanvasHeight - 65) continue;
+                    if (!WorldMarkerClear(candidate)) continue;
+                    float delta = (candidate.center - original.center).sqrMagnitude;
+                    if (delta < distance) { distance = delta; best = candidate; }
+                }
+            }
+            return best;
+        }
+
+        bool WorldMarkerClear(Rect marker)
+        {
+            for (int i = 0; i < _topLevelRegions.Count; i++)
+            {
+                Rect region = _topLevelRegions[i];
+                if (region.width * region.height > CanvasWidth * CanvasHeight * .65f) continue;
+                region.xMin -= 6; region.yMin -= 6; region.xMax += 6; region.yMax += 6;
+                if (marker.Overlaps(region)) return false;
+            }
+            return true;
+        }
+
+        void DrawResourceCard()
+        {
+            var model = World.Model;
+            Rect resources = ResourceCardBounds;
+            Frame(resources, Night, Line, 1f); Region(resources);
+            DrawIcon(new Rect(1108, 29, 48, 58), "water");
+            Label(new Rect(1161, 29, 43, 39), model.PackedWater.ToString(), ColorText(_display, model.PackedWater >= model.RequiredDays ? Sea : MainText));
+            Label(new Rect(1161, 75, 43, 21), "SU", _tiny);
+            Fill(new Rect(1207, 39, 1, 58), Line);
+            DrawIcon(new Rect(1213, 29, 48, 58), "food");
+            Label(new Rect(1266, 29, 43, 39), model.PackedFood.ToString(), ColorText(_display, model.PackedFood >= model.RequiredDays ? Sea : MainText));
+            Label(new Rect(1266, 75, 43, 21), "GIDA", _tiny);
+            Fill(new Rect(1313, 39, 1, 58), Line);
+            DrawBagIcon(new Rect(1334, 38, 32, 37), model.BagReady ? Sea : Muted);
+            Label(new Rect(1322, 79, 65, 20), model.BagReady ? "HAZIR" : "ÇANTA", ColorText(_caps, model.BagReady ? Sea : Muted));
+            Fill(new Rect(1399, 39, 1, 58), Line);
+            FittedLabel(new Rect(1413, 29, 145, 41), model.InfiniteBudget ? "SINIRSIZ" : "$ " + model.Budget.ToString("N0"), _right, Brass, 16);
+            Label(new Rect(1420, 77, 133, 21), "BÜTÇE", ColorText(_caps, Muted));
+        }
+
+        void Region(Rect rect) { _topLevelRegions.Add(rect); Mark(rect); }
+        Vector2 LogicalPointer() { return (new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) - _offset) / _scale; }
+        static int UsedSlots(List<SupplySlot> slots)
+        {
+            int count = 0;
+            if (slots != null) for (int i = 0; i < slots.Count; i++) if (HasStock(slots[i])) count++;
+            return count;
+        }
+        static string WorkModeName(PanicWorkMode mode)
+        {
+            return mode == PanicWorkMode.Timing ? "ZAMANLAMA" : mode == PanicWorkMode.Balance ? "DENGE" : "VİDALAMA";
+        }
+        static string PhaseName(PanicPhase phase)
+        {
+            switch (phase)
+            {
+                case PanicPhase.Preparing: return "HAZIRLIK";
+                case PanicPhase.Tutorial: return "ÖĞRETİCİ";
+                case PanicPhase.Disaster: return "AFET";
+                case PanicPhase.Aftermath: return "SONUÇ";
+                case PanicPhase.Inspection: return "HASAR GEZİSİ";
+                case PanicPhase.Success: return "BAŞARI";
+                case PanicPhase.GameOver: return "KOŞU BİTTİ";
+                default: return "HAZIRLIK";
+            }
+        }
+        static string DisasterHint(DisasterType type)
+        {
+            switch (type)
+            {
+                case DisasterType.Earthquake: return "EŞYALARI SABİTLE";
+                case DisasterType.Flood: return "SUYA KARŞI ÖNLEM AL";
+                case DisasterType.Fire: return "YANGINA KARŞI HAZIRLAN";
+                case DisasterType.Storm: return "ÇATIYI GÜÇLENDİR · GEVŞEK EŞYALARI SABİTLE";
+                default: return "EVİNİ HAZIRLA";
+            }
+        }
+
+        static void DrawWatch(Rect rect, Color color)
+        {
+            Rect face = new Rect(rect.x + rect.width * .10f, rect.y + rect.height * .18f, rect.width * .80f, rect.width * .80f);
+            DrawRing(face, 1f, color, 2.5f);
+            Fill(new Rect(rect.x + rect.width * .36f, rect.y + rect.height * .03f, rect.width * .28f, 4), color);
+            Fill(new Rect(rect.center.x - 2, rect.y + rect.height * .06f, 4, rect.height * .10f), color);
+            Vector2 center = face.center;
+            DrawLine(center, center + new Vector2(0, -face.height * .27f), color, 2f);
+            float angle = Time.unscaledTime * .3f;
+            DrawLine(center, center + new Vector2(Mathf.Sin(angle), -Mathf.Cos(angle)) * face.width * .28f, color, 2f);
+        }
+        static void DrawRing(Rect rect, float value, Color color, float thickness)
+        {
+            const int pieces = 40;
+            Vector2 center = rect.center;
+            float radius = Mathf.Min(rect.width, rect.height) * .46f;
+            int count = Mathf.RoundToInt(pieces * Mathf.Clamp01(value));
+            for (int i = 0; i < count; i++)
+            {
+                float a = (i / (float)pieces) * Mathf.PI * 2f - Mathf.PI * .5f;
+                float b = ((i + .84f) / pieces) * Mathf.PI * 2f - Mathf.PI * .5f;
+                DrawLine(center + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius,
+                    center + new Vector2(Mathf.Cos(b), Mathf.Sin(b)) * radius, color, thickness);
+            }
+        }
+        static void DrawLine(Vector2 a, Vector2 b, Color color, float thickness)
+        {
+            Vector2 delta = b - a;
+            if (delta.sqrMagnitude < .001f) return;
+            Matrix4x4 matrix = GUI.matrix;
+            GUI.matrix = matrix * Matrix4x4.TRS(new Vector3(a.x, a.y, 0),
+                Quaternion.Euler(0, 0, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg), Vector3.one);
+            Fill(new Rect(0, -thickness * .5f, delta.magnitude, thickness), color);
+            GUI.matrix = matrix;
+        }
+        static void DrawCheck(Rect rect, Color color)
+        {
+            DrawLine(new Vector2(rect.x, rect.y + rect.height * .45f), new Vector2(rect.x + rect.width * .35f, rect.yMax), color, 3f);
+            DrawLine(new Vector2(rect.x + rect.width * .35f, rect.yMax), new Vector2(rect.xMax, rect.y), color, 3f);
+        }
+        static void DrawWarning(Rect rect, Color color)
+        {
+            Vector2 top = new Vector2(rect.center.x, rect.y);
+            Vector2 left = new Vector2(rect.x, rect.yMax);
+            Vector2 right = new Vector2(rect.xMax, rect.yMax);
+            DrawLine(top, left, color, 2f); DrawLine(left, right, color, 2f); DrawLine(right, top, color, 2f);
+            Fill(new Rect(rect.center.x - 1, rect.y + rect.height * .36f, 2, rect.height * .27f), color);
+            Fill(new Rect(rect.center.x - 1, rect.y + rect.height * .75f, 2, 2), color);
+        }
+        static void DrawDisasterSymbol(Rect rect, DisasterType type, Color color)
+        {
+            if (type == DisasterType.Earthquake)
+            {
+                DrawLine(new Vector2(rect.x + 20, rect.y), new Vector2(rect.x + 11, rect.y + 13), color, 4f);
+                DrawLine(new Vector2(rect.x + 11, rect.y + 13), new Vector2(rect.x + 20, rect.y + 15), color, 4f);
+                DrawLine(new Vector2(rect.x + 20, rect.y + 15), new Vector2(rect.x + 8, rect.yMax), color, 4f);
+            }
+            else if (type == DisasterType.Flood)
+            {
+                for (int row = 0; row < 3; row++)
+                    for (int j = 0; j < 4; j++)
+                        DrawLine(new Vector2(rect.x + j * 7, rect.y + 5 + row * 9 + (j % 2) * 3),
+                            new Vector2(rect.x + (j + 1) * 7, rect.y + 5 + row * 9 + ((j + 1) % 2) * 3), color, 2.5f);
+            }
+            else if (type == DisasterType.Storm)
+            {
+                for(int row=0;row<3;row++)
+                {
+                    float y=rect.y+7+row*9;
+                    DrawLine(new Vector2(rect.x+2,y),new Vector2(rect.xMax-6,y),color,2.5f);
+                    DrawLine(new Vector2(rect.xMax-6,y),new Vector2(rect.xMax-1,y-4),color,2.5f);
+                    DrawLine(new Vector2(rect.xMax-1,y-4),new Vector2(rect.xMax-4,y-7),color,2.5f);
+                }
+            }
+            else
+            {
+                DrawLine(new Vector2(rect.center.x + 2, rect.y), new Vector2(rect.x + 4, rect.y + 20), color, 3f);
+                DrawLine(new Vector2(rect.x + 4, rect.y + 20), new Vector2(rect.center.x, rect.yMax), color, 3f);
+                DrawLine(new Vector2(rect.center.x, rect.yMax), new Vector2(rect.xMax - 3, rect.y + 20), color, 3f);
+                DrawLine(new Vector2(rect.xMax - 3, rect.y + 20), new Vector2(rect.center.x + 2, rect.y), color, 3f);
+                DrawLine(new Vector2(rect.center.x, rect.yMax - 2), new Vector2(rect.center.x, rect.y + 17), Brass, 3f);
+            }
+        }
+        static void DrawCorners(Rect rect, Color color)
+        {
+            const float len = 24f;
+            Fill(new Rect(rect.x, rect.y, len, 2), color); Fill(new Rect(rect.x, rect.y, 2, len), color);
+            Fill(new Rect(rect.xMax - len, rect.y, len, 2), color); Fill(new Rect(rect.xMax - 2, rect.y, 2, len), color);
+            Fill(new Rect(rect.x, rect.yMax - 2, len, 2), color); Fill(new Rect(rect.x, rect.yMax - len, 2, len), color);
+            Fill(new Rect(rect.xMax - len, rect.yMax - 2, len, 2), color); Fill(new Rect(rect.xMax - 2, rect.yMax - len, 2, len), color);
+        }
+        static void Brush(Rect rect, Color color)
+        {
+            // Offset broken edges evoke the concept's painted title swashes, without a texture dependency.
+            Fill(new Rect(rect.x + 7, rect.y + 2, rect.width - 15, rect.height - 4), color);
+            Fill(new Rect(rect.x, rect.y + 7, rect.width - 6, rect.height - 13), color);
+            Fill(new Rect(rect.x + 18, rect.y, rect.width - 43, 3), new Color(color.r, color.g, color.b, color.a * .7f));
+            Fill(new Rect(rect.x + 27, rect.yMax - 2, rect.width - 38, 4), color);
+            Fill(new Rect(rect.xMax - 8, rect.y + 4, 10, rect.height * .46f), color);
+        }
+        static void DrawHazardStripe(Rect rect, Color color)
+        {
+            Fill(rect, new Color(color.r, color.g, color.b, .22f));
+            for (float x = rect.x; x < rect.xMax; x += 18f)
+                Fill(new Rect(x, rect.y, Mathf.Min(10f, rect.xMax - x), rect.height), color);
+        }
+        static void RoundFill(Rect rect, Color color)
+        {
+            if (rect.width <= 0f || rect.height <= 0f || color.a <= 0f) return;
+            float radius = Mathf.Min(7f, Mathf.Min(rect.width, rect.height) * .5f);
+            Color prior = GUI.color;
+            GUI.color = Color.white;
+            // Unity's native rounded-rectangle shader avoids seams between nine independently filtered pieces.
+            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, color, 0f, radius);
+            GUI.color = prior;
         }
 
         GUIStyle ColorText(GUIStyle source, Color color)
@@ -1199,6 +1758,7 @@ namespace TooLateToPanic
                 case DisasterType.Earthquake: return "DEPREM";
                 case DisasterType.Flood: return "SEL";
                 case DisasterType.Fire: return "YANGIN";
+                case DisasterType.Storm: return "FIRTINA";
                 default: return "AFET";
             }
         }

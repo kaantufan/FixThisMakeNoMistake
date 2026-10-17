@@ -1,5 +1,17 @@
 # Too Late to Panic! — asset kaynakları
 
+## Güncel Home V4.7
+
+Yarkın yarkin-assets/eb05475ee0533b86031b36f156f6022521118a15 kaynağından seçili32FBX/32ikon/29materyal+atlas alındı; import/shared mesh ve GUID provenansı Assets/Vendor/Yarkin/Documentation altında korunur. Branch bütün olarak merge edilmedi. Yerel yeni12prop detay geçişi özgün prosedürel koddur. Kaynaklara yeni genel CC0/MIT lisansı atanmaz.
+
+Kullanıcının17Ekim yeni ses isteğiyle yalnız kısa hazırlık akışında7ElevenLabs konuşma+3efekt etkindir. Chrome/Creator, Mia, Eleven Multilingualv2;537mevcut kredi kullanıldı, yeni ödeme yok. Üretim/model/dosya hash/lisans koşulları Assets/Game/Resources/Audio/Jury/LICENSE-AND-PROVENANCE.md ve ilgili Evidence kaydındadır. İnsan dinleme kabulü bekler. Normal kampanyada afet sesi ve eski Tolga ertelemesi sürer.
+
+Aşağıdaki sürüm notları tarihsel üretim koşullarıdır; eski yalnız-afet/sağlayıcı-kullanılmadı ifadeleri V4.7 seçili ses paketini tarif etmez.
+
+## Tarihsel kaynak kayıtları
+
+17 Ekim Home V4.6 HUD: mevcut HTML konseptinin paleti, tipografisi, fırça vurguları ve panel düzeni Unity IMGUI arayüzüne uyarlandı. Mevcut özgün malzeme ikonları ve canlı oyun sahnesi kullanılır. Oswald/Barlow/Barlow Condensed resmi Google Fonts kaynaklarından SIL OFL1.1 ile çevrimdışı Font asseti olarak paketlenir; kaynak, dönüşüm ve tam lisanslar [HUD lisans kaydında](Licenses/HUD/README.md). Yeni ücretli sağlayıcı, ses veya kredi kullanılmadı.
+
 Ev, mobilya, ekipman, iş düzenekleri, kıyafet, afet görsel efektleri ve yerel ses tasarımları bu oyun için proje kaynaklarında üretilmiştir. Home V2 üretim/entegrasyon kayıtları üst çalışma alanındaki `Evidence/GamejamOrchestra/TLTP-HOME-V2-20261016/` altındadır; doğrulama kapsamı [Home V2 teslim kaydında](HOME-V2-DELIVERY-2026-10-16.md) belirtilir. Bu kayıt yeni ücretli sağlayıcı üretimi veya satın alma iddiası içermez.
 
 Home V2 oyuncu gövdesi/rig'i ve hareket klipleri Quaternius Universal Base Characters Standard / Universal Animation Library Standard CC0 kaynaklarını kullanır. Yerel iş kıyafeti ve saç/eldiven/bot düzenlemeleri bu kaynaklarla aynı şey değildir. Kullanılan dosyalar ve iki korunmuş lisans [oyuncu/animasyon provenansı](Existing-Player-Provenance.md) içinde listelenir.
@@ -25,3 +37,8 @@ Staging dosyası, kaynak entegrasyonu, Unity importu, build, native playback, el
 16 Ekim Home V4.3: mevcut özgün banyo duvar/kapı yerleşimi düzenlendi, mevcut96px malzeme ikonları kullanıldı. Yeni üçüncü taraf asset, insan veya ücretli sağlayıcı kullanılmadı; Evidence/GamejamOrchestra/TLTP-INTERACTION-V43-20261016.
 
 16 Ekim Home V4.4: mevcut ayakkabılık, askılık ve radyo/masanın runtime yerleşimleri girişten geriye alındı. Geometri/materyal/ikon ve mevcut Quaternius kaynakları değiştirilmedi; yeni asset/sağlayıcı/lisans kullanılmadı. Aktif geliştirme izometriktir; FPS dosyaları korunur. Güncel kabul HOME-V4.4-DELIVERY-2026-10-16.md içindedir.
+
+Home V4.7 son dış dünya eki: dere yatağı/akışPNGsi/foam, Sgaraj yolu ve komşu cephe/hasarı özgün yerel prosedürel üretimdir; yeni dış sağlayıcı yoktur. Dört NPC mevcut Quaternius CC0 rig/animasyonunu korur, yalnız ceket renkleri farklıdır. Fırtına rüzgâr klibi yerelPanicArt.GetSound üretimidir, ElevenLabs7+3paketine ek yeni kredi kullanmaz. CuratedR3 yalnız ek detay geometrisinin UnityXuyarlamasıdır; orijinalFBX/UV/atlas korunur.
+
+
+Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zamanlı kesintisiz rota + 189/189 regresyon,0runtime hata. Kısa akış49.67sn, dört doğal simülasyon; test Warp/Tick/hile0. Üretim API girdisi, OS/insan keyif kabulü değildir. LATEST ve HOME-V4.8-DELIVERY-2026-10-17.md yeniDLL/manifesti bağlar; eskiV4.7 açıkoyun korunur.

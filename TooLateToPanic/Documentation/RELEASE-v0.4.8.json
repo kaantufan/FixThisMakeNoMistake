@@ -1,0 +1,101 @@
+{
+  "version": "0.4.8",
+  "releaseTag": "v0.4.8",
+  "repository": "https://github.com/kaantufan/FixThisMakeNoMistake",
+  "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.8",
+  "sourceSnapshotUtc": "2026-10-17T00:34:53.1885304Z",
+  "sourceFilesCopiedUnmodified": 3274,
+  "liveSourceWrittenByPublisher": false,
+  "sourceMatchesVerifiedBuild": false,
+  "postBuildSourceDifferences": [
+    {
+      "category": "sources",
+      "path": "TooLateToPanic/Assets/Game/Editor/PanicResidenceBuild.cs",
+      "verifiedBuildSha256": "C16035D1E9F9A9925E44E1FBBCAD8A9DFD09ABEA2F04BDB78DA8A72323681F7D",
+      "currentSourceSha256": "E85BD3D416923E900D202BBCF37F912A335FB4DB8B5B320528C0E1F8C16DFF17"
+    },
+    {
+      "category": "sources",
+      "path": "TooLateToPanic/Assets/Game/Runtime/PanicHomeHud.cs",
+      "verifiedBuildSha256": "6AD9ECE9DDF971C113FE9872D2D35422A62FE3DA72457D44F9608B0D5CAA88DD",
+      "currentSourceSha256": "B577A2887ADBE55A4FBFED16308C1BAA60CD2247F38C98D72F0745A90EA41E6C"
+    },
+    {
+      "category": "sources",
+      "path": "TooLateToPanic/Assets/Game/Runtime/PanicHomeWorld.cs",
+      "verifiedBuildSha256": "38E1B7086209E62BF17D0A3C26349B03835FCCC90DC399AE04ECC5403211BBAD",
+      "currentSourceSha256": "DEB05F47F41BCA90591D28235514B10CA95870DCE098C5E170A6FCEC156C61E7"
+    },
+    {
+      "category": "settingsAndScenes",
+      "path": "TooLateToPanic/Assets/Game/Scenes/TooLateToPanicResidence.unity",
+      "verifiedBuildSha256": "970B07C8A9456AB04762BADC2D0987C8B2D797FE44E74F929F838A12633CDA8B",
+      "currentSourceSha256": "C70C528E1DDD42D3E3A458520336EFE73A580DF6E6A663D2D44DE54F6D6A6DEA"
+    },
+    {
+      "category": "addedSources",
+      "path": "TooLateToPanic/Assets/Game/Runtime/PanicInteractionAudit.cs",
+      "verifiedBuildSha256": null,
+      "currentSourceSha256": "752044A919A15326E2EA63E55068FBFBA86EF775D85278FD700A173716D31B71"
+    },
+    {
+      "category": "addedSources",
+      "path": "TooLateToPanic/Assets/Game/Runtime/PanicInteractionFrameAudit.cs",
+      "verifiedBuildSha256": null,
+      "currentSourceSha256": "5C42DF39880AB6E92E8F97EDCE1BE8C770D70DD98A9CE86C0FBA1DF190214B8F"
+    },
+    {
+      "category": "addedSources",
+      "path": "TooLateToPanic/Assets/Game/Runtime/PanicInteractionModelAudit.cs",
+      "verifiedBuildSha256": null,
+      "currentSourceSha256": "1C637C444316993DAAF84046899D28AB619870AE2CF8C470D84337D527AC710D"
+    },
+    {
+      "category": "addedSources",
+      "path": "TooLateToPanic/Assets/Game/Runtime/PanicInteractionWorldAudit.cs",
+      "verifiedBuildSha256": null,
+      "currentSourceSha256": "1A733A414A264D77AB7A6E2D0BD403F342FB3658116827C9A9DE308C481342F1"
+    }
+  ],
+  "binaryRebuiltForPublication": false,
+  "buildUtc": "2026-10-17T00:16:52.5507939Z",
+  "unity": "6000.0.73f1",
+  "assemblyCSharpSha256": "5683E713C90F2FD070DB819D14526EBA74ACC25B65C6581DABD6FB602F6BD17E",
+  "exeSha256": "0E1B64A3C0EBA3482F4C7B57F36CF8811997C0CE3BBED914C116CB9D4799FC7C",
+  "portableZipSha256": "018D311651CBFCC9053D1CE659430508E7829B2700E83F36B2F850BD9307D9FD",
+  "portableZipBytes": 143924613,
+  "portableAssetName": "TooLateToPanic-Home-V4.8-20261017-portable.zip",
+  "nativeEvidence": {
+    "version": "0.4.8",
+    "passed": true,
+    "checks": 149,
+    "runtimeErrors": 0,
+    "renderedCaptures": 29,
+    "wallSeconds": 149.3158721923828,
+    "shortFlowSeconds": 49.66685485839844,
+    "assemblyCSharpSha256": "5683E713C90F2FD070DB819D14526EBA74ACC25B65C6581DABD6FB602F6BD17E",
+    "sourceDrift": 0,
+    "evidence": "../Evidence/GamejamOrchestra/TLTP-FULLFLOW-QA-20261017/manager/native-v3-bf5a8289-bcfd-453a-92f9-331be7feb582",
+    "evidenceType": "Continuous real wall-clock native semantic-input route using production CharacterController/colliders, E/F pickup, inventory packing, real manual work and natural disaster clocks.",
+    "limitations": "Kesintisiz gerçek zamanlı CharacterController rotası ve üretim E/F/çanta/iş eylemleri; OS klavye/fare ve insan keyif kabulü değildir. Dört simülasyonda doğal afet/sonuç ve kayıp korunarak inceleme/menü/tekrar denendi.",
+    "fullCampaign": false,
+    "humanListening": false,
+    "OSInput": false,
+    "regressionChecks": 189,
+    "regressionEvidence": "../Evidence/GamejamOrchestra/TLTP-FULLFLOW-QA-20261017/manager/regression-v3-26951ed6-54be-4e05-bc5a-6ecc7c657ff6"
+  },
+  "limitations": "Existing V4.8 binary acceptance is retained. Post-build source edits are published as-is and have no new build/native acceptance in this publication. Existing LATEST and delivery documents are unchanged historical snapshots.",
+  "exclusions": [
+    "TooLateToPanicFPS/",
+    ".claude/",
+    "Evidence/",
+    "**/Library/",
+    "**/Temp/",
+    "**/Logs/",
+    "**/Builds/",
+    "**/UserSettings/",
+    "persistent saves and scores",
+    "Assets/Game/Deferred/Radio-legacy/ (unverified synthesized-audio redistribution terms)",
+    "unreferenced historical generated meshes/materials"
+  ]
+}

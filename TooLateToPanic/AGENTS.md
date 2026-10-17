@@ -86,3 +86,21 @@ Home V4.4 nihai kabul: source-build-v4 / native-v4-1064ed5d-bef0-4b34-ad55-dddb3
 
 Home V4.5 yerel kabul: source-build-v1/native-v1-a11f71de-8b26-4eeb-ac4e-218de111a073,12/12 PASS,0 hata; DLL 8399ADBAE91D43604CD28936C84927CC425412FF2B2E940090F4193AC690EE4C. Normal açılış, iki HUD karesi, izole skor hash korunması ve portable eşleşmesi görüldü. Durum fixture'lı API smoke'dur; manuel/minigame/tüm kampanya kabulü değildir. Güncel LATEST ve HOME-V4.5-DELIVERY-2026-10-17.md yollarını kullan.
 
+
+17 Ekim GitHub yayını: https://github.com/kaantufan/FixThisMakeNoMistake maincommit7b30510e44f7e5d5e91ba9bbc7a7ab30a2bfe771,releasev0.4.5; remoteZIPdigest yerelCE63B560... ileeşleşti. Yayıncheckout'u Evidence/GamejamOrchestra/TLTP-DEVELOPER-V45-20261017/publication/repository, asılworkspace nonGit. Gelecekpush'ta uzakmain'i kontrol et, aynıbatch github/Prepare-GitHubSource.ps1 allowlist/GUIDkapanımını tekrarçalıştır; cache/saves/Evidence/FPS/DeferredRadioWAV gitdışı; forcepushyok. Yerel build/native ve public staticGUIDkanıtı ayrı tutulur. Kaynak43runtime/shader byteeşleşmesi ve2894takipli dosya doğrulandı.
+
+
+
+17 Ekim Home V4.6 HUD teslimi: HTML konsepti yeni IMGUI HUD'ye uyarlandı; çevrimdışı OFL fontlar, ayrı dalga/süre/kaynak kartları, canlı eksikler ve ortak çanta/iş/sonuç ekranları. Güncel sözleşme Evidence/GamejamOrchestra/TLTP-HUD-V46-20261017/CONTRACT.md, builder0.4.6/Builds/Home-V4.6-20261017. source-build-v3 / native-v3-e3882617-c03a-4fc6-b8bc-907a2cb52037,75/75PASS,0hata,50render,12.16s; beş çözünürlük. DLL6E270494D3B663867DA5F0E190AB5A13D6A0E9779EE3ED742400795EF7261705. Ek dar fiziksel OS Enter/Tab/Esc/F2 ve fare kontrolü geçti; tam kampanya/mini oyun tamamlama değildir. 960x540 küçük açıklamalar ufak kalır. Kayıt hash'i korundu. Son normal süreç başlatıldı/readylog görüldü; kullanıcı Esc ile Computer Use'ı durdurduğu için yeni normal pencereye ek UI kontrolü yapılmadı. LATEST-BUILD.json ve Documentation/HOME-V4.6-HUD-DELIVERY-2026-10-17.md tek güncel teslimi bağlar. Geçmiş build metin yolları değiştirilmez; FPS askıda korunur.
+
+
+## Home V4.7 güncel teslim kararı —17Ekim
+
+Yeni kullanıcı isteğiyle izometrik kısa hazırlık akışı, seçili Yarkın importları,12prop sanat detay geçişi, görsel pickup/sabitleme/deprem tepkisi ve yalnız bu akışta7kısa ElevenLabs konuşma+3SFX yetkilendirildi.537mevcut kredi kullanıldı; yeni ödeme/abonelik/overage yok. Önceki yalnız-afet politikası seçili kısa akış sesleri için güncellendi; eski Tolga ve normal kampanya konuşması ertelenir. FPS askıda korunur; zincirleme afet ertelenir.
+
+Oyuncuya görünen metin ve seste jüri/demo sunum dili yoktur. HAZIRLIĞA BAŞLA kısa akış, SERBEST OYUN normal kampanya.270sn içerik/300sn sınır; ilk180sn keyif insanla doğrulanacak hedeftir. SAHNEYİ ATLA/Enter model sonucunu tek kez çözer ve kontrolü geri verir. F2 Kaybetmeme gerçek hasar/erzak tüketimini korur, kayıp yerine ödülsüz inceleme açar; sticky skor dışı. HUD sinematik saatini InputLocked ile durdurmaz.
+
+Güncel kanıt ve hashler LATEST-BUILD.json ile Documentation/HOME-V4.7-DELIVERY-2026-10-17.md içindedir. Eski native sonuçları yeni DLL kabulü değildir. Worker yalnız atanmış staging; root tek Unity/build/player sahibidir.
+
+
+Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zamanlı kesintisiz rota + 189/189 regresyon,0runtime hata. Kısa akış49.67sn, dört doğal simülasyon; test Warp/Tick/hile0. Üretim API girdisi, OS/insan keyif kabulü değildir. LATEST ve HOME-V4.8-DELIVERY-2026-10-17.md yeniDLL/manifesti bağlar; eskiV4.7 açıkoyun korunur.

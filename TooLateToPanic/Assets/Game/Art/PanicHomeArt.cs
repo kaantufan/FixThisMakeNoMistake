@@ -12,8 +12,8 @@ namespace TooLateToPanic
     /// </summary>
     public static class PanicHomeArt
     {
-        enum M { Walnut, WalnutLight, WalnutDark, Charcoal, Steel, Plaster, Taupe, Olive, Leaf,
-            Lawn, Earth, Concrete, Stone, Slate, Brick, Linen, SafetyAmber, Red, Glass, Black, Road, Mist }
+        internal enum M { Walnut, WalnutLight, WalnutDark, Charcoal, Steel, Plaster, Taupe, Olive, Leaf,
+            Lawn, Earth, Concrete, Stone, Slate, Brick, Linen, SafetyAmber, Red, Glass, Black, Road, Mist, FacadeSage, FacadeOchre, FacadeIvory, WarmWindow }
         static Material[] palette;
         static readonly Dictionary<string, Mesh> shapes = new Dictionary<string, Mesh>();
         static readonly Dictionary<Material, Material> recolored = new Dictionary<Material, Material>();
@@ -29,20 +29,33 @@ namespace TooLateToPanic
             // Neither soil nor turf can cover the basement/stair when the upper floors are cut away.
             LandscapeRing(b, 160, -.19f, .28f, M.Earth);
             LandscapeRing(b, 48, -.095f, .13f, M.Lawn);
-            b.Box(new Vector3(0, -.08f, 36), new Vector3(150, .05f, 24), M.Olive, .01f);
-            b.Box(new Vector3(0, -.08f, -45), new Vector3(150, .05f, 45), M.Olive, .01f);
-            b.Box(new Vector3(-45, -.08f, 0), new Vector3(45, .05f, 65), M.Olive, .01f);
-            b.Box(new Vector3(45, -.08f, 0), new Vector3(45, .05f, 65), M.Olive, .01f);
+            CreekCutGround(b, new Vector3(0, -.08f, 36), new Vector3(150, .05f, 24), M.Olive);
+            CreekCutGround(b, new Vector3(0, -.08f, -45), new Vector3(150, .05f, 45), M.Olive);
+            CreekCutGround(b, new Vector3(-45, -.08f, 0), new Vector3(45, .05f, 65), M.Olive);
+            CreekCutGround(b, new Vector3(45, -.08f, 0), new Vector3(45, .05f, 65), M.Olive);
             b.Box(new Vector3(0, -.018f, -19), new Vector3(150, .045f, 7.3f), M.Road, .008f);
             for (int s = -1; s <= 1; s += 2)
             {
-                b.Box(new Vector3(0, .018f, -19 + s * 4.12f), new Vector3(150, .12f, .68f), M.Concrete, .02f);
-                b.Box(new Vector3(0, -.006f, -19 + s * 3.66f), new Vector3(150, .09f, .14f), M.Stone, .01f);
+                if(s<0)
+                {
+                    b.Box(new Vector3(0,.018f,-23.12f),new Vector3(150,.12f,.68f),M.Concrete,.02f);
+                    b.Box(new Vector3(0,-.006f,-22.66f),new Vector3(150,.09f,.14f),M.Stone,.01f);
+                }
+                else
+                {
+                    // Garage drive returns to11.7: the dropped kerb spans9.95..13.45.
+                    for(int side=0;side<2;side++)
+                    {
+                        float left=side==0?-75f:13.45f,right=side==0?9.95f:75f;
+                        b.Box(new Vector3((left+right)*.5f,.018f,-14.88f),new Vector3(right-left,.12f,.68f),M.Concrete,.02f);
+                        b.Box(new Vector3((left+right)*.5f,-.006f,-15.34f),new Vector3(right-left,.09f,.14f),M.Stone,.01f);
+                    }
+                }
             }
             for (int i = -18; i <= 18; i++)
                 b.Box(new Vector3(i * 4, .01f, -19), new Vector3(1.8f, .008f, .1f), M.Linen, .001f);
             // A modest paved path and perimeter strip leave most of the plot as usable garden.
-            for (int z = 0; z < 11; z++)
+            for (int z = 0; z < 13; z++)
                 for (int x = 0; x < 3; x++)
                     b.Box(new Vector3((x - 1) * .56f, -.007f, -6.45f - z * .74f),
                         new Vector3(.545f, .038f, .72f), (x + z) % 4 == 0 ? M.Stone : M.Concrete, .015f);
@@ -70,7 +83,7 @@ namespace TooLateToPanic
             // Fence has a real 2m opening at the main gate (0,0,-13).
             for (int i = -8; i < 8; i++)
             {
-                if (i != -1 && i != 0) Place(root, Create("fence"), new Vector3(i * 2 + 1, 0, -13), 0);
+                if (i != -1 && i != 0 && i != 4 && i != 5 && i != 6) Place(root, Create("fence"), new Vector3(i * 2 + 1, 0, -13), 0);
                 Place(root, Create("fence"), new Vector3(i * 2 + 1, 0, 15), 0);
             }
             for (int s = -1; s <= 1; s += 2)
@@ -81,10 +94,11 @@ namespace TooLateToPanic
             for (int i = 0; i < 14; i++)
                 for (int s = -1; s <= 1; s += 2)
                     Place(root, Create("fence"), new Vector3(s * 16, 0, -12 + i * 2), 90);
+            var driveFence=Create("fence");driveFence.transform.localScale=new Vector3(.75f,1,1);Place(root,driveFence,new Vector3(8.75f,0,-13),0);
             // Trees kept away from the stair, entry and bunker routes.
             Vector3[] treeSeats = {
                 new Vector3(-12,0,11.5f), new Vector3(13,0,11.8f), new Vector3(-13,0,-8),
-                new Vector3(-19,0,4), new Vector3(20,0,4), new Vector3(-21,0,21),
+                new Vector3(-22.8f,0,8), new Vector3(20,0,4), new Vector3(-23,0,21),
                 new Vector3(21,0,22), new Vector3(-31,0,-13), new Vector3(32,0,-11),
                 new Vector3(-12,0,-29), new Vector3(13,0,-30), new Vector3(3,0,27) };
             for (int i = 0; i < treeSeats.Length; i++)
@@ -94,13 +108,10 @@ namespace TooLateToPanic
                 Place(root, tree, treeSeats[i], i * 71);
             }
             // Neighbor houses are complete silhouettes with pitched roofs, recessed windows and yards.
-            Neighbour(b, new Vector3(-25, 0, -3), 7, 6, 4.9f, 0, false);
-            Neighbour(b, new Vector3(26, 0, 1), 8, 7, 5.7f, 0, true);
-            Neighbour(b, new Vector3(-11, 0, 26), 8, 6, 5.9f, 0, true);
-            Neighbour(b, new Vector3(12, 0, 28), 9, 7, 5.2f, 0, false);
-            Neighbour(b, new Vector3(-26, 0, -32), 8, 6, 5.6f, 180, true);
-            Neighbour(b, new Vector3(1, 0, -33), 8, 7, 5.9f, 180, false);
-            Neighbour(b, new Vector3(27, 0, -33), 9, 6, 5.1f, 180, true);
+            foreach(var site in PanicExteriorArt.NeighbourSites)
+                Neighbour(b,site.Position,site.Width,site.Depth,site.Height,site.Yaw,site.Pale);
+            ExteriorStreetDetails(b);
+            var stream=PanicExteriorArt.CreateStream();stream.transform.SetParent(root.transform,false);
             // Utility poles and wires ground the scene in an inhabited street.
             for (int i = -2; i <= 2; i++)
             {
@@ -370,11 +381,11 @@ namespace TooLateToPanic
         static void LandscapeRing(Builder b, float span, float y, float thickness, M material)
         {
             float side = (span - 16) * .5f;
-            b.Box(new Vector3(-(8 + side * .5f), y, 0), new Vector3(side, thickness, span), material, .005f);
-            b.Box(new Vector3(8 + side * .5f, y, 0), new Vector3(side, thickness, span), material, .005f);
+            CreekCutGround(b, new Vector3(-(8 + side * .5f), y, 0), new Vector3(side, thickness, span), material);
+            CreekCutGround(b, new Vector3(8 + side * .5f, y, 0), new Vector3(side, thickness, span), material);
             float end = (span - 12) * .5f;
-            b.Box(new Vector3(0, y, -(6 + end * .5f)), new Vector3(16, thickness, end), material, .005f);
-            b.Box(new Vector3(0, y, 6 + end * .5f), new Vector3(16, thickness, end), material, .005f);
+            CreekCutGround(b, new Vector3(0, y, -(6 + end * .5f)), new Vector3(16, thickness, end), material);
+            CreekCutGround(b, new Vector3(0, y, 6 + end * .5f), new Vector3(16, thickness, end), material);
         }
 
         static void SouthWall(GameObject parent, float lo, float hi, bool hasEntry)
@@ -805,12 +816,62 @@ namespace TooLateToPanic
             }
             b.Cylinder(offset + Vector3.up * (ridge + .08f), .14f, width + .15f, M.Charcoal, 10, Quaternion.Euler(0, 0, 90));
         }
+        // Only visual ground is carved. Physics terrain and the house's open basement contract are unchanged.
+        static void CreekCutGround(Builder b,Vector3 centre,Vector3 size,M m,float bevel=.005f)
+        {
+            float left=centre.x-size.x*.5f,right=centre.x+size.x*.5f,near=centre.z-size.z*.5f,far=centre.z+size.z*.5f;
+            float cl=Mathf.Max(left,PanicExteriorArt.CreekLeft),cr=Mathf.Min(right,PanicExteriorArt.CreekRight);
+            float cn=Mathf.Max(near,-PanicExteriorArt.CreekLength*.5f),cf=Mathf.Min(far,PanicExteriorArt.CreekLength*.5f);
+            if(cl>=cr||cn>=cf){b.Box(centre,size,m,bevel);return;}
+            Action<float,float,float,float> slab=(x0,x1,z0,z1)=>{if(x1-x0>.001f&&z1-z0>.001f)b.Box(new Vector3((x0+x1)*.5f,centre.y,(z0+z1)*.5f),new Vector3(x1-x0,size.y,z1-z0),m,bevel);};
+            slab(left,cl,near,far);slab(cr,right,near,far);slab(cl,cr,near,cn);slab(cl,cr,cf,far);
+        }
+        static void ExteriorStreetDetails(Builder b)
+        {
+            Action<Vector3,Vector3,float> drive=(a,z,width)=>
+            {
+                Vector3 delta=z-a;Quaternion q=Quaternion.LookRotation(delta.normalized,Vector3.up);
+                b.Box((a+z)*.5f,new Vector3(width,.05f,delta.magnitude),M.Concrete,.018f,q);
+                Vector3 across=q*Vector3.right*(width*.5f-.06f);
+                for(int side=-1;side<=1;side+=2)b.Box((a+z)*.5f+across*side+Vector3.up*.028f,new Vector3(.035f,.004f,delta.magnitude),M.Stone,.001f,q);
+            };
+            // The bunker is at(11,-7),xmax11.93. This bend keeps its cover and approach route clear.
+            drive(new Vector3(11.7f,-.0115f,.13f),new Vector3(11.7f,-.0115f,-2.65f),3.2f);
+            drive(new Vector3(11.7f,-.0115f,-2.25f),new Vector3(14,-.0115f,-5.3f),3.2f);
+            drive(new Vector3(14,-.0115f,-4.45f),new Vector3(14,-.0115f,-9.1f),3.2f);
+            drive(new Vector3(14,-.0115f,-8.8f),new Vector3(11.7f,-.0115f,-11.65f),3.2f);
+            drive(new Vector3(11.7f,-.0115f,-11.2f),new Vector3(11.7f,-.0115f,-15.60f),3.2f);
+            for(int side=-1;side<=1;side+=2)
+            {
+                float x=side<0?9.38f:14.12f;
+                b.Box(new Vector3(x,.44f,-13),new Vector3(.16f,.88f,.20f),M.Brick,.016f);
+                b.Box(new Vector3(x,.91f,-13),new Vector3(.22f,.06f,.26f),M.Linen,.012f);
+                b.Box(new Vector3(x,.57f,-13.11f),new Vector3(.045f,.24f,.012f),M.SafetyAmber,.003f);
+                float drainX=side<0?10.12f:13.28f;
+                b.Box(new Vector3(drainX,.018f,-14.65f),new Vector3(.18f,.025f,.78f),M.Charcoal,.005f);
+                for(int i=0;i<7;i++)b.Box(new Vector3(drainX,.032f,-14.95f+i*.1f),new Vector3(.15f,.008f,.025f),M.Steel,.002f);
+            }
+            // Modular sidewalk joints and two inhabited-street lamps stay clear of entrances.
+            for(int i=-23;i<=23;i++)
+                for(int side=-1;side<=1;side+=2)
+                {
+                    float x=i*2f;if(side>0&&x>9.9f&&x<13.5f)continue;
+                    b.Box(new Vector3(x,.080f,-19+side*4.12f),new Vector3(.018f,.003f,.60f),M.Stone,.001f);
+                }
+            foreach(float x in new[]{-10f,18f})
+            {
+                b.Cylinder(new Vector3(x,1.85f,-14.2f),.055f,3.7f,M.Steel,10);
+                b.Box(new Vector3(x+.23f,3.68f,-14.2f),new Vector3(.5f,.065f,.075f),M.Steel,.009f);
+                b.Box(new Vector3(x+.44f,3.62f,-14.2f),new Vector3(.28f,.12f,.22f),M.Linen,.015f);
+                b.Box(new Vector3(x+.44f,3.55f,-14.2f),new Vector3(.21f,.015f,.16f),M.WarmWindow,.004f);
+            }
+        }
         static void Neighbour(Builder b, Vector3 p, float width, float depth, float height, float yaw, bool pale)
         {
             // Far scenery only: no collider, doors or runtime components. Facade remains desaturated.
             var q = Quaternion.Euler(0, yaw, 0);
             Action<Vector3, Vector3, M, float> panel = (pos, size, m, radius) => b.Box(p + q * pos, size, m, radius, q);
-            panel(new Vector3(0, height * .5f, 0), new Vector3(width, height, depth), pale ? M.Taupe : M.Plaster, .035f);
+            panel(new Vector3(0, height * .5f, 0), new Vector3(width, height, depth), pale ? M.FacadeSage : ((Mathf.Abs(p.x)%3)>1?M.FacadeOchre:M.FacadeIvory), .035f);
             panel(new Vector3(0, .2f, 0), new Vector3(width + .08f, .4f, depth + .08f), M.Brick, .02f);
             // Roof geometry is symmetric, so the yaw does not change the building silhouette.
             Roof(b, p, width + .65f, depth + .65f, height, height + depth * .26f);
@@ -825,7 +886,46 @@ namespace TooLateToPanic
                         panel(pos + new Vector3(0, -.62f, face * .04f), new Vector3(1.29f, .08f, .17f), M.Stone, .01f);
                     }
             panel(new Vector3(0, 1.02f, -depth * .5f - .04f), new Vector3(.9f, 2.04f, .09f), M.WalnutDark, .012f);
-            for (int i = 0; i < 6; i++) Bush(b, p + q * new Vector3(-width * .5f + i * width / 5, 0, -depth * .5f - 1.1f), .55f, 81 + i);
+            // Recesses and trims, not a single painted rectangle; side walls also have windows.
+            for(int floor=0;floor<2;floor++)for(int face=-1;face<=1;face+=2)
+            {
+                float y=1.45f+floor*(height*.48f);
+                for(int side=-1;side<=1;side+=2)
+                {
+                    float x=side*width*.28f,z=face*(depth*.5f+.09f);
+                    for(int edge=-1;edge<=1;edge+=2)
+                    {
+                        panel(new Vector3(x+edge*.56f,y,z),new Vector3(.075f,1.28f,.07f),M.Linen,.007f);
+                        panel(new Vector3(x,y+edge*.61f,z),new Vector3(1.18f,.075f,.07f),M.Linen,.007f);
+                    }
+                    panel(new Vector3(x,y,face*(depth*.5f+.084f)),new Vector3(.97f,.05f,.018f),M.Taupe,.003f);
+                    // A restrained interior blind on alternating windows gives occupation without glow spam.
+                    if((floor+side+face+6)%3==0)panel(new Vector3(x,y+.23f,face*(depth*.5f+.077f)),new Vector3(.88f,.35f,.012f),M.WarmWindow,.003f);
+                    float sx=side*(width*.5f+.035f),sz=face*depth*.24f;
+                    panel(new Vector3(sx,y,sz),new Vector3(.055f,1.25f,1.03f),M.Charcoal,.01f);
+                    panel(new Vector3(sx+side*.034f,y,sz),new Vector3(.028f,1.08f,.87f),M.Slate,.005f);
+                    for(int edge=-1;edge<=1;edge+=2)
+                        panel(new Vector3(sx+side*.05f,y+edge*.59f,sz),new Vector3(.065f,.065f,1.10f),M.Linen,.005f);
+                    panel(new Vector3(sx+side*.05f,y,sz),new Vector3(.04f,1.13f,.055f),M.Linen,.003f);
+                }
+            }
+            panel(new Vector3(0,height*.48f,0),new Vector3(width+.10f,.095f,depth+.10f),M.Linen,.01f);
+            for(int side=-1;side<=1;side+=2)
+            {
+                panel(new Vector3(side*(width*.5f-.055f),height*.5f,-depth*.5f-.035f),new Vector3(.13f,height-.25f,.08f),M.Linen,.01f);
+                panel(new Vector3(side*.52f,1.08f,-depth*.5f-.10f),new Vector3(.075f,2.17f,.10f),M.Linen,.008f);
+            }
+            panel(new Vector3(0,2.19f,-depth*.5f-.13f),new Vector3(1.18f,.12f,.30f),M.Stone,.014f);
+            panel(new Vector3(.31f,1.0f,-depth*.5f-.10f),new Vector3(.032f,.12f,.036f),M.Steel,.004f);
+            panel(new Vector3(.77f,1.65f,-depth*.5f-.085f),new Vector3(.24f,.16f,.055f),M.SafetyAmber,.007f);
+            panel(new Vector3(0,.08f,-depth*.5f-.35f),new Vector3(1.45f,.16f,.62f),M.Stone,.018f);
+            panel(new Vector3(0,.025f,-depth*.5f-.74f),new Vector3(1.75f,.05f,.28f),M.Concrete,.012f);
+            for(int i=0;i<6;i++)
+            {
+                float x=-width*.5f+i*width/5;
+                if(Mathf.Abs(x)<1.12f)continue;
+                Bush(b,p+q*new Vector3(x,0,-depth*.5f-1.1f),.5f,81+i);
+            }
         }
 
         static GameObject Group(GameObject parent, string name)
@@ -844,6 +944,7 @@ namespace TooLateToPanic
             go.AddComponent<MeshFilter>().sharedMesh = BoxMesh(size, radius);
             go.AddComponent<MeshRenderer>().sharedMaterial = palette[(int)material];
         }
+        internal static void EnsurePalette() { Init(); }
         static void Init()
         {
             if (palette != null && palette.Length > 0 && palette[0]) return;
@@ -855,7 +956,8 @@ namespace TooLateToPanic
                 new Color(.34f,.365f,.35f), new Color(.23f,.29f,.32f), new Color(.33f,.25f,.205f),
                 new Color(.56f,.54f,.47f), new Color(.65f,.43f,.17f), new Color(.43f,.18f,.14f),
                 new Color(.55f,.67f,.68f,.15f), new Color(.045f,.055f,.055f), new Color(.19f,.205f,.205f),
-                new Color(.46f,.49f,.49f) };
+                new Color(.46f,.49f,.49f), new Color(.42f,.55f,.48f), new Color(.66f,.47f,.31f),
+                new Color(.72f,.72f,.62f), new Color(.80f,.64f,.36f) };
             Shader shader = Shader.Find("Standard");
             if (!shader) shader = Shader.Find("Legacy Shaders/Diffuse");
             palette = new Material[colors.Length];
@@ -876,7 +978,7 @@ namespace TooLateToPanic
             m.EnableKeyword("_ALPHABLEND_ON"); m.renderQueue = 3000;
         }
 
-        sealed class Builder
+        internal sealed class Builder
         {
             readonly Dictionary<int, List<CombineInstance>> batches = new Dictionary<int, List<CombineInstance>>();
             void Add(M m, Mesh mesh, Vector3 p, Quaternion q, Vector3 scale)
@@ -926,6 +1028,10 @@ namespace TooLateToPanic
                     new Vector3(thick*.5f,eave,-depth*.5f), new Vector3(thick*.5f,eave,depth*.5f), new Vector3(thick*.5f,ridge,0) };
                 int[] t = { 0,1,2, 3,5,4, 0,3,4, 0,4,1, 1,4,5, 1,5,2, 2,5,3, 2,3,0 };
                 Add(m, FinishMesh("GablePrism", v, t), p, Quaternion.identity, Vector3.one);
+            }
+            public void Quad(Vector3 a,Vector3 b,Vector3 c,Vector3 d,M m)
+            {
+                Add(m,FinishMesh("ExteriorQuad",new[]{a,b,c,d,a,b,c,d},new[]{0,1,2,0,2,3,4,6,5,4,7,6}),Vector3.zero,Quaternion.identity,Vector3.one);
             }
             public void Attach(GameObject parent, string name)
             {

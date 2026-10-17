@@ -12,6 +12,7 @@ namespace TooLateToPanic
 
         public static GameObject Create(DisasterType type)
         {
+            if(type==DisasterType.Storm)return PanicStormArt.Create();
             var root = new GameObject("Disaster art - " + type);
             var s = root.AddComponent<PanicDisasterArtState>();
             s.Type = type;
@@ -27,6 +28,7 @@ namespace TooLateToPanic
         public static void Animate(GameObject root, float age, float intensity)
         {
             if (!root) return;
+            PanicStormArt.Animate(root,age,intensity);
             var s = root.GetComponent<PanicDisasterArtState>();
             if (!s) return;
             // HomeEffects resets phase age on Aftermath. Keep the visual event continuous.
@@ -182,18 +184,15 @@ namespace TooLateToPanic
         static void CreateQuake(PanicDisasterArtState s, Material soft)
         {
             var v = new List<Vector3>(); var tr = new List<int>();
-            for (int level = 0; level < 2; level++)
-            {
-                float y = .014f + level * 3.2f;
-                FloorCrack(v, tr, new Vector3(-6.8f, y, -3.8f), new Vector3(-2.3f, y, 2.7f), 11, .035f, level * 31);
-                FloorCrack(v, tr, new Vector3(3.4f, y, -4.6f), new Vector3(6.5f, y, 4.8f), 12, .029f, level * 19 + 4);
-                FloorCrack(v, tr, new Vector3(-4.4f, y, -.9f), new Vector3(-6.6f, y, 1.4f), 6, .018f, level + 29);
-                WallCrack(v, tr, new Vector3(-5.05f, .95f + level * 3.2f, 5.86f), 1.6f, false, level + 3);
-                WallCrack(v, tr, new Vector3(4.98f, .85f + level * 3.2f, 5.86f), 1.9f, false, level + 18);
-                WallCrack(v, tr, new Vector3(-7.86f, .9f + level * 3.2f, -2.06f), 1.7f, true, level + 25);
-            }
+            // This global weather layer is independent of the house cutaway. Only the
+            // permanent ground surface can own fractures here; item damage owns its
+            // local marks. Upper-floor/wall ribbons would float when their shell hides.
+            float y = .014f;
+            FloorCrack(v, tr, new Vector3(-6.8f, y, -3.8f), new Vector3(-2.3f, y, 2.7f), 11, .035f, 0);
+            FloorCrack(v, tr, new Vector3(3.4f, y, -4.6f), new Vector3(6.5f, y, 4.8f), 12, .029f, 4);
+            FloorCrack(v, tr, new Vector3(-4.4f, y, -.9f), new Vector3(-6.6f, y, 1.4f), 6, .018f, 29);
             var crackMat = Opaque(s, "Hairline broken plaster", new Color(.055f, .052f, .043f), .05f);
-            s.Cracks = MeshObject(s, "Persistent floor and window corner fractures", crackMat, v.ToArray(), tr.ToArray(), null);
+            s.Cracks = MeshObject(s, "Persistent ground surface fractures", crackMat, v.ToArray(), tr.ToArray(), null);
             s.Cracks.RecalculateNormals();
             s.CrackObject = s.LastObject; s.CrackObject.SetActive(false);
             CreateDebris(s, 76, false);
@@ -279,6 +278,29 @@ namespace TooLateToPanic
                 var light = go.AddComponent<Light>(); light.type = LightType.Point; light.color = new Color(1, .35f, .085f); light.range = 4.8f;
                 light.shadows = LightShadows.None; light.renderMode = LightRenderMode.ForceVertex; light.intensity = 0; s.FireLights[i] = light;
             }
+
+            // Keep the actual interior ignition sites and their seeded emitters.
+            // Small plumes at the upper window tops carry that fire beyond the
+            // opaque cinematic shell. Rounded alpha puffs rise above the eaves;
+            // no quad, wall or roof is moved.
+            ExteriorFireSmoke(s, smokeMat, "South upper window smoke", new Vector3(4f, 5.28f, -6.22f), new Vector3(.10f, .30f, -.28f));
+            ExteriorFireSmoke(s, smokeMat, "West upper window smoke", new Vector3(-8.22f, 5.28f, -3f), new Vector3(-.28f, .30f, -.08f));
+        }
+
+        static void ExteriorFireSmoke(PanicDisasterArtState s, Material material, string name, Vector3 opening, Vector3 drift)
+        {
+            // Two systems at 96 particles each add at most 192 cosmetic particles.
+            // The source patch stays outside the shell; drift goes away from it.
+            var plume = Particles(s, name, material, 96, 22, 3.7f, 5.2f, .42f, .72f);
+            MeshEmitter(plume, EmitterMesh(s, new[] { opening }, .20f));
+            var main = plume.main; main.startSpeed = new ParticleSystem.MinMaxCurve(.70f, .96f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0, Mathf.PI * 2f);
+            var velocity = plume.velocityOverLifetime; velocity.enabled = true;
+            velocity.x = drift.x; velocity.y = drift.y; velocity.z = drift.z;
+            AddNoise(plume, .18f, .45f); Grow(plume, .55f, 2.5f);
+            SetGradient(plume, new Color(.22f, .21f, .19f, 0), new Color(.40f, .39f, .36f, .54f), new Color(.47f, .47f, .44f, 0));
+            var spin = plume.rotationOverLifetime; spin.enabled = true;
+            spin.z = new ParticleSystem.MinMaxCurve(-.12f, .12f);
         }
 
         static void AnimateFire(PanicDisasterArtState s)

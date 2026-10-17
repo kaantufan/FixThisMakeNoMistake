@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -74,6 +74,7 @@ namespace TooLateToPanic
         public List<SupplySlot> Bag;
         public List<LootSource> Sources;
         public PanicWorkSession Work;
+        public int JuryWaterGatheredCount { get; private set; }
         public string Message;
 
         public string RequirementAction { get { return requirementAction; } }
@@ -110,6 +111,7 @@ namespace TooLateToPanic
         /// <summary>Starts a fresh run's expedition stock. Model run reset remains World-owned.</summary>
         public void Reset()
         {
+            JuryWaterGatheredCount = 0;
             Inventory = MakeEmptySlots(InventoryCapacity);
             Bag = MakeEmptySlots(BagCapacity);
             Sources = CreateSources();
@@ -122,9 +124,59 @@ namespace TooLateToPanic
             Message = "Evdeki dolapları ve depoyu araştır.";
         }
 
+        /// <summary>Finite demo fixture, labelled as prepared stock. Water still requires genuine pickup and packing.</summary>
+        public bool ResetForJuryDemo()
+        {
+            if (Model == null || !Model.IsJuryDemo) return false;
+            Reset();
+            AddOne("bracket", 1);
+            AddOne("screws", 2);
+            AddOne("sandbag", 2);
+            AddOne("plank", 1);
+            AddOne("extinguisher", 1);
+            Model.WaterStock = Model.FoodStock = Model.PackedWater = 0;
+            Model.PackedFood = 1;
+            SetBagCount("food", 1);
+            sourceBlueprints.Clear();
+            for (int i = 0; i < Sources.Count; i++)
+            {
+                Sources[i].Contents.Clear();
+                Sources[i].Open = false;
+                if (Sources[i].Id == "fridge") Sources[i].Contents.Add(Stack("water", 1));
+                sourceBlueprints[Sources[i].Id] = CloneSlots(Sources[i].Contents);
+            }
+            Message = "Başlangıç: 1 gıda çantada; 1 braket, 2 vida, 2 kum torbası, 1 tahta ve 1 tüp envanterde. Su buzdolabında.";
+            NotifyModel();
+            return true;
+        }
+
+        internal void SyncJuryBagAfterDisaster()
+        {
+            if (Model == null || !Model.IsJuryDemo) return;
+            SetBagCount("water", Model.PackedWater);
+            SetBagCount("food", Model.PackedFood);
+        }
+
+        internal void SyncConsumedBagSupplies()
+        {
+            if (Model == null) return;
+            SetBagCount("water", Model.PackedWater);
+            SetBagCount("food", Model.PackedFood);
+        }
+
+        public void ResetForSimulation()
+        {
+            Reset();
+            AddOne("bracket",1);AddOne("screws",2);AddOne("plank",2);AddOne("sandbag",2);AddOne("extinguisher",1);
+            SetBagCount("water",Model.PackedWater);SetBagCount("food",Model.PackedFood);
+            Message="Başlangıç çantası hazır. Sonlu iş malzemeleri envanterde; evde daha fazlasını arayabilirsin.";
+            NotifyModel();
+        }
+
         /// <summary>Refills only renewable consumables after a successfully completed wave.</summary>
         public void OnNewWave()
         {
+            if (Model != null && Model.IsJuryDemo) return;
             if (Model != null)
             {
                 SetBagCount("water", Model.PackedWater);
@@ -199,6 +251,7 @@ namespace TooLateToPanic
             string gathered = loot.Id;
             int gatheredCount = loot.Count;
             AddToSlot(Inventory[destination], gathered, gatheredCount);
+            if (Model.IsJuryDemo && gathered == "water") JuryWaterGatheredCount += gatheredCount;
             loot.Count = 0;
             loot.Id = string.Empty;
             Message = DisplayName(gathered) + " ×" + gatheredCount + " alındı.";
@@ -314,6 +367,7 @@ namespace TooLateToPanic
         /// <summary>Validates a new work attempt without spending stock or budget.</summary>
         public bool CanBeginWork(string action, string targetId)
         {
+            if (Model != null && !Model.CanBeginJuryWork(action, targetId)) return Fail("İşaretli hedefe yönel.");
             ClearRequirements();
             if (!CanPrepare()) return Fail("Hazırlık işi yalnızca hazırlıkta yapılır.");
             if (Work != null && Work.Active) return Fail("Önce etkin işi bitir veya iptal et.");
@@ -329,6 +383,7 @@ namespace TooLateToPanic
         /// <summary>Commits a completed keyboard work session exactly once, after validating all costs and targets.</summary>
         public bool TryCompleteWork(string action, string targetId)
         {
+            if (Model != null && !Model.CanBeginJuryWork(action, targetId)) return Fail("Bu iş için süre doldu; malzemelerin sende kaldı.");
             if (!CanPrepare()) return Fail("Hazırlık işi yalnızca hazırlık aşamasında tamamlanabilir.");
             if (Work == null || !Work.Complete || Work.Action != action || Work.TargetId != targetId)
                 return Fail("İşi tamamlamak için etkin klavye görevini bitir.");
@@ -729,7 +784,7 @@ namespace TooLateToPanic
             IReadOnlyList<PanicMaterialRequirement> requirements = MissingRequirements;
             for (int i = 0; i < requirements.Count; i++)
                 missing.Add(DisplayName(requirements[i].Id) + ": eksik " + requirements[i].Missing);
-            if (RequirementBudgetMissing > 0) missing.Add("Bütçe: eksik " + RequirementBudgetMissing + " ₺");
+            if (RequirementBudgetMissing > 0) missing.Add("Bütçe: eksik $ " + RequirementBudgetMissing);
             return Fail(string.Join(" · ", missing.ToArray()));
         }
 
@@ -773,6 +828,12 @@ namespace TooLateToPanic
         const float AlignTolerance = .12f;
         const float BalanceSeconds = .95f;
         const float SettleSeconds = .25f;
+        bool juryFriendly;
+        public int RequiredStrokes { get { return juryFriendly ? 2 : 3; } }
+        public int CompletedStrokes { get { return strokes; } }
+        float CurrentAlignTolerance { get { return juryFriendly ? .19f : AlignTolerance; } }
+        float CurrentBalanceSeconds { get { return juryFriendly ? .65f : BalanceSeconds; } }
+        public bool JuryFriendly { get { return juryFriendly; } }
         float stageProgress, stageAge, workAge, settleRemaining, strokeCooldown;
         float feedbackAge, toolMotion, baseTarget;
         int strokes, expectedDirection;
@@ -793,23 +854,26 @@ namespace TooLateToPanic
 
         public PanicWorkMode Mode { get; private set; }
         public bool IsApplying { get { return applying; } }
-        public int ExpectedDirection { get { return applying && Mode == PanicWorkMode.Ratchet && strokes < 3 ? expectedDirection : 0; } }
+        public int ExpectedDirection { get { return applying && Mode == PanicWorkMode.Ratchet && strokes < RequiredStrokes ? expectedDirection : 0; } }
         public string StepHint { get { return Hint; } }
         public float StageProgress { get { return stageProgress; } }
-        public float TargetWidth { get { return !applying ? AlignTolerance : Mode == PanicWorkMode.Timing ? .11f : .12f; } }
+        public float TargetWidth { get { return juryFriendly ? .19f : !applying ? AlignTolerance : Mode == PanicWorkMode.Timing ? .11f : .12f; } }
         public float ToolMotion { get { return toolMotion; } }
-        public string StageName { get { return NameForStage(Action, Mathf.Min(CompletedSteps, 3)); } }
+        public string StageName { get { return NameForStage(Action, juryFriendly && CompletedSteps > 0 ? 3 : Mathf.Min(CompletedSteps, 3)); } }
 
-        public void Begin(string action, string targetId)
+        public void Begin(string action, string targetId) { Begin(action, targetId, false); }
+
+        public void Begin(string action, string targetId, bool juryDemo)
         {
             Cancel();
+            juryFriendly = juryDemo;
             if (!IsSupported(action)) return;
             Action = action;
             TargetId = targetId ?? string.Empty;
             Label = LabelFor(action);
             Mode = action == "fire" || action == "hose" ? PanicWorkMode.Balance :
                 action == "plant" || action == "drain" || action == "flood" ? PanicWorkMode.Timing : PanicWorkMode.Ratchet;
-            TotalSteps = 4;
+            TotalSteps = juryFriendly ? 2 : 4;
             Quality = 1f;
             Active = true;
             StartStage();
@@ -862,7 +926,7 @@ namespace TooLateToPanic
                 if (pressed)
                 {
                     float error = Mathf.Abs(Cursor - Target);
-                    if (error <= AlignTolerance)
+                    if (error <= CurrentAlignTolerance)
                     {
                         applying = true;
                         stageAge = 0f;
@@ -887,18 +951,18 @@ namespace TooLateToPanic
             }
             else if (Mode == PanicWorkMode.Ratchet)
             {
-                if (strokes < 3 && strokeCooldown <= 0f && input * expectedDirection > .5f)
+                if (strokes < RequiredStrokes && strokeCooldown <= 0f && input * expectedDirection > .5f)
                 {
                     toolMotion = expectedDirection;
                     strokes++;
-                    stageProgress = strokes * .25f;
+                    stageProgress = strokes / (float)(RequiredStrokes + 1);
                     expectedDirection *= -1;
-                    strokeCooldown = .36f;
+                    strokeCooldown = juryFriendly ? .24f : .36f;
                     RefreshHint();
                 }
                 if (pulse)
                 {
-                    if (strokes >= 3) SeatStage();
+                    if (strokes >= RequiredStrokes) SeatStage();
                     else Feedback("Önce A / D ile çevir", false);
                 }
             }
@@ -924,7 +988,7 @@ namespace TooLateToPanic
                 bool inBand = Mathf.Abs(Cursor - Target) <= TargetWidth;
                 if (held && inBand)
                 {
-                    stageProgress = Mathf.Min(1f, stageProgress + dt / BalanceSeconds);
+                    stageProgress = Mathf.Min(1f, stageProgress + dt / CurrentBalanceSeconds);
                     toolMotion = .45f + stageProgress * .5f;
                     if (stageProgress >= 1f) SeatStage();
                 }
@@ -940,6 +1004,7 @@ namespace TooLateToPanic
 
         public void Cancel()
         {
+            juryFriendly = false;
             Active = false;
             Action = TargetId = Label = Hint = string.Empty;
             CompletedSteps = TotalSteps = strokes = expectedDirection = 0;
@@ -960,7 +1025,7 @@ namespace TooLateToPanic
                 uint hash = 2166136261u;
                 string seed = (Action ?? string.Empty) + "|" + (TargetId ?? string.Empty) + "|" + CompletedSteps;
                 for (int i = 0; i < seed.Length; i++) hash = (hash ^ seed[i]) * 16777619u;
-                Target = (hash & 1u) == 0u ? .26f : .74f;
+                Target = juryFriendly ? ((hash & 1u) == 0u ? .36f : .64f) : ((hash & 1u) == 0u ? .26f : .74f);
             }
             baseTarget = Target;
             RefreshHint();
@@ -970,7 +1035,7 @@ namespace TooLateToPanic
         void SeatStage()
         {
             stageProgress = 1f;
-            settleRemaining = SettleSeconds;
+            settleRemaining = juryFriendly ? .16f : SettleSeconds;
             toolMotion = 1f;
             Hint = "Yerine oturdu";
         }
@@ -987,7 +1052,7 @@ namespace TooLateToPanic
             if (Complete) { Hint = "Hazır!"; return; }
             if (feedbackAge > 0f || settleRemaining > 0f) return;
             if (!applying) Hint = "A / D ile hedefle · Enter";
-            else if (Mode == PanicWorkMode.Ratchet) Hint = strokes >= 3 ? "Space ile yerine oturt" : expectedDirection < 0 ? "A ile sola çevir" : "D ile sağa çevir";
+            else if (Mode == PanicWorkMode.Ratchet) Hint = strokes >= RequiredStrokes ? "Space ile yerine oturt" : expectedDirection < 0 ? "A ile sola çevir" : "D ile sağa çevir";
             else if (Mode == PanicWorkMode.Timing) Hint = "Yeşilde Space'e dokun";
             else Hint = Mathf.Abs(Cursor - Target) > TargetWidth ? "A / D ile basıncı dengele" : "Yeşilde Space basılı tut";
         }

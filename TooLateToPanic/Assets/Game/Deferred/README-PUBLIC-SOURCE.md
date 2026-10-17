@@ -1,5 +1,5 @@
 # Deferred audio
 
-Historical Microsoft Tolga radio WAV files are retained in the local development archive but are excluded from this public source snapshot because their redistribution terms have not been independently verified. They are outside Resources, are not used by the current disaster-only audio policy, and are not part of the current Windows player package.
+Historical Microsoft Tolga radio WAVs are retained in the local development archive and excluded from this public source snapshot because their redistribution terms have not been independently verified. They are outside Resources and absent from the current Windows package.
 
-See `../../../Documentation/ASSET-CREDITS.md` for provenance and the current audio policy. No Microsoft voice engine or voice data is included.
+Current short preparation audio uses the separately documented ElevenLabs cues in Resources/Audio/Jury; normal campaign audio remains disaster-only. See ../../../Documentation/ASSET-CREDITS.md and ../Resources/Audio/Jury/LICENSE-AND-PROVENANCE.md. No Microsoft voice engine or voice data is included.

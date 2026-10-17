@@ -1,10 +1,18 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Sürüm 2.0 · 17 Ekim 2026 · Home V4.5**
+**Sürüm 2.2 · 17 Ekim 2026 · Home V4.7**
 
 Tema **Afete Hazırlık ve Önlem**. Tek oyunculu, tamamen çevrimdışı Windows oyunu. İki yaşanabilir katı, bodrumu, balkonu, banyosu, bitişik garajı, bahçesi ve bunkeri olan müstakil evde geçer. Dolaşımda karakteri izleyen, yönü sabit izometrik ortografik kamera; afet ve sonuç sahnelerinde gerçek sinematik kamera kullanılır. Teknik hedef Unity 6000.0.73f1, Built-In ve Windows'tur.
 
-Bu belge Home V4.5 tasarımını ve kaynakta bulunan akışları tanımlar. Derleme, kısa native kontrol, elle oynanış/işitme ve son görsel kabul ayrı kanıtlardır. Güncel kaynak/build/native kimliği LATEST-BUILD.json ve [Home V4.5 teslim kaydında](HOME-V4.5-DELIVERY-2026-10-17.md) bulunur. Önceki sürümlerin sonuçları tarihsel kayıttır ve yeni DLL kabulü yerine kullanılamaz. [Home V2 GDD](GDD-HOME-V2.md) tarihsel olarak korunur. [Home V4.3 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-INTERACTION-V43-20261016/CONTRACT.md) son etkileşim ve banyo kararını; [Home V4 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-HOME-V4-20261016/CONTRACT.md) temel sanat ve iş kapsamını belirler. Bağımsız FPS projesinin kendi sözleşmesi o sürümün farklarını tanımlar.
+Bu belge Home V4.7 tasarımını ve kaynakta bulunan akışları tanımlar. Derleme, kısa native kontrol, elle oynanış/işitme ve son görsel kabul ayrı kanıtlardır. Güncel kaynak/build/native kimliği LATEST-BUILD.json ve [Home V4.7 teslim kaydında](HOME-V4.7-DELIVERY-2026-10-17.md) bulunur. Önceki sürümlerin sonuçları tarihsel kayıttır ve yeni DLL kabulü yerine kullanılamaz. [Home V2 GDD](GDD-HOME-V2.md) tarihsel olarak korunur. [Home V4.3 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-INTERACTION-V43-20261016/CONTRACT.md) son etkileşim ve banyo kararını; [Home V4 sözleşmesi](../../Evidence/GamejamOrchestra/TLTP-HOME-V4-20261016/CONTRACT.md) temel sanat ve iş kapsamını belirler. Bağımsız FPS projesinin kendi sözleşmesi o sürümün farklarını tanımlar.
+
+## Home V4.7 güncel kararlar
+
+Başlıkta HAZIRLIĞA BAŞLA sonlu stoklu270sn kısa hazırlık akışını, SERBEST OYUN normal kampanyayı açar. Kısa akışta hareket/su toplama/çantaya koyma/iki adımlı sabitleme, depremde çök–kapan–tutun alanı ve gerçek sonuç, ayrı sel drenajı/yüksek hedef ve yangın hazırlığı/dış toplanma alanı vardır. Başlangıç gıdası açıkça baseline'dır. Başarı uydurulmaz; tamam/eksik/atlandı ayrılır, skor yazılmaz. İlk180sn keyif ve toplam300sn üst sınır tasarım hedefidir; insan kabulü ayrı yapılır. Zincirleme afetler ertelenmiştir. Bu akış saati menüde de ilerler; normal kampanya hazırlık duraklatması değişmez.
+
+SAHNEYİ ATLA/Enter gerçek model çözümünü bir kez bitirip kamera/karakteri iade eder. Bunker sinematiğinde HUD'nin saatleri birlikte kilitlemesi kaldırılmıştır. F2 Kaybetmeme gerçek afet/hasar/erzak tüketimini korur, kayıp yerine incelemeye geçer; bu dalga başarı/skor/ödül sayılmaz ve koşu sticky skor dışıdır.
+
+Yarkın seçili modelleri ve12prop konstrüksiyon/malzeme/biçim geçişi, hafif seçili pickup hareketi, .30sn görsel toplama yayı ve gerçek sabitlemeye bağlı donanım eklenmiştir. Yalnız kısa akış için7ElevenLabs cümle+3kısa efekt son kullanıcı isteğiyle yetkilendirilmiştir. Konuşma15.73sn toplam, altyazılı ve tek seslidir; eski Tolga/serbest oyun konuşması ertelemesi sürer. Aşağıdaki HomeV4 yalnız-afet paragrafları tarihsel tabanı açıklar. Kaynak/build/native ve işitsel/insan kabul sınırı güncel teslimdedir.
 
 ## Temel döngü
 
@@ -153,3 +161,18 @@ Açılan kapı da kapanan kapı gibi karaktere temas etmeden durur. Yarı kapanm
 
 F2 veya görünür menü düğmesi geliştirici panelini açar. Sınırsız bütçe, iş/üretim malzemesi harcamama ve hazırlık süresini dondurma bağımsızdır; +1000 bütçe tek eylemdir. Menü açmak hile sayılmaz. Seçenek kullanılması koşuyu kalıcı hileli işaretler ve normal skor yazımını engeller; seçenek kapatmak bu koşuyu temizlemez. Yeni temiz koşu skor tutabilir. Seçimler süreç içinde korunur, diske ayar yazılmaz. Menü oyun girişini/model saatini kilitler, önceki duraklatma durumunu geri getirir. Kapasite/hedef/minigame/fizik kuralları ve afet saatleri korunur. GitHub güncel kaynak ve oynanabilir paket teslimi bu sürüm kapsamındadır.
 
+
+
+## Home V4.6 HUD
+
+HTML konsepti aktif oyuna uyarlanmıştır. Kömür/krem/petrol/amber/pas paleti, çevrimdışı Oswald/Barlow fontları, ayrı dalga/süre/kaynak kartları, canlı malzeme açıkları ve ortak çanta/iş/sonuç tasarımı kullanılır. 1600×900 mantıksal tuval ekran içine sığar; çanta ve işte gerçek sayaç görünür. Hazırlık son60alarmı, F2 ve sticky hileli koşu/skor davranışı korunur. 75/75 kısa fixture/API kontrolü, beş çözünürlük,50render ve dar fiziksel OS giriş kontrolü vardır; tam kampanya/mini oyun tamamlama kabulü değildir.
+
+
+## V4.7 dış dünya ve seçili afet ekleri
+
+Ayrı seçili tek-afet simülasyonu dört tip içerir;90sn hazırlık ve hazır başlangıç çantası açıkça belirtilir, skor/ödül yoktur. Sonuç kararlı Inspection veya gerçek kayıptır; yeni otomatik dalga açılmaz. Storm yeni3enumdur; eski0–2 ve kampanya sırası korunur. Roof/window/door riski ayrı, ankraj/tier etkisi vardır; mühendislik hesabı değildir. Dere yönlü animasyonlu mesh/foam, selde seviye değişimi; komşu hasarı yalnız sunumdur. Dört CC0 çevre NPCsi görev/ekonomi/kalabalık simülasyonu oluşturmaz. Sgaraj yolu bunker kapağını dolaşır; çit işinin konumu yolu kapatmaz.
+
+Basılı sağ sürükleme ortografik yaw/pitch, kısa sağ bırakma taşıma; UI/iş/çanta/sinematik engelleri vardır. Üst katta alt meshler gizlenir, fiziksel colliderlar kalır. Helikopter içkamera planlarında gizlenir. Sinematikler aynı süre içinde afete özel kadraj ve sakin hareket kullanır. HUD dolar ve gerçek su/gıda3D görselleri kullanır.
+
+
+Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zamanlı kesintisiz rota + 189/189 regresyon,0runtime hata. Kısa akış49.67sn, dört doğal simülasyon; test Warp/Tick/hile0. Üretim API girdisi, OS/insan keyif kabulü değildir. LATEST ve HOME-V4.8-DELIVERY-2026-10-17.md yeniDLL/manifesti bağlar; eskiV4.7 açıkoyun korunur.

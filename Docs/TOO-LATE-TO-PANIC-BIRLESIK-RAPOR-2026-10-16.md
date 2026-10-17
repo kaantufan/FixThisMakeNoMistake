@@ -1,17 +1,17 @@
 # Too Late to Panic! — izometrik gelişim, asset ve Civil uyarlama raporu
 
-**İlk rapor:** 16 Ekim 2026 · **Son düzenleme:** 17 Ekim 2026 · **Tür:** Tek seferlik değerlendirme ve üretim önerisi  
+**İlk rapor:** 16 Ekim 2026 · **Son düzenleme:** 17 Ekim 2026 · **Tür:** Birleşik araştırma, üretim ve kabul kaydı  
 **Kapsam:** İzometrik gelişim özeti, asset kalitesi/çeşitliliği, oda incelemesi, teknik sanat standardı ve Civil GameJam uyarlaması.
 
 **Aktif geliştirme kararı — 16 Ekim 2026:** Bundan sonraki ürün, asset, mekanik, demo ve kabul planı yalnız **izometrik Too Late to Panic!** içindir. **FPS geliştirmesi askıdadır; iptal edilmemiştir.** Kullanıcı yeniden gündeme aldığında dönülebilir. Mevcut FPS kaynakları, build’leri, lisansları, kayıtları ve kanıtları korunur; aktif izometrik paketler FPS entegrasyonu veya FPS testi beklemez. [Koruma ve dönüş notu](#fps-askida).
 
-**Jüri sunum sınırı — 17 Ekim 2026:** Kullanıcı bilgisidir: en fazla **5 dakika**. Öncelik, **4:30 içerik + 0:30 yedek** içinde gerçek hazırlık ve sonucu oynatmak; ayrıntılı düzenleme/kabul planı [Bölüm 5.1](#juri-demo)’dedir. Bu plan henüz oyuna uygulanmadı.
+**Kısa oynama süresi — 17 Ekim 2026:** Kullanıcı bilgisidir: en fazla **5 dakika**. Öncelik, **ilk 3 dakikada anlaşılır ve keyifli bir eylem–sonuç döngüsü**, toplamda **4:30 içerik + 0:30 yedek** içinde devam isteği uyandıran bir gösterimdir; ayrıntılı düzenleme/kabul planı [Bölüm 5.1](#juri-demo)’dedir. Ana kısa akış Home V4.8 içinde kesintisiz semantik girdi rotasıyla denendi. İnsanla ilk180sn keyif kabulü henüz yapılmadı.
 
 **Önerilen yön:** Renkli ve yaşanmış ev tabanını koruyup oda kimliğini farklı gövdelerle güçlendirmek; hazırlıkları gerçek nesne durumlarında göstermek; Civil içeriğini doğru afet davranışı, anlaşılır plan ve dürüst sonuç geri bildirimi etrafında kurmak. Önce mutfak, çanta istasyonu ve ortak donanım; ardından oda mobilyaları ve mevcut önlemleri anlatan küçük Civil paketi öneriliyor. Taşıyıcı fizik, bakım ekonomisi ve bütün market dönüşümü ayrı kapsam kararlarıdır.
 
 Bu belge önceki **14 Markdown raporunu, iki CSV tablosunu ve asset atlasının içeriğini** bir araya getirir. Tekrar eden açıklamalar, iptal edilen sayaç/takip yönergeleri ve ayrıntılı işlem günlükleri çıkarılmıştır. **40 inceleme ailesi, 24 üretim adayı, 12 teknik iddia ve 17 uyarlama fikri** aşağıda tam tablolarıyla bulunur. Bunlar tamamlanmış yeni asset veya mekanik sayıları değildir. İlk kaynak araştırmaları 16 Ekim’de, jüri süresi/kolaylık için ek resmi rehber incelemesi 17 Ekim’de yapılmıştır. Rapor düzenlemesi yeni oyun kabulü üretmez.
 
-İçindekiler: [Kararlar](#kararlar) · [Güncel durum ve gelişim](#durum) · [Asset planı](#assets) · [Civil uyarlaması](#civil) · [Birleşik üretim sırası](#yol) · [5 dakikalık jüri planı](#juri-demo) · [Görsel kanıtlar](#gorsel) · [Kabul ve kaynak kaydı](#kayit) · [FPS koruma/dönüş notu](#fps-askida)
+İçindekiler: [Kararlar](#kararlar) · [Güncel durum ve gelişim](#durum) · [Asset planı](#assets) · [Civil uyarlaması](#civil) · [Birleşik üretim sırası](#yol) · [5 dakikalık kısa akış](#juri-demo) · [İlk 3 dakika ve görsel geri bildirim](#ilk-uc-dakika) · [Görsel kanıtlar](#gorsel) · [Kabul ve kaynak kaydı](#kayit) · [FPS koruma/dönüş notu](#fps-askida)
 
 <a id="kararlar"></a>
 ## 1. Ana kararlar
@@ -25,27 +25,17 @@ Bu belge önceki **14 Markdown raporunu, iki CSV tablosunu ve asset atlasının 
 | Civil uyarlaması | Hazırlık planı, mevcut ankraj/drenajın görünür parçaları, rota vurgusu ve hesaplanan sonuçları anlatan karne uygulanabilir ilk paket. |
 | Teknik doğruluk | FRP–çelik–betonarme evrensel ucuzdan güçlüye sıra değil. Kesin deprem sayacı, her afette aynı bodrum hedefi ve %40 gerçek çökme eşiği önerileri düzeltilmeli. |
 | Kapsam | Aktif ürün izometrik; Unity 6000.0.73f1 Built-In ve çevrimdışı Windows hedefi korunur. FPS askıda tutulan bağımsız alternatiftir. Yeni renderer, büyük framework veya sağlayıcı harcaması gerekmiyor. |
-| Ses | İzometrikte son kullanıcı kararı yalnız afet sesleri. Eski radyo/anlatım hedefi ve önerilen montaj sesleri bu kararı geçersiz kılamaz. |
+| Ses | Yeni17Ekim isteğiyle kısa akışta7ElevenLabs cümle+3efekt; normal kampanyada afet sesi/eskiradyo ertelemesi sürer.537mevcut kredi; yeni ödeme yok. |
 | Kabul | Kaynak, export, kısa native kontrol, görsel değerlendirme ve insan oynanışı ayrı sonuçlardır. Araştırma önerisi uygulanmış özellik olarak yazılmaz. |
 
 <a id="durum"></a>
 ## 2. Güncel durum, gelişim ve korunacak oyun tabanı
 
-### 2.1. İzometrik sürüm bağı
+### 2.1. Güncel izometrik sürüm — Home V4.8
 
-Çalışma düzeni aktif geliştirmeyi **Home V4.4** olarak işaretliyor; son kayıtlı build indeksi hâlâ **Home V4.3**. Aşağıdaki durum ve kontrol anlatımı bu kayıtlı V4.3 kesitidir. V4.4 üretim kapsamı, yeni build/DLL ve ilgili kabul kanıtı oluştuğunda ayrıca güncellenir.
+Kısa hazırlık akışı gerçek zamanlı kesintisiz CharacterController rotasında **49.67sn** içinde bütün hedeflerle tamamlandı. Dört afet doğal sürelerinde başlatıldı/sonuçlandı; gerçek kayıp/hasar korunarak inceleme, menü ve tekrar denendi. **149/149rota**, **189/189regresyon**,0runtime hata; kaynak/prefab/asset/settings farkı0. Test ışınlanması/zaman enjeksiyonu/hile0. Girdiler üretim API'sinden; OS girdisi, ilk kez oynayan insan keyfi/işitmesi ve tam kampanya kabulü değildir.
 
-Raporun teslim kesiti **Home V4.3 / 0.4.3** indeksine bağlıdır. Önceki birleştirmede bu indeks ve diskteki `Assembly-CSharp.dll` SHA256 eşleşmesi okunmuştur. Bu kapsam değişikliği yeni Unity/import/build/player testi üretmez; aşağıdaki kabul mevcut teslim kaydıdır. Aktif kaynakların tamamı yeniden karşılaştırılmamıştır; indeksin sıfır drift kaydı kendi teslim anını anlatır.
-
-| Aktif ürün | Kayıtlı kısa kabul | Açık sınır |
-|---|---|---|
-| **İzometrik Home V4.3 / 0.4.3** | **11/11**, 0 hata; kapının karakteri itmeden durması/devamı, fare yerleştirme API’leri, gerçek malzeme açıkları ve yeni güney banyo girişi | İnsan OS girdisi ve tam kampanya kabulü yok. Merdiven kapsamı kalıcı korkuluk/controller değişmezleri; önceki tam V4.2 rota turu bu koşuda tekrarlanmamış. |
-
-[İzometrik build indeksi](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanic/LATEST-BUILD.json>) · [Home V4.3 teslimi](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanic/Documentation/HOME-V4.3-DELIVERY-2026-10-16.md>)
-
-**Bağlanan DLL SHA256:** `EE9B8A269FF8D73718D358F3BBE2B39E17086EBBA6115FE10D45A75CBE6710E1`
-
-Aktif görsel değerlendirme, önceki **Home V4 genel ev ve Home V4.1 banyo** karelerinden yararlanır. Bunlar V4.3’ün yeniden çekilmiş görsel kabulü değildir. Küvet yüzeyi veya oda boşluğu gibi tarihli bir bulgu, aynı durumun yeni pakette sürdüğünü kanıtlamaz. Bir sonraki sanat paketi aynı izometrik kamera/ışık/zoom ile karşılaştırılmalıdır. FPS görüntüleri izometrik sahnede varlık kanıtı veya kabul ölçütü olarak kullanılmaz.
+Enter atlama, adım sayısı, tüketilen çanta, doğru kayıp nedeni, farklı kat rehberi ve kayıptan sonra hasarı inceleme düzeltildi. Beş üretim oturumunun tamamlandığı doğrulandı. [Yeni teslim ve süreler](../TooLateToPanic/Documentation/HOME-V4.8-DELIVERY-2026-10-17.md). DLL `5683E713C90F2FD070DB819D14526EBA74ACC25B65C6581DABD6FB602F6BD17E`.
 
 ### 2.2. Gelişim özeti
 
@@ -62,7 +52,7 @@ Eski gelişim raporundaki çalışma alanını oyunun adına taşıma, ilgisiz d
 
 ### 2.3. Temel oyun döngüsü ve mevcut sınırlar
 
-Oyuncu yaklaşan oyun olayına hazırlanır; malzeme toplar, çanta düzenler, ev/bahçede önlem alır; olaydan sonra sonucu inceler ve yeni dalgaya geçer. Mevcut bunker bitiş koşulu oyun kuralıdır. Civil bölümündeki afete uygun korunma/tahliye hedefleri bu kuralı yeniden tasarlama önerisidir; henüz uygulanmış sonuç sayılmaz.
+Oyuncu yaklaşan oyun olayına hazırlanır; malzeme toplar, çanta düzenler, ev/bahçede önlem alır; olaydan sonra sonucu inceler ve yeni dalgaya geçer. Mevcut bunker bitiş koşulu oyun kuralıdır. Kısa akışta deprem için korunma alanı, sel için üst kat ve yangın için dış toplanma hedefleri uygulanmıştır. Normal kampanya bunker kuralı korunur.
 
 | Alan | İncelenen temel sözleşme |
 |---|---|
@@ -219,7 +209,7 @@ Paketlerin tek öncelik sırası Bölüm 5’te verilmiştir; aşağıdaki koşu
 
 Önceki kaynak audit'inde izometrik `PanicResidenceBuild.Persist` mesh/materyal kalıcılaştırırken yeni üretilen materyal dokularını ayrıca kaydetmiyordu. **Bu yalnız tarihli entegrasyon riski bulgusudur.** Güncel Home V4.3 builder'ı burada yeniden denetlenmedi; mevcut build'de kayıp doku arızası veya bugünkü eksik kod iddiası değildir. Yeni dokulu paket öncesi sahibi güncel zinciri doğrulamalıdır. Semantik materyal adlarının eski genel palette remap ile düzleşmemesi ve yeni sanatın tam bake'e girmesi de paket şartıdır.
 
-Ev/prop/ikon/VFX üretiminin ana kaynağı yerel prosedürel koddur. Mevcut Quaternius Standard gövde/animasyon tabanı ve korunmuş CC0 lisansları yeni yerel iş kıyafeti/el/alet sanatıyla karıştırılmaz. Ücretli provider işi veya kredi kullanılmadı; dış model gelirse dosya, sürüm, lisans ve uyarlama ayrı kaydedilir. Deferred konuşma kayıtları korunur; izometrikte yalnız afet sesi politikası bu görsel planla değiştirilmez.
+Ev/prop/ikon/VFX üretiminin ana kaynağı yerel prosedürel koddur. Mevcut Quaternius Standard gövde/animasyon tabanı ve korunmuş CC0 lisansları yeni yerel iş kıyafeti/el/alet sanatıyla karıştırılmaz. Bu paragrafın eski yerel sanat tabanına ek olarak V4.7 seçili Yarkın importları ve537kredilik ElevenLabs ses paketi içerir. Dosya/model/lisans/uyarlama kayıtları son teslimdedir. Deferred eski konuşmalar korunur.
 
 Teslimde üretici ID, ölçü/pivot/forward, materyal/harita, hareketli leaf/socket ve gerekli collider/etkileşim sahipliği açık olur. Gerekmeyen rig/animasyon/VFX/SFX gerekçeli `not_applicable`; gereken eksik açık eksik kalır. Sanatçı önizlemesi, indirme, kaynak entegrasyonu, native mekanik kontrol ve son görsel kabul ayrı aşamalardır. İlgili root tek birleşik import/build ve bir kısa affected smoke yapar; görsel için aynı kamera/ışıkta genel oda, en yakın etkileşim ve afet anı karşılaştırılır. Tutuş için kısa hareketli insan incelemesi de gerekir. Aktif kabul izometrik projede yapılır; collision, bütçe, süre veya kayıp kuralı sanatı geçirmek için gevşetilmez.
 
@@ -402,7 +392,7 @@ Boyutlar göreli iş sınıfıdır: **kolay** mevcut verinin sunumu, **orta** k�
 
 **Girdi ve ses.** Q hedef çevrimi/seçimi içindir; Plan görünümü ayrı görünür düğme veya çakışmayan kısayol ister. E dünya aç/kapa/ana etkileşim; F görünür seçili stok; Enter envanter onayı ve mevcut iş ailesindeki kilittir. Ratchet/Timing/Balance davranışları Bölüm 2’deki izometrik düzeni korur. Bilgi katmanı, kat/mesafe/kapalı kaynak kurallarını kendiliğinden kaldırmaz.
 
-İzometrikte yalnız afet sesleri etkindir; montaj çakması, UI sesi, genel anlatım ve radyo konuşması bu kapsamla kendiliğinden yetkilenmez. Görsel yerleşme ve kısa metin ilk tercihtir.
+V4.7 kısa akışta yeni kullanıcı isteğiyle7kısa konuşma+3efekt etkindir; altyazı ve görsel yerleşme birlikte kullanılır. Normal kampanya genel anlatımı/radyo konuşması ertelenir.
 
 **Karne doğruluğu.** İlk kart; yapılan önlem, gerçekleşen en büyük hasar katkısı, eksik hedef ve kaynaklı tek öğrenme notu gösterebilir. `Contribution` gerçekleşen hasara katkıdır; **avoided damage / önlenen hasar değildir**. “-%25 kurtardı” için aynı senaryo/seed ve olay öncesi snapshot üzerinden yan etkisiz karşı-olgusal hesap veya açık before/after terimleri gerekir. Çarpılan önlemler ve normalizasyon varken etkiler keyfî toplanmaz. Gerçek katkı ile kurulu/eksik bayrağı göstermek, hesaplanmayan faydayı uydurmadan anlamlı neden-sonuç sağlar.
 
@@ -443,7 +433,7 @@ Aşağıdaki sıra asset ve Civil araştırmalarını tek izometrik üretim plan
 
 | Sıra | Paket | Somut içerik | Bitmiş sayılma ölçütü |
 |---|---|---|---|
-| **J0** | Beş dakikalık jüri demosu | Bir tam hazırlık–afet–sonuç döngüsü, sel/yangında kısa oyuncu eylemleri, az görev ve kolaylaştırılmış işler | ≤270 sn içerik + 30 sn yedek; bütün oturum ≤300 sn; ayrı demo/skor, afete uygun faz/hedef ve gerçek durum karnesi; Bölüm 5.1 |
+| **J0** | İlk üç dakikası güçlü beş dakikalık demo | Gerçek toplama ve kısa iş, görünür sabitleme, iki eşyalı afet sonucu; sel/yangında farklı kısa eylemler | ≤180 sn ilk tam döngü; normal rotada sel de 3:00’da biter. 270 sn içerik + tek30 sn yedek; yeni zincirleme afet yok; Bölüm 5.1–5.2 |
 | **A** | Oda kimliği ve hazırlık odağı | Fırınlı ocak, eviyeli tezgâh, çaydanlık/servis kümesi; izometrikte görünür gerçek çanta; ortak kulp/menteşe/kenar ve materyal standardı | Normal kamera ölçeğinde farklı siluet; gerçek loot okunur; kapak iç hacmi, rota ve tek tüketim korunur. Yeni pişirme mekaniği gerekmiyor. |
 | **B** | Mobilya ve oda konstrüksiyonu | Ayrı koltuk/minder formu, gardırop/komodin, farklı raf yükleri, banyo çanak/kaide, metal işlik rafı ve seçilmiş alet kümesi | Yeniden renklenmiş aynı gövde yerine anlamlı yapı farkı; Normal izometrik zoom’da oda kimliği; mevcut iş yakın planında kalınlık/temas. Mevcut perde/jeneratör gibi fabrikalar yeniden üretilmeden kullanım ihtiyacı kontrol edilir. |
 | **C** | Küçük Civil paketi | Plan düğmesi/ikonları, mevcut ankrajın plaka-pul-kayışı, drenaj kanal/ızgara/çıkış, yerleşim rezervi, gerçek verili afet karnesi | Görünür parça gerçek state'i anlatır; Q/loot/iş girdileri çatışmaz; karne hesaplanmayan “önlenen hasar” yüzdesi uydurmaz; ekonomi/kayıp kuralı sessiz değişmez. |
@@ -457,9 +447,9 @@ Aşağıdaki sıra asset ve Civil araştırmalarını tek izometrik üretim plan
 
 
 <a id="juri-demo"></a>
-### 5.1. Jüri için en fazla 5 dakikalık izometrik demo — 17 Ekim kararı
+### 5.1. En fazla 5 dakikalık izometrik kısa akış —17Ekim kararı
 
-**Kısıt kullanıcıdan geliyor:** Jüri bir oturumda en fazla **300 saniye** oynayabilecek. Bu, web araştırmasından çıkarılan resmi etkinlik kuralı değildir. Önceki uzun demo önerisinin yerini bu plan alır. **Hedef 270 saniyede sonuç kartı, 30 saniye ortak yedek paydır.** Aşağıdakiler planlanmıştır; mevcut build’de uygulanmış veya insanla süre kabulü yapılmış değildir.
+**Kısıt kullanıcıdan geliyor:** Jüri bir oturumda en fazla **300 saniye** oynayabilecek. Bu, web araştırmasından çıkarılan resmi etkinlik kuralı değildir. Önceki uzun demo önerisinin yerini bu plan alır. **Hedef 270 saniyede sonuç kartı, 30 saniye ortak yedek paydır.** Ana kısa akış V4.7 içinde uygulanmıştır. Aşağıdaki süreler tasarım bütçesidir; insanla süre kabulü değildir.
 
 Bu kesitin amacı; jürinin evi tanıması, gerçek malzeme toplaması/çantaya koyması, bir önlem uygulaması, bir eşyayı taşıması ve hazırlığının sonucunu görmesidir. Dokuz dalga, dokuz iş türü, bütün odalar ve 24 üretim adayının tek oturuma sığdırılması beklenmez. Bir tam deprem döngüsü ana deneyimdir; sel ve yangın tek anlamlı eylem içeren kısa durum örnekleridir. Üç ayrı tam kampanya turu kurulmamalıdır.
 
@@ -468,14 +458,14 @@ Bu kesitin amacı; jürinin evi tanıması, gerçek malzeme toplaması/çantaya 
 | Zaman | Süre | Bölüm | Oyuncunun göreceği ve yapacağı |
 |---|---:|---|---|
 | 00:00–00:20 | 20 sn | Açılış ve ilk hareket | Tek görünür “Jüri Demosu — 5 dk” girişi; kısa ev görüşü; oyuncu yürür ve bir hedefe yaklaşır. Uzun kontrol listesi yerine o an gereken tuş görünür. |
-| 00:20–01:50 | 90 sn | Gerçek hazırlık | Yakındaki kaynaktan eksik suyu al, çantaya koy; iki belirgin eşyadan birini seçip kısa sabitleme işi yap. Malzeme alma, envanter/çanta, maliyet ve nesnede kalan önlem aynı kesitte görülür. |
-| 01:50–02:15 | 25 sn | Deprem ve sonuç | Kısa olay sunumu; sarsıntı sırasında koşma görevi yok. Sonrasında işaretli uygun rotayı yürü; seçilen eşyanın gerçek durumunu ve kısa sonucu gör. Böylece bir tam hazırlık–afet–sonuç döngüsü tamamlanır. |
-| 02:15–03:05 | 50 sn | Selin oynanabilir örneği | Yakın bir drenaj noktasında bir kısa iş; ardından gösterilen yüksek güvenli noktaya git. Kısa sel ve tek sonuç notu bu 50 saniyeye dahildir. Yeni bir tam çanta/toplama turu yok. |
-| 03:05–03:55 | 50 sn | Yangının oynanabilir örneği | Çıkışı kapatan hafif bir eşyayı geçerli yere taşı, açık rotadan uygun dış hedefe yürü. Kısa olay/sonuç gösterilir. Yeni bir iş ailesi veya son anda şalter için geri dönüş zorunlu değildir. |
-| 03:55–04:30 | 35 sn | Afet karnesi ve evin bütünü | Yaptığın önlem, açık kalan risk ve üç afetin durumu birlikte gösterilir. Mevcut kamerayla kısa ev/oda genel görüşü; ayrıntılı kampanyanın devam edebileceği bilgisi. Yeni okuma/iş kapısı yok. |
+| 00:20–01:40 | 80 sn | Gerçek hazırlık | Yakındaki kaynaktan eksik suyu al, çantaya koy; iki belirgin eşyadan birini seçip kısa sabitleme işi yap. Hızlı pickup yayı ve görünen braket, gerçek kazanımı bekletmeden anlatır. |
+| 01:40–02:10 | 30 sn | Deprem ve ilk anlamlı sonuç | Mevcut kısa olay sunumunda bir sabitlenmiş ve bir sabitlenmemiş eşyanın farklı tepkisini gör. Sarsıntı sırasında koşma görevi yok; sonrasında kısa uygun rotayı yürü. Bir tam hazırlık–afet–sonuç döngüsü burada tamamlanır. |
+| 02:10–03:00 | 50 sn | Sel örneği ve ilk üç dakikanın tamamlanması | Yakın bir drenaj noktasında bir kısa iş; ardından gösterilen yüksek güvenli noktaya git. Sel/sonuç ve geçiş bu süreye dahil. İlk üç dakika içinde ikinci farklı önlemi ve sonucunu da gör; yeni çanta/toplama turu yok. |
+| 03:00–04:10 | 70 sn | Yangınla farklı bir eylem ve kısa inceleme | Yaklaşık 50 sn içinde çıkışı kapatan hafif eşyayı taşı, uygun dış hedefe yürü ve kısa olay/sonucu gör. Kalan en çok 20 sn mevcut inceleme yaklaşımıyla seçtiğin sonucu güvenli görüşten inceleyebilirsin. Ek zorunlu iş/şalter yok; inceleme atlanabilir. |
+| 04:10–04:30 | 20 sn | Kısa afet karnesi | Yaptığın önlem, açık kalan risk ve üç afetin durumu bir bakışta gösterilir; ayrıntılı kampanyanın devam edebileceği bilgisi. Uzun slayt/okuma ve sonuç için bekleme yok. |
 | 04:30–05:00 | 30 sn | Yedek süre | Yavaş öğrenme, kısa yükleme, kapı/envanter ve geçiş gecikmeleri için ortak pay. Ek zorunlu görev veya dördüncü afet bu alana konmaz. |
 
-**Toplam:** 20 + 90 + 25 + 50 + 50 + 35 = **270 saniye içerik**; + 30 = **300 saniye üst sınır**. Her satırın yerel yönergesi, oyuncu yürüyüşü, kapı/kapak, menü, iş, olay, kısa sonuç ve geçişi kendi süresinin içindedir; bunların üzerine ayrı sinematik/öğretici süresi eklenmez. İlk çalıştırma/yükleme de jüriye ayrılan pencereye giriyorsa yedek paydan düşer; hedef makinede soğuk açılış ayrıca ölçülür. Gerekirse oyun jüri başlamadan başlıkta hazır tutulur; sunum süresi, ölçümde dışarı atılan yükleme beklemesiyle yapay biçimde kısaltılmaz.
+**Toplam:** 20 + 80 + 30 + 50 = **180 saniyede ilk tam döngü ve sel örneği**; + 70 + 20 = **270 saniye içerik**; + 30 = **300 saniye üst sınır**. Son iki dakika yangın/kısa inceleme70 + karne20 + tek ortak yedek30 olarak ayrılır; yedek ek görevle doldurulmaz. Her satırın yerel yönergesi, oyuncu yürüyüşü, kapı/kapak, menü, iş, olay, kısa sonuç ve geçişi kendi süresinin içindedir; bunların üzerine ayrı sinematik/öğretici süresi eklenmez. İlk çalıştırma/yükleme de jüriye ayrılan pencereye giriyorsa yedek paydan düşer; hedef makinede soğuk açılış ayrıca ölçülür. Gerekirse oyun jüri başlamadan başlıkta hazır tutulur; sunum süresi, ölçümde dışarı atılan yükleme beklemesiyle yapay biçimde kısaltılmaz.
 
 #### Zorluğu ve uğraştırmayı azaltacak ayarlar
 
@@ -487,7 +477,7 @@ Bu kesitin amacı; jürinin evi tanıması, gerçek malzeme toplaması/çantaya 
 | Kontrol öğrenme | Mevcut E/F ayrımı, Tab/Enter, iş ailesi ve fareyle taşıma korunur. İpucu yalnız ilgili nesnede; “Sabitle” görünür eylemi mevcut iş API’sine bağlanır. | Yeni ezber tuşu veya her işi otomatik yapan tek tuş eklenmez. Yangın kesiti yeni Balance öğreticisi zorunluluğu getirmez. |
 | Rota | Ana hazırlık aynı katta, kaynak–çanta–iş hedefi birbirine yakın. Selin yüksek hedefi kısa ve açık bir merdiven rotasında. Eşya aramak için bodrum/garaj/banyo turu gerekmez. | Katlar ve odalar varlığını korur; genel kamera bunları gösterebilir. Gerçek kapı, çarpışma, merdiven/korkuluk ve geçerli yerleşim kuralları kalır. |
 | Ekonomi | Az ve sonlu tarif; başlangıç loadout’u seçilen kısa işleri karşılar, eksik adet canlı görünür. Zorunlu market/tekrar ikmal yok. | Sınırsız bütçe/malzeme varsayılan çözüm değildir. İptal tüketmez, tamamlanma bir kez tüketir; seçimin sonucu gerçek state’tedir. |
-| Geri bildirim | 6–8 sn ilerleme yoksa kalıcı bağlam ipucu ve hedef işareti belirginleşir; ekran başına bir kısa Türkçe cümle. | İpuçları kaçırılınca kaybolmaz; yalnız renkle anlatılmaz. Yeni konuşma/AI seslendirme gerekmez; yalnız afet sesi kararı sürer. |
+| Geri bildirim | 6–8 sn ilerleme yoksa kalıcı bağlam ipucu ve hedef işareti belirginleşir; ekran başına bir kısa Türkçe cümle. | İpuçları kaçırılınca kaybolmaz; yalnız renkle anlatılmaz. V4.7 seçili kısa sesler altyazıyla aynı bilgiyi verir; dinlemek zorunlu bekleme oluşturmaz. |
 | Hata/tekrar | Kaçırılan mini oyun adımı tüm işi sıfırlamaz; başarısız örnekten sonra başlık ekranına veya dokuz dalganın başına dönülmez. “Bu adımı geç” ve “Sonuca git” görünürdür. | Atlanan/tamamlanmayan eylem kartta o isimle kalır. Otomatik başarı, bedelsiz tamamlanmış iş veya gizli koruma yazılmaz. |
 | Olay ve sonuç | Her tehlikenin sunumu kısa, aynı bilgi tekrar tekrar oynatılmaz. Bir sonraki örnek açık “Sel hazırlığı / Yangın hazırlığı” geçişiyle kurulur. | Bu geçişler ayrı tatbikat durumlarıdır; kesintisiz üç doğal dalga oynandı diye sunulmaz. İlk örnekteki gerçek kayıt sonraki kurulumla kaybolmaz. |
 
@@ -509,7 +499,7 @@ Uygulama **izometrik Jüri Demosu** adlı ayrı senaryo/profil olarak tasarlanma
 
 Başlıkta tek belirgin demo girişi, içinde “DEMO” etiketi ve normal kampanyadan ayrı kimlik bulunur. Demo sonucu normal highscore’a yazılmaz; yeniden başlatma yeni temiz demo durumunu kurar. Sonuçtaki “Kampanyaya geç” baştan, normal kurallarla başlar. FPS geliştirmesi bu işin bağımlılığı değildir ve askıda kalır.
 
-**İlk teslim:** rota/başlangıç paketi + bir tam döngü + tek mini oyun + süre/karne akışı; ardından sel ve yangının oyuncu eylemi içeren kısa örnekleri. Jüri rotasında görülen çanta, sabitleme donanımı ve mutfak/oda siluetleri ilk sanat cilasıdır. 40 ailenin tümünü veya 24 adayı bitirmek demo kabulünün ön koşulu değildir. T3, torsiyon, bakım/market ekonomisi, karma afet ve yeni konuşma bu kısa gösterimin önüne alınmaz.
+**İlk teslim:** rota/başlangıç paketi + bir tam döngü + tek mini oyun + süre/karne akışı; ardından sel ve yangının oyuncu eylemi içeren kısa örnekleri. Jüri rotasında görülen çanta, sabitleme donanımı ve mutfak/oda siluetleri ilk sanat cilasıdır. 40 ailenin tümünü veya 24 adayı bitirmek demo kabulünün ön koşulu değildir. T3, torsiyon, bakım/market ekonomisi ve karma afet sonraya bırakılır. Seçili kısa konuşmalar V4.7 uygulamasına dahildir.
 
 #### İnsanla kabul planı
 
@@ -518,7 +508,7 @@ Bu süreler şu an **tasarım bütçesidir**. API/native smoke, ilk kez oynayan 
 | Kontrol | Kabul ölçütü |
 |---|---|
 | İlk öğrenme | İlk 30 sn içinde oyuncu hareket edip ilk gerçek etkileşimi başlatabiliyor; uzun açıklama için geliştirici gerekmiyor. |
-| Gerçek oyun | Su alma/çantaya koyma, bir tamamlanan iş, afet sonucu ve geçerli bir taşıma eylemi insan girdisiyle görülüyor. |
+| Gerçek oyun ve ilk üç dakika | Su alma/çantaya koyma, bir tamamlanan iş ve anlaşılır afet sonucu ≤180 sn içinde insan girdisiyle görülüyor; normal rotada sel örneği de 3:00’da tamam. Geçerli taşıma yangın örneğinde görülür. |
 | Beş dakika | Tek oturum bütünü 300 sn’yi aşmıyor; hızlı, yavaş, bir işi kaçıran ve Esc’de bekleyen denemeler de özetle kapanıyor. |
 | Dürüst üç afet kapsamı | Normal başarılı rotada deprem tam döngü, sel ve yangında birer gerçek oyuncu eylemi var. Sadece video veya otomatik tanıtım bu ölçütü sağlamaz. |
 | Durum ve maliyet | Çift tüketim/üretim yok; iptal/atlama/timeout tüketmiyor; yarım iş “yapıldı” yazılmıyor. |
@@ -527,6 +517,55 @@ Bu süreler şu an **tasarım bütçesidir**. API/native smoke, ilk kez oynayan 
 Acemi testinde süre aşılırsa önce tekrarlı bağlantı, uzak kaynak, ek hedef ve uzun sinematik çıkarılır; zorunlu tuş yoğunluğu ve metin azaltılır. Oyuncu hızını yükseltmek, afet hızını artırmak veya gerçek güvenlik/çarpışma sınırlarını gevşetmek ilk çözüm değildir. Üç oynanabilir örnek bu bütçeye sığmıyorsa kapsam yeniden daraltılır; atlanan örneğe “oynandı” denilerek kabul verilmez.
 
 **Araştırma dayanağı — 17 Ekim 2026:** Microsoft, zorluğun kaynak bolluğu, hedef/hatırlatma ve farklı mekaniklerin yardımları üzerinden ayrı ayarlanabileceğini açıklar; burada kısa ama gerçek oynanış korunması için kullanıldı. [XAG 108](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/108) Kısa bağlamsal yardım, tutarlı simge/etiket ve okunur ekran bağlamı için [XAG 114](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/114) temel alındı. Metin/arayüzü gereksiz zaman kapısına çevirmemek için [XAG 116](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/116) dikkate alındı; bu rehber oyunun her sayacına uygulanacak tek kural veya bu demoya uygunluk sertifikası değildir. Team17’nin Assist Mode örneği tekrar baskısını azaltma/atlama seçeneklerini gösterir; TLTP’ye daha uzun tur kopyalanmadı, kısa senaryoda iş yükü azaltıldı. [Team17](https://www.team17.com/games/overcooked-all-you-can-eat) Yukarıdaki saniyeler, görev sayıları ve geçiş politikası bu proje için öneridir; kaynakların doğruladığı hazır TLTP sonucu değildir.
+
+
+<a id="ilk-uc-dakika"></a>
+### 5.2. İlk üç dakikada keyif ve akıcılık — sade görsel geri bildirim kapsamı
+
+**17 Ekim kullanıcı kararı:** Önerinin sade hali kabul edildi. İlk üç dakika içinde oyuncunun kontrolü öğrenmesi, küçük bir işi başarması ve önlemin görünür sonucunu alması hedeflenir; kalan iki dakika farklı bir eylem ve devam merakı sunar. **Zincirleme afetler sonraya bırakılmıştır.** Toplam demo hâlâ en fazla 5 dakika; 270 sn içerik + 30 sn tek ortak paydır. Buradaki süreler ve his hedefleri henüz insanla doğrulanmış sonuç değildir.
+
+Bu bölüm kararlaştırılan ürün/sunum kapsamıdır. Ayrıntılı teknik iş planı, görev dağılımı ve uygulama adımları kullanıcının sonraki isteğinde hazırlanacaktır; bu rapor düzenlemesi oyuna özellik eklemez.
+
+#### İlk üç dakikada oyuncunun alacağı karşılık
+
+İlk **30 saniyede** oyuncu yalnız okumak yerine hareket edip ilk gerçek nesneyle etkileşir. Yaklaşık **45–60 saniyede** suyu alma/çantaya koyma gibi küçük bir kazanım görünür; bitmeyen hazırlık listesiyle açılış yapılmaz. Yaklaşık **1:40’ta** seçtiği eşyanın sabitlemesini bitirip donanımı yerinde görür. **2:10’a kadar** ilk afet ve o önlemin sonucu görülür. **3:00’a kadar** selde ikinci, kısa bir eylem ve sonuç tamamlanır. Böylece ilk üç dakika eğitim beklemesi değil, oynanmış bir deneyim olur. Bunlar ölçülüp ayarlanacak hedef anlarıdır; zorlanan oyuncunun işini arka planda otomatik tamamlama izni değildir.
+
+**3:00–5:00**, daha çok tuş veya daha zor görev eklemek için kullanılmaz. Yangında basit taşıma/kaçış eylemi, önceki sabitleme ve drenajdan farklı bir hareket sunar; ardından karne ve evin genel görünüşü gelir. “Yaptığım hazırlık fark yarattı; başka bir önlem neyi değiştirir?” merakı hedeflenir. Üçüncü dakikada yeni bir uzun öğretici veya devam menüsü akışı kesmez. Erken bitiren bekletilmez; süre tutturmak için boş dolaşma eklenmez.
+
+#### Kabul edilen küçük görsel paket
+
+| Parça | Sade kapsam | Süre ve doğruluk sınırı |
+|---|---|---|
+| Seçili hedef vurgusu | Mevcut hedef çerçevesi geliştirilir; seçili ve erişilebilir tek nesnede turuncu vurgu ile mevcut kısa eylem ipucu birlikte kullanılır. | Bütün oda aynı anda parlamaz. Yeni özel outline shader’ı zorunlu teslim bağımlılığı değildir; mevcut malzeme/hasar görünüşü korunur. |
+| Hafif hareket | Yalnız seçili, küçük ve serbest pickup’ın görselinde çok hafif süzülme denenebilir; normal izometrik zoom’da fayda vermiyorsa çıkarılır. | Dolap, TV, vana veya collider kökü yüzdürülmez. Hareket sürekli görsel gürültüye dönüşmez; renkten başka seçim işareti de kalır. |
+| Hızlı toplama yayı | Mevcut pickup yayı yaklaşık **0,3 sn** olacak biçimde sadeleştirilir; hafif küçülme/esneme yeterlidir. Gerçek çanta hedefi varsa ona, yoksa tutarlı mevcut elde-alma noktasına gider. | Animasyon toplama kazanımını geciktirmez, hareketi kilitlemez. Görsel kopya ikinci malzeme veya yeni etkileşim hedefi oluşturmaz; hızlı art arda alım uzun kuyruk yaratmaz. |
+| Görünür sabitleme | Başarıyla tamamlanan mevcut işten sonra nesneye uygun braket/kayış görünür ve yerinde kalır. | Yarım veya iptal edilmiş iş tamamlanmış gösterilmez; yeni ortak güvenlik bool’u oluşturmak yerine gerçek sabitleme durumu okunur. |
+| İki eşyalı afet karşılığı | Aynı kısa deprem gösteriminde bir sabitlenmiş eşya az sallanır; bir sabitlenmemiş eşya, gerçek olay sonucuna uygun kontrollü görsel tepki verir. | Her sabitsiz eşya otomatik devrilmez; sabitleme mutlak hasarsızlık garantisi değildir. Mevcut sinematik süresinin içine girer, ek gösteri süresi açmaz. |
+| Vana kolu — ikincil cila | Gerçek açık/kapalı durumuna bağlanmış tek örnekte uygun kol 90° dönebilir. | Yeni tesisat modeli gerekiyorsa ayrıca ele alınır. İlk demo paketini bekleten iş veya jüriye zorunlu ek görev değildir; kolun dönmesi yeni yangın/sel dalgasını tetiklemez. |
+
+Kaynak incelemesinde [mevcut odak çerçevesi](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanic/Assets/Game/Runtime/PanicRefinement.cs:9>), [toplama yayı](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanic/Assets/Game/Runtime/PanicHomeLife.cs:169>) ve [sabitleme donanımı](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanic/Assets/Game/Runtime/PanicHomeWorld.cs:664>) zaten görülmüştür. Öneri bu temeli geliştirir. Kullanıcının ilk metnindeki `IsometricItemMotion`, `IsometricStylizedOutline.shader` ve `DisasterWaveEvaluator` adları mevcut API/teslim kanıtı sayılmaz; yeni bir framework veya bu adlarda sınıflar şart koşulmaz.
+
+#### Akışı canlı tutacak sınırlar
+
+**Hedef → kısa eylem → anında görünen değişiklik → küçük sonuç → farklı bir sonraki eylem** ritmi korunur. Oyuncu bir nesneye yaklaştığında ne yapacağını, aldığında ne kazandığını, işi bitirdiğinde neyin değiştiğini görmelidir. Tekrarlı vida sayısı, uzak stok ve uzun bildirimlerle bu karşılık geciktirilmez. Animasyon bitmesini beklemek, aynı eşyayı tekrar toplamak veya odayı baştan dolaşmak zorunlu kapı yapılmaz. Aynı anda bir ana hedef ve kısa bağlam yeterlidir.
+
+Gerçek sonucu model belirler, görsel onu anlatır. Görsel transform veya aktif sahne taraması yeni hasar otoritesi olmaz; aynı olay iki kez çözülmez. Mobilya kökü, collider, loot konumu ve geçerli yerleşim kuralları korunur. İlk gösterim gerçek koridoru kapatmaz, sinematikte oyuncuyu otomatik ezmez; kontrollü görsel tepki ve olay sonrası başlangıç durumuna dönüş tutarlı olmalıdır. V4.7 yeni kullanıcı isteğiyle kısa akışa7kısa ElevenLabs cümle+3efekt eklenmiştir; normal kampanya/eskiradyo ertelemesi sürer.
+
+**Bu paketin dışında:** depremden otomatik yangın/sel/elektrik şoku doğuran dallar, sahneyi tarayan yeni dalga değerlendiricisi, nesne başına fizik zinciri, yuvarlanan pil/elma kalabalığı, gerçek kaçış yolunu dinamik kilitleme ve yeni ezilme/sağlık sistemi. Sel ve yangın Bölüm 5.1’deki ayrı kısa tatbikat örnekleri olarak kalır. Tüpün hazır olmaması ateşleme nedeni, açık vana tek başına kesin yangın/sel nedeni yapılmaz. Sonraya bırakma iptal kararı değildir; bu özellikler ayrıntılı planın zorunlu ilk paketi değildir.
+
+#### Keyif ve devam isteğini nasıl değerlendireceğiz?
+
+Mevcut ilk oyuncu denemelerinde yalnız bitirme süresine bakılmaz: ilk etkileşime kadar geçen süre, ilk gerçek kazanım, ilk tamamlanan önlem, görülen neden–sonuç ve uzun hedefsiz beklemeler kaydedilir. **180 saniye içinde bir tam hazırlık–afet–sonuç döngüsü** görünmelidir; normal rotada kısa sel örneği de bu pencereye sığar. Bir hata bütün pencereyi yeniden başlatmaz.
+
+Oturum sonrasında kısa biçimde “Yaptığın hangi şey fark yarattı?” ve “Bir örnek daha oynamak ister miydin, neden?” sorulur. Bu yanıtlar ve takıldığı noktalar sonraki ayarı yönlendirir. Üç kişilik kısa deneme, eğlencenin veya oyuncuyu elde tutmanın kanıtlanmış oranı değildir. Süre geçse bile oyuncu yaptığı önlemin etkisini anlayamıyorsa ya da devamı yalnız yeni görev yükü gibi hissediyorsa bu his hedefi karşılanmış sayılmaz. Oturumu uzatmadan önce tekrar, bekleme, metin ve rota yükü azaltılır.
+
+### 5.3. V4.7 uygulaması ve ayrı sanat yönetimi geçişi
+
+Araştırmadan uygulamaya geçenler: sonlu kısa rota hedefleri, gerçek su toplama/çantaya koyma, iki adımlı atomik işler, görünür ankraj donanımı, küçük pickup hareketi/yayı, kontrollü iki mobilya tepkisi, gerçeğe bağlı sonuç kartı, Atla ve geliştirici kaybetmeme. Vana parçalama/tesisat zinciri, yeni fiziksel koridor kapatma, otomatik ezilme ve zincirleme afet yapılmadı.
+
+Yeni ayrı sanat oturumu 12prop'u somut olarak geliştirdi. Lavabo gerçek çökük çanak; metal raf konstrüksiyon ve çapraz taşıyıcı; alet duvarı dört ayırt edilebilir el aleti; kitaplık çakışmasız kitap/fotoğraf/evrak; koltuk sırt eğimine oturan dikiş; açılır kutu/dolaplarda kapakla hareket eden donanım içerir.12/12dış ölçü/menteşe korunur. Prosedürel altküme47.928→57.552üçgen; tüm oyun maliyeti değildir. Yarkın8pickup ailesi ve seçili mobilya varyantları önceki daha güçlü geometriyi koruyarak uyarlandı. Bütün40aile incelenebilir kalite matrisiyle izlenir; 40ailenin tamamı yeni baştan üretilmiş değildir.
+
+Teknik/malzeme/gölge/collider/pivot/kapak/erişim/motion/hasar/reset/lisans için durum ve gerekçeli not_applicable alanları [ayrı sanat tesliminde](../Evidence/GamejamOrchestra/TLTP-JURY-PRODUCTION-20261017/art-direction/HANDOFF.md) ve QCmatrisindedir. Gerçek son baked modellerin12yakın stüdyo karesi +atlası, son native dizinindedir. Bu görüntüler oyun içi ışık/rota ve nihai insan sanat kabulünden ayrıdır.
 
 <a id="gorsel"></a>
 ## 6. İzometrik görsel kanıt dizini
@@ -596,3 +635,12 @@ Kaynakların SHA256 dökümü, izometrik indeksin ve DLL eşleşmesinin kaydı k
 [Korunan FPS indeksi](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanicFPS/LATEST-BUILD.json>) · [Son kayıtlı teslim](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanicFPS/Documentation/FPS-V31-TEST-DELIVERY-2026-10-16.md>) · [Kontrol belgesi](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/TooLateToPanicFPS/Documentation/FPS-CONTROLS.md>) · [Bağımsız proje handoff’u](<C:/Users/kaant/Desktop/civilgamejam/TooLateToPanic/Evidence/GamejamOrchestra/TLTP-FPS-FORK-20261016/FPS-HANDOFF.md>)
 
 **Yeniden dönülürse:** Önce kullanıcının seçtiği hedef ve mevcut indeks/source/build bağı okunur; gerçek insan girdi ve kamera durumu yeniden değerlendirilir. O tarihte izometrikte geliştirilmiş içerikler tasarım/üretim referansı olabilir; aktarım ayrı seçilir, yakın kamera, collider/etkileşim ve lisans uyumu ayrıca kabul edilir. Paylaşılan Library/Temp/Logs/Builds veya otomatik kaynak eşitlemesi kurulmaz. FPS’de hazır bir model bulunması izometrikte entegre sayılmaz; izometrik ilerleme de FPS’ye kendiliğinden uygulanmış sayılmaz.
+
+
+## 17Ekim son uygulama eki: dış dünya ve dört afet seçimi
+
+Ana menüde Felaket Simülasyonu Oyna ile Deprem/Sel/Yangın/Fırtına ayrı seçilir;90sn hazırlık ve hazır1/1çanta açık baseline, sonlu malzemeler, gerçek hasar/tüketim, skor/ödülsüz kararlı inceleme. Fırtına kısa270sn akışa zorunlu eklenmez. Storm3enum, eski kampanya sırası/rastgele3tip korunur. Sofa görsel varyantının riskten kaçması giderildi.
+
+Sağ tuş basılı sürükleme kamera; kısa bırakma taşıma. Üst/alt kat renderer ayrımı fizik kapatmaz; helikopter içsahnede görünmez. Garaj yolu bunkerı dolaşıp açık çit/kaldırımdan anayola bağlanır. Komşu ev detayları ve afet sonrası ayrı hasar,4CC0çevre NPCsi; batıdere yatağı/menfez/akışlısu eklenir. Su mesh/UV/foam animasyonudur, fiziksel akışkan solver değildir. NPCler görev veya kitle tahliye simülasyonu değildir. Sinematikler uzatılmadan daha sakin ve afete özel kadrajlarla düzenlenir. Yarkın8family/10variant incelemesinde9varyant sınırlı700eküçgenle geliştirilir; kaynakFBX/UV/atlas korunur. HUD dolar, hizalama ve gerçek su/gıda3D önizleme alır.
+
+Yeni native/kaynak hash ve açık insan kabul sınırı tek [V4.7teslim kaydındadır](../TooLateToPanic/Documentation/HOME-V4.7-DELIVERY-2026-10-17.md). [MGM rüzgâr hazırlığı](https://mgm.gov.tr/arastirma/dogal-afetler.aspx?s=kuvvetliruzgar) gerçek davranış yönünü destekler; oyunun hasar katsayılarını veya binaların performansını doğrulamaz.

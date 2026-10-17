@@ -1,30 +1,26 @@
 # Too Late to Panic!
 
-**Home V4.5 hazır.** Aktif sürüm 3D izometrik; FPS askıdadır ve dosyaları korunur.
+**Home V4.8 hazır.** HAZIRLIĞA BAŞLA kısa hazırlık akışını, SERBEST OYUN normal kampanyayı açar. Aktif üretim izometriktir; FPS askıda korunur.
 
-**F2** veya başlık/duraklat ekranındaki **Geliştirici** düğmesi menüyü açar. **Sınırsız bütçe**, **Malzeme harcama**, **Hazırlık süresini durdur** ayrı ayrı seçilir. **+1.000 ₺** hazırlık/öğretici/hasar gezisinde kullanılabilir. Yukarı/aşağı + Enter/Space veya fare; F2/Esc kapatır. Menü açıkken oyun girişi ve model saati durur. Meşgul iş/taşıma/çanta/sinematik bitmeden açılmaz. Önceki duraklatma durumu korunur.
+Gerçek toplama/çanta/kısa iş ve önlemin sonucu; seçili Yarkın modelleri,12prop detay geçişi, toplama ve sabitleme hareketleri, kısa ElevenLabs sesleri. Bunker sinematiği takılması düzeltildi; **SAHNEYİ ATLA · ENTER** eklendi. **F2 → Kaybetmeme** gerçek hasarı koruyup kayıp yerine inceleme açar; ödül/skor vermez.
 
-Menüyü açmak hile sayılmaz. Hile kullanımı koşuyu kalıcı işaretler; seçenekleri kapatmak o koşuyu temizlemez. **Hileli koşular normal skor tablosuna yazılmaz.** Seçenekler süreç içinde yeni koşuya taşınır; temiz koşu için hepsini kapatıp yeniden başla. Diskte ayar tutulmaz. Kapasite, gerçek çanta eşyaları, hedef/mesafe, mini oyun ve fizik kuralları korunur. Hazırlığı dondurmak afet/sonuç saatini durdurmaz.
+Windows0.4.8: **149/149 kesintisiz rota kontrolü**, dört doğal afet, kısa akış49.67sn; regresyon189/189,0runtime hata. OS girdisi/insan keyif kabulü değildir. [Teslim ve sınırlar](Documentation/HOME-V4.8-DELIVERY-2026-10-17.md).
 
-Windows **0.4.5**, **0 hata/uyarı**. **12/12 kısa native API kontrolü**, 0 runtime hata; gerçek HUD kareleri incelendi ve normal açılış görüldü. Menü kilidi/saat/önceki pause, bağımsız maliyetler, kapasite, hileli skor dışlama ve sonraki temiz kayıt denetlendi; sonraki hileli koşu önceden yazılan izole skor dosyasının hashini değiştirmedi. Test işlemleri durum fikstürleri kullanır; fiziksel OS girişi, mini oyun, manuel/tüm kampanya veya önceki kapı/merdiven rotalarının yeni kabulü değildir.
+`Play-TooLateToPanic.cmd` → `Builds/Home-V4.8-20261017/TooLateToPanic.exe`.
 
-`Play-TooLateToPanic.cmd` → `Builds/Home-V4.5-20261017/TooLateToPanic.exe`
-
-Tek ZIP: `Builds/TooLateToPanic-Home-V4.5-20261017-portable.zip`. EXE ve yan klasörleri birlikte tut. [Build kimliği](LATEST-BUILD.json), [teslim](Documentation/HOME-V4.5-DELIVERY-2026-10-17.md), [GDD v2.0](Documentation/GDD.md).
+Taşınabilir paket: `Builds/TooLateToPanic-Home-V4.8-20261017-portable.zip`. EXE ve yan klasörleri birlikte tut. [Build kimliği](LATEST-BUILD.json), [GDD](Documentation/GDD.md), [asset/lisanslar](Documentation/ASSET-CREDITS.md).
 
 | Tuş | İşlem |
-| --- | --- |
-| F2 | Geliştirici menüsü |
-| WASD / oklar · Shift · Space | Yürü · koş · zıpla |
-| E · Q | Aç/kapat/ana etkileşim · hedef değiştir |
-| Z/X · F | Açık kaptaki malzemeyi seç · al |
-| Tab/B · oklar · Enter · F | Çanta · seç · çantaya koy · ilk yardım üret |
+|---|---|
+| WASD/ok · Shift · Space | Yürü · koş · zıpla |
+| E · Z/X · F | Aç/kapat/ana etkileşim · malzeme seç · seçileni al |
+| Tab/B · oklar · Enter | Çanta · seç · çantaya koy |
 | 1/2/3 · T | Sabitle/koru/güçlendir · duvar/zemin |
-| Sağ tık · fare · sol tık | Taşımaya başla · yer seç · bırak |
-| Taşırken teker/R · sağ tık/Esc | Döndür · iptal |
-| İşte A/D · Enter · Space | Hizala/yön/basınç · yerleştir · uygula |
-| Esc · H · PageUp/PageDown | Geri/duraklat · yardım · kamera yakınlığı |
+| Sağ tık/4 · fare/sol tık · teker/R | Taşı · bırak · döndür |
+| İşte A/D · Enter · Space | Hizala/yön/basınç · kilitle · uygula |
+| Esc · H · F2 | Geri/duraklat · yardım · geliştirici |
+| Sinematikte Enter | Sahneyi atla |
 
-Önceki güvenli kapılar, güney banyo girişi, fiziksel merdiven korkulukları, fareyle taşıma ve ikonlu eksik adetleri korunur. 12 envanter/8 çanta, üç afet, bütçe/dalga/bunker/hasar ve yerel highscore kuralları hilesiz aynı kalır. Yalnız afet sesleri; ElevenLabs son aşamaya bırakılmıştır. Yeni harcama/sağlayıcı yoktur.
+Kısa akış270sn içerik/300sn üst sınırla tasarlanır; menüler bu akışın saatini uzatmaz. Normal kampanya hazırlık duraklatması korunur. Kısa akış skor dışıdır. Geliştirici seçeneği kullanmak koşuyu kalıcı hileli işaretler; menüyü açmak işaretlemez. Gerçek kayıt kimliği V4 korunur.
 
-[Asset kayıtları](Documentation/ASSET-CREDITS.md), [oyuncu/animasyon lisansları](Documentation/Existing-Player-Provenance.md), [kalıcı kurallar](AGENTS.md). Kayıt kimliği V4 olarak korunur. Güncel GitHub kaynağı/paketi kaantufan/FixThisMakeNoMistake deposuna teslim edilir; gerçek yayın sonucu LATEST-BUILD.json içindedir. Kullanılmayan eski ZIP Geri Dönüşüm Kutusu'na alındı; açık V4.2/V4.3/V4.4 oyuncularının kullandığı klasörler korunur. Başlatıcı yalnız V4.5'i açar.
+FELAKET SİMÜLASYONU OYNA dört ayrı afeti açar: Deprem/Sel/Yangın/Fırtına.90sn hazırlık, başlangıç çantası hazır, sonlu malzeme, AFETİ BAŞLAT ve kararlı inceleme; skor dışıdır. Sağ tuşa basılı sürükle kamera açısını değiştirir, kısa sağ tık taşır. Üst katta alt kat görünmez; fizik korunur. Dış dünyada Sgaraj yolu, akan dere, komşu hasarı ve dört çevre NPCsi vardır. Su/gıda3D önizleme ve dolar gösterimi kullanılır.

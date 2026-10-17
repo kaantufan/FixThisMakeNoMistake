@@ -8,11 +8,12 @@ namespace TooLateToPanic
         AudioSource oneShot, ambience, roomTone;
         GameObject weather;
         float age;
+        float disasterAmbienceVolume = .32f;
         bool warned;
         void Awake()
         {
             oneShot = gameObject.AddComponent<AudioSource>(); oneShot.volume = .65f;
-            ambience = gameObject.AddComponent<AudioSource>(); ambience.loop = true; ambience.volume = .32f;
+            ambience = gameObject.AddComponent<AudioSource>(); ambience.loop = true; SetDisasterAmbienceVolume(.32f);
             roomTone = gameObject.AddComponent<AudioSource>(); roomTone.loop = true; roomTone.volume = 0;
         }
         public void Play(string name, float volume = .5f)
@@ -29,13 +30,17 @@ namespace TooLateToPanic
             if (phase == PanicPhase.Disaster)
             {
                 if (weather) Destroy(weather); weather = PanicDisasterArt.Create(World.Model.Disaster);
-                string id = World.Model.Disaster == DisasterType.Earthquake ? "earthquake" : World.Model.Disaster == DisasterType.Flood ? "flood" : "fire";
-                ambience.clip = Resources.Load<AudioClip>("Audio/" + id); if (!ambience.clip) ambience.clip = PanicArt.GetSound(id); ambience.volume = .32f; if (ambience.clip) ambience.Play();
+                string id = HazardSoundId(World.Model.Disaster);
+                ambience.clip = Resources.Load<AudioClip>("Audio/" + id); if (!ambience.clip) ambience.clip = PanicArt.GetSound(id); SetDisasterAmbienceVolume(.32f); if (ambience.clip) ambience.Play();
             }
-            else if (phase == PanicPhase.Aftermath) ambience.volume = .14f;
+            else if (phase == PanicPhase.Aftermath) SetDisasterAmbienceVolume(.14f);
             else if (phase == PanicPhase.Success || phase == PanicPhase.Inspection || phase == PanicPhase.GameOver)
             {
-                ambience.volume = .07f;
+                SetDisasterAmbienceVolume(.07f);
+                // The damage tour already owns settled ash/smoke. Stop active fire
+                // and its multi-floor scorch mesh before the house returns to cutaway.
+                if (phase == PanicPhase.Inspection && World.Model.Disaster == DisasterType.Fire)
+                    StopJuryHazard();
                 if (phase == PanicPhase.Success) Play("success", .55f);
                 if (phase == PanicPhase.GameOver) Play("fail", .6f);
             }
@@ -45,9 +50,24 @@ namespace TooLateToPanic
         {
             if(!World)return;
             if(!weather)weather=PanicDisasterArt.Create(World.Model.Disaster);
-            age=0;string id=World.Model.Disaster==DisasterType.Earthquake?"earthquake":World.Model.Disaster==DisasterType.Flood?"flood":"fire";
+            age=0;string id=HazardSoundId(World.Model.Disaster);
             ambience.clip=Resources.Load<AudioClip>("Audio/"+id);if(!ambience.clip)ambience.clip=PanicArt.GetSound(id);
-            ambience.volume=.3f;if(ambience.clip)ambience.Play();
+            SetDisasterAmbienceVolume(.3f);if(ambience.clip)ambience.Play();
+        }
+        void SetDisasterAmbienceVolume(float volume)
+        {
+            disasterAmbienceVolume = volume;
+            if (ambience) ambience.volume = volume * (World ? World.PresentationEffectsDuckFactor : 1f);
+        }
+        static string HazardSoundId(DisasterType type)
+        {
+            switch(type){case DisasterType.Earthquake:return "earthquake";case DisasterType.Flood:return "flood";case DisasterType.Storm:return "storm";default:return "fire";}
+        }
+        public void StopJuryHazard()
+        {
+            if (ambience) ambience.Stop();
+            if (weather) Destroy(weather);
+            weather = null;
         }
         void Update()
         {
@@ -55,6 +75,7 @@ namespace TooLateToPanic
             age += Time.deltaTime;
             if (World.Model.Phase == PanicPhase.Preparing && World.Model.TimeRemaining <= 60 && !warned) { warned = true; Play("warning", .6f); }
             if (weather) PanicDisasterArt.Animate(weather, age, World.Model.Phase == PanicPhase.Disaster || World.CinematicActive&&World.Model.Phase==PanicPhase.GameOver ? Mathf.Clamp01(age * .4f) : .35f);
+            if (ambience) ambience.volume = disasterAmbienceVolume * World.PresentationEffectsDuckFactor;
         }
     }
 }

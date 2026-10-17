@@ -8,12 +8,12 @@ namespace TooLateToPanic
     public sealed class ResidenceLootPick : MonoBehaviour { public int Index; }
     public sealed partial class PanicHomeWorld
     {
-        static readonly string[] ResidenceIds={"fireplace","computer","desk","radio","tablelamp","floorlamp","toilet","sink","bathtub","towelrack","washingmachine","waterheater","storagerack","car","toolwall","bicycle","books","houseplant","shoe_rack","coat_rack","curtains","wallart","garagedoor","bunkerhatch","rug","armchair","sofa","chair","bed","sidetable","laundrybasket","bookshelf","table","tvstand","plant","locker","toolbox","cabinet","kitchencabinet","medicinecabinet","supplycrate","bagstation"};
+        static readonly string[] ResidenceIds={"fireplace","computer","desk","radio","tablelamp","floorlamp","toilet","sink","bathtub","towelrack","washingmachine","waterheater","storagerack","car","toolwall","bicycle","books","houseplant","shoe_rack","coat_rack","curtains","wallart","garagedoor","bunkerhatch","rug","armchair","sofa","sofa_indigo","chair","bed","sidetable","laundrybasket","bookshelf","table","tvstand","plant","locker","toolbox","cabinet","kitchencabinet","medicinecabinet","supplycrate","bagstation"};
         static readonly Vector3 BunkerInteriorPosition=new Vector3(-65,0,60);
         readonly Dictionary<string,GameObject> residenceTargets=new Dictionary<string,GameObject>();
         readonly List<Collider> residenceObstacles=new List<Collider>();
-        GameObject residenceGarage,residenceBathroom,residenceBalcony,residenceBunkerRoom,lootTray,flyingLoot,helicopter,aftermath,hearthFlame;
-        Transform bunkerLeaf,garageLeaf; Vector3 garageLeafClosed,flyStart; float flyAge,residenceTime,radioClock,noticeAge,rescueAge,jumpCooldown;
+        GameObject residenceGarage,residenceBathroom,residenceBalcony,residenceBunkerRoom,lootTray,helicopter,aftermath,hearthFlame;
+        Transform bunkerLeaf,garageLeaf; Vector3 garageLeafClosed; float residenceTime,radioClock,noticeAge,rescueAge,jumpCooldown;
         Quaternion bunkerClosed;
         AudioSource radioVoice,radioNoise,rotorAudio; Light helicopterSearch,hearthLight;
         bool hearthEnabled=true,computerEnabled=true,garageOpen,minuteVoice;
@@ -30,7 +30,7 @@ namespace TooLateToPanic
         public bool IsGrounded {get {return controller&&controller.isGrounded;}}
         public string RadioHeadline {get;private set;}="";
         public static bool DisasterAudioOnly {get {return true;}}
-        public bool HasNarrationPlayback {get {return radioVoice&&radioVoice.isPlaying;}}
+        public bool HasNarrationPlayback {get {return PresentationSpeechActive||radioVoice&&radioVoice.isPlaying;}}
         public bool RadioEnabled {get;private set;}=false;
         public bool RadioSpeaking {get {return radioVoice&&radioVoice.isPlaying;}}
         public bool NotificationVisible {get {return noticeAge>0;}}
@@ -42,6 +42,7 @@ namespace TooLateToPanic
             // The upper bathroom opens directly onto the landing: no second passage door.
             Model.Items.RemoveAll(i=>i.Id=="door_inner_upper");
             var upper=Model.Items.Find(i=>i.Id=="up_cabinet"); if(upper!=null)upper.Position=new Vector3(4.6f,3.2f,-4.5f);
+            var loungeSofa=Model.Items.Find(i=>i.Id=="sofa"); if(loungeSofa!=null)loungeSofa.ArtId="sofa_indigo";
             var bunker=Model.Items.Find(i=>i.Id=="bunker");if(bunker!=null)bunker.ArtId="bunkerhatch";
             var desk=Model.Items.Find(i=>i.Id=="desk_upper");if(desk!=null){desk.Size=new Vector3(1.75f,.805f,.8f);desk.Position=new Vector3(5.3f,3.2f,-2.5f);}
             var bed=Model.Items.Find(i=>i.Id=="bed");if(bed!=null)bed.Position=new Vector3(-4.5f,3.2f,4.5f);
@@ -149,10 +150,10 @@ namespace TooLateToPanic
             if(id.StartsWith("@")){residenceTargets[id]=go;var pick=go.AddComponent<HomePick>();pick.Id=id;pick.Kind="decor";}
         }
         bool InResidence(Vector3 p){return Mathf.Abs(p.x)<8.05f&&Mathf.Abs(p.z)<6.05f||p.y>2&&p.x>-5.6f&&p.x<1.6f&&p.z<-5.9f&&p.z>-9.1f||p.x>8.1f&&p.x<15.3f&&p.z>-.1f&&p.z<6.3f;}
-        void UpdateResidenceVisibility()
+        void UpdateResidenceVisibility(bool cutawayInside)
         {
-            if(residenceBalcony)residenceBalcony.SetActive(!inside||ActiveFloor>=1);
-            if(residenceGarage){residenceGarage.SetActive(ActiveFloor>=0);foreach(var t in residenceGarage.GetComponentsInChildren<Transform>(true))if(t.name=="Roof"||t.name=="FrontHighWalls"||t.name=="solid_garage_west")t.gameObject.SetActive(!inside);}
+            if(residenceBalcony)SetResidenceRenderersVisible(residenceBalcony,!cutawayInside||ActiveFloor>=1);
+            if(residenceGarage){SetResidenceRenderersVisible(residenceGarage,!cutawayInside||ActiveFloor==0);foreach(var t in residenceGarage.GetComponentsInChildren<Transform>(true))if(t.name=="Roof"||t.name=="FrontHighWalls"||t.name=="solid_garage_west")t.gameObject.SetActive(!cutawayInside);}
         }
         void InitResidenceLife()
         {
@@ -169,21 +170,28 @@ namespace TooLateToPanic
         public bool TakeLoot()
         {
             var s=OpenSource;if(s==null){Notice("Önce kapağı aç");return false;}if(LootIndex<0||LootIndex>=s.Contents.Count)return false;
-            string id=s.Contents[LootIndex].Id;int count=s.Contents[LootIndex].Count;if(string.IsNullOrEmpty(id)||count<=0)return false;
+            string id=s.Contents[LootIndex].Id;int count=s.Contents[LootIndex].Count;int pickupVariant=LootIndex;if(string.IsNullOrEmpty(id)||count<=0)return false;
             if(!Expedition.GatherAt(s.Id,LootIndex)){Notice("Yer yok");return false;}
-            GatherItemId=id;GatherCount=count;GatherFeedback=.7f;gatherPoseTime=.7f;lastNotice=Model.Message;LootIndex=FirstLoot(s);lootSignature=null;
-            if(flyingLoot)Destroy(flyingLoot);flyingLoot=PanicResidenceArt.CreatePickup(id);flyStart=s.Position+Vector3.up;flyingLoot.transform.position=flyStart;flyingLoot.transform.localScale=Vector3.one*.65f;flyAge=0;effects.Play("buy",.22f);return true;
+            // The real gather is committed above. Presentation can never defer or repeat it.
+            Vector3 pickupStart=SelectedPickupPosition(s.Position+Vector3.up);
+            GatherItemId=id;GatherCount=count;GatherFeedback=.4f;gatherPoseTime=.32f;lastNotice=Model.Message;LootIndex=FirstLoot(s);lootSignature=null;
+            BeginPickupPresentation(id,pickupStart,pickupVariant);PlayPresentationCue("pickup_soft");return true;
         }
         void UpdateLootTray()
         {
             var s=OpenSource;
-            if(s==null||CinematicActive||LossAnnounced){if(lootTray)Destroy(lootTray);lootTray=null;lootSignature=null;return;}
+            if(s==null||CinematicActive||LossAnnounced){ClearPickupFocus();if(lootTray)Destroy(lootTray);lootTray=null;lootSignature=null;return;}
             string key=s.Id+"|"+LootIndex+"|"+string.Join(",",s.Contents.Select(x=>x.Id+":"+x.Count));if(key==lootSignature)return;lootSignature=key;
-            if(lootTray)Destroy(lootTray);lootTray=new GameObject("Visible cupboard contents");Vector3 toward=Flat(player.position-s.Position).normalized;if(toward.sqrMagnitude<.1f)toward=Vector3.back;Vector3 across=Vector3.Cross(Vector3.up,toward);int shown=0;
+            ClearPickupFocus();if(lootTray)Destroy(lootTray);lootTray=new GameObject("Visible cupboard contents");Vector3 toward=Flat(player.position-s.Position).normalized;if(toward.sqrMagnitude<.1f)toward=Vector3.back;Vector3 across=Vector3.Cross(Vector3.up,toward);int shown=0;
             for(int i=0;i<s.Contents.Count;i++)
             {
-                var slot=s.Contents[i];if(slot.Count<=0||string.IsNullOrEmpty(slot.Id))continue;var go=PanicResidenceArt.CreatePickup(slot.Id);go.transform.SetParent(lootTray.transform,false);go.transform.position=s.Position+toward*.85f+across*((shown%3-1)*.39f)+Vector3.up*(.75f+(shown/3)*.37f);go.transform.localScale=Vector3.one*(i==LootIndex?.65f:.49f);AddBoundsCollider(go);go.AddComponent<ResidenceLootPick>().Index=i;
-                var ring=MakeLine("Item highlight",new[]{new Vector3(-.18f,0,-.12f),new Vector3(.18f,0,-.12f),new Vector3(.18f,0,.12f),new Vector3(-.18f,0,.12f)},i==LootIndex?new Color(1,.73f,.31f):new Color(.39f,.65f,.52f),i==LootIndex?.025f:.012f);ring.transform.SetParent(go.transform,false);ring.transform.localPosition=Vector3.down*.015f;shown++;
+                var slot=s.Contents[i];if(slot.Count<=0||string.IsNullOrEmpty(slot.Id))continue;
+                var go=new GameObject("Loot interaction "+i);go.transform.SetParent(lootTray.transform,false);go.transform.position=s.Position+toward*.85f+across*((shown%3-1)*.39f)+Vector3.up*(.75f+(shown/3)*.37f);
+                var visual=PanicResidenceArt.CreatePickup(slot.Id,i);visual.transform.SetParent(go.transform,false);visual.transform.localScale=Vector3.one*(i==LootIndex?1f:.78f);MakeCosmeticOnly(visual);AddBoundsCollider(go);go.AddComponent<ResidenceLootPick>().Index=i;
+                if(i==LootIndex)SetPickupFocus(visual.transform);
+                // Only the selected item gets a marker. Other supplies keep their authored colour.
+                if(i==LootIndex){var ring=MakeLine("Selected supply",new[]{new Vector3(-.14f,0,-.10f),new Vector3(.14f,0,-.10f),new Vector3(.14f,0,.10f),new Vector3(-.14f,0,.10f)},PresentationOrange,.018f);ring.transform.SetParent(go.transform,false);ring.transform.localPosition=Vector3.down*.015f;}
+                shown++;
             }
         }
         void UpdateResidenceContext()
@@ -208,12 +216,13 @@ namespace TooLateToPanic
         void OnResidencePhase(PanicPhase phase,PanicPhase from)
         {
             BeginResidenceCinematic(phase,from);
+            OnPresentationPhase(phase,from);
             if(phase==PanicPhase.Aftermath){if(aftermath)Destroy(aftermath);aftermath=PanicAtmosphereArt.CreateAftermath(Model.Disaster);StartRescue();QueueRadio("aftermath");}
             if(phase==PanicPhase.Preparing){minuteVoice=false;QueueRadio(DisasterVoiceId());if(aftermath)Destroy(aftermath);aftermath=null;}
         }
         void ResetResidenceLife()
         {
-            ResetResidenceCinematic();if(lootTray)Destroy(lootTray);lootTray=null;if(flyingLoot)Destroy(flyingLoot);flyingLoot=null;lootSignature=null;GatherFeedback=0;LootIndex=0;noticeAge=0;minuteVoice=false;radioClock=15;queuedVoice=null;
+            ResetResidenceCinematic();ResetPresentation();ResetCameraOrbit();ResetExteriorLife();if(lootTray)Destroy(lootTray);lootTray=null;lootSignature=null;GatherFeedback=0;LootIndex=0;noticeAge=0;minuteVoice=false;radioClock=15;queuedVoice=null;
             if(aftermath)Destroy(aftermath);aftermath=null;if(helicopter)Destroy(helicopter);helicopter=null;if(rotorAudio)Destroy(rotorAudio);rotorAudio=null;radioVoice?.Stop();SetBunkerDoorOpen(false);
             foreach(var h in hinges.Values){h.open=false;h.closeBlocked=h.motionBlocked=false;}garageOpen=false;
         }
@@ -229,14 +238,14 @@ namespace TooLateToPanic
             if(!InputLocked)TickResidenceCinematic(dt);
             UpdateLootTray();
             UpdateInteractionOutline();
-            if(flyingLoot){flyAge+=dt;float t=Mathf.Clamp01(flyAge/.6f);var hand=animator.GetBoneTransform(HumanBodyBones.RightHand);Vector3 target=hand?hand.position:player.position+Vector3.up;flyingLoot.transform.position=Vector3.Lerp(flyStart,target,t*t)+Vector3.up*Mathf.Sin(t*Mathf.PI)*.45f;flyingLoot.transform.localScale=Vector3.one*Mathf.Lerp(.65f,.2f,t);if(t>=1){Destroy(flyingLoot);flyingLoot=null;}}
+            TickPresentation(dt);
             if(hearthFlame&&hearthEnabled)PanicAtmosphereArt.AnimateFireplace(hearthFlame,residenceTime);if(hearthLight&&hearthEnabled)hearthLight.intensity=1.1f+Mathf.Sin(residenceTime*11)*.12f;
             if(garageLeaf)garageLeaf.localPosition=Vector3.Lerp(garageLeaf.localPosition,garageLeafClosed+Vector3.up*(garageOpen?2.35f:0),dt*5);
             if(residenceTargets.TryGetValue("@radio",out var radio)&&radioVoice)radioVoice.transform.position=radio.transform.position;
             if(Model.Phase!=PanicPhase.Title){radioClock-=dt;if(radioClock<=0&&string.IsNullOrEmpty(queuedVoice)&&!RadioSpeaking){QueueRadio((radioSequence++%3)==0?DisasterVoiceId():"news");}PlayQueuedRadio();}
             if(Model.Phase==PanicPhase.Preparing&&Model.TimeRemaining<=60&&!minuteVoice){minuteVoice=true;QueueRadio("deadline");}
             if(aftermath)PanicAtmosphereArt.AnimateAftermath(aftermath,residenceTime);
-            if(helicopter){rescueAge+=dt;float cycle=Mathf.Repeat(rescueAge,27)/27;helicopter.transform.position=new Vector3(Mathf.Lerp(-31,32,cycle),9.2f+Mathf.Sin(cycle*Mathf.PI*2)*.7f,8-Mathf.Sin(cycle*Mathf.PI)*14);helicopter.transform.rotation=Quaternion.Euler(0,78,Mathf.Sin(rescueAge*.4f)*3);PanicAtmosphereArt.AnimateHelicopter(helicopter,residenceTime);}
+            if(helicopter){bool interiorShot=CinematicActive&&(CinematicKind=="Success"||CinematicKind=="BagFailure");bool visible=!interiorShot&&(!inside||ResidenceCinematicExteriorView);helicopter.SetActive(visible);if(visible){rescueAge+=dt;float cycle=Mathf.Repeat(rescueAge,27)/27;helicopter.transform.position=new Vector3(Mathf.Lerp(-31,32,cycle),9.2f+Mathf.Sin(cycle*Mathf.PI*2)*.7f,8-Mathf.Sin(cycle*Mathf.PI)*14);helicopter.transform.rotation=Quaternion.Euler(0,78,Mathf.Sin(rescueAge*.4f)*3);PanicAtmosphereArt.AnimateHelicopter(helicopter,residenceTime);}}
             if(Model.Message!=lastNotice){lastNotice=Model.Message;string m=(Model.Message??"").ToLowerInvariant();if(m.Contains("gereki")||m.Contains("eksik")||m.Contains("yok"))Notice(m.Contains("bütçe")?"Para yetmiyor":"Malzeme eksik");else if(m.Contains("dolu"))Notice("Yer yok");}
         }
     }

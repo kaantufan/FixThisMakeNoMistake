@@ -40,6 +40,43 @@ namespace TooLateToPanic
         GameObject residenceFailureLampObject;
         Transform residenceSavedSupplyDisplay;
         bool residenceSavedSupplyDisplayActive;
+        bool residenceSkipInProgress;
+        int residenceShotIndex = -1;
+        bool ResidenceCinematicExteriorView { get { return CinematicActive && (CinematicKind == "Aftermath" || CinematicKind == "DamageFailure" || CinematicKind == "Disaster" && residenceCinematicAge >= 2.55f || CinematicKind == "Deadline" && residenceCinematicAge >= 2.15f && residenceCinematicAge < 4.15f); } }
+
+        /// <summary>Skip presentation through the same model transitions; never invent an outcome.</summary>
+        public void SkipResidenceCinematic()
+        {
+            if (residenceSkipInProgress) return;
+            if (JuryActive)
+            {
+                if (JuryDemo != null && JuryDemo.SkipCinematic()) RefreshJuryPresentation();
+                return;
+            }
+            if (!CinematicActive) return;
+            residenceSkipInProgress = true;
+            PanicPhase skippedFromPhase = Model.Phase;
+            try
+            {
+                // Resolve once via the ordinary guarded model path, then stop on real inspection/loss.
+                for (int guard = 0; guard < 5; guard++)
+                {
+                    PanicPhase phase = Model.Phase;
+                    if (phase != PanicPhase.Disaster && phase != PanicPhase.Aftermath && phase != PanicPhase.Success && phase != PanicPhase.GameOver) break;
+                    if (phase == PanicPhase.GameOver && Model.PhaseTime <= 0f) break;
+                    Model.Tick(Mathf.Max(.001f, Model.PhaseTime));
+                }
+                Expedition.SyncConsumedBagSupplies();
+                ResetResidenceCinematic();
+                OnPresentationPhase(Model.Phase, skippedFromPhase);
+                CancelWork(); CancelMove(); InventoryOpen = false;
+                SyncVisuals(true);
+                if (effects) effects.OnPhase(Model.Phase);
+                previousPhase = Model.Phase;
+                UpdateContext();
+            }
+            finally { residenceSkipInProgress = false; }
+        }
 
         void BeginResidenceCinematic(PanicPhase to, PanicPhase from)
         {
@@ -67,6 +104,7 @@ namespace TooLateToPanic
                 SetResidenceActorFlags(false, false, 0f);
                 SetBunkerDoorOpen(true);
                 if (effects) effects.StartCinematicWeather();
+                if (Model.IsSimulation) { CinematicShowsActor=false;SetBunkerDoorOpen(false); }
                 return;
             }
 
@@ -75,7 +113,7 @@ namespace TooLateToPanic
                 BeginResidenceSession();
                 SetResidenceCinematic("Aftermath", "Hasar gezisi", 4f);
                 CinematicShowsActor = false;
-                if (player && residenceCinematicSession)
+                if (player && residenceCinematicSession && !Model.IsSimulation)
                     SetResidencePlayerPosition(BunkerInteriorPosition + new Vector3(0f, .04f, -.42f));
                 SetBunkerDoorOpen(false);
                 return;
@@ -206,6 +244,10 @@ namespace TooLateToPanic
             float fov = 47f;
             GetResidenceCinematicShot(out destination, out target, out fov);
 
+            int shot = CinematicKind == "Disaster" ? (residenceCinematicAge < 1.35f ? 0 : residenceCinematicAge < 2.55f ? 1 : residenceCinematicAge < 5.15f ? 2 : 3) :
+                CinematicKind == "Aftermath" ? (residenceCinematicAge < 2.15f ? 4 : 5) : 6;
+            if (shot != residenceShotIndex) { residenceShotIndex = shot; residenceCameraCutPending = true; }
+
             View.orthographic = false;
             View.fieldOfView = fov;
             bool cut=residenceCameraCutPending;
@@ -228,6 +270,13 @@ namespace TooLateToPanic
             fov = 47f;
             if (CinematicKind == "Disaster")
             {
+                if (Model.IsSimulation)
+                {
+                    float shotAge = Mathf.Lerp(2.55f,8f,SmoothResidence01(age/8f));
+                    camera=Vector3.Lerp(new Vector3(22,15,-24),new Vector3(18,12,-21),SmoothResidence01(age/8f));
+                    target=new Vector3(0,2,0);fov=49;
+                    ApplyDisasterShotDirection(shotAge,ref camera,ref target,ref fov);return;
+                }
                 if (age < 1.35f)
                 {
                     Vector3 actor = player ? player.position : BunkerPosition;
@@ -246,17 +295,18 @@ namespace TooLateToPanic
                 else if (age < 5.15f)
                 {
                     float t = SmoothResidence01((age - 2.55f) / 2.6f);
-                    camera = Vector3.Lerp(new Vector3(22f, 15f, -24f), new Vector3(18f, 13f, 22f), t);
+                    camera = Vector3.Lerp(new Vector3(22f, 15f, -24f), new Vector3(19f, 13f, -21f), t);
                     target = Vector3.Lerp(new Vector3(0f, 1.6f, 0f), new Vector3(0f, 1.5f, 1.5f), t);
                     fov = 46f;
                 }
                 else
                 {
                     float t = SmoothResidence01((age - 5.15f) / 2.85f);
-                    camera = Vector3.Lerp(new Vector3(-20f, 3.2f, -18f), new Vector3(19f, 4f, -17f), t);
-                    target = Vector3.Lerp(new Vector3(0f, 1.05f, 0f), new Vector3(1.5f, 1.4f, 0f), t);
-                    fov = 54f;
+                    camera = Vector3.Lerp(new Vector3(17f, 8.5f, -18f), new Vector3(14.5f, 7.5f, -16f), t);
+                    target = new Vector3(2.5f, 2.1f, -.5f);
+                    fov = 48f;
                 }
+                if (age >= 2.55f) ApplyDisasterShotDirection(age, ref camera, ref target, ref fov);
                 return;
             }
 
@@ -265,16 +315,16 @@ namespace TooLateToPanic
                 float t = SmoothResidence01(age / 4f);
                 if (age < 2.15f)
                 {
-                    camera = Vector3.Lerp(new Vector3(20f, 13f, -23f), new Vector3(-19f, 10f, -15f), SmoothResidence01(age / 2.15f));
+                    camera = Vector3.Lerp(new Vector3(23f, 14f, -25f), new Vector3(21f, 12f, -22f), SmoothResidence01(age / 2.15f));
                     target = new Vector3(0f, 3.8f, 0f);
                     fov = 55f;
                 }
                 else
                 {
                     float lowT = SmoothResidence01((age - 2.15f) / 1.85f);
-                    camera = Vector3.Lerp(new Vector3(-16f, 3.05f, -17f), new Vector3(16f, 3.7f, -15f), lowT);
-                    target = new Vector3(0f, 1.25f, 0f);
-                    fov = 53f;
+                    camera = Vector3.Lerp(new Vector3(18f, 6.5f, -18f), new Vector3(16f, 5.8f, -16.5f), lowT);
+                    target = new Vector3(2f, 1.25f, 0f);
+                    fov = 50f;
                 }
                 target.y += Mathf.Sin(t * Mathf.PI) * .08f;
                 return;
@@ -334,8 +384,40 @@ namespace TooLateToPanic
             fov = 51f;
         }
 
+        void ApplyDisasterShotDirection(float age, ref Vector3 camera, ref Vector3 target, ref float fov)
+        {
+            bool detail = age >= 5.15f;
+            float t = SmoothResidence01(detail ? (age - 5.15f) / 2.85f : (age - 2.55f) / 2.6f);
+            if (Model.Disaster == DisasterType.Flood)
+            {
+                camera = detail ? Vector3.Lerp(new Vector3(-28,9,-14),new Vector3(-25,8,-12),t) : Vector3.Lerp(new Vector3(-34,18,-25),new Vector3(-31,16,-22),t);
+                target = detail ? new Vector3(-15,.45f,-5) : new Vector3(-12,.5f,-4);
+                fov = detail ? 48 : 50;
+            }
+            else if (Model.Disaster.ToString() == "Storm")
+            {
+                camera = detail ? Vector3.Lerp(new Vector3(18,12,-19),new Vector3(16,10,-17),t) : Vector3.Lerp(new Vector3(26,18,-26),new Vector3(23,16,-23),t);
+                target = new Vector3(2,4.5f,0); fov = detail ? 47 : 51;
+            }
+            else if (Model.Disaster == DisasterType.Fire)
+            {
+                if (detail)
+                {
+                    camera = Vector3.Lerp(new Vector3(11.5f,9,-18),new Vector3(9,8.2f,-15.5f),t);
+                    target = new Vector3(4,6.1f,-5.8f); fov = 42;
+                }
+                else target = new Vector3(0,2.2f,0);
+            }
+            else
+            {
+                float envelope = Mathf.Sin(Mathf.Clamp01((age-2.55f)/5.45f)*Mathf.PI);
+                camera += new Vector3(Mathf.PerlinNoise(age*10,3)-.5f,Mathf.PerlinNoise(7,age*11)-.5f,0)*(.075f*envelope);
+            }
+        }
+
         void TickResidenceDisasterActor()
         {
+            if(Model.IsSimulation){CinematicShowsActor=false;SetResidenceActorFlags(false,false,0);return;}
             float age = residenceCinematicAge;
             if (age < 1.35f)
             {

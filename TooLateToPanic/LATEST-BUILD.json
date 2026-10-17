@@ -1,67 +1,135 @@
-{
+﻿{
   "variant": "isometric",
-  "version": "Home V4.5 / 0.4.5",
+  "version": "Home V4.8 /0.4.8",
   "activeDevelopment": "isometric only",
-  "fpsDevelopment": "paused, existing files preserved",
+  "fpsDevelopment": "paused, preserved",
+  "fpsTouched": false,
   "scene": "Assets/Game/Scenes/TooLateToPanicResidence.unity",
-  "executable": "Builds/Home-V4.5-20261017/TooLateToPanic.exe",
-  "portableZip": "Builds/TooLateToPanic-Home-V4.5-20261017-portable.zip",
-  "buildUtc": "2026-10-16T21:35:30.2436192Z",
+  "executable": "Builds/Home-V4.8-20261017/TooLateToPanic.exe",
+  "portableZip": "Builds/TooLateToPanic-Home-V4.8-20261017-portable.zip",
+  "buildUtc": "2026-10-17T00:16:52.5507939Z",
   "buildErrors": 0,
   "buildWarnings": 0,
   "exeSha256": "0E1B64A3C0EBA3482F4C7B57F36CF8811997C0CE3BBED914C116CB9D4799FC7C",
-  "assemblyCSharpSha256": "8399ADBAE91D43604CD28936C84927CC425412FF2B2E940090F4193AC690EE4C",
-  "sourceManifest": "Documentation/RELEASE-v0.4.5.json",
+  "assemblyCSharpSha256": "5683E713C90F2FD070DB819D14526EBA74ACC25B65C6581DABD6FB602F6BD17E",
+  "portableZipSha256": "018D311651CBFCC9053D1CE659430508E7829B2700E83F36B2F850BD9307D9FD",
+  "portableZipBytes": 143924613,
+  "portableMatchesNative": true,
+  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-FULLFLOW-QA-20261017/manager/source-build-v3/source-manifest.json",
   "sourceDrift": 0,
   "prefabCacheDrift": 0,
+  "inputAssetDrift": 0,
+  "sourceFiles": 61,
+  "retainedPrefabHashes": 74,
+  "native": {
+    "version": "0.4.8",
+    "passed": true,
+    "checks": 149,
+    "runtimeErrors": 0,
+    "renderedCaptures": 29,
+    "wallSeconds": 149.3158721923828,
+    "shortFlowSeconds": 49.66685485839844,
+    "assemblyCSharpSha256": "5683E713C90F2FD070DB819D14526EBA74ACC25B65C6581DABD6FB602F6BD17E",
+    "sourceDrift": 0,
+    "evidence": "../Evidence/GamejamOrchestra/TLTP-FULLFLOW-QA-20261017/manager/native-v3-bf5a8289-bcfd-453a-92f9-331be7feb582",
+    "evidenceType": "Continuous real wall-clock native semantic-input route using production CharacterController/colliders, E/F pickup, inventory packing, real manual work and natural disaster clocks.",
+    "limitations": "Kesintisiz gerçek zamanlı CharacterController rotası ve üretim E/F/çanta/iş eylemleri; OS klavye/fare ve insan keyif kabulü değildir. Dört simülasyonda doğal afet/sonuç ve kayıp korunarak inceleme/menü/tekrar denendi.",
+    "fullCampaign": false,
+    "humanListening": false,
+    "OSInput": false,
+    "regressionChecks": 189,
+    "regressionEvidence": "../Evidence/GamejamOrchestra/TLTP-FULLFLOW-QA-20261017/manager/regression-v3-26951ed6-54be-4e05-bc5a-6ecc7c657ff6"
+  },
+  "audio": {
+    "mode": "short preparation cues plus disaster; campaign disaster only",
+    "provider": "ElevenLabs via Chrome extension",
+    "speechClips": 7,
+    "sfxClips": 3,
+    "speechSeconds": 15.7257,
+    "existingCreditsUsed": 537,
+    "newPayment": false,
+    "humanListeningAccepted": false
+  },
   "developer": {
     "key": "F2",
     "options": [
       "InfiniteBudget",
       "FreeMaterials",
-      "FreezePreparationTime"
+      "FreezePreparationTime",
+      "NoLoss"
     ],
-    "budgetGrant": 1000,
     "cheatedRunExcludedFromScores": true,
-    "openingAloneTaints": false,
-    "optionsPersistToDisk": false
+    "noLossGivesRewards": false
   },
-  "native": {
-    "passed": true,
-    "checks": 12,
-    "errors": 0,
-    "runtimeSeconds": 0.582711935043335,
-    "completedWorkFixtures": 3,
-    "localModelFixtures": 9,
-    "playerSetupWarps": 1,
-    "scoreHashPreserved": true,
-    "evidence": "Documentation/RELEASE-v0.4.5.json",
-    "manual": false,
-    "physicalOsInput": false,
-    "fullCampaign": false,
-    "minigameAcceptance": false,
-    "normalOpened": true
+  "shortFlow": {
+    "contentSeconds": 270,
+    "hardLimitSeconds": 300,
+    "first180SecondsHumanAccepted": false,
+    "cascadeDisasters": false,
+    "continuousRouteSeconds": 49.66685485839844,
+    "continuousRouteVerified": true
   },
-  "audio": {
-    "providerWorkPerformed": false,
-    "mode": "disaster_only",
-    "speechEnabled": false
+  "simulation": {
+    "disasters": [
+      "Earthquake",
+      "Flood",
+      "Fire",
+      "Storm"
+    ],
+    "preparationSeconds": 90,
+    "initialBagWaterFood": [
+      1,
+      1
+    ],
+    "persistentScores": false,
+    "stableSingleOutcome": true
   },
-  "documentation": "Documentation/HOME-V4.5-DELIVERY-2026-10-17.md",
+  "exterior": {
+    "npcs": 4,
+    "npcQuests": false,
+    "garageDrivewayAvoidsBunker": true,
+    "animatedCreek": true,
+    "CFD": false,
+    "aftermathByDisaster": true
+  },
+  "art": {
+    "curatedFBX": 32,
+    "pickupFamiliesAdapted": 8,
+    "detailedProps": 12,
+    "allLibraryRemodeled": false,
+    "nativeStudioCaptures": 12,
+    "finalHumanArtAcceptance": false
+  },
+  "saveIdentity": "V4 retained",
+  "documentation": "Documentation/HOME-V4.8-DELIVERY-2026-10-17.md",
+  "normalProcessStarted": true,
   "cleanup": {
-    "retainedInUse": [],
-    "receipt": "Local development record; caches/builds/saves are not stored in Git",
-    "method": "Recycle Bin"
+    "retainedInUse": [
+      "Builds/Home-V4.7-20261017"
+    ],
+    "method": "Retired ZIP only to Recycle Bin; in-use old player folder retained",
+    "pending": false,
+    "receipt": "../Evidence/GamejamOrchestra/TLTP-FULLFLOW-QA-20261017/manager/cleanup-receipt.json"
   },
-  "saveIdentity": "V4 persistentDataPath retained",
-  "fpsTouched": false,
-  "portableZipSha256": "CE63B560CCA25F7640565B8E5D6A55E847F43F9B25DED6C76D40E55340BD4B4C",
-  "portableZipBytes": 111753551,
-  "portableMatchesNative": true,
   "github": {
     "repository": "https://github.com/kaantufan/FixThisMakeNoMistake",
-    "plannedTag": "v0.4.5",
-    "publicationStatus": "release_v0.4.5",
-    "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.5"
+    "publicationStatus": "No new remote publication for V4.8"
+  },
+  "normalReadyLogObserved": true,
+  "normalProcessId": 42948,
+  "normalVisualInspected": false,
+  "preservedUserProcess": {
+    "pid": 49252,
+    "executable": "Builds/Home-V4.7-20261017/TooLateToPanic.exe",
+    "closedByAgent": false
+  },
+  "visualQc": {
+    "status": "PASS_WITH_LIMITATIONS",
+    "report": "../Evidence/GamejamOrchestra/TLTP-FULLFLOW-QA-20261017/visual-qc/VISUAL-QC-V3.json",
+    "inspectedCaptures": 11,
+    "resolution": "1600x900",
+    "criticalBlockers": 0,
+    "remaining": "P2: two damage labels overlap during short exterior inspection",
+    "OSInput": false
   }
 }

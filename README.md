@@ -1,48 +1,20 @@
 # Too Late to Panic!
 
-Afete Hazırlık ve Önlem temalı, tek oyunculu ve çevrimdışı **3D izometrik** game jam oyunu. Evi ve bahçeyi güçlendir, malzeme topla, afet çantanı hazırla ve süre bitmeden sığınağa yetiş. Deprem, sel ve yangın dalgalarında evini koru.
+Afete Hazırlık ve Önlem temalı, çevrimdışı 3D Windows oyunu.
 
-**Civil GameJam 2026 October · Home V4.5 / 0.4.5**
-
-## Oyna
-
-[Windows paketini indir](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.4.5/TooLateToPanic-Home-V4.5-20261017-portable.zip) · [Sürüm sayfası](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.5)
-
-ZIP'i çıkar ve `TooLateToPanic.exe` dosyasını aç. EXE, `_Data`, `MonoBleedingEdge` ve diğer yan dosyaları birlikte tut. Kurulum veya internet bağlantısı gerekmez. Highscore yalnız çalıştırılan makinede tutulur.
-
-## Geliştirici seçenekleri
-
-**F2** veya başlık/duraklat menüsündeki **Geliştirici** düğmesiyle aç:
-
-- Sınırsız bütçe
-- İş/üretim malzemesi harcamama
-- Hazırlık süresini durdurma
-- Tek seferlik +1.000 bütçe
-
-Yukarı/aşağı + Enter/Space veya fareyle kullan; F2/Esc kapatır. Menü açıkken oyun duraklar. Hileli koşular normal skor tablosuna yazılmaz; seçenekleri sonradan kapatmak o koşuyu temizlemez. Yeni temiz koşu için bütün seçenekleri kapatıp yeniden başla.
-
-## Kontroller
-
-| Tuş | İşlem |
+| Klasör | İçerik |
 | --- | --- |
-| WASD / oklar · Shift · Space | Yürü · koş · zıpla |
-| E · F | Aç/kapat/etkileş · seçili malzemeyi al |
-| Q · Z/X | Hedef değiştir · kaptaki malzemeyi seç |
-| Tab/B · oklar · Enter | Envanter/çanta · seç · çantaya koy |
-| 1/2/3 · T | Sabitle/koru/güçlendir · duvar/zemin ankrajı |
-| Sağ tık · fare · sol tık | Eşya taşımaya başla · yer seç · bırak |
-| Taşırken teker/R · sağ tık/Esc | Döndür · iptal |
-| İşte A/D · Enter · Space | Hizala/basınç · yerleştir · uygula |
-| Esc · H · F2 | Duraklat/geri · yardım · geliştirici |
+| [TooLateToPanic](TooLateToPanic/README.md) | İzometrik Home V4.8; dört seçilebilir afet, akan dere, çevre NPC'leri, yenilenen asset/HUD; 149/149 kesintisiz rota + 189/189 regresyon kontrolü |
+| [TooLateToPanicFPS](TooLateToPanicFPS/README.md) | Askıdaki FPS denemesi; mevcut dosyalar korunur |
+| [Docs](Docs/TOO-LATE-TO-PANIC-GDD.md) | Oyun tasarımı ve ekip düzeni |
+| [Tools/GamejamOrchestra](Tools/GamejamOrchestra/policy.json) | Bu oyun için görev metinleri ve teslim şablonları |
+| [Evidence/GamejamOrchestra](Evidence/GamejamOrchestra/) | TLTP staging, kaynak/derleme/test ve düzenleme kayıtları |
 
-## Unity kaynakları
+İzometrik oyunu `Play-TooLateToPanic.cmd` açar. Sürümün güncel durumu ve kontrolleri ilgili projenin README dosyasındadır. Aktif geliştirme yalnız izometrik sürümdedir. FPS denemesi kullanıcının kararıyla durduruldu; dosyaları korunur.
 
-Unity **6000.0.73f1**, Built-In, Windows64. Unity Hub'da üst depo yerine **`TooLateToPanic/`** klasörünü proje olarak aç. Ana sahne `Assets/Game/Scenes/TooLateToPanicResidence.unity`; editör menüsü **Too Late to Panic → Build Home V4.5** ile tam build alınabilir. Komut satırı yöntemi `TooLateToPanic.PanicResidenceBuild.Build`.
+Unity 6000.0.73f1 / Built-In kullanılır. Projeyi Unity'de açarken iki oyun klasöründen ilgili olanı seçin; bu üst klasör bir Unity projesi değildir. Çalışma kuralları [AGENTS.md](AGENTS.md), ekip düzeni [TOO-LATE-TO-PANIC-TEAM.md](Docs/TOO-LATE-TO-PANIC-TEAM.md) içindedir.
 
-`Assets`, `Packages`, `ProjectSettings`, tasarım belgeleri ve ajan görev metinleri dahildir. Library/Temp/Logs/Builds, kişisel kayıtlar, yerel çalışma kanıtları ve kullanılmayan tarihsel bake kopyaları Git'e dahil değildir. Mevcut `.meta` kimlikleri ve gerekli asset bağımlılıkları korunur. Windows çıktısı Releases içindedir. FPS denemesi askıdadır; bu depo aktif izometrik kaynak teslimidir.
 
-[Tasarım dokümanı](TooLateToPanic/Documentation/GDD.md) · [Sürüm kanıtı](TooLateToPanic/Documentation/RELEASE-v0.4.5.json) · [Asset kaynakları](TooLateToPanic/Documentation/ASSET-CREDITS.md) · [Oyuncu/animasyon provenansı](TooLateToPanic/Documentation/Existing-Player-Provenance.md)
 
-Yerel V4.5 Windows build 0 hata/uyarı; 12/12 kısa native API kontrolü geçti. Bu, durum fikstürleriyle maliyet/kapasite/saat/kayıt ve geliştirici HUD kontrolüdür; manuel, mini oyun veya tam kampanya kabulü değildir. Public kaynak asset GUID kapanımı 0 eksik referans içerir; public kopyada ayrıca temiz Unity import/build çalıştırılmadı. Tarihsel geliştirme belgelerindeki yerel Evidence yolları Git'e dahil değildir; güncel public kanıt yukarıdadır.
 
-Üçüncü taraf Quaternius karakter/animasyonları korunmuş CC0 lisanslarıyla gelir. Projenin kendi kod/sanatına bu depo yeni bir lisans atamaz; kaynak ayrıntıları Asset kaynakları belgesindedir. Şimdilik yalnız afet sesleri etkindir; tarihsel, kullanılmayan Tolga konuşma WAV'ları public kaynak paketine alınmamıştır.
+
