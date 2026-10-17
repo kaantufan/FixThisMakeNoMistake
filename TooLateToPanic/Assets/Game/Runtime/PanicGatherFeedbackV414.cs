@@ -17,6 +17,7 @@ namespace TooLateToPanic
         PanicExpedition gatherExpeditionSeenV414;
         PanicMaterialPreviewV414 gatherPreviewsV414;
         GUIStyle gatherTextV414;
+        readonly Rect[] gatherHudClearanceV414=new Rect[7];
         public int GatherFeedbackCountV414 { get { return gatherFeedbackV414.Count; } }
         public int GatherFeedbackLastSequenceV414 { get { return gatherSequenceSeenV414; } }
         public bool GatherFeedbackVisibleV414 { get { return GatherFeedbackCountV414>0&&!ExperienceFeedbackBlockedV414&&Model!=null&&(Model.Phase==PanicPhase.Preparing||Model.Phase==PanicPhase.Tutorial); } }
@@ -65,24 +66,80 @@ namespace TooLateToPanic
                 float scale=Mathf.Clamp(Mathf.Min(Screen.width/1100f,Screen.height/700f),.72f,1.1f);
                 float width=Mathf.Min(268*scale,Screen.width-20),height=44*scale,gap=5*scale;
                 float compact=Mathf.Min(1,Mathf.Max(12,Screen.height-96f)/(gatherFeedbackV414.Count*(height+gap)));
+                float textCompact=compact;
                 height*=compact;gap*=compact;float allHeight=gatherFeedbackV414.Count*(height+gap);
+                int hudAreas=GatherHudClearanceRectsV414(out float clearance);
+                float available=allHeight;
+                // Keep the existing anchor/size unless this real stack intersects a visible top HUD area.
+                // Only a long overlapping queue that cannot fit below it uses the existing compact layout.
+                for(int i=0;i<gatherFeedbackV414.Count&&hudAreas>0;i++)
+                {
+                    Vector2 anchor=GatherPopupAnchorV414(gatherFeedbackV414[i],scale,width,allHeight);
+                    float clearTop=GatherClearTopV414(new Rect(anchor.x,anchor.y,width,allHeight-gap),hudAreas,clearance);
+                    if(clearTop>anchor.y)available=Mathf.Min(available,Mathf.Max(12,Screen.height-16-clearTop));
+                }
+                if(available<allHeight)
+                {
+                    float fit=available/allHeight;compact*=fit;height*=fit;gap*=fit;allHeight=available;
+                }
                 for(int i=0;i<gatherFeedbackV414.Count;i++)
                 {
-                    var p=gatherFeedbackV414[i];Vector3 screen=View.WorldToScreenPoint(p.Origin+Vector3.up*(p.Age*.36f));
-                    float anchorX=screen.z>.1f?screen.x+26*scale:Screen.width*.55f;
-                    float anchorY=screen.z>.1f?Screen.height-screen.y:Screen.height*.55f;
-                    float x=Mathf.Clamp(anchorX,10,Mathf.Max(10,Screen.width-width-10));
-                    float top=Mathf.Clamp(anchorY-allHeight*.5f,76*scale,Mathf.Max(76*scale,Screen.height-allHeight-16));
+                    var p=gatherFeedbackV414[i];Vector2 anchor=GatherPopupAnchorV414(p,scale,width,allHeight);
+                    float x=anchor.x,top=GatherClearTopV414(new Rect(x,anchor.y,width,allHeight-gap),hudAreas,clearance);
                     Rect card=new Rect(x,top+i*(height+gap),width,height);
                     float alpha=Mathf.Clamp01(p.Age/.10f)*Mathf.Clamp01((1.85f-p.Age)/.35f);
                     GUI.color=new Color(.045f,.095f,.08f,.88f*alpha);GUI.DrawTexture(card,Texture2D.whiteTexture);
                     Texture preview=gatherPreviewsV414.Get(p.Id);float icon=height-6*scale;
                     if(preview){GUI.color=new Color(1,1,1,alpha);GUI.DrawTexture(new Rect(x+3*scale,card.y+3*scale,icon,icon),preview,ScaleMode.ScaleToFit,true);}
-                    GUI.color=new Color(1,1,1,alpha);gatherTextV414.fontSize=Mathf.Max(8,Mathf.RoundToInt(16*scale*compact));
+                    GUI.color=new Color(1,1,1,alpha);gatherTextV414.fontSize=Mathf.Max(8,Mathf.RoundToInt(16*scale*textCompact));
                     GUI.Label(new Rect(x+height+4*scale,card.y,width-height-8*scale,height),"+"+p.Amount+" "+PanicExpedition.DisplayName(p.Id),gatherTextV414);
                 }
             }
             finally{GUI.matrix=matrix;GUI.color=color;}
+        }
+        Vector2 GatherPopupAnchorV414(PanicGatherFeedbackRecordV414 p,float scale,float width,float allHeight)
+        {
+            Vector3 screen=View.WorldToScreenPoint(p.Origin+Vector3.up*(p.Age*.36f));
+            float anchorX=screen.z>.1f?screen.x+26*scale:Screen.width*.55f;
+            float anchorY=screen.z>.1f?Screen.height-screen.y:Screen.height*.55f;
+            return new Vector2(Mathf.Clamp(anchorX,10,Mathf.Max(10,Screen.width-width-10)),
+                Mathf.Clamp(anchorY-allHeight*.5f,76*scale,Mathf.Max(76*scale,Screen.height-allHeight-16)));
+        }
+        int GatherHudClearanceRectsV414(out float clearance)
+        {
+            clearance=0;
+            if(!hud||!hud.isActiveAndEnabled||BagCameraOwnsView||JuryActive)return 0;
+            Rect canvas=hud.LogicalCanvasBounds;
+            float scale=Mathf.Max(.01f,Mathf.Min(Screen.width/canvas.width,Screen.height/canvas.height));
+            Vector2 offset=new Vector2((Screen.width-canvas.width*scale)*.5f,(Screen.height-canvas.height*scale)*.5f);
+            // World.OnGUI may run before HUD.OnGUI on a resize; use the same current canvas transform
+            // if the public HUD values still describe the previous frame's viewport.
+            if(Mathf.Abs(hud.CanvasScale-scale)<.0001f&&(hud.CanvasOffset-offset).sqrMagnitude<.01f)
+            {scale=hud.CanvasScale;offset=hud.CanvasOffset;}
+            clearance=Mathf.Max(4,8*scale);
+            gatherHudClearanceV414[0]=GatherHudPixelsV414(hud.WaveCardBounds,scale,offset);
+            gatherHudClearanceV414[1]=GatherHudPixelsV414(hud.TimerCardBounds,scale,offset);
+            gatherHudClearanceV414[2]=GatherHudPixelsV414(hud.ResourceCardBounds,scale,offset);
+            // Exact current DrawStatusStrip/DrawMaterialPool rectangles, not a full-screen top margin.
+            gatherHudClearanceV414[3]=GatherHudPixelsV414(new Rect(24,126,430,34),scale,offset);
+            gatherHudClearanceV414[4]=GatherHudPixelsV414(new Rect(460,126,624,38),scale,offset);
+            gatherHudClearanceV414[5]=GatherHudPixelsV414(new Rect(1364,128,104,30),scale,offset);
+            gatherHudClearanceV414[6]=GatherHudPixelsV414(new Rect(1478,128,98,30),scale,offset);
+            return gatherHudClearanceV414.Length;
+        }
+        static Rect GatherHudPixelsV414(Rect logical,float scale,Vector2 offset)
+        {return new Rect(offset.x+logical.x*scale,offset.y+logical.y*scale,logical.width*scale,logical.height*scale);}
+        float GatherClearTopV414(Rect stack,int areas,float clearance)
+        {
+            // Moving down may clear resources but meet TAB/H or the material strip; solve that actual overlap too.
+            for(int pass=0;pass<areas;pass++)
+            {
+                bool moved=false;
+                for(int i=0;i<areas;i++)if(stack.Overlaps(gatherHudClearanceV414[i]))
+                {stack.y=gatherHudClearanceV414[i].yMax+clearance;moved=true;}
+                if(!moved)break;
+            }
+            return stack.y;
         }
         void DisposeGatherFeedbackV414()
         {if(gatherPreviewsV414!=null)gatherPreviewsV414.Dispose();gatherPreviewsV414=null;gatherFeedbackV414.Clear();}

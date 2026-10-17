@@ -552,7 +552,7 @@ namespace TooLateToPanic
                 Frame(ticker, Night, Line, 1f); Region(ticker);
                 Fill(new Rect(25, 127, 82, 32), Petrol);
                 Label(new Rect(29, 128, 73, 27), "HEDEF", _caps);
-                Label(new Rect(119, 130, 321, 25), CampaignPrecautionTimer ? "Ardından 30 sn çanta" : "Önlemleri tamamla · son 30 sn çanta", _tiny);
+                Label(new Rect(119, 130, 321, 25), CampaignPrecautionTimer ? "Ardından 45 sn çanta" : "Önlemleri tamamla · son 45 sn çanta", _tiny);
                 DrawKeycap(new Rect(1364, 128, 104, 30), "TAB", "ÇANTA", Line);
                 DrawKeycap(new Rect(1478, 128, 98, 30), "H", "YARDIM", Line);
             }
@@ -945,7 +945,7 @@ namespace TooLateToPanic
             Brush(new Rect(38, 419, 177, 30), Petrol);
             Label(new Rect(52, 418, 318, 32), "HIZLI HAZIRLIK", _body);
             Label(new Rect(44, 463, 336, 27), "E ile dolabı aç · Malzeme havuza eklenir", _small);
-            Label(new Rect(44, 497, 336, 27), "Son 30 sn · su ve gıdayı al", _small);
+            Label(new Rect(44, 497, 336, 27), "Son 45 sn · su ve gıdayı al", _small);
             Label(new Rect(44, 531, 336, 27), "Nesnenin önlemini seç · H kapat", ColorText(_tiny, Sea));
         }
 

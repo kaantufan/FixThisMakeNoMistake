@@ -25,7 +25,7 @@ namespace TooLateToPanic
             public int wave,completedWaves,budgetBefore,budgetAfter,reward,finitePickupCount,workCommits,runtimeErrors;
             public long score,lastWaveScore;
             public float preparationSeconds,damage;
-            public bool bagStageAt30,cheated,stalled;
+            public bool bagStageAt45,cheated,stalled;
         }
         [Serializable] public sealed class WorkRow
         { public string action,target,materialsBefore,materialsAfter; public int wave,budgetBefore,budgetAfter; public bool committed; }
@@ -126,7 +126,9 @@ namespace TooLateToPanic
             Check("campaign.normal_start",model.Phase==PanicPhase.Preparing&&!model.IsSimulation&&!model.IsJuryDemo&&!model.IsTutorial&&!model.DeveloperAnyEnabled&&!model.CheatedRun&&!model.IsPaused);
             if(model.IsPaused)throw new InvalidOperationException("Genuine guide confirmation did not release model pause.");
             worldWasEnabled=world.enabled;world.enabled=false;report.worldUpdateSuspensions++;
-            Check("campaign.initial150",Mathf.Abs(model.TimeRemaining-150f)<.2f,"One launch frame may elapse before driver owns the model clock.");
+            Check("campaign.initial165",Mathf.Abs(model.TimeRemaining-165f)<.2f,"One launch frame may elapse before driver owns the model clock.");
+            Check("duration45.canonical-normal-contract",PanicModel.NormalPrecautionSeconds==120f&&PanicModel.NormalBagSeconds==45f&&PanicModel.NormalPreparationSeconds==165f&&PanicHomeWorld.BagPreparationSeconds==45f,
+                "Exact normal120precaution+45bag=165; no real-time/camera claim in accelerated campaign.");
             foreach(var source in expedition.Sources)
             {
                 Check("source.open."+source.Id,expedition.ToggleSource(source.Id));report.sourceOpenCalls++;
@@ -142,9 +144,9 @@ namespace TooLateToPanic
                 int pickupBefore=report.finitePickupCalls,workBefore=report.work.Count;
                 PrepareWithFiniteResources();
                 row.workCommits=report.work.Count-workBefore;
-                Tick(Mathf.Max(.001f,model.TimeRemaining-30f));
-                row.bagStageAt30=world.BagFinalStageActive;
-                Check("wave."+number+".bag_boundary",row.bagStageAt30&&Mathf.Abs(model.TimeRemaining-30f)<.01f,"Logical final-30s gate; rendered camera NOT_RUN.");
+                Tick(Mathf.Max(.001f,model.TimeRemaining-45f));
+                row.bagStageAt45=world.BagFinalStageActive;
+                Check("wave."+number+".bag_boundary",row.bagStageAt45&&Mathf.Abs(model.TimeRemaining-45f)<.01f,"Logical final-45s gate; rendered camera NOT_RUN.");
                 PackEssential("water");PackEssential("food");
                 row.bagBefore=Bag(model);row.finitePickupCount=report.finitePickupCalls-pickupBefore;
                 row.precautions=Precautions(model);
@@ -166,7 +168,7 @@ namespace TooLateToPanic
                     Check("wave."+number+".damage_bounds",!float.IsNaN(model.TotalDamage)&&model.TotalDamage>=0&&model.TotalDamage<PanicModel.DamageLossLimit&&model.Items.All(i=>i.Damage>=0&&i.Damage<=100.001f));
                     string retained=Precautions(model),finite=Materials(expedition);
                     model.FinishInspection();row.phasechain+=">"+model.Phase;
-                    Check("wave."+number+".next_wave",model.Wave==number+1&&model.Phase==PanicPhase.Preparing&&model.TimeRemaining==150f&&model.RequiredDays==1&&model.TotalDamage==0&&model.Items.All(i=>i.Damage==0f&&i.Contribution==0f));
+                    Check("wave."+number+".next_wave",model.Wave==number+1&&model.Phase==PanicPhase.Preparing&&model.TimeRemaining==165f&&model.RequiredDays==1&&model.TotalDamage==0&&model.Items.All(i=>i.Damage==0f&&i.Contribution==0f));
                     Check("wave."+number+".persistent_precautions",retained==Precautions(model));
                     expedition.OnNewWave();report.newWaveCalls++;
                     Check("wave."+number+".refill",finite==Materials(expedition)&&expedition.WorldSupplies.Where(s=>s.ItemId=="water"||s.ItemId=="food"||s.ItemId=="battery").All(s=>s.Count==s.InitialCount));
@@ -260,7 +262,7 @@ namespace TooLateToPanic
             }
             Check("sequence.four_disasters",report.schedule.Take(50).Select(r=>r.disaster).Distinct().Count()==4,"Baseline %3 is expected to FAIL this check; staged %4 must include Storm.");
             a.ReturnToTitle();a.StartRun(false);
-            Check("restart.reset",a.Wave==1&&a.CompletedWaves==0&&a.Score==0&&a.Budget==1000&&a.TimeRemaining==150f&&a.PackedWater==0&&a.PackedFood==0&&!a.CheatedRun&&a.Disaster==DisasterType.Earthquake&&a.Items.All(i=>i.Damage==0));
+            Check("restart.reset",a.Wave==1&&a.CompletedWaves==0&&a.Score==0&&a.Budget==1000&&a.TimeRemaining==165f&&a.PackedWater==0&&a.PackedFood==0&&!a.CheatedRun&&a.Disaster==DisasterType.Earthquake&&a.Items.All(i=>i.Damage==0));
         }
         void RunCounterChecks()
         {
@@ -278,8 +280,8 @@ namespace TooLateToPanic
         void Flush()
         {
             File.WriteAllText(Path.Combine(world.EvidencePath,"wave50-report.json"),JsonUtility.ToJson(report,true));
-            var csv=new StringBuilder("seed,wave,disaster,preparationseconds,phasechain,bagbefore,bagafter,stockbefore,stockafter,materials_before,materials_after,finitepickupcount,completedWaves,reward,score,budgetbefore,budgetafter,damage,runtimeerrors,stall,cheated,failure\n");
-            foreach(var r in report.waves)csv.AppendLine(string.Join(",",new object[]{r.seed,r.wave,r.disaster,r.preparationSeconds,r.phasechain,r.bagBefore,r.bagAfter,r.stockBefore,r.stockAfter,r.materialsBefore,r.materialsAfter,r.finitePickupCount,r.completedWaves,r.reward,r.score,r.budgetBefore,r.budgetAfter,r.damage,r.runtimeErrors,r.stalled,r.cheated,r.failure}.Select(Csv)));
+            var csv=new StringBuilder("seed,wave,disaster,preparationseconds,bag_stage_at45,phasechain,bagbefore,bagafter,stockbefore,stockafter,materials_before,materials_after,finitepickupcount,completedWaves,reward,score,budgetbefore,budgetafter,damage,runtimeerrors,stall,cheated,failure\n");
+            foreach(var r in report.waves)csv.AppendLine(string.Join(",",new object[]{r.seed,r.wave,r.disaster,r.preparationSeconds,r.bagStageAt45,r.phasechain,r.bagBefore,r.bagAfter,r.stockBefore,r.stockAfter,r.materialsBefore,r.materialsAfter,r.finitePickupCount,r.completedWaves,r.reward,r.score,r.budgetBefore,r.budgetAfter,r.damage,r.runtimeErrors,r.stalled,r.cheated,r.failure}.Select(Csv)));
             File.WriteAllText(Path.Combine(world.EvidencePath,"campaign-waves.csv"),csv.ToString());
             File.WriteAllText(Path.Combine(world.EvidencePath,"schedule-only.csv"),"seed,wave,disaster,layer\n"+string.Join("\n",report.schedule.Select(r=>r.seed+","+r.wave+","+r.disaster+",NATIVE_SCHEDULE_REFLECTION_FIXTURE")));
         }

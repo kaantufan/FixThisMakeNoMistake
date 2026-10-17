@@ -237,7 +237,7 @@ namespace TooLateToPanic
             w.InputLocked=true;FixtureNote("CLOCK_LOCK", "InputLocked=true during bounded geometry/API setup; model timer held. Real controller/colliders continue; this segment does not establish normal locomotion animation or uninterrupted campaign acceptance.");
             yield return Section("layout",Layout());yield return Section("stairs",Stairs());
             yield return Section("outdoor",Outdoor());yield return Section("ceiling",Ceiling());
-            w.InputLocked=false;FixtureNote("CLOCK_LOCK_END","Restore normal model clock before actual work, feedback, final30 and cinematic sections.");
+            w.InputLocked=false;FixtureNote("CLOCK_LOCK_END","Restore normal model clock before actual work, feedback, final45 and cinematic sections.");
             yield return Section("work",Work());yield return Section("utilities",Utilities());yield return Section("feedback",Feedback());
             yield return Section("bag",Bag());yield return Section("bunker",Bunker());yield return Section("hazards",Hazards());
             yield return Section("street",Street());yield return Section("models",Models());
@@ -277,7 +277,7 @@ namespace TooLateToPanic
             if(skip!=null){skip.Invoke(w,null);skip.Invoke(w,null);}else if(w.CinematicActive){w.SkipResidenceCinematic();FixtureNote("MISSING_INTRO_FALLBACK","Clear existing presentation only to continue QA; required intro checks already FAIL.");}
             yield return null;
             Check("intro.skip-resolves-once",count&&skip!=null&&!Bool(w,"IntroStoryActiveV414")&&Int(w,"IntroStoryResolutionCountV414")==before+1,"before="+before+" after="+Int(w,"IntroStoryResolutionCountV414"));
-            Check("normal.120-plus-30",Mathf.Abs(w.Model.TimeRemaining-150f)<.25f&&Mathf.Abs(PanicHomeWorld.BagPreparationSeconds-30f)<.001f,"Initial model remaining="+w.Model.TimeRemaining+"; no accelerated elapsed-time claim.");
+            Check("normal.120-plus-45",Mathf.Abs(w.Model.TimeRemaining-165f)<.25f&&Mathf.Abs(PanicHomeWorld.BagPreparationSeconds-45f)<.001f,"Initial model remaining="+w.Model.TimeRemaining+"; no accelerated elapsed-time claim.");
             Check("normal.starts-isometric",w.View.orthographic&&!w.BagCameraOwnsView&&!w.WorkActive);
         }
         void ActivateDefaultFreeplayForQa()
@@ -286,6 +286,24 @@ namespace TooLateToPanic
             if(w.Model.IsJuryDemo)report.shortFlowStarts++;
             else if(!w.Model.IsSimulation&&(w.Model.Phase==PanicPhase.Preparing||w.Model.Phase==PanicPhase.Tutorial))report.startGameCalls++;
         }
+        IEnumerator GuideResolutionCaptureR7(int width,int height,string label)
+        {
+            float clock=w.Model.TimeRemaining,age=Field<float>(w,"residenceCinematicAge");Vector3 actor=w.PlayerPosition;
+            int resolutions=Int(hud,"FreeplayOnboardingResolutionCountV414");
+            Screen.SetResolution(width,height,FullScreenMode.Windowed);
+            float deadline=Time.realtimeSinceStartup+3;
+            while((Screen.width!=width||Screen.height!=height)&&Time.realtimeSinceStartup<deadline)yield return null;
+            yield return null;yield return new WaitForEndOfFrame();
+            Check("onboarding.resolution."+width+"x"+height,Screen.width==width&&Screen.height==height,"Actual window resolution; no image resampling or QA camera.","NATIVE_RENDER_STATE");
+            Check("onboarding.same-paused-guide."+width+"x"+height,Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&
+                Mathf.Abs(w.Model.TimeRemaining-clock)<.005f&&Mathf.Abs(Field<float>(w,"residenceCinematicAge")-age)<.005f&&Vector3.Distance(actor,w.PlayerPosition)<.005f&&Int(hud,"FreeplayOnboardingResolutionCountV414")==resolutions,
+                "Same unacknowledged guide/clock/actor/cinematic across actual surface resize.");
+            yield return Shot(label);
+            string path=Path.Combine(w.EvidencePath,label+".png");byte[] png=File.Exists(path)?File.ReadAllBytes(path):Array.Empty<byte>();
+            Check("onboarding.actual-png-size."+width+"x"+height,png.Length>=24&&PngDimensionR7(png,16)==width&&PngDimensionR7(png,20)==height,"Actual ScreenCapture PNG IHDR dimensions.","NATIVE_CAPTURE_FILE");
+        }
+        static int PngDimensionR7(byte[] data,int offset)
+        {return data[offset]<<24|data[offset+1]<<16|data[offset+2]<<8|data[offset+3];}
         IEnumerator Onboarding()
         {
             bool seams=Require(hud,"FreeplayOnboardingOpenV414","onboarding.open-seam")&Require(hud,"FreeplayOnboardingSeenV414","onboarding.seen-seam")&
@@ -298,31 +316,36 @@ namespace TooLateToPanic
             ActivateDefaultFreeplayForQa();object openingConfirm=Call(hud,"ConfirmFreeplayOnboardingV414");
             Check("onboarding.opening-frame-does-not-auto-ack",openingConfirm is bool openingAccepted&&!openingAccepted&&Bool(hud,"FreeplayOnboardingOpenV414")&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Real production confirm rejects the title opening frame, preventing title Enter/click from instantly consuming the explanation.");
             yield return null;
-            Check("onboarding.first-free-is-normal150",w.Model.Phase==PanicPhase.Preparing&&!w.JuryActive&&!w.Model.IsSimulation&&Mathf.Abs(w.Model.TimeRemaining-150)<.005f&&Mathf.Abs(PanicHomeWorld.BagPreparationSeconds-30)<.001f,"Normal120+30 run; default action must not enter short flow.");
+            Check("onboarding.first-free-is-normal165",w.Model.Phase==PanicPhase.Preparing&&!w.JuryActive&&!w.Model.IsSimulation&&Mathf.Abs(w.Model.TimeRemaining-165)<.005f&&Mathf.Abs(PanicHomeWorld.BagPreparationSeconds-45)<.001f,"Normal120+45 run; default action must not enter short flow.");
             Check("onboarding.first-free-modal-owns-pause",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked,"Model pause and world input lock must remain owned by guide through the next phase synchronization.");
             float clock=w.Model.TimeRemaining,cinemaAge=Field<float>(w,"residenceCinematicAge");Vector3 actor=w.PlayerPosition;int budget=w.Model.Budget;string stock=Stock();
             int resolutions=Int(hud,"FreeplayOnboardingResolutionCountV414");
-            yield return Shot("00-first-freeplay-controls-guide");yield return Wait(.6f);
+            Check("onboarding.guide-initial1600",Screen.width==1600&&Screen.height==900,"Root launches visible1600x900; smaller surfaces are captured on this same paused guide.","NATIVE_RENDER_STATE");
+            yield return Shot("00-first-freeplay-controls-guide");
+            yield return GuideResolutionCaptureR7(1280,720,"00-first-freeplay-controls-guide-1280x720");
+            yield return GuideResolutionCaptureR7(960,540,"00-first-freeplay-controls-guide-960x540");
+            yield return GuideResolutionCaptureR7(1600,900,"00-first-freeplay-controls-guide-1600x900-restored");
+            yield return Wait(.6f);
             Check("onboarding.real-frame-clock-input-cinema-freeze",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&Mathf.Abs(w.Model.TimeRemaining-clock)<.005f&&Vector3.Distance(actor,w.PlayerPosition)<.005f&&Mathf.Abs(Field<float>(w,"residenceCinematicAge")-cinemaAge)<.005f,
-                "Real.6s frame wait; clock alone is insufficient because intro could also freeze150. No movement adapter or direct clock call used.");
+                "Real.6s frame wait; clock alone is insufficient because intro could also freeze165. No movement adapter or direct clock call used.");
             foreach(var key in new[]{KeyCode.E,KeyCode.F,KeyCode.Space,KeyCode.Tab,KeyCode.B,KeyCode.F2,KeyCode.Alpha1,KeyCode.Alpha3}){w.HandleKey(key);yield return null;}
             Check("onboarding.production-key-dispatch-blocked",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&!w.InventoryOpen&&!w.WorkActive&&!w.IsMoving&&!hud.DeveloperMenuOpen&&!w.BagCameraOwnsView&&w.Model.Budget==budget&&Stock()==stock&&Vector3.Distance(actor,w.PlayerPosition)<.005f&&Int(hud,"FreeplayOnboardingResolutionCountV414")==resolutions,
                 "Production HandleKey E/F/Space/Tab/B/F2/1/3 cannot mutate/open other modes. API dispatch is not OS WASD acceptance; source Update pause gate and later root OS remain separate.");
             w.ReturnToMenu();yield return null;yield return null;
             Check("onboarding.unacknowledged-menu-cleanup",w.Model.Phase==PanicPhase.Title&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.InputLocked&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Real menu return releases guide-owned modal/pause/lock; unacknowledged first-use state remains unseen.");
             ActivateDefaultFreeplayForQa();yield return null;
-            Check("onboarding.unacknowledged-free-reopens",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&!w.JuryActive&&Mathf.Abs(w.Model.TimeRemaining-150)<.005f,"Second explicitly counted start must still teach an unacknowledged first free session.");
+            Check("onboarding.unacknowledged-free-reopens",Bool(hud,"FreeplayOnboardingOpenV414")&&w.Model.IsPaused&&w.InputLocked&&!w.JuryActive&&Mathf.Abs(w.Model.TimeRemaining-165)<.005f,"Second explicitly counted start must still teach an unacknowledged first free session.");
             int before=Int(hud,"FreeplayOnboardingResolutionCountV414");object first=Call(hud,"ConfirmFreeplayOnboardingV414"),second=Call(hud,"ConfirmFreeplayOnboardingV414");
             Check("onboarding.ack-consumes-world-frame",Bool(hud,"FreeplayOnboardingInputBlockedV414")&&w.CancelFrame==Time.frameCount&&Int(w,"DiscreteInputFrame")==Time.frameCount,"Real same-frame input owner remains blocked after confirmation; OS Enter/key-up swallowing is separate root evidence.");
             yield return null;
             Check("onboarding.ack-resolves-once",first is bool accepted&&accepted&&second is bool duplicate&&!duplicate&&!Bool(hud,"FreeplayOnboardingOpenV414")&&Bool(hud,"FreeplayOnboardingSeenV414")&&Int(hud,"FreeplayOnboardingResolutionCountV414")==before+1,
                 "Two real production confirm calls; only first resolves. This is the same action as visible ANLADIM BAŞLA/Enter, not a synthetic key event.");
-            Check("onboarding.ack-releases-owned-pause",!w.Model.IsPaused&&!w.InputLocked&&Mathf.Abs(w.Model.TimeRemaining-150)<.25f&&!w.Model.CheatedRun&&!w.Model.DeveloperAnyEnabled,"Normal clock remains150 before gameplay; guide use is not cheating.");
+            Check("onboarding.ack-releases-owned-pause",!w.Model.IsPaused&&!w.InputLocked&&Mathf.Abs(w.Model.TimeRemaining-165)<.25f&&!w.Model.CheatedRun&&!w.Model.DeveloperAnyEnabled,"Normal clock remains165 before gameplay; guide use is not cheating.");
             if(Bool(w,"IntroStoryActiveV414")){w.SkipIntroStoryV414();report.onboardingIntroSkips++;FixtureNote("ONBOARDING_REAL_INTRO_SKIP","Production intro skip after guide acknowledgement only, so actual preparation clock resume can be observed without another9s wait. Existing Intro section still covers natural9s separately.");}
             float resumed=w.Model.TimeRemaining;yield return Wait(.18f);
             Check("onboarding.actual-normal-clock-resumes",!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.InputLocked&&controller.enabled&&w.Model.Phase==PanicPhase.Preparing&&w.Model.TimeRemaining<resumed-.05f,"Real normal frames after modal/intro release; no time assignment or Tick.");
             w.ReturnToMenu();yield return null;ActivateDefaultFreeplayForQa();yield return null;
-            Check("onboarding.only-first-free-this-session",Bool(hud,"FreeplayOnboardingSeenV414")&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.JuryActive&&Mathf.Abs(w.Model.TimeRemaining-150)<.25f,"Fresh run after confirmed guide does not reopen it in this process session; no persistent save flag is written by QA.");
+            Check("onboarding.only-first-free-this-session",Bool(hud,"FreeplayOnboardingSeenV414")&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.JuryActive&&Mathf.Abs(w.Model.TimeRemaining-165)<.25f,"Fresh run after confirmed guide does not reopen it in this process session; no persistent save flag is written by QA.");
             w.ReturnToMenu();yield return null;Call(hud,"ActivateTitleChoiceV414",1);report.menuActionCalls++;if(w.Model.IsJuryDemo)report.shortFlowStarts++;w.FullFlowScriptedInput=true;yield return null;
             Check("onboarding.short-flow-keeps-own-mode",w.JuryActive&&w.Model.IsJuryDemo&&!Bool(hud,"FreeplayOnboardingOpenV414")&&!w.Model.IsPaused&&!w.InputLocked,"Actual separate short-flow UI action remains available and does not inherit freeplay modal/pause.");
             w.ReturnToMenu();yield return null;
@@ -659,33 +682,33 @@ namespace TooLateToPanic
         {
             Check("normal.clock.unscaled-real-frame-setup",!w.InputLocked&&!w.Model.IsPaused&&!w.Model.DeveloperAnyEnabled&&Mathf.Abs(Time.timeScale-1)<.001f,"No clock freeze, developer option or timescale acceleration during this interval.");
             float clockBefore=w.Model.TimeRemaining,wallBefore=Time.realtimeSinceStartup,heartbeat=wallBefore;
-            FixtureNote("REAL_CLOCK_INTERVAL","Allow normal production Model.Tick from remaining="+clockBefore+" down to31.05 using actual frames; no direct Tick/time mutation in this interval.");
-            while(w.Model.Phase==PanicPhase.Preparing&&w.Model.TimeRemaining>31.05f&&Time.realtimeSinceStartup-wallBefore<126f)
+            FixtureNote("REAL_CLOCK_INTERVAL","Allow normal production Model.Tick from remaining="+clockBefore+" down to46.05 using actual frames; no direct Tick/time mutation in this interval.");
+            while(w.Model.Phase==PanicPhase.Preparing&&w.Model.TimeRemaining>46.05f&&Time.realtimeSinceStartup-wallBefore<126f)
             {
                 if(Time.realtimeSinceStartup-heartbeat>=15){heartbeat=Time.realtimeSinceStartup;Observe("normal-clock-wait");Debug.Log("OVERHAUL414_CLOCK remaining="+w.Model.TimeRemaining.ToString("F2"));}
                 yield return null;
             }
             float realSeconds=Time.realtimeSinceStartup-wallBefore,modelSeconds=clockBefore-w.Model.TimeRemaining;
-            Check("normal.clock.actual-precaution-duration",w.Model.Phase==PanicPhase.Preparing&&w.Model.TimeRemaining<=31.05f&&w.Model.TimeRemaining>30.5f&&Mathf.Abs(realSeconds-modelSeconds)<1.5f&&clockBefore>145f,
+            Check("normal.clock.actual-precaution-duration",w.Model.Phase==PanicPhase.Preparing&&w.Model.TimeRemaining<=46.05f&&w.Model.TimeRemaining>45.5f&&Mathf.Abs(realSeconds-modelSeconds)<1.5f&&clockBefore>160f,
                 "Real frame interval="+realSeconds.ToString("F2")+" model decrement="+modelSeconds.ToString("F2")+" start="+clockBefore+" end="+w.Model.TimeRemaining);
             Call(w,"RefreshPreparationVisibility");Supplies(false,"precautions");
             int water=w.Expedition.Count("water");w.SetFocus("supply_water_kitchen");Check("bag.early-pickup-denied",!w.TakeWorldSupply()&&w.Expedition.Count("water")==water&&!w.BeginBagPreparation());
             yield return Place(new Vector3(4.65f,0,3.55f),"bag-same-position-transition");Vector3 actor=w.PlayerPosition;var original=controller;
             w.TickPreparationStages();
-            Check("bag.actual-31-still-precautions",!w.BagFinalStageActive&&!w.BagCameraOwnsView&&!w.BeginBagPreparation());
-            hud.SetPaused(true);w.Model.TimeRemaining=30;report.explicitTimerFixtures++;FixtureNote("TIMER_BOUNDARY","Paused TimeRemaining=30; exact boundary fixture.");w.TickPreparationStages();yield return Wait(.15f);
-            Check("bag.pause-blocks-entry",!w.BagCameraOwnsView&&Mathf.Abs(w.Model.TimeRemaining-30)<.001f);hud.SetPaused(false);w.TickPreparationStages();yield return SettleBag();
+            Check("bag.actual-46-still-precautions",!w.BagFinalStageActive&&!w.BagCameraOwnsView&&!w.BeginBagPreparation());
+            hud.SetPaused(true);w.Model.TimeRemaining=45;report.explicitTimerFixtures++;FixtureNote("TIMER_BOUNDARY","Paused TimeRemaining=45; exact boundary fixture.");w.TickPreparationStages();yield return Wait(.15f);
+            Check("bag.pause-blocks-entry",!w.BagCameraOwnsView&&Mathf.Abs(w.Model.TimeRemaining-45)<.001f);hud.SetPaused(false);w.TickPreparationStages();yield return SettleBag();
             Check("bag.same-controller-and-position",controller==original&&controller.enabled&&Vector3.Distance(actor,w.PlayerPosition)<.005f&&!w.View.orthographic);
             yield return Wait(.12f);
             bool stressSeams=Require(w,"FpsStressIntensityV414","fps.stress-intensity-seam")&Require(w,"FpsVeilOpacityV414","fps.veil-opacity-seam")&Require(w,"FpsFeedbackAudioPlayingV414","fps.audio-state-seam")&Require(w,"FpsStressClockV414","fps.stress-clock-seam");
-            Check("fps.actual-stress-finite-and-bounded",stressSeams&&Finite(w.FpsStressIntensityV414)&&w.FpsStressIntensityV414>=0&&w.FpsStressIntensityV414<=1&&Finite(w.FpsVeilOpacityV414)&&w.FpsVeilOpacityV414>=.16f&&w.FpsVeilOpacityV414<=.2201f&&Finite(w.FpsMovementMultiplierV414)&&w.FpsMovementMultiplierV414>=.94f&&w.FpsMovementMultiplierV414<=1&&Finite(w.FpsLookMultiplierV414)&&w.FpsLookMultiplierV414>=.94f&&w.FpsLookMultiplierV414<=1&&w.FpsVeilTextureV414&&w.FpsVeilTextureV414.width>=96&&w.FpsStressVisibleV414,"Actual final30 production stress/veil/texture/damping state. This does not establish human readability or comfort.","NATIVE_API_FRAME");
+            Check("fps.actual-stress-finite-and-bounded",stressSeams&&Finite(w.FpsStressIntensityV414)&&w.FpsStressIntensityV414>=0&&w.FpsStressIntensityV414<=1&&Finite(w.FpsVeilOpacityV414)&&w.FpsVeilOpacityV414>=.16f&&w.FpsVeilOpacityV414<=.2201f&&Finite(w.FpsMovementMultiplierV414)&&w.FpsMovementMultiplierV414>=.94f&&w.FpsMovementMultiplierV414<=1&&Finite(w.FpsLookMultiplierV414)&&w.FpsLookMultiplierV414>=.94f&&w.FpsLookMultiplierV414<=1&&w.FpsVeilTextureV414&&w.FpsVeilTextureV414.width>=96&&w.FpsStressVisibleV414,"Actual final45 production stress/veil/texture/damping state. This does not establish human readability or comfort.","NATIVE_API_FRAME");
             Check("fps.actual-local-audio-playing",w.FpsFeedbackAudioPlayingV414,"Actual local heartbeat/breath AudioSource.isPlaying; no listening acceptance.","NATIVE_AUDIO_STATE");
             FixtureNote("FPS_HUD_PAUSE_API","Production HUD.SetPaused(true/false), real .25s frame wait. No OS Escape and no live timer assignment in this pause case.");
             hud.SetPaused(true);yield return null;float pausedTimer=w.Model.TimeRemaining,pausedStress=w.FpsStressClockV414;yield return Wait(.25f);
             Check("fps.pause-clock-veil-audio-stop",w.Model.IsPaused&&Mathf.Abs(w.Model.TimeRemaining-pausedTimer)<.001f&&Mathf.Abs(w.FpsStressClockV414-pausedStress)<.001f&&!w.FpsFeedbackAudioPlayingV414&&!w.FpsStressVisibleV414&&w.FpsVeilOpacityV414==0,"Paused production clock/stress clock remain fixed and local AudioSources stop.","NATIVE_AUDIO_STATE");
             hud.SetPaused(false);yield return Wait(.12f);
-            Check("fps.resume-clock-veil-audio",!w.Model.IsPaused&&w.Model.TimeRemaining<pausedTimer-.04f&&w.FpsStressClockV414>pausedStress&&w.FpsStressVisibleV414&&w.FpsFeedbackAudioPlayingV414,"Normal final30 resumes through the same controller/view; no second phase wait.","NATIVE_AUDIO_STATE");
-            w.HandleKey(KeyCode.G);Check("bag.no-return-to-precautions",w.BagFirstPersonActive&&!w.FinishBagPreparation());Call(w,"RefreshPreparationVisibility");Supplies(true,"final30");
+            Check("fps.resume-clock-veil-audio",!w.Model.IsPaused&&w.Model.TimeRemaining<pausedTimer-.04f&&w.FpsStressClockV414>pausedStress&&w.FpsStressVisibleV414&&w.FpsFeedbackAudioPlayingV414,"Normal final45 resumes through the same controller/view; no second phase wait.","NATIVE_AUDIO_STATE");
+            w.HandleKey(KeyCode.G);Check("bag.no-return-to-precautions",w.BagFirstPersonActive&&!w.FinishBagPreparation());Call(w,"RefreshPreparationVisibility");Supplies(true,"final45");
             Check("bag.containers-auto-closed",w.Expedition.Sources.All(s=>!s.Open));
             foreach(string item in new[]{"water","food"})
             {
@@ -873,6 +896,15 @@ namespace TooLateToPanic
         {
             FixtureNote("MODEL_FIXTURES","Exact thresholds and same-seed risk comparisons use isolated new production models. Model.Tick only here; no live run timer, loss or budget tolerance mutation.");
             string original=PanicModel.ScorePathOverride;
+            Check("duration45.canonical-normal-contract",PanicModel.NormalPrecautionSeconds==120f&&PanicModel.NormalBagSeconds==45f&&PanicModel.NormalPreparationSeconds==165f&&PanicHomeWorld.BagPreparationSeconds==45f,
+                "Explicit120+45=165 contract and World alias; damage/cost/controller rules unchanged.","NATIVE_MODEL_FIXTURE");
+            PanicModel.ScorePathOverride=Path.Combine(w.EvidencePath,"duration45-model-timing.json");int timingCheck=0;
+            PanicRevisionV412ModelChecks.CheckCampaignTiming((ok,label)=>Check("duration45.model."+(++timingCheck).ToString("D2"),ok,label,"NATIVE_MODEL_FIXTURE"));
+            int shortTimingCheck=0;
+            PanicRevisionV412ModelChecks.CheckShortFlowTimingR7((ok,label)=>Check("duration45.short."+(++shortTimingCheck).ToString("D2"),ok,label,"NATIVE_MODEL_FIXTURE"));
+            report.modelFixtureTicks+=7;PanicModel.ScorePathOverride=original;
+            FixtureNote("DURATION45_MODEL_CLOCK_FIXTURE","Separate fresh models:165start,paused120held,119active→46,120active→45,44bag→1,165deadline loss/retry and developer sticky freeze. Seven explicit production Model.Tick calls; not real-time/OS evidence.");
+            FixtureNote("DURATION45_SHORT_CLOCK_FIXTURE","Separate short model/expedition: three production flow.Tick calls .1+.1+34.8 reach35elapsed of80 and final45, with270+30reserve unchanged; no bag/anchor/resource grants or World timer writes.");
             foreach(float boundary in new[]{74.99f,75f,75.01f})
             {
                 PanicModel.ScorePathOverride=Path.Combine(w.EvidencePath,"model-boundary-"+boundary.ToString("F2",System.Globalization.CultureInfo.InvariantCulture)+".json");

@@ -145,7 +145,7 @@ namespace TooLateToPanic
             Model.PackedFood = 1;
             SetBagCount("food", 1);
             PrepareShortFlowSupplies();
-            Message = "Başlangıç: 1 gıda çantada. Hazır yapı malzemeleri havuzda; dolaplarda fazlası var. Suyu son 30 saniyede al.";
+            Message = "Başlangıç: 1 gıda çantada. Hazır yapı malzemeleri havuzda; dolaplarda fazlası var. Suyu son 45 saniyede al.";
             NotifyModel();
             return true;
         }

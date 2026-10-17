@@ -117,7 +117,7 @@ namespace TooLateToPanic
         public bool IsRunning { get { return running && Model.IsJuryDemo; } }
         public float ElapsedSeconds { get { return elapsed; } }
         public float StageRemainingSeconds { get { return Mathf.Max(0, stageDuration - stageAge); } }
-        public bool BagFinalStageActive { get { return IsRunning && Stage == PanicJuryStage.Preparation && StageRemainingSeconds <= 30f; } }
+        public bool BagFinalStageActive { get { return IsRunning && Stage == PanicJuryStage.Preparation && StageRemainingSeconds <= PanicModel.NormalBagSeconds; } }
         public IReadOnlyList<PanicJuryDisasterOutcome> Outcomes { get { return outcomes.AsReadOnly(); } }
         public PanicJurySnapshot Snapshot { get { if (dirty || cached == null) { cached = new PanicJurySnapshot(this); dirty = false; } return cached; } }
         public bool CanAdvance { get { return Stage == PanicJuryStage.EarthquakeResult || Stage == PanicJuryStage.Inspection || Stage == PanicJuryStage.Result; } }
@@ -391,13 +391,13 @@ namespace TooLateToPanic
         {
             get
             {
-                if (Stage == PanicJuryStage.Onboarding) return "WASD / oklarla yürü. Önce eşyaları sabitle; son 30 saniyede çantanı hazırla.";
+                if (Stage == PanicJuryStage.Onboarding) return "WASD / oklarla yürü. Önce eşyaları sabitle; son 45 saniyede çantanı hazırla.";
                 if (Stage == PanicJuryStage.Preparation)
                 {
                     if (!BagFinalStageActive) return !ActualAnchoredHero() ?
-                        "Buzdolabı ya da kitaplığı seç · 1 ile vidaları tak. Çanta son 30 saniyede hazırlanır." :
-                        "Önlemin hazır. Çanta aşaması son 30 saniyede başlayacak; evde gezinebilirsin.";
-                    if (!Done("water_packed")) return "Son 30 saniye · mutfak tezgâhındaki suya yaklaş · E veya F ile al; gereken su çantana yerleşir.";
+                        "Buzdolabı ya da kitaplığı seç · 1 ile vidaları tak. Çanta son 45 saniyede hazırlanır." :
+                        "Önlemin hazır. Çanta aşaması son 45 saniyede başlayacak; evde gezinebilirsin.";
+                    if (!Done("water_packed")) return "Son 45 saniye · mutfak tezgâhındaki suya yaklaş · E veya F ile al; gereken su çantana yerleşir.";
                     return "İşaretli alana yaklaş · E ile çök–kapan–tutun. Sarsıntıda koşma.";
                 }
                 if (Stage == PanicJuryStage.Earthquake) return Done("quake_cover") ? "Sarsıntı sürüyor. Seçtiğin eşyanın bağlantısına bak." : "Hazırlık süresi bitti. Eksikler sonuçta gösterilecek; tamamlanmış sayılmadı.";

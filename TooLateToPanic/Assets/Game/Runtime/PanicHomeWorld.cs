@@ -631,7 +631,7 @@ namespace TooLateToPanic
             if (TryInteractUtilityV414()) return;
             if (focusId == "@bunker" || Selected != null && Selected.Id == "bunker")
             {
-                if (!BagFinalStageActive) { Notice("Çanta hazırlığı son 30 saniyede başlar; önce evdeki önlemleri tamamla."); return; }
+                if (!BagFinalStageActive) { Notice("Çanta hazırlığı son 45 saniyede başlar; önce evdeki önlemleri tamamla."); return; }
                 EnterPresentationSafeBunkerV414(); return;
             }
             var source = NearestSource;

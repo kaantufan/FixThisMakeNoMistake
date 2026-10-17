@@ -223,10 +223,10 @@ namespace TooLateToPanic
             {
                 FocusLabel=PanicExpedition.DisplayName(supply.ItemId);
                 ShortAction=BagFirstPersonActive?"Al":"Çanta hazırlığına geç";
-                ContextHint=CanInteract?(BagFirstPersonActive?"E / F · Al · Temel ihtiyaç çantaya eklenir":"Çanta hazırlığı son 30 saniyede başlar"):"";
+                ContextHint=CanInteract?(BagFirstPersonActive?"E / F · Al · Temel ihtiyaç çantaya eklenir":"Çanta hazırlığı son 45 saniyede başlar"):"";
                 return;
             }
-            if(focusId=="@bagstation") {FocusLabel="Afet çantası";ShortAction=BagFinalStageActive?"Çantayı düzenle":"Son 30 sn";ContextHint=CanInteract?(BagFinalStageActive?"E · "+ShortAction:"Çanta hazırlığı son 30 saniyede başlar"):"";return;}
+            if(focusId=="@bagstation") {FocusLabel="Afet çantası";ShortAction=BagFinalStageActive?"Çantayı düzenle":"Son 45 sn";ContextHint=CanInteract?(BagFinalStageActive?"E · "+ShortAction:"Çanta hazırlığı son 45 saniyede başlar"):"";return;}
             var s=NearestSource;var item=Selected;var site=gardenSites.Find(x=>x.id==focusId);
             FocusLabel=s!=null?s.Label:item!=null?item.Label:site!=null?site.label:focusId=="@radio"?"Radyo":focusId=="@computer"?"Bilgisayar":focusId=="@fireplace"?"Şömine":focusId=="@garage"?"Garaj":focusId=="@laundry"?"Çamaşır makinesi":focusId=="@toilet"?"Tuvalet":focusId=="@sink"?"Lavabo":"";
             ShortAction=s!=null?(s.Open?"Kapat":"Aç"):focusId=="@bunker"||item!=null&&item.Id=="bunker"?"Sığın":focusId=="@radio"?(RadioEnabled?"Kapat":"Aç"):focusId=="@garage"?(garageOpen?"Kapat":"Aç"):focusId=="@fireplace"?(hearthEnabled?"Söndür":"Yak"):focusId=="@computer"?(computerEnabled?"Kapat":"Aç"):focusId!=null&&hinges.ContainsKey(focusId)?(hinges[focusId].open?"Kapat":"Aç"):item!=null&&item.Kind==ItemKind.Door?"Aç / Kapat":site!=null&&!site.done?"Başla":"";

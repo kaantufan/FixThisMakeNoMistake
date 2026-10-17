@@ -52,8 +52,8 @@ namespace TooLateToPanic
             {
                 var m = NewRun(); m.Phase = PanicPhase.Inspection; m.Wave = wave - 1;
                 m.FinishInspection(); m.PackedWater = m.PackedFood = 1;
-                check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 150f && m.PhaseTime == 150f,
-                    "wave " + wave + " starts with 120 precaution seconds plus30 bag seconds");
+                check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 165f && m.PhaseTime == 165f,
+                    "wave " + wave + " starts with 120 precaution seconds plus45 bag seconds");
                 check(m.Wave == wave && m.RequiredDays == 1 && m.BagReady && m.PackedSupportMask == 0,
                     "wave " + wave + " only needs one water and food, no support");
                 m.PackedWater = 0; check(!m.BagReady, "wave " + wave + " missing water rejects");
@@ -135,11 +135,11 @@ namespace TooLateToPanic
             flow.Tick(.1f, PanicJuryDemo.QuakeCoverPosition, true, false);
             check(model.BagReady && flow.ShelterKind == PanicJuryShelter.None &&
                 !flow.TryReachShelter(PanicJuryShelter.QuakeCover, PanicJuryDemo.QuakeCoverPosition, true),
-                "ready bag and anchor cannot begin earthquake before final30");
-            flow.Tick(49.8f, PanicJuryDemo.QuakeCoverPosition, true, false);
-            check(flow.BagFinalStageActive && Math.Abs(model.TimeRemaining - 30f) < .001f &&
+                "ready bag and anchor cannot begin earthquake before final45");
+            flow.Tick(34.8f, PanicJuryDemo.QuakeCoverPosition, true, false);
+            check(flow.BagFinalStageActive && Math.Abs(model.TimeRemaining - 45f) < .001f &&
                 flow.ShelterKind == PanicJuryShelter.QuakeCover && !e.CanBeginWork("upgrade", "wall_north"),
-                "final30 clock permits shelter and closes construction");
+                "final45 clock permits shelter and closes construction");
             check(flow.TryReachShelter(PanicJuryShelter.QuakeCover, PanicJuryDemo.QuakeCoverPosition, true) &&
                 flow.Outcomes.Count == 1 && flow.Outcomes[0].WaterConsumed == 1 && flow.Outcomes[0].FoodConsumed == 1,
                 "short earthquake consumes exactly one actual water and food");
@@ -169,40 +169,54 @@ namespace TooLateToPanic
             check(allRegionsBuildable, "128 finite resets can commit all three regional row recipes with actual costs");
             return passed.AsReadOnly();
         }
-        static void CheckCampaignTiming(Action<bool,string> check)
+        public static void CheckShortFlowTimingR7(Action<bool,string> check)
+        {
+            var model=new PanicModel();var expedition=new PanicExpedition(model);var flow=new PanicJuryDemo(model,expedition);
+            check(flow.Start(),"short45 starts a fresh isolated real short scenario");
+            flow.Tick(.1f,PanicJuryDemo.SpawnPosition+new Vector3(1,0,0),true,false);
+            flow.Tick(.1f,PanicJuryDemo.QuakeCoverPosition,true,false);
+            check(flow.Stage==PanicJuryStage.Preparation&&!flow.BagFinalStageActive&&Math.Abs(model.TimeRemaining-79.8f)<.001f&&model.CanBeginJuryWork("anchorwall","bookshelf"),
+                "short45 first .1+.1 leaves79.8 and keeps actual precaution gate open");
+            flow.Tick(34.8f,PanicJuryDemo.QuakeCoverPosition,true,false);
+            check(flow.Stage==PanicJuryStage.Preparation&&flow.BagFinalStageActive&&Math.Abs(model.TimeRemaining-45f)<.001f&&!model.CanBeginJuryWork("anchorwall","bookshelf"),
+                "short45 .1+.1+34.8 is35 elapsed of80 and reaches exact45 bag gate");
+            check(PanicJuryDemo.ContentLimitSeconds==270f&&PanicJuryDemo.ReserveSeconds==30f&&PanicJuryDemo.HardLimitSeconds==300f,
+                "short45 keeps270 content plus30 reserve, hard limit300");
+        }
+        public static void CheckCampaignTiming(Action<bool,string> check)
         {
             var m = NewRun();
-            check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 150f && m.PhaseTime == 150f,
-                "campaign starts with 150 total preparation seconds");
+            check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 165f && m.PhaseTime == 165f,
+                "campaign starts with 165 total preparation seconds");
             check(m.Budget == 1000 && m.PackedWater == 0 && m.PackedFood == 0 && !m.CheatedRun,
                 "shorter campaign clock does not grant budget, supplies or cheat status");
             m.SetPaused(true); m.Tick(120f);
-            check(m.TimeRemaining == 150f && m.PhaseTime == 150f && !m.CheatedRun,
+            check(m.TimeRemaining == 165f && m.PhaseTime == 165f && !m.CheatedRun,
                 "campaign pause preserves the full preparation clock without marking a cheat");
             m.SetPaused(false); m.Tick(119f);
-            check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 31f && m.PhaseTime == 31f,
-                "119 elapsed campaign seconds leave one precaution second before final30");
+            check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 46f && m.PhaseTime == 46f,
+                "119 elapsed campaign seconds leave one precaution second before final45");
             m.Tick(1f);
-            check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 30f && m.PhaseTime == 30f,
-                "120 elapsed campaign seconds reach the unchanged final30 bag boundary");
-            m.Tick(29f);
+            check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 45f && m.PhaseTime == 45f,
+                "120 elapsed campaign seconds reach the final45 bag boundary");
+            m.Tick(44f);
             check(m.Phase == PanicPhase.Preparing && m.TimeRemaining == 1f,
-                "campaign retains the whole30 seconds for bag collection and shelter");
+                "campaign retains the whole45 seconds for bag collection and shelter");
             m.Tick(1f);
             check(m.Phase == PanicPhase.GameOver && m.TimeRemaining == 0f && !string.IsNullOrEmpty(m.FailureReason),
-                "150 elapsed campaign seconds still cause the real unsheltered timeout loss");
+                "165 elapsed campaign seconds still cause the real unsheltered timeout loss");
             check(m.Budget == 1000 && m.PackedWater == 0 && m.PackedFood == 0 && m.CompletedWaves == 0 &&
                 m.Score == 0 && m.LastReward == 0 && !m.CheatedRun,
                 "campaign timeout preserves real budget, empty bag and zero rewards");
             m.StartRun(false);
-            check(m.Phase == PanicPhase.Preparing && m.Wave == 1 && m.TimeRemaining == 150f && m.PhaseTime == 150f,
-                "campaign retry resets the same150 second preparation clock");
+            check(m.Phase == PanicPhase.Preparing && m.Wave == 1 && m.TimeRemaining == 165f && m.PhaseTime == 165f,
+                "campaign retry resets the same165 second preparation clock");
             m.SetDeveloperOption(PanicDeveloperOption.FreezePreparationTime, true); m.Tick(120f);
-            check(m.TimeRemaining == 150f && m.PhaseTime == 150f && m.CheatedRun,
+            check(m.TimeRemaining == 165f && m.PhaseTime == 165f && m.CheatedRun,
                 "developer freeze still holds the new campaign clock and marks the run");
             m.SetDeveloperOption(PanicDeveloperOption.FreezePreparationTime, false); m.Tick(120f);
-            check(m.TimeRemaining == 30f && m.PhaseTime == 30f && m.CheatedRun && !m.DeveloperAnyEnabled,
-                "unfreezing reaches final30 after120 active seconds and keeps cheat status sticky");
+            check(m.TimeRemaining == 45f && m.PhaseTime == 45f && m.CheatedRun && !m.DeveloperAnyEnabled,
+                "unfreezing reaches final45 after120 active seconds and keeps cheat status sticky");
         }
         static PanicModel NewRun() { var m = new PanicModel(); m.StartRun(false); return m; }
         static void Install(PanicWorkSession work)

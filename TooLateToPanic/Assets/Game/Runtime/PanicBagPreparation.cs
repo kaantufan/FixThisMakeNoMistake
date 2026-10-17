@@ -18,7 +18,7 @@ namespace TooLateToPanic
         public bool BagFirstPersonActive { get { return bagViewMode == BagViewMode.FirstPerson; } }
         public bool BagCameraTransitionActive { get { return bagViewMode == BagViewMode.Entering || bagViewMode == BagViewMode.Leaving; } }
         public bool BagCameraOwnsView { get { return bagViewMode != BagViewMode.Isometric; } }
-        public const float BagPreparationSeconds = 30f;
+        public const float BagPreparationSeconds = PanicModel.NormalBagSeconds;
         public bool BagFinalStageActive { get { return Model != null && !Model.IsSimulation &&
             (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial) && Model.TimeRemaining <= BagPreparationSeconds &&
             (!JuryActive || JurySnapshot != null && JurySnapshot.Stage == PanicJuryStage.Preparation); } }
@@ -42,7 +42,7 @@ namespace TooLateToPanic
             }
             Expedition.ClearRequirements();
             BeginBagPreparation(); RefreshPreparationVisibility();
-            Model.Notify(JuryActive ? "Son 30 saniye · suyunu al, işaretli güvenli alana geç." : "Son 30 saniye · bir su ve bir gıda al, bodrumdaki sığınağa gir.");
+            Model.Notify(JuryActive ? "Son 45 saniye · suyunu al, işaretli güvenli alana geç." : "Son 45 saniye · bir su ve bir gıda al, bodrumdaki sığınağa gir.");
         }
         public Vector3 BagTransitionActorPosition { get { return bagTransitionActor; } }
         public float BagCameraTransitionProgress { get { return Mathf.Clamp01(bagViewAge / 1.1f); } }

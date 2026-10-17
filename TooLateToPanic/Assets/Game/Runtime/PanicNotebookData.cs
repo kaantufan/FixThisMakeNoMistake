@@ -126,7 +126,7 @@ namespace TooLateToPanic
             var requirements = new PanicMaterialRequirement[sourceRequirements.Count];
             for (int i = 0; i < sourceRequirements.Count; i++) requirements[i] = sourceRequirements[i];
             bool timedJury = jury != null && jury.Active;
-            string note = timedJury ? jury.Hint : model.TimeRemaining > 30 ? "Önlemleri tamamla. Son 30 saniyede çanta hazırlığı başlayacak." : model.BagReady ? "Su ve gıda hazır. Bodrumdaki sığınağa git." :
+            string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlemleri tamamla. Son 45 saniyede çanta hazırlığı başlayacak." : model.BagReady ? "Su ve gıda hazır. Bodrumdaki sığınağa git." :
                 "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Temel ihtiyaçlar doğrudan çantana eklenir.";
             return new PanicNotebookSnapshot {
                 Phase = PhaseName(model.Phase), Disaster = DisasterName(model.Disaster), Wave = model.Wave,

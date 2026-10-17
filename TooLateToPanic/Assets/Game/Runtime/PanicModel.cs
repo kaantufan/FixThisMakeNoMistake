@@ -86,6 +86,9 @@ namespace TooLateToPanic
         private const int SupportMask = 15;
         public const float DamageLossLimit = 75f;
         public const int RequiredSupplyPerWave = 1;
+        public const float NormalPrecautionSeconds = 120f;
+        public const float NormalBagSeconds = 45f;
+        public const float NormalPreparationSeconds = NormalPrecautionSeconds + NormalBagSeconds;
         private const int ScoreTableSchema = 1;
 
         /// <summary>
@@ -261,7 +264,7 @@ namespace TooLateToPanic
                     if (!prepWarningShown && before > 60f && TimeRemaining <= 60f)
                     {
                         prepWarningShown = true;
-                        Message = IsSimulation ? "Son 60 saniye: hazırlık süresi bitmeden önlemlerini tamamla." : "Son 60 saniye: önlemlerini tamamla. Son 30 saniyede çanta hazırlığı başlayacak.";
+                        Message = IsSimulation ? "Son 60 saniye: hazırlık süresi bitmeden önlemlerini tamamla." : "Son 60 saniye: önlemlerini tamamla. Son 45 saniyede çanta hazırlığı başlayacak.";
                     }
 
                     if (TimeRemaining <= 0f)
@@ -577,7 +580,7 @@ namespace TooLateToPanic
             Phase = PanicPhase.Preparing;
             TimeRemaining = PhaseTime = 100f;
             MarkRunCheatedIfOptionsEnabled();
-            Message = "Önce evini hazırla. Son 30 saniyede suyu al; çantanda 1 gıda hazır.";
+            Message = "Önce evini hazırla. Son 45 saniyede suyu al; çantanda 1 gıda hazır.";
             return true;
         }
 
@@ -1402,8 +1405,8 @@ namespace TooLateToPanic
 
         private static float PreparationSeconds()
         {
-            // Every campaign wave has 120 seconds for precautions, then 30 for the bag.
-            return 150f;
+            // Every campaign wave preserves 120 seconds for precautions, then 45 for the bag.
+            return NormalPreparationSeconds;
         }
 
         private static bool IsValidSupportIndex(int index)

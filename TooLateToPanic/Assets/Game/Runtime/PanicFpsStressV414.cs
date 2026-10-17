@@ -27,7 +27,7 @@ namespace TooLateToPanic
             hud&&(hud.DeveloperMenuOpen||hud.DeveloperInputBlockedThisFrame||hud.NotebookModalBlocked); } }
         public bool FpsStressVisibleV414 { get { return BagFirstPersonActive&&BagFinalStageActive&&!ExperienceFeedbackBlockedV414; } }
         public static float EvaluateDeadlineStressV414(float seconds)
-        { if(float.IsNaN(seconds)||float.IsInfinity(seconds))return 0;float t=1-Mathf.Clamp01(seconds/30f);return t*t*(3-2*t); }
+        { if(float.IsNaN(seconds)||float.IsInfinity(seconds))return 0;float t=1-Mathf.Clamp01(seconds/PanicModel.NormalBagSeconds);return t*t*(3-2*t); }
 
         void InitExperienceFeedbackV414()
         {
