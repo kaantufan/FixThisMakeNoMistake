@@ -683,7 +683,7 @@ namespace TooLateToPanic
                 if (WorkActive || IsMoving || !Model.CanBeginJuryWork("anchorwall", item.Id)) return;
                 Model.ToggleAnchor(item.Id); effects.Play("anchor_release",.35f); SyncVisuals(true); UpdateContext(); return;
             }
-            if (index != 4 && index != PanicItemActionRules.PrimaryShortcut(item)) { Model.Notify("Bu nesnede uygulanabilir işlem yok."); return; }
+            if (index != 4 && index != Expedition.PrimaryShortcutV414(item)) { Model.Notify("Bu nesnede uygulanabilir işlem yok."); return; }
             if (index == 1)
             {
                 if (item.Anchored) { Model.ToggleAnchor(item.Id); return; }
@@ -709,11 +709,12 @@ namespace TooLateToPanic
             SetFocus(target);
             workAction = action; workTarget = target; workAge = 0;
             ResetManualWorkPointerV414();
-            Expedition.Work.Begin(action, target, Model.IsJuryDemo); InventoryOpen = false;
+            if (!Expedition.BeginValidatedWorkV414(action, target, Model.IsJuryDemo)) { CancelWork(); return; }
+            InventoryOpen = false;
             if (PositionOf(target, out var taskPosition)) { var toward = Flat(taskPosition-player.position); if (toward.sqrMagnitude>.01f) { facingYaw=Mathf.Atan2(toward.x,toward.z)*Mathf.Rad2Deg; hero.rotation=Quaternion.Euler(0,facingYaw,0); } }
             animator.SetBool("Working", true); animator.SetBool("Kneeling", action == "drain" || action == "anchorfloor");
             var hand = PanicCharacterArt.GetCharacterBone(hero.gameObject, animator, HumanBodyBones.RightHand);
-            if (hand && action != "plant") { handTool = PanicCharacterArt.CreateHandTool(action == "fire" ? "build" : action); handTool.transform.SetParent(hand,false); handTool.transform.localRotation=Quaternion.Euler(0,180,0); }
+            if (hand && !Expedition.Work.IsUtility && action != "plant") { handTool = PanicCharacterArt.CreateHandTool(Expedition.Work.UsesHammer ? action == "drain" ? "drain" : "hammer" : action); handTool.transform.SetParent(hand,false); handTool.transform.localRotation=Quaternion.Euler(0,180,0); }
             if (!Expedition.Work.IsWorldConstruction)
             { workRig = PanicWorkArt.CreateWorkRig(action); workRig.transform.position = new Vector3(100, 100, 100); LayerRecursive(workRig, 30); workCamera.enabled = true; }
             else { StartDirectConstruction(action, target); Expedition.Work.TryClick(0); }
@@ -734,6 +735,7 @@ namespace TooLateToPanic
             if(!WorkActive)return;workAge+=dt;
             TickWorkAudio();
             Expedition.Work.Tick(dt,direction,held,pressed,pulse);
+            if (handTool && Expedition.Work.UsesHammer && workAction != "drain") handTool.transform.localRotation=Quaternion.Euler(-55f*Expedition.Work.ToolMotion,180,0);
             if(workRig)PanicWorkArt.UpdateWorkRig(workRig,Expedition.Work.Progress,Expedition.Work.CompletedSteps,workAge,Expedition.Work.Cursor,Expedition.Work.IsApplying,Expedition.Work.ToolMotion);
             AnimateDirectConstruction(Expedition.Work.Progress);
             if(Expedition.Work.Complete)CompleteWork();
@@ -770,6 +772,7 @@ namespace TooLateToPanic
             if (hero && workAction != null) PanicCharacterArt.ClearTaskPose(hero.gameObject);
             CancelDirectConstruction();
             Expedition.Work.Cancel();
+            Expedition.CancelFloorWallUpgradeV414();
             if (animator) { animator.SetBool("Working", false); animator.SetBool("Kneeling", false); }
             if (workRig) Destroy(workRig); workRig = null;
             if (handTool) PanicCharacterArt.ReleaseHandTool(handTool); handTool=null;

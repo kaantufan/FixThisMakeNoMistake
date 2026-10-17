@@ -48,7 +48,7 @@ namespace TooLateToPanic
                 var r=node.AddComponent<LineRenderer>();r.useWorldSpace=false;r.positionCount=32;r.loop=false;r.sharedMaterial=haze;r.widthMultiplier=.12f;
                 r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;s.Ribbons.Add(r);
             }
-            CreateFunnelV414(root,s,Material(s,"V414 rotating storm column",Color.white,null),leaves);
+            CreateFunnelV414(root,s,Material(s,"V414 rotating storm column",Color.white,null),Material(s,"Storm lifted timber and leaves",Color.white,null));
             foreach(var ps in s.Emitters)ps.Play(true);
             Animate(root,0,0);return root;
         }
@@ -90,11 +90,27 @@ namespace TooLateToPanic
             {int v=y*19+a;uv[v]=new Vector2(a/18f,y/24f);if(y<24&&a<18){triangles[write++]=v;triangles[write++]=v+19;triangles[write++]=v+1;triangles[write++]=v+1;triangles[write++]=v+19;triangles[write++]=v+20;}}
             s.Funnel.vertices=s.Vertices;s.Funnel.triangles=triangles;s.Funnel.uv=uv;s.Funnel.colors=s.Colors;s.Funnel.MarkDynamic();s.Funnel.bounds=new Bounds(new Vector3(-19.2f,6,11),new Vector3(10,16,10));
             var go=new GameObject("Peripheral rotating funnel");go.transform.SetParent(root.transform,false);go.AddComponent<MeshFilter>().sharedMesh=s.Funnel;var r=go.AddComponent<MeshRenderer>();r.sharedMaterial=haze;r.shadowCastingMode=ShadowCastingMode.Off;
+            s.CloudBase=FunnelMassV414(root,"Attached rotating storm cloud base",haze,s.Funnel.bounds,out s.CloudVertices,out s.CloudColors);
+            s.GroundDust=FunnelMassV414(root,"Ground contact scouring dust",haze,s.Funnel.bounds,out s.DustVertices,out s.DustColors);
             s.Debris=new Mesh{name="Storm rotating coherent leaf and panel debris"};s.DebrisVertices=new Vector3[24*4];var tr=new int[24*6];var duv=new Vector2[24*4];var dc=new Color[24*4];
             for(int i=0;i<24;i++)
-            {int v=i*4,t=i*6;tr[t]=v;tr[t+1]=v+1;tr[t+2]=v+2;tr[t+3]=v;tr[t+4]=v+2;tr[t+5]=v+3;duv[v]=Vector2.zero;duv[v+1]=Vector2.up;duv[v+2]=Vector2.one;duv[v+3]=Vector2.right;for(int k=0;k<4;k++)dc[v+k]=Color.white;}
+            {int v=i*4,t=i*6;tr[t]=v;tr[t+1]=v+1;tr[t+2]=v+2;tr[t+3]=v;tr[t+4]=v+2;tr[t+5]=v+3;duv[v]=Vector2.zero;duv[v+1]=Vector2.up;duv[v+2]=Vector2.one;duv[v+3]=Vector2.right;for(int k=0;k<4;k++)dc[v+k]=i%5==0?new Color(.63f,.55f,.41f,.94f):new Color(.42f,.47f,.29f,.90f);}
             s.Debris.vertices=s.DebrisVertices;s.Debris.triangles=tr;s.Debris.uv=duv;s.Debris.colors=dc;s.Debris.MarkDynamic();s.Debris.bounds=s.Funnel.bounds;
             go=new GameObject("Orbiting outdoor leaf and roof-sheet fragments");go.transform.SetParent(root.transform,false);go.AddComponent<MeshFilter>().sharedMesh=s.Debris;r=go.AddComponent<MeshRenderer>();r.sharedMaterial=leaves;r.shadowCastingMode=ShadowCastingMode.Off;
+        }
+        static Mesh FunnelMassV414(GameObject root,string name,Material material,Bounds bounds,out Vector3[] vertices,out Color[] colors)
+        {
+            // Both cosmetic masses remain inside the existing 10x16x10m funnel bounds.
+            vertices=new Vector3[9*25];colors=new Color[vertices.Length];var uv=new Vector2[vertices.Length];var triangles=new int[8*24*6];int write=0;
+            for(int y=0;y<9;y++)for(int a=0;a<25;a++)
+            {
+                int v=y*25+a;uv[v]=new Vector2(a/24f,y/8f);
+                if(y<8&&a<24){triangles[write++]=v;triangles[write++]=v+25;triangles[write++]=v+1;triangles[write++]=v+1;triangles[write++]=v+25;triangles[write++]=v+26;}
+            }
+            var mesh=new Mesh{name=name};mesh.vertices=vertices;mesh.colors=colors;mesh.triangles=triangles;mesh.uv=uv;mesh.MarkDynamic();mesh.bounds=bounds;
+            var node=new GameObject(name);node.transform.SetParent(root.transform,false);node.AddComponent<MeshFilter>().sharedMesh=mesh;
+            var renderer=node.AddComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
+            return mesh;
         }
         static void AnimateFunnelV414(PanicStormMotionV414 s,float strength)
         {
@@ -102,19 +118,37 @@ namespace TooLateToPanic
             for(int y=0;y<25;y++)for(int a=0;a<19;a++)
             {
                 float q=y/24f,angle=a/18f*Mathf.PI*2+time*(2.4f-q*.8f)+q*3.8f;
-                float radius=(.42f+q*q*3.1f)*(1+.08f*Mathf.Sin(angle*3+q*17-time*3));
-                int v=y*19+a;float bend=q*q*.8f*Mathf.Sin(time*.28f);
+                float radius=(.72f+Mathf.Pow(q,1.6f)*2.95f)*(1+.07f*Mathf.Sin(angle*3+q*17-time*3));
+                int v=y*19+a;float bend=q*q*.45f*Mathf.Sin(time*.28f);
                 s.Vertices[v]=new Vector3(-19.2f+bend+Mathf.Cos(angle)*radius,q*11.5f,11+Mathf.Sin(angle)*radius);
-                float alpha=(.10f+.14f*(.5f+.5f*Mathf.Sin(angle*2+q*15-time)))*Mathf.Sin(q*Mathf.PI)*strength;
-                s.Colors[v]=new Color(.30f,.34f,.32f,alpha);
+                float band=.5f+.5f*Mathf.Sin(angle*3+q*21-time*1.8f);
+                float alpha=(.42f+.18f*band)*Mathf.Lerp(.68f,1,Mathf.Sin(q*Mathf.PI))*strength;
+                s.Colors[v]=new Color(.22f+.10f*band,.25f+.10f*band,.27f+.10f*band,alpha);
             }
             s.Funnel.vertices=s.Vertices;s.Funnel.colors=s.Colors;
+            for(int y=0;y<9;y++)for(int a=0;a<25;a++)
+            {
+                int v=y*25+a;float q=y/8f,angle=a/24f*Mathf.PI*2+time*.52f;
+                float billow=1+.035f*Mathf.Sin(angle*5+q*11-time*.7f);
+                float radius=Mathf.Sin(q*Mathf.PI)*4.35f*billow;
+                float bend=.25f*Mathf.Sin(time*.28f);
+                s.CloudVertices[v]=new Vector3(-19.2f+bend+Mathf.Cos(angle)*radius,11.15f+q*2.55f,11+Mathf.Sin(angle)*radius);
+                float shade=.5f+.5f*Mathf.Sin(angle*3+q*9-time*.6f);
+                s.CloudColors[v]=new Color(.20f+.08f*shade,.23f+.08f*shade,.25f+.08f*shade,(.46f+.14f*shade)*strength);
+                angle=a/24f*Mathf.PI*2-time*2.1f+q*2.3f;
+                radius=(.68f+Mathf.Sin(q*Mathf.PI)*2.55f)*(1+.07f*Mathf.Sin(angle*4+time));
+                s.DustVertices[v]=new Vector3(-19.2f+Mathf.Cos(angle)*radius,.055f+q*1.85f,11+Mathf.Sin(angle)*radius);
+                float edge=Mathf.Sin(q*Mathf.PI);
+                s.DustColors[v]=new Color(.46f,.42f,.34f,(.18f+.28f*edge)*edge*strength);
+            }
+            s.CloudBase.vertices=s.CloudVertices;s.CloudBase.colors=s.CloudColors;
+            s.GroundDust.vertices=s.DustVertices;s.GroundDust.colors=s.DustColors;
             for(int i=0;i<24;i++)
             {
-                float q=Mathf.Repeat(i/24f+time*.045f,.94f)+.025f,angle=i*2.399f+time*(3-q),radius=.55f+q*q*3.4f;
-                Vector3 center=new Vector3(-19.2f+Mathf.Sin(time*.28f)*q*q*.8f+Mathf.Cos(angle)*radius,q*10.8f,11+Mathf.Sin(angle)*radius);
+                float q=Mathf.Repeat(i/24f+time*.045f,.94f)+.025f,angle=i*2.399f+time*(3-q),radius=.8f+Mathf.Pow(q,1.7f)*3.05f;
+                Vector3 center=new Vector3(-19.2f+Mathf.Sin(time*.28f)*q*q*.45f+Mathf.Cos(angle)*radius,q*10.8f,11+Mathf.Sin(angle)*radius);
                 Quaternion rotate=Quaternion.Euler(time*83+i*17,time*127+i*53,time*61);
-                float size=(i%5==0?.33f:.12f)*strength;int v=i*4;
+                float size=(i%5==0?.46f:.20f)*strength;int v=i*4;
                 s.DebrisVertices[v]=center+rotate*new Vector3(-size,0,-size*.5f);s.DebrisVertices[v+1]=center+rotate*new Vector3(-size,.03f,size*.5f);s.DebrisVertices[v+2]=center+rotate*new Vector3(size,0,size*.5f);s.DebrisVertices[v+3]=center+rotate*new Vector3(size,-.02f,-size*.5f);
             }
             s.Debris.vertices=s.DebrisVertices;
@@ -145,8 +179,8 @@ namespace TooLateToPanic
     }
     public sealed class PanicStormMotionV414:MonoBehaviour
     {
-        public Mesh Funnel,Debris;public Vector3[] Vertices,DebrisVertices;public Color[] Colors;
+        public Mesh Funnel,Debris,CloudBase,GroundDust;public Vector3[] Vertices,DebrisVertices,CloudVertices,DustVertices;public Color[] Colors,CloudColors,DustColors;
         public float Clock,LastAge,Gust;
-        void OnDestroy(){if(Funnel)Destroy(Funnel);if(Debris)Destroy(Debris);}
+        void OnDestroy(){if(Funnel)Destroy(Funnel);if(Debris)Destroy(Debris);if(CloudBase)Destroy(CloudBase);if(GroundDust)Destroy(GroundDust);}
     }
 }

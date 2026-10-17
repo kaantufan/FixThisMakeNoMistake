@@ -197,12 +197,12 @@ namespace TooLateToPanic
             foreach(var action in new[]{"gasoff","wateroff","poweroff"})TryWork(action,PanicUtilitySafetyV414.TargetForAction(action));
             // Finite authored stock is allocated once. Persisting installations are never re-granted.
             foreach(var item in model.Items.OrderByDescending(i=>Risk(i,DisasterType.Earthquake)))
-            {string action=PanicItemActionRules.PrimaryAction(item);if(action=="anchorwall"||action=="anchorfloor")TryWork(action,item.Id);}
+            {string action=expedition.PrimaryActionV414(item);if(action=="anchorwall"||action=="anchorfloor")TryWork(action,item.Id);}
             TryWork("plant","plant_west1");TryWork("plant","plant_west2");TryWork("plant","plant_east");
             TryWork("fire","fire_station");TryWork("hose","hose_station");
             TryWork("drain","drain_west");TryWork("drain","drain_east");
             foreach(var item in model.Items.OrderByDescending(i=>Risk(i,DisasterType.Storm)))
-                for(int tier=0;tier<2;tier++)if(PanicItemActionRules.PrimaryAction(item)=="upgrade")TryWork("upgrade",item.Id);
+                for(int tier=0;tier<2;tier++)if(expedition.PrimaryActionV414(item)=="upgrade")TryWork("upgrade",item.Id);
         }
         static float Risk(PanicItem item,DisasterType type)
         {return (float)typeof(PanicModel).GetMethod("BaseRisk",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,new object[]{item,type});}
@@ -210,15 +210,19 @@ namespace TooLateToPanic
         {
             if(!expedition.CanBeginWork(action,target))return;
             var item=model.Items.Find(i=>i.Id==target);
-            int budget=model.Budget,cost=PanicExpedition.WorkCost(action,item);
-            var costs=PanicExpedition.MaterialCosts(action,item).ToArray();
+            int budget=model.Budget,cost=expedition.WorkBudgetCostV414(action,target);
+            var costs=expedition.WorkMaterialCostsV414(action,target).ToArray();
             var owned=costs.ToDictionary(c=>c.Id,c=>expedition.Count(c.Id));
             var row=new WorkRow{wave=model.Wave,action=action,target=target,budgetBefore=budget,materialsBefore=Materials(expedition)};
-            expedition.Work.Begin(action,target);
+            if(!expedition.BeginValidatedWorkV414(action,target,false))return;
             for(int guard=0;guard<64&&expedition.Work.Active&&!expedition.Work.Complete;guard++)
             {
-                if(expedition.Work.UsesRotation)
-                {expedition.Work.TryClick(expedition.Work.CompletedSteps);expedition.Work.ApplyRotation(60f*expedition.Work.ExpectedDirection,true);}
+                if(expedition.Work.UsesDirectClick)
+                {
+                    expedition.Work.TryClick(expedition.Work.CompletedSteps);
+                    if(expedition.Work.UsesLinearDrag)expedition.Work.ApplyLinearDisplacement(.5f,true);
+                    else expedition.Work.ApplyRotation(60f*expedition.Work.ExpectedDirection,true);
+                }
                 else expedition.Work.PressHammer();
                 report.workInputSamples++;
             }

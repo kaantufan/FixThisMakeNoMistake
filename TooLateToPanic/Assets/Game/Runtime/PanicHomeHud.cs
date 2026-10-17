@@ -118,7 +118,7 @@ namespace TooLateToPanic
         public Rect RequirementCardBounds { get { int n = World && World.Expedition != null ?
             Mathf.Min(3, World.Expedition.CurrentRequirements.Count) : 0;
             return new Rect(1100, 170, 476, 104 + n * 82 +
-                (World && World.Expedition != null && World.Expedition.RequirementBudgetMissing > 0 ? 52 : 0)); } }
+                (World && World.Expedition != null && (World.Expedition.RequirementBudgetMissing > 0 || !string.IsNullOrEmpty(World.Expedition.FloorWallRequirementLabelV414)) ? 52 : 0)); } }
         public float CanvasScale { get { return _scale; } }
         public Vector2 CanvasOffset { get { return _offset; } }
         public int SupplyPreviewCount { get { return _supplyPreviews == null ? 0 : _supplyPreviews.CachedPreviewCount; } }
@@ -608,7 +608,7 @@ namespace TooLateToPanic
             Frame(panel, Night, new Color(Brass.r, Brass.g, Brass.b, .55f), 1f);
             Region(panel);
             Brush(new Rect(panel.x + 14, panel.y + 17, panel.width - 28, 36), Rust);
-            Label(new Rect(panel.x + 28, panel.y + 18, panel.width - 54, 32), RequirementTitle(expedition.RequirementAction), _body);
+            Label(new Rect(panel.x + 28, panel.y + 18, panel.width - 54, 32), RequirementTitleV414(expedition), _body);
             Label(new Rect(panel.x + 110, panel.y + 61, 137, 20), "MALZEME", _tiny);
             Label(new Rect(panel.x + 250, panel.y + 61, 58, 20), "VAR", ColorText(_caps, Muted));
             Label(new Rect(panel.x + 310, panel.y + 61, 64, 20), "GEREK", ColorText(_caps, Muted));
@@ -619,7 +619,7 @@ namespace TooLateToPanic
                 Rect row = new Rect(panel.x + 12, panel.y + 88 + i * 82, panel.width - 24, 74);
                 DrawRequirementRow(row, requirement);
             }
-            if (expedition.RequirementBudgetMissing > 0)
+            if (expedition.RequirementBudgetMissing > 0 || !string.IsNullOrEmpty(expedition.FloorWallRequirementLabelV414))
             {
                 float y = panel.y + 90 + count * 82;
                 Fill(new Rect(panel.x + 20, y, panel.width - 40, 1), Line);
@@ -637,7 +637,7 @@ namespace TooLateToPanic
             int count = Mathf.Min(3, requirements.Count);
             Rect panel = new Rect(824, 647, 660, 100);
             Frame(panel, Night, new Color(Brass.r, Brass.g, Brass.b, .45f), 1f); Mark(panel);
-            Label(new Rect(panel.x + 14, panel.y + 4, 632, 24), RequirementTitle(expedition.RequirementAction) +
+            Label(new Rect(panel.x + 14, panel.y + 4, 632, 24), RequirementTitleV414(expedition) +
                 (expedition.RequirementBudgetMissing > 0 ? "  ·  Bütçe eksik " + expedition.RequirementBudgetMissing + " $" : ""), ColorText(_tiny, Brass));
             if (count == 0) return;
             float cellWidth = (panel.width - 24) / count;
@@ -897,13 +897,14 @@ namespace TooLateToPanic
             if (World.Model.Phase != PanicPhase.Preparing && World.Model.Phase != PanicPhase.Tutorial) return;
             PanicItem item = World.Selected;
             if (item == null || !World.CanInteract) return;
+            if (DrawFloorWallUpgradePreviewV414(item)) return;
             bool release = PanicItemActionRules.CanReleaseAnchor(item);
-            int shortcut = release ? 1 : PanicItemActionRules.PrimaryShortcut(item);
-            if (shortcut == 0 || !World.Model.CanBeginJuryWork(release ? "anchorwall" : PanicItemActionRules.PrimaryAction(item), item.Id)) return;
+            int shortcut = release ? 1 : World.Expedition.PrimaryShortcutV414(item);
+            if (shortcut == 0 || !World.Model.CanBeginJuryWork(release ? "anchorwall" : World.Expedition.PrimaryActionV414(item), item.Id)) return;
             Rect panel = new Rect(1100, 170, 476, 126);
             Frame(panel, Night, Line, 1f); Region(panel);
             FittedLabel(new Rect(1118, 178, 438, 29), item.Label, _small, SoftText, 14);
-            Button(new Rect(1118, 218, 438, 58), (release ? "ÇÖZ" : PanicItemActionRules.PrimaryLabel(item)) + " · " + shortcut, true, Brass, () => World.QuickAction(shortcut));
+            Button(new Rect(1118, 218, 438, 58), (release ? "ÇÖZ" : World.Expedition.PrimaryLabelV414(item)) + " · " + shortcut, true, Brass, () => World.QuickAction(shortcut));
         }
 
         void DrawControls(string[][] controls)
@@ -931,8 +932,8 @@ namespace TooLateToPanic
             bool prepare = World.Model.Phase == PanicPhase.Preparing || World.Model.Phase == PanicPhase.Tutorial;
             if (!prepare || selected == null || !World.CanInteract) return WalkControls;
             var controls = new List<string[]>(WalkControls);
-            int shortcut = PanicItemActionRules.PrimaryShortcut(selected);
-            if (shortcut != 0 && World.Model.CanBeginJuryWork(PanicItemActionRules.PrimaryAction(selected), selected.Id)) controls.Add(new[] { shortcut.ToString(), PanicItemActionRules.PrimaryLabel(selected) });
+            int shortcut = World.Expedition.PrimaryShortcutV414(selected);
+            if (shortcut != 0 && World.Model.CanBeginJuryWork(World.Expedition.PrimaryActionV414(selected), selected.Id)) controls.Add(new[] { shortcut.ToString(), World.Expedition.PrimaryLabelV414(selected) });
             if (selected.Movable && !selected.Anchored) controls.Add(new[] { "SAĞ TIK/4", "TAŞI" });
             return controls.ToArray();
         }

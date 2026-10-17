@@ -26,6 +26,11 @@ namespace TooLateToPanic
             if(Vector3.Distance(position,BunkerInteriorPosition)<8)return "step_concrete";
             return footstepSurface.Sample(position,InResidence(position)?"step_wood":"step_concrete");
         }
+        public PanicFootstepSurface.SampleTrace FootstepSurfaceTraceAt(Vector3 position)
+        {
+            FootstepSurfaceAt(position); // Ensure the same authored-mesh cache as production footsteps.
+            return footstepSurface.Trace(position,InResidence(position)?"step_wood":"step_concrete");
+        }
         string ContainerAudio(string id)
         {
             if (id == "fridge") return "door_fridge";

@@ -24,6 +24,7 @@ namespace TooLateToPanic
         void InitOverhaulV414()
         {
             AddBox("Permanent roof ceiling V414", new Vector3(0, 6.48f, 0), new Vector3(16f, .2f, 12f));
+            InitRoofAccessPhysicsR6();
             streetLifeV414 = gameObject.AddComponent<PanicStreetLifeV414>();
             streetLifeV414.Bind(this);
         }

@@ -472,6 +472,9 @@ namespace TooLateToPanic
             yield return Push("roof-normal-jump",Vector3.zero,1.3f,true);Check("roof.normal-jump-cannot-access",report.routes.Last().highestY>foot+.5f&&report.routes.Last().highestY+controller.height<6.4f,"Normal Jump apex remains below the roof.","NATIVE_PHYSICS");
             yield return Push("roof-upward-capsule-probe",Vector3.up,.8f,false,true);
             var probe=report.routes.Last();Check("roof.ceiling-solid-when-cutaway",probe.above>0&&w.PlayerPosition.y+controller.height<=6.46f,"Direct upward actual controller collision; does not infer a ceiling from a low jump.","NATIVE_PHYSICS_PROBE");
+            yield return PanicRoofAccessProbeR6.Run(w,
+                row=>Check(row.id,row.passed,JsonUtility.ToJson(row),row.layer),
+                (kind,position)=>{report.setupWarps++;FixtureNote(kind,"Roof R6 fixture at "+position+"; setup/probe is not a reached route.");});
             yield return Place(new Vector3(0,0,-9),"roof-exterior-capture");
             yield return Photo("10-roof-inaccessible-exterior",new Vector3(16,16,-18),new Vector3(0,3,0),13f);
         }
@@ -502,8 +505,18 @@ namespace TooLateToPanic
             Check("work.legacy-held-input-no-progress",Mathf.Abs(w.Expedition.Work.Progress-idle)<.0001f);
             Check("work.first-real-click-target",w.ClickWorkTarget(0)&&w.WorkTargetViewport(0).z>0&&hud.WorkClickTargetBounds(0).width>0);
             yield return TurnCurrent(60,false);Check("work.released-mouse-no-progress",Mathf.Abs(w.Expedition.Work.Progress-idle)<.0001f);
-            yield return TurnCurrent(60);float turned=w.Expedition.Work.Progress;w.Expedition.Work.ApplyRotation(-30,true);w.StepWork(Dt,0,false,false,false);yield return null;
-            Check("work.wrong-direction-backs-out",w.Expedition.Work.Progress<turned&&w.Expedition.Work.Progress>0);
+            yield return new WaitForEndOfFrame();
+            bool gripReady=w.ManualWorkCenterV414(0,out Vector2 screwGrip);float untouched=w.Expedition.Work.Progress;
+            Vector2 screwHold=screwGrip+Vector2.right*28f;w.ProcessManualWorkPointerV414(screwHold,true,true);report.workApiSamples++;
+            Check("work.pointer-press-selects-only",gripReady&&Mathf.Abs(w.Expedition.Work.Progress-untouched)<.0001f);
+            w.ProcessManualWorkPointerV414(screwGrip+new Vector2(Mathf.Cos(Mathf.PI/3),Mathf.Sin(Mathf.PI/3))*28f,false,true);w.StepWork(Dt,0,false,false,false);report.workApiSamples++;yield return null;
+            float turned=w.Expedition.Work.Progress;
+            var actualRig=Field<GameObject>(w,"workRig");var actualHead=actualRig?actualRig.transform.Find("Fastener_0/TurningHead"):null;
+            Check("work.pointer-real-screw-and-tool-motion",turned>untouched&&actualHead&&Quaternion.Angle(actualHead.localRotation,Quaternion.Euler(0,0,-w.Expedition.Work.StageProgress*270f))<.1f);
+            w.ProcessManualWorkPointerV414(screwHold,false,false);w.StepWork(Dt,0,false,false,false);report.workApiSamples++;yield return null;
+            Check("work.pointer-release-preserves-progress",Mathf.Abs(w.Expedition.Work.Progress-turned)<.0001f);
+            w.Expedition.Work.ApplyRotation(-30,true);w.StepWork(Dt,0,false,false,false);yield return null;
+            Check("work.reposition-preserves-progress",Mathf.Abs(w.Expedition.Work.Progress-turned)<.0001f&&turned>0);
             yield return TurnCurrent(240);w.ClickWorkTarget(1);yield return TurnCurrent(240);
             Check("work.nearly-complete-unspent",w.WorkActive&&w.Expedition.Work.Progress>.93f&&stock==Stock()&&budget==w.Model.Budget&&!item.Anchored);
             yield return Shot("11-manual-anchor-near-complete");w.CancelWork();yield return null;
@@ -514,19 +527,54 @@ namespace TooLateToPanic
             stock=Stock();budget=w.Model.Budget;w.CompleteWork();w.BeginWork("anchorwall","fridge");yield return null;
             Check("work.anchor-once",!w.WorkActive&&stock==Stock()&&budget==w.Model.Budget);
             yield return Place(new Vector3(-2.6f,0,4.8f),"hammer-wall-approach","wall_north");
-            var wall=w.Model.Items.Find(i=>i.Id=="wall_north");int tier=wall.Tier;price=PanicExpedition.WorkCost("upgrade",wall);costs=PanicExpedition.MaterialCosts("upgrade",wall).ToArray();owned=costs.Select(c=>w.Expedition.Count(c.Id)).ToArray();budget=w.Model.Budget;
+            var wall=w.Model.Items.Find(i=>i.Id=="wall_north");PanicFloorWallUpgradePlanV414 floorPlan;
+            bool floorQuoted=w.Expedition.TryGetFloorWallUpgradeV414(wall.Id,out floorPlan);
+            Check("work.floor-quote",floorQuoted&&floorPlan.Floor==0&&floorPlan.WallCount==4&&floorPlan.ChangedWallCount==4&&floorPlan.TargetTier==1&&floorPlan.BudgetCost==480,"Actual selected Model wall floor; existing four real T0 wall recipes, not a one-wall discount.");
+            var floorIds=floorQuoted?floorPlan.WallIds.ToArray():new string[0];int floorTarget=floorQuoted?floorPlan.TargetTier:0;
+            var floorMembers=w.Model.Items.Where(i=>floorIds.Contains(i.Id)).ToArray();var allTierBefore=w.Model.Items.ToDictionary(i=>i.Id,i=>i.Tier);
+            price=w.Expedition.WorkBudgetCostV414("upgrade",wall.Id);costs=w.Expedition.WorkMaterialCostsV414("upgrade",wall.Id).ToArray();owned=costs.Select(c=>w.Expedition.Count(c.Id)).ToArray();budget=w.Model.Budget;
             w.BeginWork("upgrade","wall_north");yield return null;Check("work.hammer-started",w.WorkActive&&w.Expedition.Work.UsesHammer,w.Model.Message);
             if(w.WorkActive)
             {
                 for(int k=0;k<5;k++){w.StepWork(Dt,0,true,true,false);report.workApiSamples++;yield return null;}
                 Check("work.holding-space-not-a-press",w.Expedition.Work.CompletedStrokes==0);
                 for(int k=0;k<3;k++){w.StepWork(Dt,0,false,false,true);report.workApiSamples++;yield return null;yield return null;}
-                Check("work.three-separate-presses-incomplete",w.WorkActive&&w.Expedition.Work.CompletedStrokes==3&&wall.Tier==tier&&w.Model.Budget==budget);
-                yield return Shot("12-hammer-three-presses");w.StepWork(Dt,0,false,false,true);report.workApiSamples++;yield return null;
-                Check("work.fourth-press-atomic",!w.WorkActive&&wall.Tier==tier+1&&w.Model.Budget==budget-price&&costs.Select((c,k)=>w.Expedition.Count(c.Id)==owned[k]-c.Required).All(v=>v));
+                Check("work.three-separate-presses-incomplete",w.WorkActive&&w.Expedition.Work.CompletedStrokes==3&&w.Model.Items.All(i=>i.Tier==allTierBefore[i.Id])&&w.Model.Budget==budget&&costs.Select((c,k)=>w.Expedition.Count(c.Id)==owned[k]).All(v=>v));
+                yield return Shot("12-hammer-three-presses");string floorCancelStock=Stock();w.CancelWork();yield return null;
+                Check("work.floor-near-complete-cancel-free",!w.WorkActive&&Stock()==floorCancelStock&&w.Model.Budget==budget&&w.Model.Items.All(i=>i.Tier==allTierBefore[i.Id])&&w.Expedition.ActiveFloorWallUpgradeV414==null);
+                w.BeginWork("upgrade","wall_north");yield return null;Check("work.floor-restart-same-full-cost",w.WorkActive&&w.Expedition.ActiveFloorWallUpgradeV414!=null&&w.Expedition.ActiveFloorWallUpgradeV414.BudgetCost==price);
+                for(int k=0;k<3;k++){w.StepWork(Dt,0,false,false,true);report.workApiSamples++;yield return null;yield return null;}
+                w.StepWork(Dt,0,false,false,true);report.workApiSamples++;yield return null;
+                Check("work.fourth-press-atomic",!w.WorkActive&&floorMembers.Length==4&&floorMembers.All(i=>i.Tier==Math.Max(allTierBefore[i.Id],floorTarget))&&w.Model.Items.Where(i=>!floorIds.Contains(i.Id)).All(i=>i.Tier==allTierBefore[i.Id])&&w.Model.Budget==budget-price&&costs.Select((c,k)=>w.Expedition.Count(c.Id)==owned[k]-c.Required).All(v=>v));
+                string floorCommittedStock=Stock();int floorCommittedBudget=w.Model.Budget;w.CompleteWork();
+                Check("work.floor-double-complete-noop",Stock()==floorCommittedStock&&w.Model.Budget==floorCommittedBudget&&w.Expedition.ActiveFloorWallUpgradeV414==null);
+                Check("work.floor-next-tier-not-free",w.Expedition.WorkBudgetCostV414("upgrade",wall.Id)==720&&!w.Expedition.CanBeginWork("upgrade",wall.Id)&&Stock()==floorCommittedStock&&w.Model.Budget==floorCommittedBudget,"Next full-floor T2 costs720 budget/8planks/12screws; no stock grant or discounted retry.");
             }
             Check("work.normal-cost-route-not-cheated",!w.Model.CheatedRun&&!w.Model.DeveloperAnyEnabled);
             hud.ToggleDeveloperMenu();yield return null;bool menu=hud.DeveloperMenuOpen;hud.ToggleDeveloperMenu();yield return null;Check("developer.menu-alone-no-cheat",menu&&!hud.DeveloperMenuOpen&&!w.Model.CheatedRun);
+        }
+        bool UtilityHandlePoseR6(GameObject root,string action,float progress)
+        {
+            var handle=root?root.transform.Find("ValveMotion"):null;if(!handle)return false;
+            return action=="poweroff"?Mathf.Abs(handle.localPosition.y-(.74f-.26f*progress))<.0001f&&Quaternion.Angle(handle.localRotation,Quaternion.identity)<.1f:
+                Quaternion.Angle(handle.localRotation,Quaternion.Euler(0,0,90f*(1-progress)))<.1f;
+        }
+        IEnumerator DriveUtilityPointerR6(string action,float fraction)
+        {
+            yield return new WaitForEndOfFrame();
+            bool ready=w.ManualWorkCenterV414(0,out Vector2 grip)&&w.ManualWorkPivotV414(out Vector2 pivot);
+            Check("utility.pointer-ready."+action,ready);if(!ready)yield break;
+            w.ManualWorkPivotV414(out Vector2 origin);w.ManualWorkClosedGripV414(out Vector2 closed);
+            float before=w.Expedition.Work.Progress;w.ProcessManualWorkPointerV414(grip,true,true);report.workApiSamples++;
+            Check("utility.pointer-selection-no-progress."+action,Mathf.Abs(w.Expedition.Work.Progress-before)<.0001f);
+            Vector2 radial=grip-origin;float initial=Mathf.Atan2(radial.y,radial.x);int steps=Mathf.Max(1,Mathf.CeilToInt(90f*fraction/15f));Vector2 pointer=grip;
+            for(int k=1;k<=steps&&w.WorkActive;k++)
+            {
+                float part=fraction*k/steps;
+                pointer=action=="poweroff"?Vector2.Lerp(grip,closed,part):origin+new Vector2(Mathf.Cos(initial+part*Mathf.PI*.5f),Mathf.Sin(initial+part*Mathf.PI*.5f))*radial.magnitude;
+                w.ProcessManualWorkPointerV414(pointer,false,true);w.StepWork(Dt,0,false,false,false);report.workApiSamples++;yield return null;
+            }
+            w.ProcessManualWorkPointerV414(pointer,false,false);report.workApiSamples++;
         }
         IEnumerator Utilities()
         {
@@ -535,18 +583,29 @@ namespace TooLateToPanic
                 string id=PanicUtilitySafetyV414.TargetForAction(action);Vector3 station;
                 bool positioned=w.TryUtilityStationPositionV414(id,out station);Check("utility.world-station."+action,positioned);
                 var map=Field<Dictionary<string,GameObject>>(w,"residenceTargets");GameObject root=map!=null&&map.ContainsKey(id)?map[id]:null;
-                Check("utility.real-pick-solid-state."+action,root&&root.GetComponent<HomePick>()&&root.GetComponentsInChildren<Collider>(true).Any(c=>c.enabled&&!c.isTrigger)&&root.GetComponentsInChildren<Renderer>(true).Length>0&&!w.UtilityStationClosedV414(id));
+                Check("utility.real-pick-solid-open-pose."+action,root&&root.GetComponent<HomePick>()&&root.GetComponentsInChildren<Collider>(true).Any(c=>c.enabled&&!c.isTrigger)&&!w.UtilityStationClosedV414(id)&&UtilityHandlePoseR6(root,action,0));
                 if(!positioned)continue;Vector3 approach=station+(action=="poweroff"?Vector3.back:Vector3.left)*1.1f;
-                yield return Place(approach,"utility-"+action,id);int budget=w.Model.Budget;string stock=Stock();w.BeginWork(action,id);yield return null;
-                Check("utility.reachable-work-start."+action,w.WorkActive&&w.Expedition.Work.IsUtility,w.Model.Message);
+                yield return Place(approach,"utility-"+action,id);int budget=w.Model.Budget;string stock=Stock();w.HandleKey(KeyCode.E);yield return null;
+                Check("utility.e-start-and-appropriate-control."+action,w.WorkActive&&w.Expedition.Work.IsUtility&&!Field<GameObject>(w,"handTool")&&w.Expedition.Work.RequiredDegrees==90,w.Model.Message);
                 if(!w.WorkActive)continue;
-                Check("utility.actual-handle-camera-target."+action,w.WorkTargetViewport(0).z>0&&w.ClickWorkTarget(0));
-                yield return TurnCurrent(w.Expedition.Work.RequiredDegrees-15);
-                Check("utility.not-committed-before-end."+action,!w.UtilityStationClosedV414(id)&&w.WorkActive&&budget==w.Model.Budget&&stock==Stock());
-                w.CancelWork();yield return null;Check("utility.cancel-free."+action,!w.UtilityStationClosedV414(id)&&budget==w.Model.Budget&&stock==Stock());
-                w.BeginWork(action,id);yield return null;yield return DriveWork();
-                Check("utility.real-model-committed."+action,!w.WorkActive&&w.Model.UtilitySafety.IsComplete(action)&&w.UtilityStationClosedV414(id)&&w.Expedition.IsWorkCommitted(action,id)&&budget==w.Model.Budget&&stock==Stock());
-                w.BeginWork(action,id);yield return null;Check("utility.duplicate-denied."+action,!w.WorkActive&&budget==w.Model.Budget&&stock==Stock());
+                bool linear=action=="poweroff";
+                Check("utility.distinct-control-mode."+action,w.Expedition.Work.UsesLinearDrag==linear&&w.Expedition.Work.UsesRotation!=linear&&!w.Expedition.Work.UsesHammer);
+                w.ClickWorkTarget(0);
+                bool wrongAdapter=linear?w.Expedition.Work.ApplyRotation(-45,true):w.Expedition.Work.ApplyLinearDisplacement(.5f,true);
+                Check("utility.wrong-adapter-no-progress."+action,!wrongAdapter&&w.Expedition.Work.Progress==0);
+                for(int k=0;k<3;k++){w.StepWork(Dt,1,true,true,false);report.workApiSamples++;yield return null;}
+                Check("utility.idle-no-motion-or-commit."+action,w.Expedition.Work.Progress==0&&!w.UtilityStationClosedV414(id)&&budget==w.Model.Budget&&stock==Stock());
+                yield return DriveUtilityPointerR6(action,5f/6f);
+                var rig=Field<GameObject>(w,"workRig");
+                Check("utility.actual-partial-pose-uncommitted."+action,w.WorkActive&&w.Expedition.Work.Progress>.7f&&w.Expedition.Work.Progress<.99f&&UtilityHandlePoseR6(rig,action,w.Expedition.Work.Progress)&&!w.UtilityStationClosedV414(id)&&budget==w.Model.Budget&&stock==Stock());
+                float retained=w.Expedition.Work.Progress;w.StepWork(Dt,0,false,false,false);yield return null;
+                Check("utility.release-stops."+action,Mathf.Abs(retained-w.Expedition.Work.Progress)<.0001f);
+                yield return Shot("13-utility-"+action+"-partial");w.CancelWork();yield return null;
+                Check("utility.cancel-free-world-open."+action,!w.UtilityStationClosedV414(id)&&UtilityHandlePoseR6(map[id],action,0)&&budget==w.Model.Budget&&stock==Stock());
+                w.HandleKey(KeyCode.E);yield return null;yield return DriveUtilityPointerR6(action,1);
+                Check("utility.real-model-committed."+action,!w.WorkActive&&w.Model.UtilitySafety.IsComplete(action)&&w.UtilityStationClosedV414(id)&&w.Expedition.IsWorkCommitted(action,id)&&UtilityHandlePoseR6(map[id],action,1)&&budget==w.Model.Budget&&stock==Stock());
+                w.HandleKey(KeyCode.E);w.BeginWork(action,id);yield return null;
+                Check("utility.already-safe-no-repeat."+action,!w.WorkActive&&budget==w.Model.Budget&&stock==Stock());
                 yield return Shot("13-utility-"+action);
             }
         }
@@ -837,7 +896,7 @@ namespace TooLateToPanic
                 PanicModel.ScorePathOverride=Path.Combine(w.EvidencePath,"model-risk-"+action+".json");var m=new PanicModel();m.StartRun(false);var e=new PanicExpedition(m);
                 DisasterType type=action=="wateroff"?DisasterType.Flood:DisasterType.Fire;m.Disaster=type;var calculate=typeof(PanicModel).GetMethod("CalculateDamage",Instance);calculate.Invoke(m,null);float before=m.TotalDamage;
                 string target=PanicUtilitySafetyV414.TargetForAction(action);bool begins=e.CanBeginWork(action,target);e.Work.Begin(action,target);int cap=25;
-                while(e.Work.Active&&!e.Work.Complete&&cap-->0){e.Work.TryClick(0);e.Work.ApplyRotation(30*e.Work.ExpectedDirection,true);}bool committed=e.TryCompleteWork(action,target);calculate.Invoke(m,null);
+                while(e.Work.Active&&!e.Work.Complete&&cap-->0){e.Work.TryClick(0);if(e.Work.UsesLinearDrag)e.Work.ApplyLinearDisplacement(1f/3f,true);else e.Work.ApplyRotation(30*e.Work.ExpectedDirection,true);}bool committed=e.TryCompleteWork(action,target);calculate.Invoke(m,null);
                 Check("model.utility-real-risk-effect."+action,begins&&committed&&m.TotalDamage<before&&!m.CheatedRun,"same-seed damage before="+before+" after="+m.TotalDamage,"NATIVE_MODEL_FIXTURE");
             }
             PanicModel.ScorePathOverride=original;yield return null;

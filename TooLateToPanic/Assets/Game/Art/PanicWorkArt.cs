@@ -83,7 +83,7 @@ namespace TooLateToPanic
             }
             if (s.Job == Job.Gas || s.Job == Job.Water || s.Job == Job.Power || s.Job == Job.Hose)
             {
-                if (s.Valve) s.Valve.localRotation = Quaternion.Euler(0, 0, Mathf.Clamp01(progress) * (s.Job == Job.Power ? 180f : s.Job == Job.Water || s.Job == Job.Hose ? -180f : -90f));
+                SetUtilityHandlePose(s.Valve, s.Job, progress);
                 if (s.Tool) s.Tool.gameObject.SetActive(false);
                 if (s.Flow) s.Flow.gameObject.SetActive(false);
                 s.LastProgress = Mathf.Clamp01(progress); return;
@@ -279,11 +279,37 @@ namespace TooLateToPanic
             if (state.Job == Job.Gas || state.Job == Job.Water || state.Job == Job.Power || state.Job == Job.Hose)
             {
                 if (index != 0 || !state.Valve) return false;
-                worldPosition = state.Valve.position; return true;
+                worldPosition = state.Valve.TransformPoint(state.Job == Job.Gas || state.Job == Job.Water ? new Vector3(.20f,0,0) : Vector3.zero); return true;
             }
             if (state.Job != Job.AnchorWall && state.Job != Job.AnchorFloor || !state.Heads[index]) return false;
             worldPosition = state.Heads[index].position;
             return true;
+        }
+
+        public static bool GetControlPivotPosition(GameObject rig, out Vector3 worldPosition)
+        {
+            worldPosition = Vector3.zero;
+            if (!rig || !rigs.TryGetValue(rig.GetInstanceID(),out var state) || !state.Valve) return false;
+            worldPosition = state.Valve.position; return true;
+        }
+        public static bool GetControlClosedPosition(GameObject rig, out Vector3 worldPosition)
+        {
+            worldPosition=Vector3.zero;
+            if(!rig||!rigs.TryGetValue(rig.GetInstanceID(),out var s)||!s.Valve||!s.Valve.parent)return false;
+            worldPosition=s.Valve.parent.TransformPoint(s.Job==Job.Power?new Vector3(0,.48f,-.10f):new Vector3(.20f,.62f,-.17f));
+            return s.Job==Job.Power||s.Job==Job.Gas||s.Job==Job.Water;
+        }
+
+        static void SetUtilityHandlePose(Transform handle, Job job, float progress)
+        {
+            if (!handle) return;
+            float p=Mathf.Clamp01(progress);
+            if (job==Job.Power)
+            {
+                handle.localPosition=new Vector3(0,.74f-.26f*p,-.10f);
+                handle.localRotation=Quaternion.identity;
+            }
+            else handle.localRotation=Quaternion.Euler(0,0,job==Job.Hose?-180f*p:90f*(1-p));
         }
 
         static void UpdateDirectAnchor(RigState s, float progress, int completedSteps)
@@ -773,7 +799,7 @@ namespace TooLateToPanic
             var root = new GameObject("Utility_station_" + job);
             UtilityJob(root.transform, job);
             Transform handle = root.transform.Find("ValveMotion");
-            if (handle) handle.localRotation = Quaternion.Euler(0, 0, closed ? job == Job.Power ? 180 : job == Job.Water ? -180 : -90 : 0);
+            SetUtilityHandlePose(handle,job,closed?1:0);
             // Large physical state lamps: unisolated amber, isolated green.
             Sphere(root.transform, "Safety_state_indicator", new Vector3(.17f, 1.12f, -.075f), new Vector3(.035f,.035f,.025f), closed ? P.Leaf : P.Amber);
             return root;
@@ -785,9 +811,9 @@ namespace TooLateToPanic
                 Box(p, "Electrical_enclosure", new Vector3(0,.68f,.025f), new Vector3(.44f,.72f,.12f), P.SteelDark);
                 Box(p, "Insulated_breaker_face", new Vector3(0,.68f,-.049f), new Vector3(.34f,.59f,.035f), P.Paper);
                 Box(p, "Breaker_travel_slot", new Vector3(0,.61f,-.073f), new Vector3(.09f,.37f,.02f), P.Ink);
-                var lever = New(p, "ValveMotion", new Vector3(0,.62f,-.10f));
-                Box(lever, "Breaker_lever", new Vector3(0,.11f,0), new Vector3(.072f,.25f,.052f), P.Rubber);
-                Box(lever, "Wide_insulated_grip", new Vector3(0,.22f,-.006f), new Vector3(.20f,.07f,.07f), P.Red);
+                var lever = New(p, "ValveMotion", new Vector3(0,.74f,-.10f));
+                Box(lever, "Breaker_lever", Vector3.zero, new Vector3(.072f,.10f,.052f), P.Rubber);
+                Box(lever, "Wide_insulated_grip", new Vector3(0,0,-.006f), new Vector3(.20f,.07f,.07f), P.Red);
                 for (int k=0;k<3;k++) Box(p, "Fuse_bank", new Vector3(-.10f+k*.10f,.87f,-.081f), new Vector3(.045f,.08f,.015f), P.Steel);
                 return;
             }
@@ -801,21 +827,9 @@ namespace TooLateToPanic
                 FixedScrew(p,new Vector3(side*.08f,.69f+side*.35f,.043f),Quaternion.identity,.5f);
             }
             var valve = New(p,"ValveMotion",new Vector3(0,.62f,-.17f));
-            if (job == Job.Gas)
-            {
-                Box(valve,"Yellow_gas_lever",new Vector3(.13f,0,0),new Vector3(.32f,.055f,.037f),P.Amber);
-                Cyl(valve,"Lever_hub",Vector3.zero,.045f,.035f,P.Steel,FrontAxis);
-            }
-            else
-            {
-                Ring(valve,"Blue_water_handwheel",Vector3.zero,Vector3.forward,.15f,.022f,P.Water);
-                for(int i=0;i<4;i++)
-                {
-                    float angle=i*Mathf.PI*.5f;
-                    Between(valve,"Handwheel_spoke",Vector3.zero,new Vector3(Mathf.Cos(angle),Mathf.Sin(angle),0)*.14f,.022f,.025f,P.Water);
-                }
-                Cyl(valve,"Handwheel_hub",Vector3.zero,.042f,.035f,P.Steel,FrontAxis);
-            }
+            // Both installed controls are explicit quarter-turn lever valves: parallel=open, perpendicular=closed.
+            Box(valve,job==Job.Gas?"Yellow_gas_lever":"Blue_water_lever",new Vector3(.13f,0,0),new Vector3(.32f,.055f,.037f),job==Job.Gas?P.Amber:P.Water);
+            Cyl(valve,"Lever_hub",Vector3.zero,.045f,.035f,P.Steel,FrontAxis);
             Gauge(p,new Vector3(.13f,.96f,-.055f),.085f);
         }
 

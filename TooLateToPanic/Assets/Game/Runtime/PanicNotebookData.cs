@@ -121,10 +121,10 @@ namespace TooLateToPanic
                 if (source != null && source.Floor == floor) pins.Add(new PanicNotebookPin(source));
             var materials = new int[MaterialIds.Length];
             for (int i = 0; i < materials.Length; i++) materials[i] = expedition.Count(MaterialIds[i]);
-            string selectedAction = selected == null ? string.Empty : PanicItemActionRules.PrimaryAction(selected);
-            var recipe = PanicExpedition.MaterialCosts(selectedAction, selected);
-            var requirements = new PanicMaterialRequirement[recipe.Count];
-            for (int i = 0; i < recipe.Count; i++) requirements[i] = new PanicMaterialRequirement(recipe[i].Id, recipe[i].Required, expedition.Count(recipe[i].Id));
+            string selectedAction = selected == null ? string.Empty : expedition.PrimaryActionV414(selected);
+            var sourceRequirements = expedition.WorkRequirementsV414(selectedAction, selected == null ? null : selected.Id);
+            var requirements = new PanicMaterialRequirement[sourceRequirements.Count];
+            for (int i = 0; i < sourceRequirements.Count; i++) requirements[i] = sourceRequirements[i];
             bool timedJury = jury != null && jury.Active;
             string note = timedJury ? jury.Hint : model.TimeRemaining > 30 ? "Önlemleri tamamla. Son 30 saniyede çanta hazırlığı başlayacak." : model.BagReady ? "Su ve gıda hazır. Bodrumdaki sığınağa git." :
                 "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Temel ihtiyaçlar doğrudan çantana eklenir.";
@@ -137,8 +137,8 @@ namespace TooLateToPanic
                 InventoryCapacity = expedition.Inventory == null ? 0 : expedition.Inventory.Count, BagCapacity = expedition.Bag == null ? 0 : expedition.Bag.Count,
                 BagReady = model.BagReady, CheatedRun = model.CheatedRun, Pins = pins.ToArray(), Pages = pages, Materials = materials,
                 RequiredDays = model.RequiredDays, PackedWater = model.PackedWater, PackedFood = model.PackedFood,
-                SelectedLabel = selected == null ? string.Empty : selected.Label, SelectedAction = selectedAction,
-                SelectedRequirements = requirements, SelectedBudgetCost = PanicExpedition.WorkCost(selectedAction, selected)
+                SelectedLabel = expedition.WorkTargetLabelV414(selectedAction, selected == null ? null : selected.Id), SelectedAction = selectedAction,
+                SelectedRequirements = requirements, SelectedBudgetCost = expedition.WorkBudgetCostV414(selectedAction, selected == null ? null : selected.Id)
             };
         }
 

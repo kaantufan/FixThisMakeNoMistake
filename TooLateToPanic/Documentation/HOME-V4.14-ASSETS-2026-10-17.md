@@ -1,73 +1,31 @@
-# V4.14 asset teslim / credits notları
+# Home V4.14 — etkin assetler ve kaynakları
 
-Bu not root'un README/credits/teslim matrisine alması içindir. Kaynak intakesi, yeni build'e bake edilmesi, native render/oynanış ve insan kabulü ayrı durumlardır. Bu worker Unity/player/native açmadı. Son native kabul ve güncel DLL/ZIP bağlantısını yalnız root LATEST/teslim kaydında doldurur.
+Güncel derleme ve test kimliği [LATEST-BUILD.json](../LATEST-BUILD.json) ve [teslim kaydı](HOME-V4.14-DELIVERY-2026-10-17.md) içindedir. Kaynak intakesi, Unity derlemesi, native görüntü/oynanış ve insan kabulü ayrı kanıtlardır. Bu belge kaynak/provenance kaydıdır.
 
-R5 kaynak eklemesi: kullanıcının ayrı ses sohbetindeki doğrudan yetkisiyle ElevenLabs üzerinde üretilmiş 14 efekt ve 2 müzik alındı. `Evidence/GamejamOrchestra/TLTP-AUDIO-REVISION-V414-20261017/PROVENANCE.md`, `audio-manifest.json` ve ham dosyalar kaynak/proses/hash kaydıdır; runtime provenance Resources/Licenses altında korunur. 5003 mevcut kredi kullanıldı, yeni ödeme yok. Önceki yerel nabız artık imported heartbeat'i kullanır; düşük nefes sentezi fallback olarak korunur. Bunlar CC0 diye yeniden etiketlenmez. Eski yerel ses açıklamaları tarihsel katmanı anlatır; yeni paketin native/insan dinleme kabulü son teslimde ayrı raporlanır.
+## Karakter ve animasyon
 
-Deprem okunurluğu için yeni yerel sunum, gerçek mobilya mesh ve materyallerini geçici render kopyalarında kullanır. Yeni dış sağlayıcı asseti veya rig içermez; kaynak mesh lisansları aynen geçerlidir. Gerçek eşya/collider/Model yerleşimi ve normal UAL karakter Animator'ı korunur.
+Ana karakter, NPC ve kurtarma gövdeleri mevcut Quaternius `Superhero_Male_FullBody.fbx` humanoid Avatar ve UAL1 Standard Idle/Walk/Jog/Jump/Interact/Fixing kliplerini kullanır. Normal hareketin tek yazarı mevcut MovePlayer/SetMoveAnimation ve Animator'dır. İkinci LateUpdate Speed/Airborne yazımı kaldırıldı. Kullanıcının istediği sivil görünüm aynı çalışan kemiklerle koyu yeşil açık ceket, açık tişört, koyu pantolon, günlük kahverengi ayakkabı, çıplak eller ve kısa saç/sakal olarak yerel uyarlandı. Eski karakter fiziği ve ağırlıkları korunur.
 
-## Değişmez dış kaynak kimlikleri
+[defter-mockup 00377265](https://github.com/kaantufan/FixThisMakeNoMistake/commit/00377265c740fdc973039d0266cefc8c913633b9) içindeki Meshy FBX/dokular görünüm referansıdır. Bu kaynak rig/klip içermiyordu. Kullanıcının reddettiği yerel 19 kemikli deneme aktif oyuncu/NPC değildir; kaynak dosyaları ve eski aday kanıtları korunur. FBX SHA256: `56C18BF9071C0694B54C669DA092B14F02DE11D268146FD576D8660EA10F37F1`. Quaternius CC0 metinleri mevcut kaynaklar için geçerlidir; Meshy arşivinin kamuya yeniden dağıtım lisansı ayrıca doğrulanmış değildir.
 
-| Kaynak | Doğrulanan commit | Bu paketin gerçek intakesi |
-|---|---|---|
-| [defter-mockup](https://github.com/kaantufan/FixThisMakeNoMistake/commit/00377265c740fdc973039d0266cefc8c913633b9) | `00377265c740fdc973039d0266cefc8c913633b9` | `Meshy_AI_survival_protagonist_1017123545_image-to-3d-texture_fbx/` içindeki gerçek FBX ve seçili harici dokular |
-| [yarkin-assets](https://github.com/kaantufan/FixThisMakeNoMistake/commit/29bf309fa0c7ccfdafd0a935e93512a44f550c9e) | `29bf309fa0c7ccfdafd0a935e93512a44f550c9e` | `_YarkinAssets/Art/Meshes/SM_BunkerHatch.fbx` ve gereken materyal/atlas bağımlılık kapanımı |
+FPS el/kol görünümü ayrı yerel prosedürel mesh ve eklemlerdir. Parmak MCP/PIP/DIP zincirleri, toplama/tutuş, yürüme/koşma/zıplama/iniş tepkileri gerçek motor ve iş durumuna bağlıdır. Yeni üçüncü şahıs Meshy assetinin elleri olarak kredilendirilmez. Anatomi ve rahatlık konusunda insan kabulü teknik test sayılarıyla ilan edilmez.
 
-Branch adının daha sonra ilerlemesi bu teslimin kaynak kimliğini değiştirmez. Bağımsız eski FPS checkout/kayıtları kaynak havuzu yapılmadı. Başka branch'in script/package/oyun sistemi topluca alınmadı. Diğer retained CuratedYarkin eşyalarının tümünü bu yeni bunker commit'inden yeniden alınmış gibi etiketleme.
+## Sığınak ve ev
 
-## Güncel aktif karakter: çalışan humanoid ve sivil kıyafet
+[yarkin-assets 29bf309](https://github.com/kaantufan/FixThisMakeNoMistake/commit/29bf309fa0c7ccfdafd0a935e93512a44f550c9e) kaynaklı gerçek `SM_BunkerHatch.fbx` kapak/menteşe/kilit görselleri mevcut açık şaft ve fizik üzerine uyarlandı. FBX SHA256: `1DCAE78A93D6B0AAE490AAE54FF943B6082C7D10A6494C42AC59FCCA264C1C07`. Kaynak controller/cutscene/package/shader sistemleri topluca alınmadı. Built-In Standard materyaller ve ayrı V414 GUID'leri kullanılır. Sağlanan beyan `Resources/Licenses/Yarkin-V414-SuppliedDeclaration.txt` içinde korunur.
 
-Kullanıcı yeni procedural hareketi iki kez reddettikten sonra eski çalışan karakterin animasyonlarını koruyup görünümünü yeni referansa benzetmeyi istedi. Son r4 adayı gerçek `Superhero_Male_FullBody.fbx` humanoid Avatar'ı ve `UAL1_Standard.fbx` Idle/Walk/Jog/Jump/Interact/Fixing kliplerini kullanır. Önceki V2 workwear kostümü yerine koyu yeşil açık ceket, açık gri tişört, sade koyu pantolon, kahverengi günlük ayakkabı, çıplak eller ve kısa saç/sakal uyarlanır. Kıyafetler mevcut çalışan kemiklere bağlanır; kaynak Avatar, weights ve controller fiziği değişmez. Meshy dokusu farklı UV'ye bağlanmaz. Yeni Meshy model yalnız görünüm referansı ve korunmuş kaynak arşividir; aktif oyuncu/NPC prefabı değildir.
+Kapak açma, gerçek çanta görselini atma, açık şafttan atlama ve baş temizlendikten sonra kapağı kapatma mevcut üretim sinematiğine bağlıdır. Geçici çanta ve açık geçiş halkası yerel uyarlamadır; shared kaynak mesh/materyaller yok edilmez.
 
-`Player/SurvivorV2.prefab` gerçek retained humanoid ve `SurvivorV2.controller` ile yeniden bake edilir. Sivil NPC ve kurtarma kopyaları da bu gerçek çalışan prefabı kullanır. Quaternius kaynakları için mevcut CC0 metinleri geçerlidir; yerel yeni kıyafet/saç/temas uyarlaması o dış kaynakla aynı şey değildir. FPS el modeli ayrı yerel kaynaktır ve bu dönüşte korunur. Bunker atışında sınırlı kol uzanması ve gerçek Jump_Loop klibi uygulanır; yeni procedural yürüyüş kullanılmaz. Root'un güncel build/native/OS ve insan kabulü ayrı sonuçlardır.
+İki yatak odası, çalışma odası, banyo/hol/balkon, salon/mutfak/WC/kiler/garaj ve bodrum mevcut ev fabrikalarının yerel düzenlemesidir. Gerçek geçişler, merdiven ve köprü korkulukları root tarafından fizik katmanında doğrulanır. Bunlar dışarıdan alınmış yeni bir ev paketi değildir.
 
-## İlk iki adayın Meshy mesh/doku ve rig kaydı — aktif karakter değil
+## Ses ve efektler
 
-- Asıl yükleme Meshy adını taşıyan FBX7400 dosyasıdır:19,584,135byte,1mesh geometry,3,257 kaynak kontrol noktası,1materyal,5Texture/5Video kaydı. Kaynakta deformer/iskelet/animation stack **yoktur**. Unity'nin UV/normal köşe bölmesi sonrası vertex sayısı kaynak kontrol noktası sayısından farklı olabilir.
-- Live kaynak kopyası `Assets/Game/Resources/CuratedCharacter/DefterSurvivor.fbx`; SHA256 `56C18BF9071C0694B54C669DA092B14F02DE11D268146FD576D8660EA10F37F1`.
-- Gerçek harici BaseColor, Normal ve Roughness PNG'leri byte korunarak kopyalandı. `DefterSurvivor_BaseColor.png` materyale bağlı; sRGB. `DefterSurvivor_Normal.png` normal-map/linear; materyale bağlı ve yeni mesh'in tangent'i yerel hesaplanır. Roughness linear kaynak arşividir, şu an Standard materyale bağlı değildir; smoothness=.18 kullanılır. Emission/metallic harici dosyaları staged özgün checkout'ta kalır, runtime materyal bunları kullanmaz. FBX'in kendi beş gömülü Video Content payloadı da byte-identical FBX içinde korunur; bunları harici PNG dosyalarının birebir kopyası olarak tanımlama.
-- Importer kaynak ayarı max2048, compression/mipmap açık; BaseColor sRGB, Normal/Roughness linear. Gerçek platform formatı/bellek boyutu root'un Unity import kanıtıyla yazılmalıdır. Kaynak FBX bake sırasında readable'dır; hiçbir provider rigging işi/ücret/kredi kullanımı yoktur.
-- Yerel uyarlama:1.80m taban-merkez fit,19adlı deform kemiği,vertex başına normalize iki etki,özgün geometri/UV ve kaynak dokuları. Idle/walk/run/jump/land/work/gather/throw/jump-to-shelter hareketleri mevcut authoritative motor/iş fazından sürülen yerel prosedürel rig/IK çalışmasıdır. **Meshy'den hazır rig/klip veya Quaternius'tan aktarılmış yeni animasyon klibi değildir.**
-- İlk iki adayda `Player/SurvivorV2.prefab` yolu CuratedDefterSurvivor_V414 içeriği için kullanıldı. Kullanıcı bu hareketi kabul etmedi; son r4 adayı yukarıdaki gerçek eski humanoid ile yeniden bake edilir. Eski Meshy kaynak dosyaları, controller ve kaynak kanıtı silinmez; bu eski kaynakların Resources içinde korunması aktif kullanıldıkları anlamına gelmez.
+Kullanıcının ayrı ses sohbetindeki açık yetkisiyle ElevenLabs üzerinde 14 efekt + 2 müzik üretildi: **5003 mevcut kredi, yeni ödeme yok**. Konuşma yerine bip ve altyazı kullanılır. Ses manifesti, ham dosyalar, üretim kayıtları ve provenance `Evidence/GamejamOrchestra/TLTP-AUDIO-REVISION-V414-20261017/` altında; kaynak metinler `Resources/Audio/Foley/REVISION-V414-PROVENANCE.md` ve `Resources/Audio/Music/REVISION-V414-PROVENANCE.md` içindedir. Bunlar CC0 diye yeniden etiketlenmez. Önceki yerel heartbeat üretimi tarihsel fallback'tir; etkin nabız imported klibi kullanır. Düşük nefes fallback'i yerel sayısal sentezdir. Yeni kök oturum sağlayıcı çağrısı yapmadı.
 
-## Bunker ve FPS el kaydı
+Motor/siren/rotor gerçek oyuncu mesafesine göre azalır; sığınak içeride filtre uygular. Adım yüzeyi gerçek cached prefab mesh/materyallerinden 11 cm temas alanıyla seçilir; 6 mm derzlerde alttaki betonun kaplamayı bastırması giderildi. PCM/AudioSource veya zemin sorgusu kontrolü insan dinleme ve miks kabulü değildir.
 
-- Gerçek `SM_BunkerHatch.fbx` SHA256 `1DCAE78A93D6B0AAE490AAE54FF943B6082C7D10A6494C42AC59FCCA264C1C07`. Kaynaktaki HatchLid_Hinge/LockWheel meshleri mevcut kuzey DoorLeaf altında kullanılır. Eski açık çerçeve/şaft/fizik/etkileşim korunur; upstream Base/Portal/DeepShaft renderleri ve eski lid renderı kalıcı gizlidir. Upstream cutscene/controller/item evaluator/shader/physics scriptleri taşınmaz. Materyaller Built-In Standard'a uyarlanmış,GUID'ler V414 namespace'ine yeniden eşlenmiştir.
-- Kare çerçeveden dairesel kapağa yerel açık geçiş ring'i özgün kod/mesh uyarlamasıdır; merkezde yüzey/collider yoktur. Runtime Mesh ve yalnız fallback Material açık instance sahibince bırakılır; shared FBX/Resources materyali sahiplenilmez.
-- FPS el/kol modeli dış sağlayıcı veya branch'ten indirilmiş bir el asset'i değildir. Mevcut yerel el çalışmasının V4.14 uyarlamasıdır:iki tarafta el/palm ve parmak başına MCP/PIP/DIP zinciri; palmiye/finger taper,omuz-dirsek-bilek oranı,toplama/kapak tutuşu,yürüme/koşma/zıplama/iniş tepkisi yerel prosedürel mesh/eklem hareketidir. Third-person Meshy kaynak el/kolu olarak kredilendirme. El sistemi kamerayı veya gameplay state'i sahiplenmez.
+Deprem dış cephe sarsıntısı, toz/kırıntı; sel akış/köpük/yüzen parçalar; yangın alev/duman; fırtına hortum/bulut/yer tozu/dönen enkaz yerel kod/mesh/particle çalışmalarıdır. Dış VFX paketi satın alınmadı. Depremde gerçek ev collider ve Model dönüşümleri korunur; geçici render kopyaları tek pivotta birlikte hareket eder ve pause/skip/reset ile temizlenir. Hortumun gerçek kamera görünürlüğü native karelerle ayrıca değerlendirilir.
 
-## Yerel ses ve dinamik efekt authorship
+Malzeme kazanımında +adet ve görsel, gerçek `LastGatherRewards` stok farkından ve aynı dünya asset fabrikasının renderından gelir. Yeni ödül veya tahmini adet üretilmez. Seçim vurgusu asset yüzeyi/silueti üzerindedir; boş alana zemin kutusu eklenmez.
 
-- Yeni heartbeat/breath:tamamen yerel sayısal sentez;22,050Hz mono,1s çift-atım döngüsü ve3s nonverbal filtreli gürültü nefesi. İnsandan kayıt,AI seslendirme/provider çağrısı,voice clone veya yeni ElevenLabs işi yoktur. Önceki yetkili ses kayıtları/lisansları kendi retained kaydıyla ayrı korunur. Yeni ses denklemlerinde source-math finite/no-clipping kontrolü vardır; bu duyulabilirlik/mix/insan dinleme kabulü değildir.
-- FPS radial veil,iki eksende≤.20derece aim sway,.10s damping ve1→.94 kontrol çarpanları yerel kod uyarlamasıdır. HUD metinlerinin arkasında çizilir; global kamera tek root'tadır. Native okunurluk/rahatlık henüz ayrı kabul ister.
-- Gerçek malzeme kazanım kartları yerel presentation kodudur. İsim/adet gerçek GatherSequence/LastGatherRewards.Id/Required kaydından gelir; ikon yerine aynı gerçek world pickup mesh factory'sinin bounded128px renderı kullanılır. Shared asset provenance değişmez; yeni eşya veya tahmini miktar üretilmez.
-- `hazards-street` paketinin yeni deprem impulse/toz/moloz,directional sel/foam/eddy,mesh flame tongues,storm funnel/orbital debris/rain ve procedural service-vehicle aftermath çalışmaları **özgün yerel/prosedürel kaynak uyarlamalarıdır**; yeni dış VFX pack/provider indirilmemiştir. Bu ayrı sanat worker'ının source/detached kanıtı native kabul yerine geçmez. Ana Model hasar/önlem kararı ve fizik bu görsel koddan bağımsız root/model tarafındadır.
-- Civilian car geometrisi retained PanicResidenceArt fabrikası; yeni servis aracı varyantı/ışık barı/hasar overlay'i yerel çalışmadır. NPC/responder mevcut `Player/SurvivorV2` yolunu klonlar. Yeni prefab Meshy olduğunda onların gövde/doku provenance'ı da Meshy+yerel19bone olur. Hazards-street handoff'undaki eski **"retained CC0 SurvivorV2 rigs/clips" cümlesi bu yeni prefab için geçersizdir**; README'ye taşınmamalıdır.
-
-## İstek / root bağlantısı / artist sınırı matrisi
-
-| İstek | Gerçek asset/presentation yolu | Root bağlantısı ve kalan kabul |
-|---|---|---|
-| Ana karakterin yeni branch modeliyle değişmesi | CuratedCharacter FBX+PNG; CreateCuratedCharacter;19bone rig | BakePlayer→uyumluluk prefabı; yeni source mesh identity/native ön-arka yüz ve ayak yüksekliği gerekir |
-| Yürüme/koşma/zıplama/iniş/iş/toplama | SetMotion→SetTaskPose; gerçek motor/Work.Progress | Root LateUpdate; kaynak birim metres/sn,placeholder humanoid klip sayısı kabul ölçütü değildir |
-| FPS doğal eklemli el/kol | PanicBagHandsArt.Create/SetLocomotion/Animate | Aynı player/controller/Model; anatomi/eklem kırılması/temas native yakın kare gerekir |
-| Yeni sığınak kapağı ve çanta-atla-kapat | Actual sourced lid/wheel+open ring; gerçek çanta render kopyası | Root Story/Cinema/route/hinge;0–1yaklaşım,1–1.65açma,1.65–2.5atma,2.5–4.05atlama,3.8kapanış; native görünür temas kabulü ayrı |
-| FPS baskı ve hafif zorlaşma | Yerel veil/sway/synth heartbeat/breath | Ortak ApplyBagPose;root saat/pause/UI;kulakla mix ve keyif/rahatlık ölçülmedi |
-| Gerçek toplama geri bildirimi | Reward kayıtları+actual material RenderTexture | Tick-only event/adet;OnGUI draw-only;native text/mesh görünümü gerekir |
-| Afetlerin dinamik görünmesi | Yerel DisasterArt/StormArt factory'leri | Root hazard zaman/fazı/camera/foliage hooks;gerçek ev açıklıklarıyla native kare gerekir |
-| Dış dünya trafiği ve yardım ekipleri | Retained car+yerel service variants;NPC prefab klonları | StreetLife ve mevcut ExteriorLife ayrı;her kopya yeni rig SetMotion almalı;araç/ekip gelişinin native zaman kanıtı gerekir |
-| Ev/çocuk odası/mutfak/merdiven yerleşimi | Ayrı layout/house factory paketi | Bu not onların teslim hashlerini veya native kabulünü sahiplenmez;root layout matrisiyle birleştirir |
-| Gerçek tesisat/manuel iş etkisi | Ayrı mechanics Model/Expedition/work paketi | Sanat root API'ye bağlanır;malzeme/bütçe/iptal/hasar/score etkisinin kabulü mechanics+root'tadır |
-| Hikâye,skip ve sonucu tek çözme | Root Story/Cinema/Model | Asset katmanı sonucu değiştirmez;clock/controller/skip/model testleri root kaydıdır |
-
-## Kısa artist sınırlamaları ve yayın lisansı
-
-1. Korunmuş Meshy klasöründe bağımsız lisans grant'i veya generation/provider hesabı receipt'i yoktur. Bu Meshy kaynak ve harici dokuların kamuya yeniden dağıtım lisansı **UNVERIFIED** kalır; CC0 etiketi konmaz. Son aktif oyuncu/NPC'ler retained Quaternius humanoid kullanır. Yerel taşınabilir pakette korunmuş Resources kaynaklarının bulunması kamuya yayın yetkisi veya lisans doğrulaması sayılmaz.
-2. Yarkin'in verilen `ASSET_MANIFEST_AND_LICENSES.md` beyanı jam sırasında prosedürel/AI destekli üretim ve paylaşım kısıtı olmadığını bildirir. Özgün beyan `Resources/Licenses/Yarkin-V414-SuppliedDeclaration.txt` olarak korunur; bu bağımsız hak incelemesi veya tüm repo için genel lisans grant'i diye genişletilmez.
-3. Yerel19bone skin/prosedürel hareket source-math ve detached C# doğrulamasına sahiptir; facial rig/mocap/humanoid retarget üretildi iddiası yoktur. FPS el yakın planı,skin deformasyonu,temas,baş/kapak açıklığı ve kıyafet örtüşmesi native kare bekler. NPC'lerin aynı kaynak texture'ı paylaşması özgün ayrı üniforma/karakter modeli teslim edildi demek değildir.
-4. Kaynak matematiğinde3.8s kapanış başlangıcında muhafazakâr baş-ring dikey açıklığı≈.481m. Bu native collision/render kabulü değildir.3.35–3.42s kısa kol/el-ring geçişi ve yaklaşım yürüyüş hızı native karede izlenecek sınırdır.
-5. Ücret/provider işi/paket veya renderer göçü yoktur. ROOT yeni build/DLL/ZIP ve native kanıtı eklemeden bu not yayınlanmış/oynanarak kabul edilmiş teslim sayılmaz.
-
-README/credits'e alınabilecek kısa kaynak cümlesi:
-
-> Ana karakter ve NPC'ler mevcut çalışan Quaternius humanoid/UAL animasyonlarını kullanır; yeni sivil kıyafet görünümü kullanıcının defter-mockup00377265 referansına göre yerel olarak uyarlanmıştır. Reddedilen Meshy rig kaynakları korunur ve aktif kullanılmaz. FPS elleri, heartbeat/nefes ve dinamik görsel efektler yerel üretimdir. Sığınak kapağı yarkin-assets29bf309 kaynağından uyarlanmıştır. Yeni kaynakların kamuya yeniden dağıtım lisansı ayrıca doğrulanmış değildir.
+Sanat/entegrasyon staging paketleri ve ilk aday ayrıntıları `Evidence/GamejamOrchestra/TLTP-OVERHAUL-V414-20261017/` altında hashleriyle korunur. Tarihsel adayların teknik geçişi son sürüm veya kullanıcı kabulü gibi yeniden etiketlenmez. Bu belge kamuya yayın yapılmış olduğunu söylemez.

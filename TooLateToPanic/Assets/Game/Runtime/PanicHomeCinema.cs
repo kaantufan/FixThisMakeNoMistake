@@ -403,9 +403,9 @@ namespace TooLateToPanic
             }
             else if (Model.Disaster.ToString() == "Storm")
             {
-                // The real funnel is west/north (-19.2,0..11.5,11), not above the house centre.
-                camera = detail ? Vector3.Lerp(new Vector3(23,20,-26),new Vector3(21,19,-24),t) : Vector3.Lerp(new Vector3(29,23,-30),new Vector3(27,22,-28),t);
-                target = detail ? new Vector3(-5.5f,5,4.5f) : new Vector3(-6,5.8f,4.5f); fov = detail ? 54 : 56;
+                // West-side two-subject frame: ground contact, full funnel/cloud and home below the letterbox.
+                camera = detail ? Vector3.Lerp(new Vector3(-20.5f,20,-26.5f),new Vector3(-19.5f,19.5f,-25),t) : Vector3.Lerp(new Vector3(-22,21,-29),new Vector3(-21,20.5f,-27.5f),t);
+                target = detail ? new Vector3(-6.7f,5.2f,4.8f) : new Vector3(-6.5f,5.1f,4.5f); fov = 56;
             }
             else if (Model.Disaster == DisasterType.Fire)
             {

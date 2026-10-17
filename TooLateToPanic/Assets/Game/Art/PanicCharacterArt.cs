@@ -310,6 +310,12 @@ namespace TooLateToPanic
                 b.Segment("nozzle", go.transform, steel, Vector3.zero, Vector3.forward * .22f, .035f, .025f);
                 b.Box("nozzle grip", go.transform, grip, new Vector3(0, -.05f, .035f), new Vector3(.045f, .12f, .05f), Quaternion.Euler(-15, 0, 0));
             }
+            else if (job == "hammer")
+            {
+                b.Segment("hammer handle",go.transform,grip,new Vector3(0,0,-.10f),new Vector3(0,0,.20f),.021f,.018f);
+                b.Box("steel hammer head",go.transform,steel,new Vector3(0,0,.22f),new Vector3(.15f,.055f,.055f),Quaternion.identity);
+                b.Box("hammer strike face",go.transform,steel,new Vector3(.082f,0,.22f),new Vector3(.025f,.062f,.062f),Quaternion.identity);
+            }
             else
             {
                 b.Segment("driver grip", go.transform, grip, new Vector3(0, 0, -.07f), new Vector3(0, 0, .07f), .029f, .025f);

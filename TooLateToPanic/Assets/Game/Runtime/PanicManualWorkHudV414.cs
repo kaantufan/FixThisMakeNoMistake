@@ -14,9 +14,17 @@ namespace TooLateToPanic
                 Rect panel = new Rect(456, 620, 688, 192);
                 Frame(panel, Night, Line, 1f); Region(panel);
                 FittedLabel(new Rect(478, 632, 640, 34), work.Label, _heading, MainText, 20);
-                Label(new Rect(480, 675, 620, 31), "SPACE · " + work.CompletedStrokes + " / " + work.RequiredStrokes + " VURUŞ", ColorText(_body, Brass));
-                Label(new Rect(480, 713, 620, 28), "Ayrı ayrı bas. İş bitince harcanır; iptal ücretsiz.", _small);
-                DrawBar(new Rect(480, 766, 432, 8), work.Progress, Sea);
+                Label(new Rect(480, 670, 620, 28), "BAĞLANTI · " + work.CompletedStrokes + " / " + work.RequiredStrokes + " VURUŞ", ColorText(_body, Brass));
+                for(int n=0;n<work.RequiredStrokes;n++)
+                {
+                    Rect nail=new Rect(480+n*108,704,94,42);bool done=n<work.CompletedStrokes,current=n==work.CompletedStrokes;
+                    if(current)Button(nail,"VUR",true,Brass,()=>{World.StrikeManualWorkV414();});
+                    else {Frame(nail,Night,done?Sea:Line,1);if(done)DrawCheck(new Rect(nail.center.x-10,nail.center.y-7,20,14),Sea);}
+                    DrawSegmentV414(new Vector2(nail.x+10,nail.y+9),new Vector2(nail.x+26,nail.y+9),done?Sea:MainText);
+                    DrawSegmentV414(new Vector2(nail.x+18,nail.y+9),new Vector2(nail.x+18,nail.y+28),done?Sea:MainText);
+                }
+                Label(new Rect(480, 753, 432, 23), "Tıkla veya SPACE · Basılı tutmak tekrarlamaz.", _tiny);
+                DrawBar(new Rect(480, 788, 432, 8), work.Progress, Sea);
                 Button(new Rect(934, 751, 184, 42), "İPTAL · ESC", false, Line, World.CancelWork);
                 return true;
             }
@@ -27,7 +35,7 @@ namespace TooLateToPanic
             Rect fitted = FittedTextureRect(new Rect(90, 225, 1006, 554), World.WorkTexture);
             World.SetManualWorkViewportV414(fitted);
             if (World.WorkTexture) GUI.DrawTexture(fitted, World.WorkTexture, ScaleMode.StretchToFill, false);
-            Label(new Rect(110, 191, 950, 30), "SOL TUŞU BASILI TUT · OK YÖNÜNDE ÇEVİR", ColorText(_tiny, Brass));
+            Label(new Rect(110, 191, 950, 30), work.Action=="poweroff"?"KIRMIZI KOLU TUT · AŞAĞI İNDİR":work.IsUtility?"VANA KOLUNU TUT · 90° SAAT YÖNÜNDE ÇEVİR":"SOL TUŞU BASILI TUT · SAAT YÖNÜNDE ÇEVİR", ColorText(_tiny, Brass));
             Label(new Rect(110, 785, 950, 28), work.IsUtility ? "Mevcut tesisatı kapatmak ücretsizdir. İptal: ESC / BACKSPACE" :
                 "İş tamamlanınca bir kez harcanır. İptal: ESC / BACKSPACE", _tiny);
             for (int i = 0; i < work.TotalSteps; i++)
@@ -35,42 +43,53 @@ namespace TooLateToPanic
                 Rect hit = World.ManualWorkTargetBoundsV414(i);
                 if (hit.width <= 0f) continue;
                 bool done = i < work.CompletedSteps, current = i == work.NextClickTarget;
-                Color accent = done ? Sea : current ? Brass : Muted;
+                Color accent = done ? Sea : current ? World.ManualWorkDraggingV414?Sea:Brass : Muted;
                 DrawRing(hit, 1f, accent, current ? 3 : 1);
                 if (done) DrawCheck(new Rect(hit.center.x - 10, hit.center.y - 7, 20, 14), Sea);
                 else if (current)
                 {
                     DrawRing(new Rect(hit.x + 6, hit.y + 6, hit.width - 12, hit.height - 12), work.StageProgress, Sea, 4);
-                    Label(new Rect(hit.center.x - 62, hit.yMax + 9, 124, 28), work.ExpectedDirection > 0 ? "SAAT YÖNÜ" : "TERS YÖN", ColorText(_center, Brass));
-                    DrawWorkDirectionV414(hit.center, 56, work.ExpectedDirection > 0, Brass);
+                    Label(new Rect(hit.center.x - 72, hit.yMax + 9, 144, 28), work.Action=="poweroff"?"AŞAĞI ↓":work.IsUtility?"90° → KAPALI":"SAAT YÖNÜ", ColorText(_center, Brass));
+                    if(work.IsUtility&&World.ManualWorkClosedGripV414(out Vector2 end))
+                    {
+                        DrawRing(new Rect(end.x-10,end.y-10,20,20),1,Sea,2);
+                        Label(new Rect(end.x+15,end.y-14,150,28),"KAPALI KONUM",ColorText(_tiny,Sea));
+                        if(work.Action!="poweroff"&&World.ManualWorkPivotV414(out Vector2 pivot))DrawWorkDirectionV414(pivot,Mathf.Max(18,Vector2.Distance(hit.center,pivot)),true,Brass);
+                    }
+                    else DrawWorkDirectionV414(hit.center,56,true,Brass,work.RequiredDegrees);
+                    if(World.ManualWorkDraggingV414)
+                    {
+                        Vector2 pointer=World.ManualWorkPointerV414;
+                        DrawRing(new Rect(pointer.x-6,pointer.y-6,12,12),1,Sea,2);
+                        DrawSegmentV414(hit.center,pointer,new Color(Sea.r,Sea.g,Sea.b,.6f));
+                    }
                 }
             }
             const float x = 1122, w = 384;
             Brush(new Rect(x, 190, w, 38), Rust);
             Label(new Rect(x + 14, 190, w - 26, 36), work.IsUtility ? "TESİSAT GÜVENLİĞİ" : "MANUEL MONTAJ", _body);
             FittedLabel(new Rect(x, 248, w, 54), work.Label, _heading, MainText, 20);
-            Label(new Rect(x, 326, w, 50), "Basılı tut ve çevir.", _heading);
-            Label(new Rect(x, 389, w, 80), work.ExpectedDirection > 0 ? "Farenin sol tuşunu basılı tut.\nParçanın çevresinde saat yönünde dön." :
-                "Farenin sol tuşunu basılı tut.\nParçanın çevresinde saatin tersine dön.", _wrap);
+            Label(new Rect(x, 326, w, 50), work.Action=="poweroff"?"Kolu aşağı sürükle.":work.IsUtility?"Kolu çeyrek tur çevir.":"Vida başını tut ve çevir.", _heading);
+            Label(new Rect(x, 389, w, 80),work.Action=="poweroff"?"Yukarı: elektrik açık.\nAşağı: elektrik kesik.\nAlternatif: ↓ tuşunu basılı tut.":work.IsUtility?"Kol boruya paralel: açık.\nKol boruya dik: kapalı.\nAlternatif: → tuşunu basılı tut.":"Gerçek vida başını tut. Başın çevresinde saat yönünde döndükçe alet ve vida döner.\nAlternatif: → tuşunu basılı tut.",_wrap);
             Label(new Rect(x, 484, w, 90), work.IsUtility ? PanicUtilitySafetyV414.Effect(work.Action) :
-                "Bırakınca durur. Yanlış yön geri alır.\nİki vida bitince eşya sabitlenir.", _wrap);
+                "Bırakınca durur; yeniden tutup devam et.\nGeri hareket ilerlemeyi silmez.\nİki vida bitince eşya sabitlenir.", _wrap);
             Label(new Rect(x, 591, w, 39), work.IsUtility || work.Action == "hose" ? Mathf.RoundToInt(work.Progress * 100) + "%" :
                 work.CompletedSteps + " / " + work.TotalSteps + " VİDA", _display);
             DrawBar(new Rect(x, 656, w, 9), work.Progress, Sea);
             Button(new Rect(x, 729, w, 58), "İPTAL ET · ESC", false, Line, World.CancelWork);
             return true;
         }
-        void DrawWorkDirectionV414(Vector2 center, float radius, bool clockwise, Color color)
+        void DrawWorkDirectionV414(Vector2 center, float radius, bool clockwise, Color color, float degrees=90f)
         {
             Vector2 last = Vector2.zero;
-            for (int k = 0; k <= 15; k++)
+            for (int k = 0; k <= Mathf.CeilToInt(degrees/18f); k++)
             {
-                float angle = (-135f + (clockwise ? 1 : -1) * k * 18f) * Mathf.Deg2Rad;
+                float angle = (-90f + (clockwise ? 1 : -1) * Mathf.Min(degrees,k * 18f)) * Mathf.Deg2Rad;
                 Vector2 next = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
                 if (k > 0) DrawSegmentV414(last, next, color);
                 last = next;
             }
-            float end = (-135f + (clockwise ? 1 : -1) * 270f) * Mathf.Deg2Rad;
+            float end = (-90f + (clockwise ? 1 : -1) * degrees) * Mathf.Deg2Rad;
             Vector2 tangent = new Vector2(-Mathf.Sin(end), Mathf.Cos(end)) * (clockwise ? 1 : -1);
             Vector2 side = new Vector2(-tangent.y, tangent.x);
             DrawSegmentV414(last, last - tangent * 13 + side * 7, color);

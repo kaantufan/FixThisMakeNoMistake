@@ -83,7 +83,7 @@ namespace TooLateToPanic
 
         public string RequirementAction { get { return requirementAction; } }
         public string RequirementTargetId { get { return requirementTargetId; } }
-        public int RequirementBudgetCost { get { return WorkCost(requirementAction, FindItem(requirementTargetId)); } }
+        public int RequirementBudgetCost { get { return WorkBudgetCostV414(requirementAction, requirementTargetId); } }
         public int RequirementBudgetOwned { get { return Model == null ? 0 : Mathf.Max(0, Model.Budget); } }
         public int RequirementBudgetMissing
         {
@@ -91,11 +91,11 @@ namespace TooLateToPanic
         }
         public IReadOnlyList<PanicMaterialRequirement> CurrentRequirements
         {
-            get { return RequirementsFor(MaterialCosts(requirementAction, FindItem(requirementTargetId)), false); }
+            get { return RequirementsFor(WorkMaterialCostsV414(requirementAction, requirementTargetId), false); }
         }
         public IReadOnlyList<PanicMaterialRequirement> MissingRequirements
         {
-            get { return RequirementsFor(MaterialCosts(requirementAction, FindItem(requirementTargetId)), true); }
+            get { return RequirementsFor(WorkMaterialCostsV414(requirementAction, requirementTargetId), true); }
         }
         public bool HasMissingRequirements
         {
@@ -123,6 +123,7 @@ namespace TooLateToPanic
             Sources = CreateSources();
             sourceBlueprints.Clear();
             committedWork.Clear();
+            CancelFloorWallUpgradeV414();
             ClearRequirements();
             for (int i = 0; i < Sources.Count; i++)
                 sourceBlueprints[Sources[i].Id] = CloneSlots(Sources[i].Contents);
@@ -264,6 +265,7 @@ namespace TooLateToPanic
             if (Model != null && !Model.CanBeginJuryWork(action, targetId)) return Fail("Bu aşamada işaretli önlemi tamamla.");
             if (!CanPrepare()) return Fail("Hazırlık işi yalnızca hazırlıkta yapılır.");
             if (Work != null && Work.Active) return Fail("Önce etkin işi bitir veya iptal et.");
+            if (IsFloorWallRequestV414(action, targetId)) return CanBeginFloorWallUpgradeV414(targetId);
             PanicItem item;
             string resultMessage;
             if (!ValidateWorkTarget(action, targetId, out item, out resultMessage)) return false;
@@ -281,6 +283,8 @@ namespace TooLateToPanic
             if (Work == null || !Work.Complete || Work.Action != action || Work.TargetId != targetId)
                 return Fail("İşi tamamlamak için kurulumu bitir.");
             if (string.IsNullOrEmpty(targetId)) return Fail("İş hedefi belirtilmedi.");
+            if (floorWallWorkV414 != null || IsFloorWallRequestV414(action, targetId))
+                return TryCompleteFloorWallUpgradeV414(targetId);
 
             PanicItem item;
             string resultMessage;
@@ -719,9 +723,10 @@ namespace TooLateToPanic
         public bool Complete;
         public PanicWorkMode Mode { get; private set; }
         public bool JuryFriendly { get { return juryFriendly; } }
-        public bool UsesDirectClick { get { return UsesRotation; } }
-        public bool UsesRotation { get { return Action == "anchorwall" || Action == "anchorfloor" || PanicUtilitySafetyV414.IsAction(Action) || Action == "hose"; } }
-        public bool UsesHammer { get { return !UsesRotation; } }
+        public bool UsesDirectClick { get { return UsesRotation || UsesLinearDrag; } }
+        public bool UsesLinearDrag { get { return Action == "poweroff"; } }
+        public bool UsesRotation { get { return Action == "anchorwall" || Action == "anchorfloor" || Action == "gasoff" || Action == "wateroff" || Action == "hose"; } }
+        public bool UsesHammer { get { return !UsesDirectClick; } }
         public bool IsUtility { get { return PanicUtilitySafetyV414.IsAction(Action); } }
         public bool IsWorldConstruction { get { return UsesHammer; } }
         public bool IsInstalling { get { return installing; } }
@@ -732,7 +737,7 @@ namespace TooLateToPanic
         public int CompletedStrokes { get { return completedStrokes; } }
         // Positive is clockwise in the displayed work-camera image.
         public int ExpectedDirection { get { return Action == "poweroff" ? -1 : 1; } }
-        public float RequiredDegrees { get { return Action == "poweroff" ? 90f : IsUtility || Action == "hose" ? 180f : 270f; } }
+        public float RequiredDegrees { get { return IsUtility ? 90f : Action == "hose" ? 180f : 270f; } }
         public string StepHint { get { return Hint; } }
         public float StageProgress { get { return stageProgress; } }
         public float TargetWidth { get { return 0f; } }
@@ -763,11 +768,21 @@ namespace TooLateToPanic
         public bool ApplyRotation(float clockwiseDegrees, bool leftMouseHeld)
         {
             if (!Active || Complete || !UsesRotation || !installing || !leftMouseHeld ||
-                !Finite(clockwiseDegrees) || Mathf.Abs(clockwiseDegrees) > 75f || Mathf.Abs(clockwiseDegrees) < .05f) return false;
+                !Finite(clockwiseDegrees) || Mathf.Abs(clockwiseDegrees) < .00001f) return false;
             float signed = clockwiseDegrees * ExpectedDirection;
+            if (signed <= 0f) return false; // Repositioning never punishes completed work.
             stageProgress = Mathf.Clamp01(stageProgress + signed / RequiredDegrees);
-            Cursor = stageProgress; toolMotion = signed > 0f ? 1f : .15f;
+            Cursor = stageProgress; toolMotion = 1f;
             UpdateProgress();
+            if (stageProgress >= .99999f) FinishStep();
+            RefreshHint(); return true;
+        }
+        /// <summary>Signed fraction of the real breaker track. Positive is downward/off; release, reverse and idle do not advance.</summary>
+        public bool ApplyLinearDisplacement(float downwardTrackFraction, bool held)
+        {
+            if (!Active || Complete || !UsesLinearDrag || !installing || !held || !Finite(downwardTrackFraction) || downwardTrackFraction <= 0f) return false;
+            stageProgress = Mathf.Clamp01(stageProgress + downwardTrackFraction);
+            Cursor = stageProgress; toolMotion = 1f; UpdateProgress();
             if (stageProgress >= .99999f) FinishStep();
             RefreshHint(); return true;
         }
@@ -806,9 +821,10 @@ namespace TooLateToPanic
         }
         void RefreshHint()
         {
-            Hint = Complete ? "Hazır!" : UsesHammer ? "SPACE tuşuna ayrı ayrı bas · " + completedStrokes + " / " + HammerStrokes :
-                (installing ? "Sol tuşu basılı tut, " : "İşaretli parçaya basılı tut, ") +
-                (ExpectedDirection > 0 ? "saat yönünde çevir." : "saatin tersine çevir.");
+            Hint = Complete ? "Hazır!" : UsesHammer ? "Bağlantıya tıkla veya SPACE · " + completedStrokes + " / " + HammerStrokes :
+                Action == "poweroff" ? "Kırmızı kolu tutup aşağı indir. Alternatif: ↓." :
+                IsUtility ? "Vana kolunu tutup 90° saat yönünde çevir. Alternatif: →." :
+                "İşaretli vida/bağlantıyı tutup saat yönünde çevir. Bırakınca durur. Alternatif: →.";
         }
         static bool Finite(float v) { return !float.IsNaN(v) && !float.IsInfinity(v); }
         static bool IsSupported(string action)
