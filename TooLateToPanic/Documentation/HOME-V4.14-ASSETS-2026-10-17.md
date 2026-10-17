@@ -11,14 +11,20 @@ Bu not root'un README/credits/teslim matrisine alması içindir. Kaynak intakesi
 
 Branch adının daha sonra ilerlemesi bu teslimin kaynak kimliğini değiştirmez. Bağımsız eski FPS checkout/kayıtları kaynak havuzu yapılmadı. Başka branch'in script/package/oyun sistemi topluca alınmadı. Diğer retained CuratedYarkin eşyalarının tümünü bu yeni bunker commit'inden yeniden alınmış gibi etiketleme.
 
-## Gerçek karakter mesh/doku ve rig kaydı
+## Güncel aktif karakter: çalışan humanoid ve sivil kıyafet
+
+Kullanıcı yeni procedural hareketi iki kez reddettikten sonra eski çalışan karakterin animasyonlarını koruyup görünümünü yeni referansa benzetmeyi istedi. Son r4 adayı gerçek `Superhero_Male_FullBody.fbx` humanoid Avatar'ı ve `UAL1_Standard.fbx` Idle/Walk/Jog/Jump/Interact/Fixing kliplerini kullanır. Önceki V2 workwear kostümü yerine koyu yeşil açık ceket, açık gri tişört, sade koyu pantolon, kahverengi günlük ayakkabı, çıplak eller ve kısa saç/sakal uyarlanır. Kıyafetler mevcut çalışan kemiklere bağlanır; kaynak Avatar, weights ve controller fiziği değişmez. Meshy dokusu farklı UV'ye bağlanmaz. Yeni Meshy model yalnız görünüm referansı ve korunmuş kaynak arşividir; aktif oyuncu/NPC prefabı değildir.
+
+`Player/SurvivorV2.prefab` gerçek retained humanoid ve `SurvivorV2.controller` ile yeniden bake edilir. Sivil NPC ve kurtarma kopyaları da bu gerçek çalışan prefabı kullanır. Quaternius kaynakları için mevcut CC0 metinleri geçerlidir; yerel yeni kıyafet/saç/temas uyarlaması o dış kaynakla aynı şey değildir. FPS el modeli ayrı yerel kaynaktır ve bu dönüşte korunur. Bunker atışında sınırlı kol uzanması ve gerçek Jump_Loop klibi uygulanır; yeni procedural yürüyüş kullanılmaz. Root'un güncel build/native/OS ve insan kabulü ayrı sonuçlardır.
+
+## İlk iki adayın Meshy mesh/doku ve rig kaydı — aktif karakter değil
 
 - Asıl yükleme Meshy adını taşıyan FBX7400 dosyasıdır:19,584,135byte,1mesh geometry,3,257 kaynak kontrol noktası,1materyal,5Texture/5Video kaydı. Kaynakta deformer/iskelet/animation stack **yoktur**. Unity'nin UV/normal köşe bölmesi sonrası vertex sayısı kaynak kontrol noktası sayısından farklı olabilir.
 - Live kaynak kopyası `Assets/Game/Resources/CuratedCharacter/DefterSurvivor.fbx`; SHA256 `56C18BF9071C0694B54C669DA092B14F02DE11D268146FD576D8660EA10F37F1`.
 - Gerçek harici BaseColor, Normal ve Roughness PNG'leri byte korunarak kopyalandı. `DefterSurvivor_BaseColor.png` materyale bağlı; sRGB. `DefterSurvivor_Normal.png` normal-map/linear; materyale bağlı ve yeni mesh'in tangent'i yerel hesaplanır. Roughness linear kaynak arşividir, şu an Standard materyale bağlı değildir; smoothness=.18 kullanılır. Emission/metallic harici dosyaları staged özgün checkout'ta kalır, runtime materyal bunları kullanmaz. FBX'in kendi beş gömülü Video Content payloadı da byte-identical FBX içinde korunur; bunları harici PNG dosyalarının birebir kopyası olarak tanımlama.
 - Importer kaynak ayarı max2048, compression/mipmap açık; BaseColor sRGB, Normal/Roughness linear. Gerçek platform formatı/bellek boyutu root'un Unity import kanıtıyla yazılmalıdır. Kaynak FBX bake sırasında readable'dır; hiçbir provider rigging işi/ücret/kredi kullanımı yoktur.
 - Yerel uyarlama:1.80m taban-merkez fit,19adlı deform kemiği,vertex başına normalize iki etki,özgün geometri/UV ve kaynak dokuları. Idle/walk/run/jump/land/work/gather/throw/jump-to-shelter hareketleri mevcut authoritative motor/iş fazından sürülen yerel prosedürel rig/IK çalışmasıdır. **Meshy'den hazır rig/klip veya Quaternius'tan aktarılmış yeni animasyon klibi değildir.**
-- `Player/SurvivorV2.prefab` yolu yalnız mevcut runtime uyumluluk kimliğidir; yeni baked içerik CuratedDefterSurvivor_V414 olmalıdır. Yol adından V2/Quaternius/CC0 kaynak sonucu çıkarma. Root builder intakesi ve yeni prefab/native kare doğrulaması tamamlanmadan yeni karakter oyuncuda kabul edildi yazma.
+- İlk iki adayda `Player/SurvivorV2.prefab` yolu CuratedDefterSurvivor_V414 içeriği için kullanıldı. Kullanıcı bu hareketi kabul etmedi; son r4 adayı yukarıdaki gerçek eski humanoid ile yeniden bake edilir. Eski Meshy kaynak dosyaları, controller ve kaynak kanıtı silinmez; bu eski kaynakların Resources içinde korunması aktif kullanıldıkları anlamına gelmez.
 
 ## Bunker ve FPS el kaydı
 
@@ -52,7 +58,7 @@ Branch adının daha sonra ilerlemesi bu teslimin kaynak kimliğini değiştirme
 
 ## Kısa artist sınırlamaları ve yayın lisansı
 
-1. Yeni karakterin yüklenmiş Meshy klasöründe bağımsız lisans grant'i veya generation/provider hesabı receipt'i yoktur. Kullanıcı bu kaynağın oyun içi intakesini açıkça istedi; bu, kamuya dağıtım lisansının doğrulandığı anlamına gelmez. **Yeni Meshy karakteri,harici dokuları ve aynı gövdeyi kullanan NPC/responder kopyaları için yayın/yeniden dağıtım lisansı: UNVERIFIED. CC0 etiketi konmaz.** Eski Quaternius lisansları yalnız gerçekten retained Quaternius dosyaları içindir.
+1. Korunmuş Meshy klasöründe bağımsız lisans grant'i veya generation/provider hesabı receipt'i yoktur. Bu Meshy kaynak ve harici dokuların kamuya yeniden dağıtım lisansı **UNVERIFIED** kalır; CC0 etiketi konmaz. Son aktif oyuncu/NPC'ler retained Quaternius humanoid kullanır. Yerel taşınabilir pakette korunmuş Resources kaynaklarının bulunması kamuya yayın yetkisi veya lisans doğrulaması sayılmaz.
 2. Yarkin'in verilen `ASSET_MANIFEST_AND_LICENSES.md` beyanı jam sırasında prosedürel/AI destekli üretim ve paylaşım kısıtı olmadığını bildirir. Özgün beyan `Resources/Licenses/Yarkin-V414-SuppliedDeclaration.txt` olarak korunur; bu bağımsız hak incelemesi veya tüm repo için genel lisans grant'i diye genişletilmez.
 3. Yerel19bone skin/prosedürel hareket source-math ve detached C# doğrulamasına sahiptir; facial rig/mocap/humanoid retarget üretildi iddiası yoktur. FPS el yakın planı,skin deformasyonu,temas,baş/kapak açıklığı ve kıyafet örtüşmesi native kare bekler. NPC'lerin aynı kaynak texture'ı paylaşması özgün ayrı üniforma/karakter modeli teslim edildi demek değildir.
 4. Kaynak matematiğinde3.8s kapanış başlangıcında muhafazakâr baş-ring dikey açıklığı≈.481m. Bu native collision/render kabulü değildir.3.35–3.42s kısa kol/el-ring geçişi ve yaklaşım yürüyüş hızı native karede izlenecek sınırdır.
@@ -60,4 +66,4 @@ Branch adının daha sonra ilerlemesi bu teslimin kaynak kimliğini değiştirme
 
 README/credits'e alınabilecek kısa kaynak cümlesi:
 
-> Ana karakter görseli kullanıcı tarafından verilen FixThisMakeNoMistake/defter-mockup00377265 Meshy yüklemesinden; yerel19bone rig,prosedürel hareket,FPS elleri ve adaptörler bu oyun için AI destekli yerel kaynak çalışmasıdır. Sığınak kapağı yarkin-assets29bf309 kaynağından uyarlanmıştır. Yeni heartbeat/nefes ve dinamik görsel efektler yerel prosedürel üretimdir. Yeni Meshy kaynaklarının kamuya dağıtım lisansı henüz doğrulanmamıştır; eski Quaternius CC0 lisansı bu modelin lisansı değildir.
+> Ana karakter ve NPC'ler mevcut çalışan Quaternius humanoid/UAL animasyonlarını kullanır; yeni sivil kıyafet görünümü kullanıcının defter-mockup00377265 referansına göre yerel olarak uyarlanmıştır. Reddedilen Meshy rig kaynakları korunur ve aktif kullanılmaz. FPS elleri, heartbeat/nefes ve dinamik görsel efektler yerel üretimdir. Sığınak kapağı yarkin-assets29bf309 kaynağından uyarlanmıştır. Yeni kaynakların kamuya yeniden dağıtım lisansı ayrıca doğrulanmış değildir.

@@ -26,12 +26,29 @@ namespace TooLateToPanic
                 {
                     if(!neighbor.visual||!neighbor.animator||!neighbor.animator.runtimeAnimatorController||neighbor.animator.applyRootMotion)return false;
                     var rig=neighbor.visual.GetComponent<PanicCuratedCharacterRig>();
-                    var skin=neighbor.visual.GetComponent<SkinnedMeshRenderer>();
-                    if(!rig||rig.Bones==null||rig.Bones.Length!=19||rig.BindPositions==null||rig.BindPositions.Length!=19||
-                        !skin||!skin.sharedMesh||skin.sharedMesh.vertexCount==0||skin.sharedMesh.bindposes.Length!=19)return false;
-                    var rendererBones=skin.bones;
-                    if(rendererBones==null||rendererBones.Length!=19)return false;
-                    for(int i=0;i<19;i++)if(!rig.Bones[i]||rendererBones[i]!=rig.Bones[i])return false;
+                    var skin=neighbor.visual.GetComponentInChildren<SkinnedMeshRenderer>(true);
+                    if(rig)
+                    {
+                        if(rig.Bones==null||rig.Bones.Length!=19||rig.BindPositions==null||rig.BindPositions.Length!=19||
+                            !skin||!skin.sharedMesh||skin.sharedMesh.vertexCount==0||skin.sharedMesh.bindposes.Length!=19)return false;
+                        var rendererBones=skin.bones;
+                        if(rendererBones==null||rendererBones.Length!=19)return false;
+                        for(int i=0;i<19;i++)if(!rig.Bones[i]||rendererBones[i]!=rig.Bones[i])return false;
+                    }
+                    else
+                    {
+                        if(!neighbor.animator.isHuman||!neighbor.animator.avatar||!neighbor.animator.avatar.isValid||!skin||!skin.sharedMesh||skin.sharedMesh.vertexCount==0)return false;
+                        bool idle=false,walk=false,jog=false,jump=false;
+                        foreach(var clip in neighbor.animator.runtimeAnimatorController.animationClips)
+                        {
+                            if(!clip)continue;string name=clip.name;
+                            idle|=name.IndexOf("Idle_Loop",System.StringComparison.OrdinalIgnoreCase)>=0;
+                            walk|=name.IndexOf("Walk_Loop",System.StringComparison.OrdinalIgnoreCase)>=0;
+                            jog|=name.IndexOf("Jog_Fwd_Loop",System.StringComparison.OrdinalIgnoreCase)>=0;
+                            jump|=name.IndexOf("Jump_Loop",System.StringComparison.OrdinalIgnoreCase)>=0;
+                        }
+                        if(!idle||!walk||!jog||!jump)return false;
+                    }
                 }
                 return true;
             }

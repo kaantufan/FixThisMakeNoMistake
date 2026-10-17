@@ -38,13 +38,44 @@ namespace TooLateToPanic
 
         public static void SetCinematicPose(GameObject model, string action, float phase)
         {
-            if(!model)return;ClearTaskPose(model);var rig=model.GetComponent<PanicCuratedCharacterRig>();if(rig)rig.SampleCinematic(action,phase);
+            if(!model)return;ClearTaskPose(model);
+            var rig=model.GetComponent<PanicCuratedCharacterRig>();
+            if(rig){rig.SampleCinematic(action,phase);return;}
+            // Explicit retained-humanoid adapter. Source animation is real UAL, never the kneeling fixing clip for a jump.
+            var a=model.GetComponentInChildren<Animator>();if(!a||!a.isHuman||!a.avatar||!a.runtimeAnimatorController)return;
+            phase=float.IsNaN(phase)||float.IsInfinity(phase)?0:Mathf.Clamp01(phase);
+            bool jump=(action??"").IndexOf("jump",StringComparison.OrdinalIgnoreCase)>=0;
+            bool throwing=(action??"").IndexOf("throw",StringComparison.OrdinalIgnoreCase)>=0;
+            if(!jump&&!throwing)return;
+            a.applyRootMotion=false;a.SetFloat("Speed",0);a.SetBool("Kneeling",false);
+            a.SetBool("Airborne",jump);a.SetBool("Working",throwing);
+            // The existing root owns trajectory and clock. Sample retained clip pose at that exact phase only.
+            a.Play(jump?"Jump loop":"Standing work",0,phase*.98f);a.Update(0f);
+            if(throwing)
+            {
+                // Release is root-owned at1.85s, phase(.20/.85). Reach before that real release, then follow through.
+                var st=Poses.GetValue(model,x=>new PoseState(x.transform,a));st.Restore();st.Capture();
+                Transform root=model.transform;Vector3 hip=st.Hips?root.InverseTransformPoint(st.Hips.position):new Vector3(0,.95f,0);
+                // Continue the already-raised opening grip; do not drop the hand on the first throw frame.
+                float extend=Mathf.Lerp(.8f,1f,Mathf.SmoothStep(0,1,Mathf.Clamp01(phase/.23529412f)));
+                float recover=1-Mathf.SmoothStep(0,1,Mathf.Clamp01((phase-.57f)/.43f));
+                float reach=extend*recover;st.Lean(8f*reach,-5f*reach);
+                Vector3 right=root.TransformPoint(new Vector3(.18f,hip.y+.39f,hip.z+.56f));
+                Vector3 left=root.TransformPoint(new Vector3(-.19f,hip.y+.18f,hip.z+.22f));
+                st.ReachBlended(false,right,root.TransformPoint(new Vector3(.47f,hip.y+.15f,hip.z+.10f)),reach);
+                st.ReachBlended(true,left,root.TransformPoint(new Vector3(-.42f,hip.y+.10f,hip.z+.06f)),reach*.45f);
+                if(st.RightHand)st.RightHand.rotation=Quaternion.AngleAxis(-18*reach,root.right)*st.RightHand.rotation;
+                st.Commit();
+            }
         }
 
         public static void SetMotion(GameObject model, Animator animator, float speed, bool grounded, float verticalSpeed, float dt)
         {
-            if(!model)return; ClearTaskPose(model);
-            var rig=model.GetComponent<PanicCuratedCharacterRig>();if(rig)rig.Sample(speed,grounded,verticalSpeed,dt);
+            // Retained humanoid: original controller/MovePlayer owns all normal Speed, Airborne and bones.
+            // Return before ClearTaskPose, sampler, parameter writes or any transform access.
+            if(!model || animator && animator.isHuman)return;
+            var rig=model.GetComponent<PanicCuratedCharacterRig>();
+            if(rig){ClearTaskPose(model);rig.Sample(speed,grounded,verticalSpeed,dt);}
         }
 
         public static void Dress(GameObject existingModel, Animator humanoid)
@@ -62,17 +93,18 @@ namespace TooLateToPanic
             // Mark only after validating the skeleton; this survives prefab serialization/instantiation.
             new GameObject(Tag).transform.SetParent(model, false);
             var art = new Batch(model);
-            Material jacket = Mat("Indigo canvas jacket", new Color(.115f, .155f, .205f), .13f);
-            Material seams = Mat("Faded indigo seams", new Color(.225f, .27f, .31f), .12f);
-            Material trousers = Mat("Olive ripstop trousers", new Color(.21f, .235f, .165f), .10f);
-            Material olive = Mat("Olive pocket flaps", new Color(.275f, .285f, .205f), .10f);
-            Material rust = Mat("Rust reinforcement", new Color(.35f, .205f, .135f), .17f);
-            Material leather = Mat("Charcoal leather and rubber", new Color(.065f, .072f, .075f), .24f);
-            Material metal = Mat("Brushed worn hardware", new Color(.36f, .365f, .34f), .34f, .55f);
-            Material shirt = Mat("Warm grey undershirt", new Color(.31f, .31f, .285f), .08f);
-            Material skin = Mat("Natural warm skin", new Color(.55f, .385f, .285f), .23f);
-            Material hair = Mat("Soft charcoal hair", new Color(.07f, .057f, .047f), .12f);
-            Material eyes = Mat("Dark brown eyes", new Color(.055f, .043f, .033f), .3f);
+            // Civilian palette references the actual defter BaseColor; no incompatible UV texture transfer.
+            Material jacket = Mat("Resident muted pine jacket", new Color(.18f,.29f,.27f), .12f);
+            Material seams = Mat("Resident jacket subtle seams", new Color(.15f,.24f,.225f), .11f);
+            Material trousers = Mat("Resident charcoal trousers", new Color(.135f,.145f,.17f), .09f);
+            Material olive = trousers;
+            Material rust = Mat("Resident warm brown casual shoes", new Color(.24f,.18f,.135f), .16f);
+            Material leather = Mat("Resident dark brown sole", new Color(.12f,.105f,.095f), .14f);
+            Material metal = Mat("Resident small muted fastener", new Color(.26f,.28f,.27f), .20f,.2f);
+            Material shirt = Mat("Resident light grey T shirt", new Color(.79f,.82f,.81f), .07f);
+            Material skin = Mat("Resident uncovered warm face and hands", new Color(.67f,.47f,.36f), .20f);
+            Material hair = Mat("Resident short dark hair and beard", new Color(.065f,.055f,.048f), .10f);
+            Material eyes = Mat("Resident dark eyes", new Color(.055f,.043f,.033f), .20f);
             // R2: author a continuous skinned workwear underlayer directly on the retained body.
             // Skin is restricted to actual head/neck and hands, so articulated shell overlap can
             // never reveal a naked torso/arm/leg. Imported mesh, weights and Avatar stay untouched.
@@ -110,84 +142,85 @@ namespace TooLateToPanic
             art.Rings("collar", chest, shirt, centre,
                 new[] { nck.y - .052f, nck.y + .015f }, new[] { .103f, .082f }, new[] { .097f, .079f });
             float front = centre.z + torsoDepth + .008f;
-            art.Box("front zip", chest, metal, new Vector3(centre.x, (h.y + .12f + nck.y - .07f) * .5f, front), new Vector3(.012f, nck.y - h.y - .19f, .012f));
-            art.Box("zip pull", chest, metal, new Vector3(centre.x, nck.y - .10f, front + .012f), new Vector3(.025f, .036f, .012f));
-            for (int side = -1; side <= 1; side += 2)
+            float shirtBottom=h.y+.075f,shirtTop=nck.y-.055f,shirtHeight=Mathf.Max(.22f,shirtTop-shirtBottom);
+            art.Box("plain light T shirt visible in open jacket",chest,shirt,new Vector3(centre.x,(shirtBottom+shirtTop)*.5f,front+.012f),new Vector3(halfWidth*.70f,shirtHeight,.018f));
+            for(int side=-1;side<=1;side+=2)
             {
-                float px = centre.x + side * halfWidth * .50f;
-                art.Box("chest pocket", chest, seams, new Vector3(px, shoulderY - .135f, front - .004f), new Vector3(.112f, .115f, .025f));
-                art.Box("chest pocket flap", chest, jacket, new Vector3(px, shoulderY - .085f, front + .012f), new Vector3(.12f, .036f, .022f));
-                art.Box("pocket snap", chest, metal, new Vector3(px, shoulderY - .085f, front + .027f), new Vector3(.012f, .012f, .008f));
-                art.Box("hem welt pocket", hips, seams, new Vector3(centre.x + side * halfWidth * .48f, h.y + .005f, centre.z + torsoDepth * .96f), new Vector3(.12f, .022f, .018f));
+                art.Box("simple open jacket edge",chest,jacket,new Vector3(centre.x+side*halfWidth*.405f,(shirtBottom+shirtTop)*.5f,front+.025f),new Vector3(.032f,shirtHeight+.015f,.022f),Quaternion.Euler(0,0,-side*3));
+                art.Box("quiet jacket welt pocket",hips,seams,new Vector3(centre.x+side*halfWidth*.56f,h.y+.015f,centre.z+torsoDepth*.96f),new Vector3(.095f,.015f,.012f));
             }
-            art.Box("small woven preparedness patch", chest, rust, new Vector3(centre.x - halfWidth * .5f, shoulderY - .126f, front + .026f), new Vector3(.062f, .027f, .006f));
 
             // A closed pelvis garment covers the hip articulation underneath the jacket hem.
             art.Rings("trouser seat", hips, trousers, centre,
                 new[] { h.y - .19f, h.y - .11f, h.y + .045f },
                 new[] { halfWidth * .68f, halfWidth * .79f, halfWidth * .78f },
                 new[] { .13f, .145f, .135f });
-            art.Rings("belt", hips, leather, centre,
-                new[] { h.y - .025f, h.y + .025f }, new[] { halfWidth * .905f, halfWidth * .905f }, new[] { torsoDepth * .98f, torsoDepth * .98f });
-            art.Box("belt buckle", hips, metal, new Vector3(centre.x, h.y, centre.z + torsoDepth + .017f), new Vector3(.077f, .058f, .023f));
-            art.Box("buckle inset", hips, leather, new Vector3(centre.x, h.y, centre.z + torsoDepth + .031f), new Vector3(.047f, .029f, .008f));
-            art.Box("utility pouch", hips, rust, new Vector3(centre.x + halfWidth + .012f, h.y - .07f, centre.z + .012f), new Vector3(.105f, .16f, .10f));
-            art.Box("pouch closure", hips, leather, new Vector3(centre.x + halfWidth + .012f, h.y - .01f, centre.z + .071f), new Vector3(.10f, .036f, .018f));
-            art.Box("belt radio", hips, leather, new Vector3(centre.x - halfWidth - .012f, h.y - .045f, centre.z + .012f), new Vector3(.07f, .14f, .065f));
-            art.Segment("radio antenna", hips, leather, new Vector3(centre.x - halfWidth - .012f, h.y + .015f, centre.z), new Vector3(centre.x - halfWidth - .012f, h.y + .13f, centre.z), .008f, .007f);
+            // Plain waistband under the jacket. No utility pouch, radio, work patch or exposed heavy buckle.
+            art.Rings("plain trouser waistband",hips,trousers,centre,new[]{h.y-.012f,h.y+.018f},new[]{halfWidth*.78f,halfWidth*.78f},new[]{.14f,.14f});
 
             DressSide(art, model, humanoid, true, jacket, seams, trousers, olive, rust, leather, metal);
             DressSide(art, model, humanoid, false, jacket, seams, trousers, olive, rust, leather, metal);
-            Vector3 hp = Local(model, head);
-            art.HairCap(head, hair, hp + new Vector3(0, .112f, -.006f));
-            // A few broad clumps create a short swept silhouette instead of an untextured sphere.
-            art.Box("swept forelock", head, hair, hp + new Vector3(-.035f, .225f, .045f), new Vector3(.15f, .06f, .12f), Quaternion.Euler(0, -12, -13));
-            art.Box("side part", head, hair, hp + new Vector3(.075f, .18f, .015f), new Vector3(.045f, .12f, .15f), Quaternion.Euler(0, 0, -12));
+            // Fit short crown/back hair and narrow chin beard from the actual weighted retained head.
+            // No fixed-size forelock/sidepart boxes crossing the eyes or forehead.
+            AddResidentBeard(art,existingModel,model,head,hair);
             art.Flush();
         }
 
-        static void DressSide(Batch art, Transform model, Animator a, bool left, Material jacket, Material seam, Material pants, Material olive, Material rust, Material leather, Material metal)
+        static void DressSide(Batch art,Transform model,Animator a,bool left,Material jacket,Material seam,Material pants,Material olive,Material rust,Material leather,Material metal)
         {
-            string s = left ? "_l" : "_r"; float sign = left ? -1 : 1;
-            Transform upper = Bone(model, a, left ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm, "upperarm" + s);
-            Transform lower = Bone(model, a, left ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm, "lowerarm" + s);
-            Transform hand = Bone(model, a, left ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand, "hand" + s);
-            Transform thigh = Bone(model, a, left ? HumanBodyBones.LeftUpperLeg : HumanBodyBones.RightUpperLeg, "thigh" + s);
-            Transform calf = Bone(model, a, left ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg, "calf" + s);
-            Transform foot = Bone(model, a, left ? HumanBodyBones.LeftFoot : HumanBodyBones.RightFoot, "foot" + s);
-            if (upper != null && lower != null && hand != null)
+            string s=left?"_l":"_r";
+            Transform upper=Bone(model,a,left?HumanBodyBones.LeftUpperArm:HumanBodyBones.RightUpperArm,"upperarm"+s);
+            Transform lower=Bone(model,a,left?HumanBodyBones.LeftLowerArm:HumanBodyBones.RightLowerArm,"lowerarm"+s);
+            Transform hand=Bone(model,a,left?HumanBodyBones.LeftHand:HumanBodyBones.RightHand,"hand"+s);
+            Transform thigh=Bone(model,a,left?HumanBodyBones.LeftUpperLeg:HumanBodyBones.RightUpperLeg,"thigh"+s);
+            Transform calf=Bone(model,a,left?HumanBodyBones.LeftLowerLeg:HumanBodyBones.RightLowerLeg,"calf"+s);
+            Transform foot=Bone(model,a,left?HumanBodyBones.LeftFoot:HumanBodyBones.RightFoot,"foot"+s);
+            if(upper&&lower&&hand)
             {
-                Vector3 u = Local(model, upper), e = Local(model, lower), w = Local(model, hand);
-                art.Segment("upper canvas sleeve" + s, upper, jacket, Vector3.LerpUnclamped(u, e, -.13f), Vector3.LerpUnclamped(u, e, 1.09f), .124f, .092f);
-                art.Segment("forearm canvas sleeve" + s, lower, jacket, Vector3.LerpUnclamped(e, w, -.10f), Vector3.Lerp(e, w, .98f), .098f, .067f);
-                art.Segment("stitched cuff" + s, lower, rust, Vector3.Lerp(e, w, .86f), Vector3.LerpUnclamped(e, w, 1.025f), .065f, .063f);
-                art.Box("elbow reinforcement" + s, lower, seam, e + new Vector3(0, 0, -.063f), new Vector3(.105f, .12f, .025f));
-                Transform finger = Named(model, "middle_01" + s);
-                Vector3 end = finger != null ? Local(model, finger) : w + (w - e).normalized * .11f;
-                art.Segment("fingerless work glove" + s, hand, leather, w, Vector3.LerpUnclamped(w, end, 1.11f), .055f, .052f, .72f);
-                art.Segment("glove knuckle panel" + s, hand, rust, Vector3.Lerp(w, end, .56f) + new Vector3(0, .018f, 0), end + new Vector3(0, .018f, 0), .047f, .044f, .68f);
+                Vector3 u=Local(model,upper),e=Local(model,lower),w=Local(model,hand);
+                art.Segment("plain jacket upper sleeve"+s,upper,jacket,Vector3.LerpUnclamped(u,e,-.10f),Vector3.LerpUnclamped(u,e,1.07f),.112f,.084f);
+                art.Segment("plain jacket forearm sleeve"+s,lower,jacket,Vector3.LerpUnclamped(e,w,-.08f),Vector3.Lerp(e,w,.93f),.090f,.060f);
+                art.Segment("simple jacket cuff"+s,lower,seam,Vector3.Lerp(e,w,.86f),Vector3.Lerp(e,w,.97f),.062f,.059f);
+                // The retained skinned hands stay uncovered: no dark work-glove shell.
             }
-            if (thigh == null || calf == null || foot == null) return;
-            Vector3 t = Local(model, thigh), k = Local(model, calf), f = Local(model, foot);
-            art.Segment("cargo thigh" + s, thigh, pants, Vector3.LerpUnclamped(t, k, -.12f), Vector3.LerpUnclamped(t, k, 1.05f), .135f, .102f, .93f);
-            art.Segment("cargo lower leg" + s, calf, pants, Vector3.LerpUnclamped(k, f, -.065f), Vector3.Lerp(k, f, .91f), .105f, .076f, .94f);
-            art.Box("reinforced knee" + s, calf, rust, k + new Vector3(0, -.035f, .083f), new Vector3(.125f, .145f, .038f));
-            Vector3 pocket = Vector3.Lerp(t, k, .43f) + new Vector3(sign * .119f, 0, .009f);
-            art.Box("cargo side pocket" + s, thigh, olive, pocket, new Vector3(.055f, .17f, .135f));
-            art.Box("cargo flap" + s, thigh, pants, pocket + new Vector3(sign * .012f, .073f, 0), new Vector3(.06f, .038f, .145f));
-            art.Box("cargo snap" + s, thigh, metal, pocket + new Vector3(sign * .043f, .07f, .038f), new Vector3(.009f, .013f, .013f));
-            Transform toe = Bone(model, a, left ? HumanBodyBones.LeftToes : HumanBodyBones.RightToes, "ball" + s);
-            Vector3 fw = toe != null ? Local(model, toe) - f : Vector3.forward;
-            fw.y = 0; if (fw.sqrMagnitude < .001f) fw = Vector3.forward; fw.Normalize();
-            Quaternion bootRotation = Quaternion.LookRotation(fw, Vector3.up);
-            Vector3 boot = f + fw * .065f;
-            art.Box("thick rubber sole" + s, foot, leather, boot + Vector3.down * .065f, new Vector3(.18f, .055f, .32f), bootRotation);
-            art.Box("leather work boot" + s, foot, rust, boot + Vector3.up * .005f, new Vector3(.168f, .13f, .30f), bootRotation);
-            art.Box("rubber toe cap" + s, foot, leather, boot + fw * .105f - Vector3.up * .008f, new Vector3(.173f, .105f, .09f), bootRotation);
-            art.Segment("boot shaft" + s, foot, rust, f - Vector3.up * .015f, f + Vector3.up * .18f, .085f, .087f, .89f);
-            art.Segment("padded boot collar" + s, foot, leather, f + Vector3.up * .145f, f + Vector3.up * .19f, .092f, .092f, .9f);
-            for (int i = 0; i < 3; i++)
-                art.Box("boot lace" + s, foot, seam, f + fw * (.052f + i * .022f) + Vector3.up * (.079f - i * .017f), new Vector3(.095f, .009f, .009f), bootRotation);
+            if(!thigh||!calf||!foot)return;
+            Vector3 t=Local(model,thigh),k=Local(model,calf),f=Local(model,foot);
+            art.Segment("plain trouser thigh"+s,thigh,pants,Vector3.LerpUnclamped(t,k,-.10f),Vector3.LerpUnclamped(t,k,1.045f),.126f,.098f,.93f);
+            art.Segment("plain trouser lower leg"+s,calf,pants,Vector3.LerpUnclamped(k,f,-.055f),Vector3.Lerp(k,f,.91f),.101f,.074f,.94f);
+            // No knee pad, cargo pocket, pouch or metal snap. Low casual shoes retain the existing foot envelope.
+            Transform toe=Bone(model,a,left?HumanBodyBones.LeftToes:HumanBodyBones.RightToes,"ball"+s);
+            Vector3 fw=toe?Local(model,toe)-f:Vector3.forward;fw.y=0;if(fw.sqrMagnitude<.001f)fw=Vector3.forward;fw.Normalize();
+            Quaternion rotation=Quaternion.LookRotation(fw,Vector3.up);Vector3 shoe=f+fw*.065f;
+            art.Box("low casual sole"+s,foot,leather,shoe-Vector3.up*.065f,new Vector3(.174f,.035f,.31f),rotation);
+            art.Box("plain brown casual shoe"+s,foot,rust,shoe-Vector3.up*.012f,new Vector3(.165f,.105f,.285f),rotation);
+            art.Segment("low casual heel"+s,foot,rust,f-Vector3.up*.015f,f+Vector3.up*.065f,.078f,.078f,.89f);
+            for(int i=0;i<2;i++)art.Box("subtle shoe seam"+s,foot,seam,f+fw*(.065f+i*.025f)+Vector3.up*(.047f-i*.012f),new Vector3(.080f,.007f,.007f),rotation);
+        }
+
+        static void AddResidentBeard(Batch art,GameObject body,Transform model,Transform head,Material hair)
+        {
+            // Fit only the actual lower face bounds of the retained weighted head; never cover the eyes/forehead.
+            Bounds bounds=new Bounds();bool any=false;
+            foreach(var renderer in body.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                string name=renderer.name.ToLowerInvariant();if(name.Contains("eye")||name.Contains("brow")||name.Contains("hair"))continue;
+                var mesh=renderer.sharedMesh;if(!mesh)continue;var vertices=mesh.vertices;var weights=mesh.boneWeights;var bones=renderer.bones;
+                for(int i=0;i<vertices.Length&&i<weights.Length;i++)
+                {
+                    var w=weights[i];float influence=0;
+                    if(w.boneIndex0<bones.Length&&bones[w.boneIndex0]==head)influence+=w.weight0;
+                    if(w.boneIndex1<bones.Length&&bones[w.boneIndex1]==head)influence+=w.weight1;
+                    if(w.boneIndex2<bones.Length&&bones[w.boneIndex2]==head)influence+=w.weight2;
+                    if(w.boneIndex3<bones.Length&&bones[w.boneIndex3]==head)influence+=w.weight3;
+                    if(influence<.35f)continue;Vector3 p=model.InverseTransformPoint(renderer.transform.TransformPoint(vertices[i]));
+                    if(!any){bounds=new Bounds(p,Vector3.zero);any=true;}else bounds.Encapsulate(p);
+                }
+            }
+            if(!any||bounds.size.y<.08f)return;
+            float width=bounds.size.x,height=bounds.size.y,x=bounds.center.x,y=bounds.min.y,z=bounds.max.z;
+            art.HairCap(head,hair,bounds);
+            // Chin only: upper edge stays below28percent of measured head height. No cheek/moustache mask panels.
+            art.Box("narrow natural chin beard",head,hair,new Vector3(x,y+height*.19f,z-.009f),new Vector3(width*.42f,height*.15f,.014f));
         }
 
         /// <summary>Apply after Animator, every active work frame. Passing null/empty/idle/walk clears.</summary>
@@ -501,17 +534,19 @@ namespace TooLateToPanic
                 }
                 Get(bone, m).ClosedRings(pts, sides, rings);
             }
-            public void HairCap(Transform bone, Material m, Vector3 center)
+            public void HairCap(Transform bone,Material m,Bounds head)
             {
-                const int sides = 16, rings = 6; var pts = new Vector3[sides * rings];
-                for (int r = 0; r < rings; r++) for (int i = 0; i < sides; i++)
+                const int sides=16,rings=6;var pts=new Vector3[sides*rings];
+                Vector3 center=new Vector3(head.center.x,head.min.y+head.size.y*.80f,head.center.z-head.size.z*.07f);
+                for(int r=0;r<rings;r++)for(int i=0;i<sides;i++)
                 {
-                    float a = -Tau * i / sides;
-                    float theta = Mathf.Lerp(1.73f, .045f, r / (rings - 1f));
-                    float back = Mathf.Max(0, -Mathf.Cos(a));
-                    pts[r * sides + i] = center + new Vector3(Mathf.Sin(a) * Mathf.Sin(theta) * .118f, Mathf.Cos(theta) * .147f - back * (1-r/(rings-1f)) * .06f, Mathf.Cos(a) * Mathf.Sin(theta) * .119f);
+                    float q=r/(rings-1f),a=-Tau*i/sides,theta=Mathf.Lerp(Mathf.PI*.5f,.045f,q);
+                    float back=Mathf.Max(0,-Mathf.Cos(a));
+                    pts[r*sides+i]=center+new Vector3(Mathf.Sin(a)*Mathf.Sin(theta)*head.size.x*.51f,
+                        Mathf.Cos(theta)*head.size.y*.22f-back*(1-q)*head.size.y*.08f,
+                        Mathf.Cos(a)*Mathf.Sin(theta)*head.size.z*.48f);
                 }
-                Get(bone, m).ClosedRings(pts, sides, rings);
+                Get(bone,m).ClosedRings(pts,sides,rings);
             }
             public void Flush()
             {

@@ -14,13 +14,14 @@ namespace TooLateToPanic
         {
             public string utc, phase, stage, disaster, focus, hint, message, failure, inventory, bag;
             public float seconds, dt, preparation, phaseTime, damage, juryElapsed;
-            public Vector3 actor;
+            public Vector3 actor, viewPosition, viewForward, viewEuler;
             public int frame, wave, budget, water, food, completedWaves, reward, workStep, workNext;
             public long score;
             public bool focused, controller, grounded, inputLocked, cinema, loss, inventoryOpen, workActive, moving, cheated, simulationComplete;
-            public bool infiniteBudget, freeMaterials, freezeTime, noLoss, developerMenu;
+            public bool infiniteBudget, freeMaterials, freezeTime, noLoss, developerMenu, bagFirstPerson, bagTransition;
             public string[] keyDown, keyUp, goals;
-            public bool leftDown, rightDown;
+            public bool leftDown, rightDown, leftHeld, rightHeld;
+            public float workProgress;
         }
         [Serializable] sealed class Summary
         {
@@ -71,12 +72,14 @@ namespace TooLateToPanic
             var m=world.Model;var work=world.Expedition.Work;
             var row=new State{utc=DateTime.UtcNow.ToString("o"),seconds=age,dt=Time.unscaledDeltaTime,frame=Time.frameCount,
                 phase=m.Phase.ToString(),stage=stage,disaster=m.Disaster.ToString(),actor=world.PlayerPosition,preparation=m.TimeRemaining,phaseTime=m.PhaseTime,
+                viewPosition=world.View?world.View.transform.position:Vector3.zero,viewForward=world.View?world.View.transform.forward:Vector3.forward,viewEuler=world.View?world.View.transform.eulerAngles:Vector3.zero,
                 wave=m.Wave,budget=m.Budget,water=m.PackedWater,food=m.PackedFood,damage=m.TotalDamage,score=m.Score,completedWaves=m.CompletedWaves,reward=m.LastReward,
                 focus=world.FocusLabel,hint=world.ContextHint,message=m.Message,failure=m.FailureReason,focused=Application.isFocused,
                 controller=world.PlayerControllerEnabled,grounded=body&&body.isGrounded,inputLocked=world.InputLocked,cinema=world.CinematicActive,loss=world.LossAnnounced,
                 inventoryOpen=world.InventoryOpen,workActive=world.WorkActive,moving=world.IsMoving,cheated=m.CheatedRun,simulationComplete=m.SimulationComplete,
                 infiniteBudget=m.InfiniteBudget,freeMaterials=m.FreeMaterials,freezeTime=m.FreezePreparationTime,noLoss=m.DeveloperNoLoss,developerMenu=hud&&hud.DeveloperMenuOpen,
-                workStep=work.CompletedSteps,workNext=work.NextClickTarget,keyDown=down,keyUp=up,leftDown=left,rightDown=right,
+                workStep=work.CompletedSteps,workNext=work.NextClickTarget,workProgress=work.Progress,keyDown=down,keyUp=up,leftDown=left,rightDown=right,leftHeld=Input.GetMouseButton(0),rightHeld=Input.GetMouseButton(1),
+                bagFirstPerson=world.BagFirstPersonActive,bagTransition=world.BagCameraTransitionActive,
                 inventory=string.Join(";",world.Expedition.Inventory.Select(x=>x.Id+":"+x.Count)),bag=string.Join(";",world.Expedition.Bag.Select(x=>x.Id+":"+x.Count)),
                 juryElapsed=world.JuryDemo==null?0:world.JuryDemo.ElapsedSeconds,
                 goals=world.JuryDemo==null?Array.Empty<string>():world.JurySnapshot.Goals.Select(x=>x.Id+"="+x.State).ToArray()};

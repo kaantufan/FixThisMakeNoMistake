@@ -542,6 +542,8 @@ namespace TooLateToPanic
 
         void ResetResidenceCinematic()
         {
+            // Explicit cinematic exit only; ordinary locomotion never calls pose restoration.
+            if (hero && residenceCinematicSession) PanicCharacterArt.ClearTaskPose(hero.gameObject);
             CleanupBunkerBagV414();
             CinematicActive = false;
             CinematicTitle = string.Empty;
@@ -580,6 +582,7 @@ namespace TooLateToPanic
                 {
                     animator.SetBool("Working", residenceSavedWorking);
                     animator.SetBool("Kneeling", residenceSavedKneeling);
+                    animator.SetBool("Airborne", false);
                     animator.SetFloat("Speed", 0f);
                 }
                 if (View)

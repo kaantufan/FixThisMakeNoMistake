@@ -9,7 +9,7 @@ namespace TooLateToPanic
         sealed class Walker
         {public GameObject Root;public Animator Animator;public Vector3 A,B;public float Offset,Speed;}
         sealed class Car
-        {public GameObject Root;public float Offset,Speed;public Vector3 Previous;}
+        {public GameObject Root;public float Offset,Speed;public Vector3 Previous;public PanicStreetLifeArtV414.VehicleModelFront ModelFront;}
         sealed class Response
         {public Car Car;public Walker Crew;public float Delay,Destination;public Transform[] Wheels;public Renderer[] Beacons;}
         readonly List<Walker> civilians=new List<Walker>(2);
@@ -41,7 +41,7 @@ namespace TooLateToPanic
             streetRoot=new GameObject("V414 street life");streetRoot.transform.SetParent(transform,false);
             for(int i=0;i<2;i++)
             {
-                var moving=new Car{Root=PanicStreetLifeArtV414.CivilianCar(i),Offset=i*31};moving.Root.transform.SetParent(streetRoot.transform,false);moving.Root.SetActive(false);traffic.Add(moving);
+                var moving=new Car{Root=PanicStreetLifeArtV414.CivilianCar(i),Offset=i*31,ModelFront=PanicStreetLifeArtV414.CivilianModelFront};moving.Root.transform.SetParent(streetRoot.transform,false);moving.Root.SetActive(false);traffic.Add(moving);
                 var stand=new Car{Root=PanicStreetLifeArtV414.CivilianCar(i+2),Offset=i};stand.Root.transform.SetParent(streetRoot.transform,false);stand.Root.transform.position=ParkedPosition(i);stand.Root.transform.rotation=Quaternion.Euler(0,90,0);stand.Root.SetActive(false);parked.Add(stand);
                 var npc=PanicExteriorArt.CreatePedestrianVisual(i+8);if(!npc)continue;
                 npc.transform.SetParent(streetRoot.transform,false);npc.name="V414 ambient sidewalk resident "+i;npc.SetActive(false);
@@ -81,7 +81,7 @@ namespace TooLateToPanic
                 c.Root.SetActive(ambient);c.Speed=ambient?(c.Offset==0?3.6f:3.1f):0;
                 if(!ambient)continue;float sign=c.Offset==0?1:-1;
                 float x=sign*(Mathf.Repeat(clock*c.Speed+c.Offset,72)-36);
-                c.Root.transform.SetPositionAndRotation(new Vector3(x,.035f,sign>0?-17.2f:-20.7f),Quaternion.Euler(0,sign>0?90:270,0));
+                c.Root.transform.SetPositionAndRotation(new Vector3(x,.035f,sign>0?-17.2f:-20.7f),PanicStreetLifeArtV414.VehicleHeading(Vector3.right*sign,c.ModelFront));
             }
             if(phase==PanicPhase.Disaster)hazardClock+=dt;
             for(int i=0;i<parked.Count;i++)
@@ -124,13 +124,13 @@ namespace TooLateToPanic
             for(int i=0;i<4;i++)
             {
                 var kind=(PanicStreetLifeArtV414.Service)i;var vehicle=PanicStreetLifeArtV414.EmergencyVehicle(kind);vehicle.transform.SetParent(responseRoot.transform,false);
-                var car=new Car{Root=vehicle};var crew=PanicStreetLifeArtV414.Responder(kind,i);Walker walker=null;
+                var car=new Car{Root=vehicle,ModelFront=PanicStreetLifeArtV414.EmergencyModelFront};var crew=PanicStreetLifeArtV414.Responder(kind,i);Walker walker=null;
                 if(crew){crew.transform.SetParent(responseRoot.transform,false);crew.SetActive(false);float x=-11+i*7.5f;walker=new Walker{Root=crew,Animator=crew.GetComponentInChildren<Animator>(),A=new Vector3(x-1.6f,.085f,-23.75f),B=new Vector3(x+2.0f,.085f,-24.7f),Offset=i*.8f};}
                 var wheels=new List<Transform>();var beacons=new List<Renderer>();
                 foreach(var node in vehicle.GetComponentsInChildren<Transform>())if(node.name=="Response wheel")wheels.Add(node);
                 foreach(var renderer in vehicle.GetComponentsInChildren<Renderer>())if(renderer.transform.parent&&(renderer.transform.parent.name=="BeaconBlue"||renderer.transform.parent.name=="BeaconRed"))beacons.Add(renderer);
                 response.Add(new Response{Car=car,Crew=walker,Delay=i*1.6f,Destination=-11+i*7.5f,Wheels=wheels.ToArray(),Beacons=beacons.ToArray()});
-                vehicle.transform.SetPositionAndRotation(new Vector3(38+i*8,.035f,-21.3f),Quaternion.Euler(0,270,0));car.Previous=vehicle.transform.position;
+                vehicle.transform.SetPositionAndRotation(new Vector3(38+i*8,.035f,-21.3f),PanicStreetLifeArtV414.VehicleHeading(Vector3.left,car.ModelFront));car.Previous=vehicle.transform.position;
             }
         }
         void AnimateResponse(float dt)

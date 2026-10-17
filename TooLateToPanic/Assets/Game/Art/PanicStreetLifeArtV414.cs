@@ -10,6 +10,20 @@ namespace TooLateToPanic
     public static class PanicStreetLifeArtV414
     {
         public enum Service { Police,Ambulance,Fire,Rescue }
+        public enum VehicleModelFront { NegativeZ,PositiveZ }
+        // ResidenceArt.Car: hood/headlights at -Z, red tail lamps at +Z.
+        // All four response factories: cab/headlights at +Z, tail lamps at -Z.
+        public const VehicleModelFront CivilianModelFront=VehicleModelFront.NegativeZ;
+        public const VehicleModelFront EmergencyModelFront=VehicleModelFront.PositiveZ;
+        public static Vector3 LocalVehicleFront(VehicleModelFront modelFront)
+        {return modelFront==VehicleModelFront.NegativeZ?Vector3.back:Vector3.forward;}
+        public static Quaternion VehicleHeading(Vector3 travelDirection,VehicleModelFront modelFront)
+        {
+            travelDirection.y=0;
+            if(travelDirection.sqrMagnitude<.000001f)return Quaternion.identity;
+            // LookRotation owns local +Z; align the authored front, not an assumed +Z bonnet.
+            return Quaternion.LookRotation(modelFront==VehicleModelFront.NegativeZ?-travelDirection:travelDirection,Vector3.up);
+        }
         public static GameObject CivilianCar(int variant)
         {
             var root=PanicResidenceArt.Create("car");root.name="V414 street car "+variant;

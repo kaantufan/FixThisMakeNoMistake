@@ -185,32 +185,59 @@ namespace TooLateToPanic
 
         static void BakePlayer()
         {
-            const string source = "Assets/Game/Resources/CuratedCharacter/DefterSurvivor.fbx";
+            const string source = "Assets/Vendor/Player/Superhero_Male_FullBody.fbx";
             var importer = AssetImporter.GetAtPath(source) as ModelImporter;
-            if (importer == null) throw new Exception("Defter character source missing");
-            if (!importer.isReadable || importer.importAnimation)
-            { importer.isReadable = true; importer.importAnimation = false; importer.SaveAndReimport(); }
-            var root = PanicCharacterArt.CreateCuratedCharacter();
-            if (!root) throw new Exception("Defter character rig construction failed");
-            root.name = "Survivor V414 - Defter character";
+            if (importer != null && !importer.isReadable) { importer.isReadable = true; importer.SaveAndReimport(); }
+            var body = AssetDatabase.LoadAssetAtPath<GameObject>(source);
+            if (!body) throw new Exception("Licensed player source missing");
+            var root = UnityEngine.Object.Instantiate(body); root.name = "Survivor V414 — retained humanoid civilian";
             var animator = root.GetComponent<Animator>() ?? root.AddComponent<Animator>();
-            const string controllerPath = "Assets/Game/Resources/Player/SurvivorV414.controller";
-            var ac = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
-            if (!ac) ac = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
-            foreach (var parameter in new[] { "Speed", "Working", "Kneeling", "Airborne" })
-                if (!ac.parameters.Any(p => p.name == parameter))
-                    ac.AddParameter(parameter, parameter == "Speed" ? AnimatorControllerParameterType.Float : AnimatorControllerParameterType.Bool);
-            var stateMachine = ac.layers[0].stateMachine;
-            if (stateMachine.states.Length == 0) stateMachine.defaultState = stateMachine.AddState("Procedural rig motor");
-            animator.avatar = null;
-            animator.runtimeAnimatorController = ac;
-            animator.applyRootMotion = false;
+            animator.avatar = AssetDatabase.LoadAllAssetsAtPath(source).OfType<Avatar>().FirstOrDefault();
+            PanicCharacterArt.Dress(root, animator);
+            string controllerPath = "Assets/Game/Resources/Player/SurvivorV2.controller";
+            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath)) AssetDatabase.DeleteAsset(controllerPath);
+            var ac = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            ac.AddParameter("Speed", AnimatorControllerParameterType.Float);
+            ac.AddParameter("Working", AnimatorControllerParameterType.Bool);
+            ac.AddParameter("Kneeling", AnimatorControllerParameterType.Bool);
+            ac.AddParameter("Airborne", AnimatorControllerParameterType.Bool);
+            var clips = AssetDatabase.LoadAllAssetsAtPath("Assets/Vendor/Player/UAL1_Standard.fbx")
+                .OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview")).ToArray();
+            AnimationClip Clip(string exact, string fallback)
+            {
+                return clips.FirstOrDefault(c => c.name.EndsWith("|" + exact, StringComparison.OrdinalIgnoreCase))
+                    ?? clips.FirstOrDefault(c => c.name.IndexOf(fallback, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+            var jumpClip = Clip("Jump_Loop", "Jump_Loop");
+            if (!jumpClip || !Clip("Idle_Loop", "Idle_Loop") || !Clip("Walk_Loop", "Walk") || !Clip("Jog_Fwd_Loop", "Jog") ||
+                !(Clip("Interact", "Interact") ?? Clip("Push_Loop", "Push")) || !Clip("Fixing_Kneeling", "Fixing"))
+                throw new InvalidOperationException("Retained V4.13 humanoid requires real Idle/Walk/Jog/Jump/Interact/Fixing clips; placeholder fallback refused.");
+            var sm = ac.layers[0].stateMachine;
+            var locomotion = sm.AddState("Smooth locomotion");
+            var tree = new BlendTree { name = "Idle walk run", blendType = BlendTreeType.Simple1D, blendParameter = "Speed", useAutomaticThresholds = false };
+            AssetDatabase.AddObjectToAsset(tree, ac);
+            tree.AddChild(Clip("Idle_Loop", "Idle_Loop"), 0);
+            tree.AddChild(Clip("Walk_Loop", "Walk"), .64f);
+            tree.AddChild(Clip("Jog_Fwd_Loop", "Jog"), 1);
+            locomotion.motion = tree; sm.defaultState = locomotion;
+            var jump = sm.AddState("Jump loop"); jump.motion = jumpClip;
+            Transition(locomotion, jump, "Airborne", true, duration: .1f);
+            Transition(jump, locomotion, "Airborne", false, duration: .1f);
+            var work = sm.AddState("Standing work");
+            work.motion = Clip("Interact", "Interact") ?? Clip("Push_Loop", "Push");
+            var kneel = sm.AddState("Ground work");
+            kneel.motion = Clip("Fixing_Kneeling", "Fixing") ?? work.motion;
+            Transition(locomotion, work, "Working", true, "Kneeling", false);
+            Transition(locomotion, kneel, "Working", true, "Kneeling", true);
+            Transition(work, locomotion, "Working", false);
+            Transition(kneel, locomotion, "Working", false);
+            animator.runtimeAnimatorController = ac; animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true)) skin.updateWhenOffscreen = true;
+            foreach (var r in root.GetComponentsInChildren<SkinnedMeshRenderer>()) r.updateWhenOffscreen = true;
             Persist(root);
             PrefabUtility.SaveAsPrefabAsset(root, "Assets/Game/Resources/Player/SurvivorV2.prefab");
             UnityEngine.Object.DestroyImmediate(root);
-            Debug.Log("HOME_V414_PLAYER_BAKED source=DefterSurvivor rig=19-bone procedural motor; no imported animation clips");
+            Debug.Log("HOME_V414_RETAINED_V413_HUMANOID_BAKED clips=" + string.Join(",", tree.children.Select(x => x.motion ? x.motion.name : "MISSING")) + " jump=" + jumpClip.name);
         }
 
         static void Transition(AnimatorState from, AnimatorState to, string flag, bool value, string other = null, bool otherValue = false, float duration = .16f)

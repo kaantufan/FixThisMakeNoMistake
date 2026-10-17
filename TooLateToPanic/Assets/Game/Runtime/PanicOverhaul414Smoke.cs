@@ -35,13 +35,18 @@ namespace TooLateToPanic
         [Serializable] public sealed class Fixture { public string kind, detail; public int frame; }
         [Serializable] public sealed class GaitSample
         {
-            public string label, mesh;public int phase,frame,vertices,changedVertices,changedBones;
+            public string label, mesh, evaluatedClips;public int phase,frame,vertices,changedVertices,changedBones;
             public float secondsSinceWalkStart,secondsSincePrevious,actorTravel,peakLocalVertexDelta,rmsLocalVertexDelta,restRmsLocalVertexDelta;
             public Vector3 actor;
         }
+        [Serializable] public sealed class VehicleDirection
+        {
+            public string label,root,meshFrontSource;public int frame;public Vector3 start,end,authoredLocalFront,worldFront,displacement;
+            public float moved,forwardDot;
+        }
         sealed class GaitWindow
         {
-            public SkinnedMeshRenderer Skin;public Vector3[] Rest,Previous;public Quaternion[] Bones;
+            public SkinnedMeshRenderer Skin;public Animator Animator;public Vector3[] Rest,Previous;public Quaternion[] Bones;
             public Vector3 ActorStart;public float Start,Next,PreviousTime;public int Captured;
         }
         [Serializable] public sealed class Receipt
@@ -54,6 +59,7 @@ namespace TooLateToPanic
             public List<Row> rows = new List<Row>(); public List<Fixture> fixtures = new List<Fixture>();
             public List<Route> routes = new List<Route>(); public List<Frame> frames = new List<Frame>();
             public List<GaitSample> gaitSamples = new List<GaitSample>();
+            public List<VehicleDirection> vehicleDirections = new List<VehicleDirection>();
             public List<string> sections = new List<string>(), errors = new List<string>(), captures = new List<string>();
         }
         readonly Receipt report = new Receipt();
@@ -293,6 +299,7 @@ namespace TooLateToPanic
                     changedVertices=changed,changedBones=Changed(gait.Bones,Pose(gait.Skin.bones)),secondsSinceWalkStart=now-gait.Start,secondsSincePrevious=now-gait.PreviousTime,
                     actorTravel=Vector3.Distance(gait.ActorStart,w.PlayerPosition),peakLocalVertexDelta=peak,rmsLocalVertexDelta=same&&current.Length>0?Mathf.Sqrt(sum/current.Length):0,
                     restRmsLocalVertexDelta=same&&current.Length>0?Mathf.Sqrt(restSum/current.Length):0,actor=w.PlayerPosition};report.gaitSamples.Add(sample);
+                sample.evaluatedClips=gait.Animator?string.Join("|",gait.Animator.GetCurrentAnimatorClipInfo(0).Where(c=>c.clip&&c.weight>.05f).Select(c=>c.clip.name+":"+c.weight.ToString("F3"))):"missing";
                 Check("character.gait-live-baked-sample."+sample.phase,same&&current.Length>0&&gait.Skin.enabled&&gait.Skin.gameObject.activeInHierarchy&&!w.InputLocked&&sample.actorTravel>.02f,
                     "Actual SMR.BakeMesh local vertices after root LateUpdate; phase="+sample.phase+" vertices="+sample.vertices+" changed="+sample.changedVertices+" peak="+sample.peakLocalVertexDelta+" rms="+sample.rmsLocalVertexDelta+" interval="+sample.secondsSincePrevious+" travel="+sample.actorTravel,"NATIVE_BAKED_SKIN_DEFORMATION");
                 gait.Previous=current;gait.PreviousTime=now;gait.Next=now+.12f;gait.Captured++;
@@ -301,37 +308,36 @@ namespace TooLateToPanic
         IEnumerator Character()
         {
             yield return Place(new Vector3(0,0,-18),"character-exterior-open-road");
-            var skin=hero.GetComponentInChildren<SkinnedMeshRenderer>(true);var rig=hero.GetComponents<Component>().FirstOrDefault(c=>c&&c.GetType().Name=="PanicCuratedCharacterRig");
-            var prefab=Resources.Load<GameObject>("Player/SurvivorV2");var prefabSkin=prefab?prefab.GetComponentInChildren<SkinnedMeshRenderer>(true):null;
-            var source=Resources.Load<GameObject>("CuratedCharacter/DefterSurvivor");var baseTexture=Resources.Load<Texture2D>("CuratedCharacter/DefterSurvivor_BaseColor");
-            Check("character.actual-new-source",rig&&skin&&skin.sharedMesh&&prefab&&prefabSkin&&prefabSkin.sharedMesh==skin.sharedMesh&&source&&prefab.GetComponents<Component>().Any(c=>c&&c.GetType().Name=="PanicCuratedCharacterRig"),
-                "Actual runtime/prefab shared mesh + new local rig marker + source Resource; mesh="+(skin&&skin.sharedMesh?skin.sharedMesh.name:"missing")+". Compatibility path name alone is insufficient.");
-            Check("character.original-texture-bound",skin&&skin.sharedMaterial&&baseTexture&&skin.sharedMaterial.mainTexture==baseTexture,"Actual new source texture identity, not an old V2 material-name check.");
-            var animator=Field<Animator>(w,"animator");Check("character.local-rig-contract",skin&&skin.bones.Length==19&&animator&&!animator.isHuman&&!animator.applyRootMotion,"19 weighted local bones; no old humanoid avatar/clip oracle.");
+            var skin=hero.GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(r=>r.enabled&&r.sharedMesh&&r.bones.Length>0).OrderByDescending(r=>r.sharedMesh.vertexCount).FirstOrDefault();
+            var rig=hero.GetComponents<Component>().FirstOrDefault(c=>c&&c.GetType().Name=="PanicCuratedCharacterRig");
+            var prefab=Resources.Load<GameObject>("Player/SurvivorV2");var prefabAnimator=prefab?prefab.GetComponentInChildren<Animator>(true):null;
+            var animator=Field<Animator>(w,"animator");var clips=animator&&animator.runtimeAnimatorController?animator.runtimeAnimatorController.animationClips:Array.Empty<AnimationClip>();
+            Check("character.retained-humanoid-source",!rig&&skin&&skin.sharedMesh&&prefab&&prefabAnimator&&animator&&animator.avatar&&animator.avatar.isValid&&animator.avatar.isHuman&&animator.avatar==prefabAnimator.avatar&&animator.runtimeAnimatorController==prefabAnimator.runtimeAnimatorController&&prefab.GetComponentsInChildren<SkinnedMeshRenderer>(true).Any(r=>r.sharedMesh==skin.sharedMesh),
+                "Actual retained working humanoid Avatar/controller and shared baked mesh identity. User authorized new appearance on this rig; no workwear-byte/texture/19bone/Meshy oracle.");
+            Check("character.retained-clips-controller",new[]{"Idle_Loop","Walk_Loop","Jog_Fwd_Loop","Jump_Loop"}.All(suffix=>clips.Any(c=>c&&c.length>0&&c.name.EndsWith(suffix,StringComparison.OrdinalIgnoreCase)))&&clips.Any(c=>c&&c.length>0&&(c.name.IndexOf("Interact",StringComparison.OrdinalIgnoreCase)>=0||c.name.IndexOf("Push",StringComparison.OrdinalIgnoreCase)>=0))&&clips.Any(c=>c&&c.length>0&&c.name.IndexOf("Fixing",StringComparison.OrdinalIgnoreCase)>=0),
+                "Actual bound retained UAL Idle/Walk/Jog/Jump/Interact(orPush)/Fixing clips with nonzero duration; clip presence is not OS run acceptance.");
+            Check("character.retained-avatar-contract",skin&&skin.bones.Length>19&&animator&&animator.isHuman&&!animator.applyRootMotion&&animator.runtimeAnimatorController,"Real humanoid bones and Avatar drive the skin; root motion stays disabled.");
+            Check("character.appearance-materials-present",skin&&skin.sharedMaterials.Length>0&&skin.sharedMaterials.All(m=>m),"Actual visible fallback skin materials exist. Revised clothes/colors/face/hair are user-authorized; human appearance acceptance remains open.");
+            FixtureNote("RETAINED_HUMANOID_IDENTITY","User rejected new procedural gait. Avatar="+(animator&&animator.avatar?animator.avatar.name:"missing")+" controller="+(animator&&animator.runtimeAnimatorController?animator.runtimeAnimatorController.name:"missing")+" actualClips="+string.Join("|",clips.Where(c=>c).Select(c=>c.name))+". Appearance may differ from old workwear; humanoid/UAL mechanics must remain real.");
             if(skin&&skin.sharedMesh)
             {
-                var weights=skin.sharedMesh.boneWeights;Check("character.weights-normalized",weights.Length==skin.sharedMesh.vertexCount&&weights.All(b=>b.boneIndex0>=0&&b.boneIndex0<19&&b.boneIndex1>=0&&b.boneIndex1<19&&Finite(b.weight0)&&Finite(b.weight1)&&Mathf.Abs(b.weight0+b.weight1-1)<.001f));
+                var weights=skin.sharedMesh.boneWeights;int boneCount=skin.bones.Length;
+                Check("character.weights-normalized",weights.Length==skin.sharedMesh.vertexCount&&weights.All(b=>Finite(b.weight0)&&Finite(b.weight1)&&Finite(b.weight2)&&Finite(b.weight3)&&Mathf.Abs(b.weight0+b.weight1+b.weight2+b.weight3-1)<.001f&&ValidBone(b.boneIndex0,b.weight0,boneCount)&&ValidBone(b.boneIndex1,b.weight1,boneCount)&&ValidBone(b.boneIndex2,b.weight2,boneCount)&&ValidBone(b.boneIndex3,b.weight3,boneCount)),"Actual retained skin4weight normalization and real bone index range.");
                 var before=Pose(skin.bones);Vector3 p=w.PlayerPosition;int walkDeltas=0;float gaitStart=Time.realtimeSinceStartup;
-                var gait=new GaitWindow{Skin=skin,Rest=BakedLocalVertices(skin),Bones=before,ActorStart=p,Start=gaitStart,PreviousTime=gaitStart,Next=gaitStart+.10f};
+                var gait=new GaitWindow{Skin=skin,Animator=animator,Rest=BakedLocalVertices(skin),Bones=before,ActorStart=p,Start=gaitStart,PreviousTime=gaitStart,Next=gaitStart+.10f};
                 FixtureNote("GAIT_REAL_MOTOR_CAPTURE","Six phase photos target.12s spacing during actual normal-clock SmokeMove on open road. Photo samples actual SMR.BakeMesh local vertices after root LateUpdate, so actor world translation is excluded. No pose, bone, rig-time, renderer or actor-transform write. Actual sample intervals are recorded; separate camera images are NATIVE_RENDER_CAMERA, not OS/UI frames.");
                 yield return Walk("character-walk",p+Vector3.right*4.4f,3f,.27f,()=>{walkDeltas=Mathf.Max(walkDeltas,Changed(before,Pose(skin.bones)));},()=>CaptureWalkingGait(gait));
                 Check("character.six-actual-walk-phase-captures",gait.Captured==6&&report.gaitSamples.Count==6,"Actual continuous route captures="+gait.Captured+"; phase PNGs and exact intervals are retained. No setup warp inside walk.","NATIVE_PHYSICS_ANIMATION");
                 Check("character.actual-baked-skin-walk-deforms",gait.Captured==6&&report.gaitSamples.Skip(1).Count(s=>s.rmsLocalVertexDelta>.001f&&s.changedVertices>=8)>=3&&report.gaitSamples.Skip(1).Any(s=>s.peakLocalVertexDelta>.01f),
                     "Compare consecutive live local baked vertex arrays, excluding world translation: >=3 inter-phase RMS changes above1mm with >=8 vertices each, plus a >1cm peak. Bone-only change cannot satisfy this check.","NATIVE_BAKED_SKIN_DEFORMATION");
                 Check("character.motor-walk-deforms",!w.InputLocked&&Vector3.Distance(p,w.PlayerPosition)>1.5f&&walkDeltas>=4,"Normal clock/unlocked real SmokeMove -> root LateUpdate -> live joint changes sampled while walking; deltas="+walkDeltas,"NATIVE_PHYSICS_ANIMATION");
-                var motion=typeof(PanicCharacterArt).GetMethod("SetMotion",Static);
-                Check("character.run-motor-api",motion!=null);
-                if(motion!=null)
-                {
-                    yield return new WaitForEndOfFrame();motion.Invoke(null,new object[]{hero.gameObject,animator,PanicHomeWorld.WalkSpeed,true,0f,.06f});var walk=Pose(skin.bones);
-                    motion.Invoke(null,new object[]{hero.gameObject,animator,PanicHomeWorld.RunSpeed,true,0f,.06f});var run=Pose(skin.bones);report.runPoseFixtures++;
-                    FixtureNote("RUN_POSE_API","SetMotion(actual hero, RunSpeed) only; no OS Shift or controller running claim.");
-                    Check("character.motor-run-distinct",Changed(walk,run)>=4,"Production rig sampler on real imported skin; explicit speed fixture.");
-                }
+                Check("character.actual-retained-walk-clip-evaluated",report.gaitSamples.Any(s=>s.evaluatedClips!=null&&s.evaluatedClips.IndexOf("Walk",StringComparison.OrdinalIgnoreCase)>=0),"Actual Animator clip weights observed during real SmokeMove and local BakeMesh sampling. No synthetic Animator.Play/Update, rig time or bone writes.");
+                FixtureNote("RETAINED_RUN_SCOPE","Bound real UAL Jog clip verified above. This route exercises actual walk/jump; OS Shift/controller run and human gait judgment remain separate, not inferred from clip existence.");
                 while(!w.IsGrounded){w.SmokeMove(Vector2.zero,Dt);yield return null;}
-                var grounded=Pose(skin.bones);float baseY=w.PlayerPosition.y;w.Jump();bool airborne=false;int deltas=0;float peak=baseY;
-                float end=Time.realtimeSinceStartup+1.2f;while(Time.realtimeSinceStartup<end){w.SmokeMove(Vector2.zero,Dt);yield return null;peak=Mathf.Max(peak,w.PlayerPosition.y);if(!w.IsGrounded){airborne=true;deltas=Mathf.Max(deltas,Changed(grounded,Pose(skin.bones)));}}
+                var grounded=Pose(skin.bones);float baseY=w.PlayerPosition.y;w.Jump();bool airborne=false,jumpClipObserved=false;int deltas=0;float peak=baseY;
+                float end=Time.realtimeSinceStartup+1.2f;while(Time.realtimeSinceStartup<end){w.SmokeMove(Vector2.zero,Dt);yield return null;peak=Mathf.Max(peak,w.PlayerPosition.y);if(!w.IsGrounded){airborne=true;deltas=Mathf.Max(deltas,Changed(grounded,Pose(skin.bones)));jumpClipObserved|=animator&&animator.GetCurrentAnimatorClipInfo(0).Any(c=>c.clip&&c.weight>.05f&&c.clip.name.IndexOf("Jump",StringComparison.OrdinalIgnoreCase)>=0);}}
                 Check("character.actual-jump-deforms",airborne&&peak>baseY+.6f&&deltas>=4,"Real Jump/controller y and root-driven joint changes; peak="+peak,"NATIVE_PHYSICS_ANIMATION");
+                Check("character.actual-retained-jump-clip-evaluated",jumpClipObserved,"Real enabled-controller airborne frames must evaluate the actual retained Jump clip; no Animator.Play/Update or pose mutation by QA.","NATIVE_PHYSICS_ANIMATION");
             }
             Vector3 facing=hero.forward;facing.y=0;facing.Normalize();
             FixtureNote("CHARACTER_CAPTURE_FACING","Open-road original live hero. Front/back cameras use actual hero.forward; no renderer, actor rotation, material or overlay override.");
@@ -339,6 +345,7 @@ namespace TooLateToPanic
             yield return Photo("04-character-back",w.PlayerPosition-facing*3.3f+Vector3.up*1.15f,w.PlayerPosition+Vector3.up*.95f);
         }
         static bool Finite(float n){return !float.IsNaN(n)&&!float.IsInfinity(n);}
+        static bool ValidBone(int index,float weight,int count){return weight<=0||index>=0&&index<count;}
         IEnumerator Layout()
         {
             var windows=w.Model.Items.Where(i=>i.Kind==ItemKind.Window).ToArray();var windowRoots=Field<Dictionary<string,GameObject>>(w,"items");
@@ -619,8 +626,8 @@ namespace TooLateToPanic
             int before=Int(w,"BunkerSequenceResolutionCountV414");w.HandleKey(KeyCode.E);yield return null;Check("bunker.real-fps-E-entry",w.Model.Phase==PanicPhase.Disaster&&!w.BagCameraOwnsView,w.ContextHint);
             Check("fps.exit-cinematic-stops-audio",w.Model.Phase==PanicPhase.Disaster&&!w.BagCameraOwnsView&&!w.FpsFeedbackAudioPlayingV414&&!w.FpsStressVisibleV414&&w.FpsVeilOpacityV414==0,"Actual FPS E shelter transition invokes production ResetBagPreparation/SuspendExperienceFeedback; no listening claim.","NATIVE_AUDIO_STATE");
             var stages=new List<string>();bool releaseBefore=false;int releases=0;float maxBagMotion=0,maxActorMotion=0;Vector3? firstBag=null;Vector3 firstActor=w.PlayerPosition;
-            bool openBeforeThrow=false,lidDuringJump=true,closed=false,bagRendered=false,openCapture=false;
-            var head=hero.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="Head");int jumpFrames=0;float end=Time.realtimeSinceStartup+6.5f;
+            bool openBeforeThrow=false,lidDuringJump=true,closed=false,bagRendered=false,openCapture=false,airborneCapture=false;
+            var head=PanicCharacterArt.GetCharacterBone(hero.gameObject,Field<Animator>(w,"animator"),HumanBodyBones.Head);int jumpFrames=0;float end=Time.realtimeSinceStartup+6.5f;
             while(w.Model.Phase==PanicPhase.Disaster&&Time.realtimeSinceStartup<end)
             {
                 string stage=Text(w,"BunkerSequenceStageV414").ToLowerInvariant();bool release=Bool(w,"BunkerBagReleasedV414");if(release&&!releaseBefore)releases++;releaseBefore=release;
@@ -633,12 +640,15 @@ namespace TooLateToPanic
                 if(!openCapture&&(stage=="open"||stage=="bagthrow")&&LidAngle()>85)
                 {openCapture=true;yield return Shot("18-bunker-lid-fully-open");}
                 if(stage=="jump"){jumpFrames++;lidDuringJump&=head&&(head.position.y<PanicHomeWorld.BunkerPosition.y-.10f||LidAngle()>85);}
+                if(!airborneCapture&&stage=="jump"&&Field<float>(w,"residenceCinematicAge")>=3.15f)
+                {airborneCapture=true;yield return Shot("18-bunker-airborne");}
                 if(stage=="closed")closed|=LidAngle()<8;
                 if(stage.Length>0&&!stages.Contains(stage)){stages.Add(stage);yield return Shot("18-bunker-"+stage);}
                 Observe("bunker-sequence-sample");yield return null;
             }
             int oi=stages.IndexOf("open"),bi=stages.IndexOf("bagthrow"),ji=stages.IndexOf("jump"),ci=stages.IndexOf("closed");
             Check("bunker.production-stage-order",seams&&oi>=0&&bi>oi&&ji>bi&&ci>ji,string.Join(" -> ",stages));
+            Check("bunker.actual-midflight-capture",airborneCapture,"Additional actual jump/descent frame after cinematic age3.15; initial18-bunker-jump remains. Image existence/stage labels do not establish human throw/jump acceptance.","NATIVE_CAPTURE_FILE");
             Check("bunker.lid-open-until-head-clears",openBeforeThrow&&openCapture&&jumpFrames>=2&&lidDuringJump&&closed,"Actual leaf stays open while actual Head is above collar; final close after clearance is permitted.");
             Check("bunker.actual-bag-release-and-motion",firstBag.HasValue&&bagRendered&&releases==1&&maxBagMotion>.25f,"bag root exists/visible/moved="+maxBagMotion+" release edges="+releases);
             Check("bunker.actor-trajectory-and-once",maxActorMotion>.8f&&Int(w,"BunkerSequenceResolutionCountV414")==before+1,"actual actor displacement="+maxActorMotion+" resolution before="+before+" after="+Int(w,"BunkerSequenceResolutionCountV414"));
@@ -693,6 +703,31 @@ namespace TooLateToPanic
             var list=Field<IList>(street,"response");if(list==null)return Array.Empty<GameObject>();var roots=new List<GameObject>();
             foreach(object item in list){var root=Read(Read(item,crew?"Crew":"Car"),"Root") as GameObject;if(root)roots.Add(root);}return roots.ToArray();
         }
+        void CheckVehicleMeshForward(GameObject[] roots,Dictionary<int,Vector3> before,Vector3 localFront,int expected,string label,string source)
+        {
+            Check("street."+label+".expected-actual-mesh-roots",roots.Length==expected,"Expected actual moving vehicle roots="+expected+"; declared mesh front comes from authored headlight/bonnet geometry, not root+Z assumption.");
+            for(int i=0;i<roots.Length;i++)
+            {
+                var root=roots[i];Vector3 start=root&&before.ContainsKey(root.GetInstanceID())?before[root.GetInstanceID()]:Vector3.zero;
+                Vector3 delta=root?root.transform.position-start:Vector3.zero;delta.y=0;
+                Vector3 front=root?root.transform.TransformDirection(localFront):Vector3.zero;front.y=0;front.Normalize();
+                float moved=delta.magnitude,dot=moved>.0001f?Vector3.Dot(front,delta/moved):-1;
+                report.vehicleDirections.Add(new VehicleDirection{label=label,root=root?root.name:"missing",meshFrontSource=source,frame=Time.frameCount,start=start,end=root?root.transform.position:Vector3.zero,authoredLocalFront=localFront,worldFront=front,displacement=delta,moved=moved,forwardDot=dot});
+                Check("street."+label+".mesh-forward."+i,root&&before.ContainsKey(root.GetInstanceID())&&moved>.02f&&dot>0&&root.GetComponentsInChildren<Renderer>(true).Any(r=>r.enabled&&r.gameObject.activeInHierarchy),
+                    "Actual mesh front dot native displacement="+dot+" moved="+moved+" localFront="+localFront+" worldFront="+front+" delta="+delta+" source="+source,"NATIVE_MESH_FORWARD_MOTION");
+            }
+        }
+        IEnumerator VehicleMeshForwardEvidence(GameObject[] roots,Dictionary<int,Vector3> before,Vector3 localFront,int expected,string label,string source)
+        {
+            float discontinuity=label=="traffic"?20f:50f;
+            // The ambient route intentionally wraps its offscreen endpoint. A teleport
+            // across that seam is not a velocity sample; observe a fresh short interval.
+            for(int retry=0;retry<3&&roots.Any(g=>g&&before.ContainsKey(g.GetInstanceID())&&Vector3.Distance(before[g.GetInstanceID()],g.transform.position)>=discontinuity);retry++)
+            {FixtureNote("VEHICLE_LOOP_WRAP_EXCLUDED",label+"; endpoint displacement>="+discontinuity+"m excluded from directional evidence. Resample actual roots after.12s without moving them.");before=roots.Where(g=>g).ToDictionary(g=>g.GetInstanceID(),g=>g.transform.position);yield return Wait(.12f);}
+            bool clean=roots.All(g=>g&&before.ContainsKey(g.GetInstanceID())&&Vector3.Distance(before[g.GetInstanceID()],g.transform.position)<discontinuity);
+            Check("street."+label+".direction-sample-no-wrap",clean,"Only actual bounded motion intervals may support direction evidence. Missing clean sample fails; no skip-to-PASS.");
+            if(clean)CheckVehicleMeshForward(roots,before,localFront,expected,label,source);
+        }
         IEnumerator Street()
         {
             w.ReturnToMenu();w.StartGame(false);report.startGameCalls++;w.FullFlowScriptedInput=true;yield return null;
@@ -705,12 +740,14 @@ namespace TooLateToPanic
             yield return Wait(.8f);int civiliansMoved=civilianRoots.Count(g=>g&&before.ContainsKey(g.GetInstanceID())&&Vector3.Distance(before[g.GetInstanceID()],g.transform.position)>.02f);
             int vehiclesMoved=trafficRoots.Count(g=>g&&before.ContainsKey(g.GetInstanceID())&&Vector3.Distance(before[g.GetInstanceID()],g.transform.position)>.02f);
             Check("street.actual-native-transforms-move",civiliansMoved>0&&vehiclesMoved>0,"Actual civilian roots moved="+civiliansMoved+" traffic roots moved="+vehiclesMoved+"; counts alone are insufficient.");
+            yield return VehicleMeshForwardEvidence(trafficRoots,before,Vector3.back,2,"traffic","Actual ResidenceArt.Car bonnet/headlights are local-Z, red tail lamps+Z; source-forward-proof.json binds this geometry. Independent expected axis, not production VehicleHeading output.");
             yield return Photo("22-alive-street-before",new Vector3(-5,5,-28),new Vector3(0,1,-18),14f);
             w.ReturnToMenu();w.StartDisasterSimulation(DisasterType.Fire);report.simulationStarts++;w.FullFlowScriptedInput=true;yield return null;w.Model.EnterBunker();
             float end=Time.realtimeSinceStartup+28;while(!Bool(street,"ResponseActive")&&Time.realtimeSinceStartup<end)yield return null;
             var responseVehicles=ResponseRoots(street,false);var responseBefore=responseVehicles.ToDictionary(g=>g.GetInstanceID(),g=>g.transform.position);
             yield return Wait(5.25f);int arrivingMoved=responseVehicles.Count(g=>g&&responseBefore.ContainsKey(g.GetInstanceID())&&Vector3.Distance(responseBefore[g.GetInstanceID()],g.transform.position)>.02f);
             Check("street.actual-response-vehicles-move",responseVehicles.Length==4&&arrivingMoved==4,"Actual arrival roots moving across real frames="+arrivingMoved+"/4; no speed-only counter claim.","NATIVE_RENDER_TRANSFORM");
+            yield return VehicleMeshForwardEvidence(responseVehicles,responseBefore,Vector3.forward,4,"response","Actual four EmergencyVehicle cab/headlights local+Z, rear red lamps-Z; independent authored-axis expectation, not root moved alone.");
             FixtureNote("RESPONSE_REAL_ARRIVAL_WAIT","ResponseActive creates cars before arrival; crews activate only at actual destinations. Wait for4 crews on the existing Fire aftermath, without a new disaster or time mutation.");
             while((Int(street,"ResponseVehicleCount")!=4||Int(street,"ResponderCount")!=4)&&Time.realtimeSinceStartup<end)yield return null;
             var responseRoot=Field<GameObject>(street,"responseRoot");

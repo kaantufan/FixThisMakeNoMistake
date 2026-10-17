@@ -405,10 +405,11 @@ namespace TooLateToPanic
         {
             if (!hero || !animator || Model.IsPaused || NotebookBlocksInput) return;
             if (ApplyCinematicCharacterPoseV414()) return;
-            PanicCharacterArt.SetMotion(hero.gameObject, animator, WorkActive || InventoryOpen || InputLocked ? 0 : new Vector2(controller.velocity.x, controller.velocity.z).magnitude, controller.isGrounded, gravitySpeed, Time.deltaTime);
-            string task = WorkActive ? Expedition.Work.IsWorldConstruction ? (workAction == "drain" ? "build-ground" : "build") : workAction : gatherPoseTime > 0 ? "gather" : IsMoving ? "carry" : "";
-            PanicCharacterArt.SetTaskPose(hero.gameObject, animator, task, WorkActive ? Expedition.Work.Progress : 0);
-            PanicCharacterArt.UpdateSecondary(hero.gameObject, desiredVelocity.magnitude, Time.deltaTime);
+            // Retained V4.13 locomotion is evaluated solely by Animator after MovePlayer's original parameters.
+            // Ordinary walking/idle/gather/carry has no procedural sample, Restore, Speed or bone write here.
+            if (!WorkActive) return;
+            string task = Expedition.Work.IsWorldConstruction ? (workAction == "drain" ? "build-ground" : "build") : workAction;
+            PanicCharacterArt.SetTaskPose(hero.gameObject, animator, task, Expedition.Work.Progress);
         }
 
         Vector2 ReadMove() { return new Vector2((Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) ? 1 : 0) - (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow) ? 1 : 0), (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow) ? 1 : 0) - (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) ? 1 : 0)); }
@@ -765,6 +766,8 @@ namespace TooLateToPanic
             if (Expedition == null) return;
             ResetManualWorkPointerV414();
             if (WorkActive) CancelFrame=Time.frameCount;
+            // One explicit actual-work exit, never an ordinary walk-frame pose restore.
+            if (hero && workAction != null) PanicCharacterArt.ClearTaskPose(hero.gameObject);
             CancelDirectConstruction();
             Expedition.Work.Cancel();
             if (animator) { animator.SetBool("Working", false); animator.SetBool("Kneeling", false); }

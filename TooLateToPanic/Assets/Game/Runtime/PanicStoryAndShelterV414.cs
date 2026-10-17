@@ -18,6 +18,7 @@ namespace TooLateToPanic
         bool bunkerSequenceResolvedV414;
         Vector3 bagReleasePositionV414;
         Quaternion bagReleaseRotationV414;
+        Vector3 cinematicBagGripLocalV414;
         PanicStreetLifeV414 streetLifeV414;
 
         void InitOverhaulV414()
@@ -100,6 +101,7 @@ namespace TooLateToPanic
                 cinematicBagV414 = PanicResidenceArt.Create("bagstation");
             cinematicBagV414.name = "Actual thrown emergency bag V414";
             cinematicBagV414.transform.localScale *= .68f;
+            PrepareBunkerBagGripV414();
             foreach (var c in cinematicBagV414.GetComponentsInChildren<Collider>(true)) c.enabled = false;
             foreach (var body in cinematicBagV414.GetComponentsInChildren<Rigidbody>(true)) { body.isKinematic = true; body.detectCollisions = false; }
             BuildBunkerApproachRouteV414(cinematicActorStart, cinematicHatchApproach);
@@ -124,7 +126,9 @@ namespace TooLateToPanic
                 CinematicShowsActor = true;
                 player.position = SampleBunkerApproachRouteV414(Mathf.Clamp01(age));
                 FaceResidenceActor(BunkerPosition - player.position);
-                SetResidenceActorFlags(false, age >= 1f, age < 1f ? .85f : 0);
+                SetResidenceActorFlags(false, age >= 1f, 0);
+                // Cinematic-only approach uses the retained motor's original damped Animator path.
+                if(age<1f)SetMoveAnimation(Mathf.Clamp01(BunkerApproachRouteLengthV414/RunSpeed),Time.deltaTime);
                 SetBunkerLidPoseV414(SmoothResidence01((age - 1f) / .65f));
             }
             else if (age < 2.5f)
@@ -165,10 +169,7 @@ namespace TooLateToPanic
             {
                 if (age < 1.85f)
                 {
-                    var hand = PanicCharacterArt.GetCharacterBone(hero.gameObject, animator, HumanBodyBones.RightHand);
-                    cinematicBagV414.transform.SetPositionAndRotation(hand ? hand.position : player.position + new Vector3(.25f, .85f, .2f), Quaternion.Euler(0, facingYaw, -12));
-                    bagReleasePositionV414 = cinematicBagV414.transform.position;
-                    bagReleaseRotationV414 = cinematicBagV414.transform.rotation;
+                    UpdateHeldBunkerBagV414();
                 }
                 else
                 {
@@ -184,15 +185,43 @@ namespace TooLateToPanic
             }
         }
 
+        void PrepareBunkerBagGripV414()
+        {
+            cinematicBagGripLocalV414=Vector3.zero;if(!cinematicBagV414)return;
+            Transform bag=cinematicBagV414.transform;Bounds bounds=new Bounds();bool any=false;
+            foreach(var renderer in cinematicBagV414.GetComponentsInChildren<Renderer>(true))
+            {
+                if(!renderer.enabled)continue;Bounds b=renderer.bounds;
+                for(int i=0;i<8;i++)
+                {
+                    Vector3 p=bag.InverseTransformPoint(b.center+Vector3.Scale(b.extents,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1)));
+                    if(!any){bounds=new Bounds(p,Vector3.zero);any=true;}else bounds.Encapsulate(p);
+                }
+            }
+            // CreateDisplay is explicitly bottom-centred. The hand holds near the top, not the bottom pivot.
+            if(any)cinematicBagGripLocalV414=new Vector3(bounds.center.x,bounds.max.y-bounds.size.y*.02f,bounds.center.z);
+        }
+
+        void UpdateHeldBunkerBagV414()
+        {
+            if(!cinematicBagV414||BunkerBagReleasedV414||residenceCinematicAge>=1.85f)return;
+            var hand=PanicCharacterArt.GetCharacterBone(hero.gameObject,animator,HumanBodyBones.RightHand);
+            Vector3 hold=hand?hand.position:player.position+new Vector3(.25f,.85f,.2f);
+            Transform bag=cinematicBagV414.transform;bag.rotation=Quaternion.Euler(0,facingYaw,-12);
+            bag.position+=hold-bag.TransformPoint(cinematicBagGripLocalV414);
+            bagReleasePositionV414=bag.position;bagReleaseRotationV414=bag.rotation;
+        }
+
         bool ApplyCinematicCharacterPoseV414()
         {
             if (!CinematicActive) return false;
             if (CinematicKind == "Disaster" && !Model.IsSimulation)
             {
-                if (residenceCinematicAge < 1f) PanicCharacterArt.SetMotion(hero.gameObject, animator, BunkerApproachRouteLengthV414, true, 0, Time.deltaTime);
-                else if (residenceCinematicAge < 1.65f) { PanicCharacterArt.SetMotion(hero.gameObject, animator, 0, true, 0, Time.deltaTime); PanicCharacterArt.SetTaskPose(hero.gameObject, animator, "gather", .5f); }
-                else if (residenceCinematicAge < 2.5f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "throw", Mathf.Clamp01((residenceCinematicAge - 1.65f) / .85f));
-                else PanicCharacterArt.SetCinematicPose(hero.gameObject, "jump", Mathf.Clamp01((residenceCinematicAge - 2.5f) / 1.55f));
+                if (residenceCinematicAge >= 1f && residenceCinematicAge < 1.65f) PanicCharacterArt.SetTaskPose(hero.gameObject, animator, "gather", .5f);
+                else if (residenceCinematicAge >= 1.65f && residenceCinematicAge < 2.5f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "throw", Mathf.Clamp01((residenceCinematicAge - 1.65f) / .85f));
+                else if (residenceCinematicAge >= 2.5f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "jump", Mathf.Clamp01((residenceCinematicAge - 2.5f) / 1.55f));
+                // Sync the held cosmetic bag after this exact frame's evaluated hand pose, before real release.
+                if(residenceCinematicAge<1.85f)UpdateHeldBunkerBagV414();
             }
             return true;
         }

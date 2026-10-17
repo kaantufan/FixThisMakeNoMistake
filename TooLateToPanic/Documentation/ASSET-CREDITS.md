@@ -2,9 +2,9 @@
 
 ## Home V4.14 — 17 Ekim 2026
 
-`defter-mockup` dalı `00377265c740fdc973039d0266cefc8c913633b9` karakter mesh/kaplamaları ve `yarkin-assets` dalı `29bf309fa0c7ccfdafd0a935e93512a44f550c9e` bunker kapağı/kilit meshleri seçilerek alındı. Kaynak karakterde rig veya klip yoktur; gerçek mesh için yerel19kemikli iskelet, ağırlıklar ve prosedürel hareket/iş/atlama pozları üretildi. FPS el rig'i, oda/tesisat geometrileri, yerel nabız/nefes sesleri, afet VFX ve yardım aracı düzenlemeleri bu görevdeki yerel kod üretimidir. Harici ücretli servis veya kredi kullanılmadı.
+`defter-mockup` dalı `00377265c740fdc973039d0266cefc8c913633b9` karakter mesh/kaplamaları ve `yarkin-assets` dalı `29bf309fa0c7ccfdafd0a935e93512a44f550c9e` bunker kapağı/kilit meshleri seçilerek alındı. İlk Meshy karakterde rig/klip yoktu; iki yerel hareket denemesi kullanıcı tarafından reddedildi. Son r4 adayı çalışan eski Quaternius humanoid Avatar ve gerçek UAL Idle/Walk/Jog/Jump/Interact/Fixing kliplerini korur; görünümü yeni referanstaki yeşil ceket, açık tişört, sade pantolon ve saç/sakal çizgisine göre yerel olarak uyarlanır. Yeni procedural yürüyüş kullanılmaz; Meshy kaynakları arşivde korunur. FPS el rig'i, oda/tesisat geometrileri, yerel nabız/nefes sesleri, afet VFX ve yardım aracı düzenlemeleri bu görevdeki yerel kod üretimidir. Harici ücretli servis veya kredi kullanılmadı.
 
-Yeni karakterin sivil NPC/kurtarma kopyaları da aynı Meshy kaynağından gelir; eski Quaternius CC0 lisansı bunlara uygulanmaz. Karakter/bunker için kamuya yeniden dağıtım lisansı ayrıca doğrulanmış değildir; yeni bir genel lisans atanmadı. Kaynak provenansı, hashler ve açık artist sınırları: [V4.14 asset notları](HOME-V4.14-ASSETS-2026-10-17.md). GitHub'a yayın yapılmadı.
+Son aktif sivil NPC/kurtarma kopyaları da retained çalışan humanoid prefabını kullanır; mevcut Quaternius CC0 metinleri yalnız gerçekten o gövde/animasyon kaynakları içindir. Yerel yeni kıyafetlere otomatik dış kaynak lisansı atanmaz. Korunan Meshy kaynakları ve yeni bunker için kamuya yeniden dağıtım lisansı ayrıca doğrulanmış değildir. Kaynak provenansı, hashler ve açık artist sınırları: [V4.14 asset notları](HOME-V4.14-ASSETS-2026-10-17.md). Bu root oturumu GitHub yayını başlatmadı.
 
 ## Home V4.12 — 17 Ekim 2026
 
