@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 9155078778349757496}
   - component: {fileID: 1740107960263400743}
   - component: {fileID: 9165352691012093068}
+  - component: {fileID: 6271978170350503136}
   - component: {fileID: 8370894492879729399}
   m_Layer: 0
   m_Name: PF_WaterValve
@@ -55,8 +56,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.475, y: 0.375, z: 0.189375}
-  m_Center: {x: 0, y: 0.1875, z: 0}
+  m_Size: {x: 0.55, y: 0.37500003, z: 0.25687498}
+  m_Center: {x: 0, y: 0.18750001, z: 0}
 --- !u!114 &9165352691012093068
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80,10 +81,58 @@ MonoBehaviour:
   isSecuredOrClosed: 0
   triggersSecondaryHazard: 2
   currentState: 0
+  mechanismKind: 2
   visualRoot: {fileID: 3016641747872942961}
   securedBracketObject: {fileID: 0}
-  valveHandleTransform: {fileID: 0}
+  valveHandleTransform: {fileID: 6124635996807577352}
+  secondaryMovingPart: {fileID: 5725616630210141073}
+  tertiaryMovingPart: {fileID: 3432522719218986292}
+  quaternaryMovingPart: {fileID: 376611187336019180}
+  mechanicalAnimator: {fileID: 6271978170350503136}
+  valveAnimationDuration: 0.92
+  isContainerCabinet: 0
+  cabinetDoorHinge: {fileID: 0}
+  isCabinetDoorOpen: 0
+  doorOpenAngleY: 105
+  doorAnimationDuration: 0.52
+  containedItemSlot: {fileID: 0}
+  containedItem: {fileID: 0}
   inventoryIcon: {fileID: 21300000, guid: 118bdc8a82b392741817dca84bc0316a, type: 3}
+  _initialVisualLocalPos: {x: 0, y: 0, z: 0}
+  _initialVisualLocalRot: {x: 0, y: 0, z: 0, w: 1}
+  _initialVisualLocalScale: {x: 1, y: 1, z: 1}
+  _handleBasePos: {x: -0.024999997, y: 0.1875, z: 0.0959375}
+  _handleBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _secondaryBasePos: {x: -0.18124999, y: 0.1875, z: 0.0384375}
+  _secondaryBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _tertiaryBasePos: {x: 0.14750001, y: 0.1875, z: 0.033437498}
+  _tertiaryBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _quaternaryBasePos: {x: -0.18124999, y: 0.103750005, z: -0.0015624985}
+  _quaternaryBaseScale: {x: 1, y: 1, z: 1}
+  _doorBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _hasCapturedRestPose: 1
+--- !u!95 &6271978170350503136
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46811116321684639}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d722ac0b67bae85408ee766190ddae6b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &8370894492879729399
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -128,7 +177,7 @@ Transform:
   m_GameObject: {fileID: 8819605393992120419}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.1875, z: 0}
+  m_LocalPosition: {x: 0, y: 0.18750001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -153,7 +202,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.36462113
+  m_Radius: 0.41027358
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &3339413431423462554
 PrefabInstance:
@@ -203,17 +252,61 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -384801376269446254, guid: aa6013600e900de40854c83467cdad30, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -384801376269446254, guid: aa6013600e900de40854c83467cdad30, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 141089232095052206, guid: aa6013600e900de40854c83467cdad30, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 141089232095052206, guid: aa6013600e900de40854c83467cdad30, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: aa6013600e900de40854c83467cdad30, type: 3}
       propertyPath: m_Name
       value: Visual
+      objectReference: {fileID: 0}
+    - target: {fileID: 6999301012961326859, guid: aa6013600e900de40854c83467cdad30, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6999301012961326859, guid: aa6013600e900de40854c83467cdad30, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa6013600e900de40854c83467cdad30, type: 3}
+--- !u!4 &376611187336019180 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -6093925327783849866, guid: aa6013600e900de40854c83467cdad30, type: 3}
+  m_PrefabInstance: {fileID: 3339413431423462554}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3016641747872942961 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: aa6013600e900de40854c83467cdad30, type: 3}
+  m_PrefabInstance: {fileID: 3339413431423462554}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3432522719218986292 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 141089232095052206, guid: aa6013600e900de40854c83467cdad30, type: 3}
+  m_PrefabInstance: {fileID: 3339413431423462554}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5725616630210141073 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6999301012961326859, guid: aa6013600e900de40854c83467cdad30, type: 3}
+  m_PrefabInstance: {fileID: 3339413431423462554}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6124635996807577352 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -384801376269446254, guid: aa6013600e900de40854c83467cdad30, type: 3}
   m_PrefabInstance: {fileID: 3339413431423462554}
   m_PrefabAsset: {fileID: 0}

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -21,21 +22,24 @@ namespace YarkinAssets.Editor
 
         private static void AutoBuildIfNeeded()
         {
-            // Automatically trigger full 32-asset build if the new 32nd prefab (PF_RubblePile) is not built yet
-            if (AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabsDir}/PF_RubblePile.prefab") == null &&
-                AssetDatabase.LoadAssetAtPath<GameObject>($"{MeshesDir}/SM_RubblePile.fbx") != null)
+            // Automatically trigger full 33-asset build if the new mechanical animation controllers & previews are not built yet
+            if (AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>($"{AnimationsDir}/AC_WaterValve.controller") == null &&
+                AssetDatabase.LoadAssetAtPath<GameObject>($"{MeshesDir}/SM_WaterValve.fbx") != null)
             {
-                Debug.Log("[YarkinAssetPipelineBuilder] Auto-building all 32 upgraded prefabs, L-brackets, icons & isometric scene...");
+                Debug.Log("[YarkinAssetPipelineBuilder] Auto-building all 33 prefabs with physically-based Valve/Faucet/Breaker/Door animations, AnimatorControllers, icons & isometric scene...");
                 BuildAll();
             }
         }
         private const string RootDir = "Assets/_YarkinAssets";
         private const string MeshesDir = RootDir + "/Art/Meshes";
         private const string MaterialsDir = RootDir + "/Art/Materials";
+        private const string AnimationsDir = RootDir + "/Art/Animations";
         private const string IconsDir = RootDir + "/Art/Icons";
+        private const string PreviewsDir = RootDir + "/Art/Icons/Previews";
         private const string PackedTexDir = RootDir + "/Art/Textures/Packed";
         private const string PrefabsDir = RootDir + "/Prefabs";
         private const string ScenesDir = RootDir + "/Scenes";
+
 
         private struct PaletteDef
         {
@@ -126,11 +130,12 @@ namespace YarkinAssets.Editor
             new PaletteDef("GlassCyan",    0.55f, 0.88f, 0.96f, 0.10f, 0.10f),
         };
 
-        // Full 32-Asset Master Catalog (18 Upgraded Core + 14 IMO Expansion)
+        // Full 33-Asset Master Catalog (18 Upgraded Core + 15 IMO Expansion incl. Hinged FireCabinet)
         private static readonly AssetSpec[] Specs = new[]
         {
             // --- PART A: ORIGINAL 18 ASSETS ---
-            new AssetSpec("FireExtinguisher",  "fire_extinguisher",  "Yangın Tüpü",          DisasterItemCategory.FireSafety,          4.50f, 35, true,  true,  false, SecondaryHazardType.FireWave,         ColliderKind.Capsule),
+            // Note: FireExtinguisher is Collectible (taken from inside FireCabinet), NOT directly wall-bolted itself!
+            new AssetSpec("FireExtinguisher",  "fire_extinguisher",  "Yangın Tüpü",          DisasterItemCategory.FireSafety,          4.50f, 35, true,  false, false, SecondaryHazardType.None,             ColliderKind.Capsule),
             new AssetSpec("Blanket",           "blanket",            "Battaniye",            DisasterItemCategory.SurvivalGear,        1.20f, 20, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("SnackBar",          "snack_bar",          "Snack Bar",            DisasterItemCategory.FoodAndWater,        0.08f, 10, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("Apple",             "apple",              "Elma",                 DisasterItemCategory.FoodAndWater,        0.15f,  8, true,  false, false, SecondaryHazardType.None,             ColliderKind.Capsule),
@@ -149,23 +154,24 @@ namespace YarkinAssets.Editor
             new AssetSpec("EmergencyRadio",    "emergency_radio",    "Acil Durum Radyosu",   DisasterItemCategory.Communication,       0.65f, 30, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("AirConditioner",    "air_conditioner",    "Duvar Kliması",        DisasterItemCategory.HouseholdFixture,   12.00f, 30, false, true,  false, SecondaryHazardType.FallingTrauma,    ColliderKind.Box),
 
-            // --- PART B: 14 NEW IMO DISASTER EXPANSION ASSETS ---
+            // --- PART B: 13 IMO DISASTER EXPANSION ASSETS (31 Total Assets) ---
             new AssetSpec("GasValve",          "gas_valve",          "Doğalgaz Ana Vanası",  DisasterItemCategory.UtilityValve,        0.00f, 45, false, false, true,  SecondaryHazardType.FireWave,         ColliderKind.Box),
             new AssetSpec("WaterValve",        "water_valve",        "Su Kesme Vanası",      DisasterItemCategory.UtilityValve,        0.00f, 40, false, false, true,  SecondaryHazardType.FloodWave,        ColliderKind.Box),
             new AssetSpec("BreakerBox",        "breaker_box",        "Elektrik Sigorta Panosu",DisasterItemCategory.UtilityValve,      0.00f, 40, false, false, true,  SecondaryHazardType.ElectricalShock,  ColliderKind.Box),
-            new AssetSpec("Bookcase",          "bookcase",           "Büyük Ahşap Kitaplık", DisasterItemCategory.HouseholdFixture,   35.00f, 35, false, true,  false, SecondaryHazardType.CorridorBlockage, ColliderKind.Box),
+            new AssetSpec("Bookcase",          "bookcase",           "Büyük Ahşap Kitaplık (2 Bölmeli)", DisasterItemCategory.HouseholdFixture, 35.00f, 35, false, true, false, SecondaryHazardType.CorridorBlockage, ColliderKind.Box),
             new AssetSpec("Refrigerator",      "refrigerator",       "Mutfak Buzdolabı",     DisasterItemCategory.HouseholdFixture,   55.00f, 35, false, true,  false, SecondaryHazardType.CorridorBlockage, ColliderKind.Box),
             new AssetSpec("WaterHeater",       "water_heater",       "Banyo Termosifonu",    DisasterItemCategory.HouseholdFixture,   28.00f, 40, false, true,  false, SecondaryHazardType.FloodWave,        ColliderKind.Capsule),
-            new AssetSpec("SturdyTable",       "sturdy_table",       "Sağlam Masa (Yaşam Üçgeni)",DisasterItemCategory.HouseholdFixture,22.0f,30, false, false, false, SecondaryHazardType.None,             ColliderKind.Box),
+            new AssetSpec("SturdyTable",       "sturdy_table",       "Sağlam Masa (Yaşam Üçgeni)",DisasterItemCategory.HouseholdFixture,22.0f,30, false, true,  false, SecondaryHazardType.FallingTrauma,    ColliderKind.Box),
             new AssetSpec("EmergencyWhistle",  "emergency_whistle",  "Deprem Düdüğü",        DisasterItemCategory.Communication,       0.03f, 35, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
-            new AssetSpec("DocumentPouch",     "document_pouch",     "Evrak & DASK Dosyası", DisasterItemCategory.SurvivalGear,        0.20f, 30, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("WorkGloves",        "work_gloves",        "Ağır Hizmet Eldiveni", DisasterItemCategory.SurvivalGear,        0.25f, 20, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("MultiTool",         "multi_tool",         "Çok Amaçlı Pense/Çakı",DisasterItemCategory.SurvivalGear,        0.22f, 25, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
-            new AssetSpec("DustMask",          "dust_mask",          "FFP3 Toz Maskesi",     DisasterItemCategory.MedicalAndHygiene,   0.05f, 20, true,  false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("ShatteredGlass",    "shattered_glass",    "Kırık Cam Tehlikesi",  DisasterItemCategory.EnvironmentalHazard, 0.00f,  0, false, false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("RubblePile",        "rubble_pile",        "Dökülmüş Moloz Yığını",DisasterItemCategory.EnvironmentalHazard, 0.00f,  0, false, false, false, SecondaryHazardType.CorridorBlockage, ColliderKind.Box),
+            new AssetSpec("FireCabinet",       "fire_cabinet",       "Yangın Tüpü Dolabı",   DisasterItemCategory.FireSafety,         14.00f, 35, false, true,  false, SecondaryHazardType.FireWave,         ColliderKind.Box),
         };
 
+        [MenuItem("Tools/Yarkin Assets/Build All 33 Prefabs, Multi-State Brackets, Icons & Isometric Scene")]
+        [MenuItem("Tools/Yarkin Assets/Build All 31 Prefabs, Multi-State Brackets, Icons & Isometric Scene")]
         [MenuItem("Tools/Yarkin Assets/Build All 32 Prefabs, Multi-State Brackets, Icons & Isometric Scene")]
         [MenuItem("Tools/Yarkin Assets/Build All 18 Prefabs, Icons & Demo Scene")]
         public static void BuildAll()
@@ -200,13 +206,15 @@ namespace YarkinAssets.Editor
             BuildDemoShowcaseScene(prefabs, materials);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[YarkinAssetPipelineBuilder] Successfully built {prefabs.Count} prefabs (with 3D L-Brackets & Valve states), {Palette.Length} semantic materials, 32 icons, and True Isometric Demo_YarkinAssets scene!");
+            Debug.Log($"[YarkinAssetPipelineBuilder] Successfully built {prefabs.Count} prefabs (with custom non-obstructing 3D brackets, hinged FireCabinet & Valve states), {Palette.Length} semantic materials, 33 icons, and True Isometric Demo_YarkinAssets scene!");
         }
 
         private static void EnsureFolders()
         {
             Directory.CreateDirectory(MaterialsDir);
+            Directory.CreateDirectory(AnimationsDir);
             Directory.CreateDirectory(IconsDir);
+            Directory.CreateDirectory(PreviewsDir);
             Directory.CreateDirectory(PackedTexDir);
             Directory.CreateDirectory(PrefabsDir);
             Directory.CreateDirectory(ScenesDir);
@@ -408,12 +416,12 @@ namespace YarkinAssets.Editor
             triggerSphere.isTrigger = true;
             triggerSphere.radius = Mathf.Max(0.35f, combinedBounds.extents.magnitude * 1.15f);
 
-            // 3. If Securable Fixture -> Add 3D Steel L-Bracket & Safety Straps child object (Default Inactive, toggled when player secures!)
+            // 3. If Securable Fixture -> Add custom, non-obstructing 3D Seismic Brackets (Default Inactive, toggled when player secures!)
             GameObject bracketRoot = null;
             if (spec.IsSecurableFixture)
             {
-                bracketRoot = BuildSteelLBracketVisual(root.transform, combinedBounds, materials);
-                bracketRoot.SetActive(false); // Hidden until player secures it with [F]!
+                bracketRoot = BuildSteelLBracketVisual(spec.CodeName, root.transform, combinedBounds, materials);
+                bracketRoot.SetActive(false); // Hidden until player secures it!
             }
 
             // 4. Add DisasterPrepItem metadata & state controller
@@ -430,7 +438,105 @@ namespace YarkinAssets.Editor
             item.visualRoot = visual.transform;
             item.securedBracketObject = bracketRoot;
 
-            // 5. Add IsometricItemMotion component
+            // 5. Wire Mechanical Pivots & Multi-Part Animation Transforms
+            switch (spec.CodeName)
+            {
+                case "GasValve":
+                    item.mechanismKind = ValveMechanismKind.QuarterTurnBallValve;
+                    item.valveAnimationDuration = 0.58f;
+                    item.valveHandleTransform = FindChildByKeyword(visual.transform, "ValveHandle_Pivot");
+                    item.secondaryMovingPart = FindChildByKeyword(visual.transform, "GaugeNeedle_Pivot");
+                    break;
+
+                case "WaterValve":
+                    item.mechanismKind = ValveMechanismKind.RisingStemWaterValve;
+                    item.valveAnimationDuration = 0.92f;
+                    item.valveHandleTransform = FindChildByKeyword(visual.transform, "ValveHandle_Pivot");
+                    item.secondaryMovingPart = FindChildByKeyword(visual.transform, "FaucetTap_Pivot");
+                    item.tertiaryMovingPart = FindChildByKeyword(visual.transform, "MeterTurbine_Pivot");
+                    item.quaternaryMovingPart = FindChildByKeyword(visual.transform, "WaterDrop_Pivot");
+                    break;
+
+                case "BreakerBox":
+                    item.mechanismKind = ValveMechanismKind.CircuitBreakerPanel;
+                    item.valveAnimationDuration = 0.42f;
+                    item.valveHandleTransform = FindChildByKeyword(visual.transform, "MainBreaker_Pivot");
+                    item.quaternaryMovingPart = FindChildByKeyword(visual.transform, "StatusLED_Pivot");
+                    break;
+
+                case "WaterHeater":
+                    item.mechanismKind = ValveMechanismKind.WaterHeaterIsolation;
+                    item.valveAnimationDuration = 0.65f;
+                    item.valveHandleTransform = FindChildByKeyword(visual.transform, "ValveHandle_Pivot");
+                    item.secondaryMovingPart = FindChildByKeyword(visual.transform, "ThermostatKnob_Pivot");
+                    item.quaternaryMovingPart = FindChildByKeyword(visual.transform, "StatusLED_Pivot");
+                    break;
+
+                case "AirConditioner":
+                    item.mechanismKind = ValveMechanismKind.AirConditionerLouver;
+                    item.valveAnimationDuration = 0.60f;
+                    item.valveHandleTransform = FindChildByKeyword(visual.transform, "VentFlap_Pivot");
+                    item.quaternaryMovingPart = FindChildByKeyword(visual.transform, "StatusLED_Pivot");
+                    break;
+
+                case "Refrigerator":
+                    item.isContainerCabinet = true;
+                    item.doorOpenAngleY = -95f;
+                    item.doorAnimationDuration = 0.62f;
+                    item.cabinetDoorHinge = FindChildByKeyword(visual.transform, "CabinetDoor_Hinge");
+                    item.secondaryMovingPart = FindChildByKeyword(visual.transform, "UpperDoor_Hinge");
+                    break;
+
+                case "FireCabinet":
+                    item.isContainerCabinet = true;
+                    item.doorOpenAngleY = 105f;
+                    item.doorAnimationDuration = 0.54f;
+                    item.cabinetDoorHinge = FindChildByKeyword(visual.transform, "CabinetDoor_Hinge");
+
+                    // Create Interior Mount Slot and instantiate PF_FireExtinguisher inside the cabinet!
+                    GameObject mountSlot = new GameObject("ExtinguisherMountSlot");
+                    mountSlot.transform.SetParent(root.transform, false);
+                    mountSlot.transform.localPosition = new Vector3(0.015f, 0.044f, 0.0f);
+                    item.containedItemSlot = mountSlot.transform;
+
+                    GameObject extPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabsDir}/PF_FireExtinguisher.prefab");
+                    if (extPrefab != null)
+                    {
+                        GameObject mountedExt = (GameObject)PrefabUtility.InstantiatePrefab(extPrefab);
+                        mountedExt.name = "PF_FireExtinguisher_Mounted";
+                        mountedExt.transform.SetParent(mountSlot.transform, false);
+                        mountedExt.transform.localPosition = Vector3.zero;
+                        mountedExt.transform.localRotation = Quaternion.identity;
+                        mountedExt.transform.localScale = Vector3.one;
+                        item.containedItem = mountedExt.GetComponent<DisasterPrepItem>();
+                    }
+                    break;
+            }
+
+            // Capture exact FBX rest positions of all mechanical pivots BEFORE evaluating initial poses
+            item.CaptureMechanicalRestPose();
+
+            // 6. Generate Physics-Baked Unity AnimationClips (.anim) & AnimatorController (.controller) for mechanical assets
+            if (item.mechanismKind != ValveMechanismKind.None || item.isContainerCabinet)
+            {
+                RuntimeAnimatorController ac = BuildMechanicalAnimatorAndClips(spec.CodeName, item);
+                if (ac != null)
+                {
+                    Animator anim = root.AddComponent<Animator>();
+                    anim.runtimeAnimatorController = ac;
+                    anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    item.mechanicalAnimator = anim;
+                }
+            }
+
+            // Initialize default open/intact mechanical pose (e.g., BreakerBox main switch UP at -48 deg, GasGauge needle at -38 deg)
+            item.SetSecuredOrClosed(false, instant: true);
+            if (item.isContainerCabinet)
+            {
+                item.SetCabinetDoorOpen(false, instant: true);
+            }
+
+            // 7. Add IsometricItemMotion component
             var motion = root.AddComponent<IsometricItemMotion>();
             motion.targetVisual = visual.transform;
             motion.enableIdleBobbing = false;
@@ -441,7 +547,260 @@ namespace YarkinAssets.Editor
             return savedPrefab;
         }
 
-        private static GameObject BuildSteelLBracketVisual(Transform parent, Bounds b, Dictionary<string, Material> materials)
+        private static Transform FindChildByKeyword(Transform parent, string keyword)
+        {
+            if (parent == null) return null;
+            Transform direct = parent.Find(keyword);
+            if (direct != null) return direct;
+            foreach (Transform t in parent.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.Contains(keyword))
+                {
+                    return t;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Generates physics-baked Unity .anim clips and .controller state machines in Assets/_YarkinAssets/Art/Animations
+        /// so animations can also be inspected/scrubbed in the Unity Animation & Animator windows.
+        /// </summary>
+        private static RuntimeAnimatorController BuildMechanicalAnimatorAndClips(string codeName, DisasterPrepItem item)
+        {
+            string openClipPath = $"{AnimationsDir}/Anim_{codeName}_Open.anim";
+            string closedClipPath = $"{AnimationsDir}/Anim_{codeName}_Close.anim";
+            string controllerPath = $"{AnimationsDir}/AC_{codeName}.controller";
+
+            AnimationClip openClip = new AnimationClip { name = $"Anim_{codeName}_Open", frameRate = 60f };
+            AnimationClip closeClip = new AnimationClip { name = $"Anim_{codeName}_Close", frameRate = 60f };
+
+            const int samples = 30;
+            float duration = item.isContainerCabinet && item.mechanismKind == ValveMechanismKind.None
+                ? item.doorAnimationDuration
+                : item.valveAnimationDuration;
+            if (duration < 0.2f) duration = 0.55f;
+
+            switch (item.mechanismKind)
+            {
+                case ValveMechanismKind.QuarterTurnBallValve:
+                {
+                    BakeRotationCurveZ(closeClip, "Visual/ValveHandle_Pivot", duration, samples, u => DisasterPrepItem.EvaluateBallValveCurve(u) * 90f);
+                    BakeRotationCurveZ(openClip, "Visual/ValveHandle_Pivot", duration, samples, u => (1f - DisasterPrepItem.EvaluateBallValveCurve(u)) * 90f);
+
+                    BakeRotationCurveZ(closeClip, "Visual/GaugeNeedle_Pivot", duration, samples, u =>
+                    {
+                        float uG = Mathf.Clamp01((u - 0.25f) / 0.75f);
+                        return Mathf.LerpUnclamped(-38f, 112f, DisasterPrepItem.EvaluateUnderdampedGaugeCurve(uG));
+                    });
+                    BakeRotationCurveZ(openClip, "Visual/GaugeNeedle_Pivot", duration, samples, u =>
+                    {
+                        float uG = Mathf.Clamp01((u - 0.15f) / 0.85f);
+                        return Mathf.LerpUnclamped(112f, -38f, DisasterPrepItem.EvaluateUnderdampedGaugeCurve(uG));
+                    });
+                    break;
+                }
+
+                case ValveMechanismKind.RisingStemWaterValve:
+                {
+                    Vector3 basePos = item.valveHandleTransform != null ? item.valveHandleTransform.localPosition : Vector3.zero;
+                    BakeRotationCurveZ(closeClip, "Visual/ValveHandle_Pivot", duration, samples, u => DisasterPrepItem.EvaluateMultiTurnWheelCurve(u) * 540f);
+                    BakePositionCurveZ(closeClip, "Visual/ValveHandle_Pivot", duration, samples, basePos, u => basePos.z - 0.015f * DisasterPrepItem.EvaluateMultiTurnWheelCurve(u));
+
+                    BakeRotationCurveZ(openClip, "Visual/ValveHandle_Pivot", duration, samples, u => (1f - DisasterPrepItem.EvaluateMultiTurnWheelCurve(u)) * 540f);
+                    BakePositionCurveZ(openClip, "Visual/ValveHandle_Pivot", duration, samples, basePos, u => basePos.z - 0.015f * (1f - DisasterPrepItem.EvaluateMultiTurnWheelCurve(u)));
+
+                    BakeRotationCurveZ(closeClip, "Visual/FaucetTap_Pivot", duration, samples, u => DisasterPrepItem.EvaluateBallValveCurve(Mathf.Clamp01((u - 0.1f) / 0.85f)) * 90f);
+                    BakeRotationCurveZ(openClip, "Visual/FaucetTap_Pivot", duration, samples, u => (1f - DisasterPrepItem.EvaluateBallValveCurve(Mathf.Clamp01((u - 0.1f) / 0.85f))) * 90f);
+                    break;
+                }
+
+                case ValveMechanismKind.CircuitBreakerPanel:
+                {
+                    BakeRotationCurveX(closeClip, "Visual/MainBreaker_Pivot", duration, samples, u => Mathf.LerpUnclamped(-48f, 48f, DisasterPrepItem.EvaluateBreakerSnapCurve(u)));
+                    BakeRotationCurveX(openClip, "Visual/MainBreaker_Pivot", duration, samples, u => Mathf.LerpUnclamped(48f, -48f, DisasterPrepItem.EvaluateBreakerSnapCurve(u)));
+                    break;
+                }
+
+                case ValveMechanismKind.WaterHeaterIsolation:
+                {
+                    BakeRotationCurveZ(closeClip, "Visual/ValveHandle_Pivot", duration, samples, u => DisasterPrepItem.EvaluateBallValveCurve(u) * 90f);
+                    BakeRotationCurveZ(closeClip, "Visual/ThermostatKnob_Pivot", duration, samples, u => Mathf.SmoothStep(0f, 1f, u) * -120f);
+
+                    BakeRotationCurveZ(openClip, "Visual/ValveHandle_Pivot", duration, samples, u => (1f - DisasterPrepItem.EvaluateBallValveCurve(u)) * 90f);
+                    BakeRotationCurveZ(openClip, "Visual/ThermostatKnob_Pivot", duration, samples, u => (1f - Mathf.SmoothStep(0f, 1f, u)) * -120f);
+                    break;
+                }
+
+                case ValveMechanismKind.AirConditionerLouver:
+                {
+                    BakeRotationCurveX(closeClip, "Visual/VentFlap_Pivot", duration, samples, u => Mathf.SmoothStep(0f, 1f, u) * -48f);
+                    BakeRotationCurveX(openClip, "Visual/VentFlap_Pivot", duration, samples, u => (1f - Mathf.SmoothStep(0f, 1f, u)) * -48f);
+                    break;
+                }
+
+                default:
+                {
+                    if (item.isContainerCabinet)
+                    {
+                        float maxAngle = item.doorOpenAngleY;
+                        // For cabinets, openClip opens the door (0 -> maxAngle) and closeClip closes the door (maxAngle -> 0)
+                        BakeRotationCurveY(openClip, "Visual/CabinetDoor_Hinge", duration, samples, u => DisasterPrepItem.EvaluateDoorHingeCurve(u) * maxAngle);
+                        BakeRotationCurveY(closeClip, "Visual/CabinetDoor_Hinge", duration, samples, u => (1f - DisasterPrepItem.EvaluateDoorHingeCurve(u)) * maxAngle);
+                        if (codeName == "Refrigerator")
+                        {
+                            BakeRotationCurveY(openClip, "Visual/UpperDoor_Hinge", duration, samples, u => DisasterPrepItem.EvaluateDoorHingeCurve(Mathf.Clamp01((u - 0.12f) / 0.88f)) * (maxAngle * 0.88f));
+                            BakeRotationCurveY(closeClip, "Visual/UpperDoor_Hinge", duration, samples, u => (1f - DisasterPrepItem.EvaluateDoorHingeCurve(Mathf.Clamp01((u - 0.12f) / 0.88f))) * (maxAngle * 0.88f));
+                        }
+                    }
+                    break;
+                }
+            }
+
+            CreateOrReplaceClipAsset(openClip, openClipPath);
+            CreateOrReplaceClipAsset(closeClip, closedClipPath);
+
+            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath) != null)
+            {
+                AssetDatabase.DeleteAsset(controllerPath);
+            }
+            AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            controller.AddParameter("IsClosed", AnimatorControllerParameterType.Bool);
+            controller.AddParameter("IsDoorOpen", AnimatorControllerParameterType.Bool);
+
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            bool isDoorOnly = item.isContainerCabinet && item.mechanismKind == ValveMechanismKind.None;
+
+            AnimatorState defaultState = sm.AddState(isDoorOnly ? "Door_Closed" : "Valve_Open_Default");
+            defaultState.motion = isDoorOnly ? closeClip : openClip;
+            sm.defaultState = defaultState;
+
+            AnimatorState activeState = sm.AddState(isDoorOnly ? "Door_Open" : "Valve_Closed_Secured");
+            activeState.motion = isDoorOnly ? openClip : closeClip;
+
+            string paramName = isDoorOnly ? "IsDoorOpen" : "IsClosed";
+            AnimatorStateTransition tToActive = defaultState.AddTransition(activeState);
+            tToActive.hasExitTime = false;
+            tToActive.duration = 0.05f;
+            tToActive.AddCondition(AnimatorConditionMode.If, 0f, paramName);
+
+            AnimatorStateTransition tToDefault = activeState.AddTransition(defaultState);
+            tToDefault.hasExitTime = false;
+            tToDefault.duration = 0.05f;
+            tToDefault.AddCondition(AnimatorConditionMode.IfNot, 0f, paramName);
+
+            EditorUtility.SetDirty(controller);
+            return controller;
+        }
+
+        private static void CreateOrReplaceClipAsset(AnimationClip clip, string path)
+        {
+            AnimationClip existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            if (existing != null)
+            {
+                EditorUtility.CopySerialized(clip, existing);
+                EditorUtility.SetDirty(existing);
+            }
+            else
+            {
+                AssetDatabase.CreateAsset(clip, path);
+            }
+        }
+
+        private static void BakeRotationCurveX(AnimationClip clip, string relPath, float duration, int samples, Func<float, float> angleEval)
+        {
+            AnimationCurve cx = new AnimationCurve();
+            AnimationCurve cy = new AnimationCurve();
+            AnimationCurve cz = new AnimationCurve();
+            for (int i = 0; i <= samples; i++)
+            {
+                float u = i / (float)samples;
+                float t = u * duration;
+                cx.AddKey(t, angleEval(u));
+                cy.AddKey(t, 0f);
+                cz.AddKey(t, 0f);
+            }
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.x"), cx);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.y"), cy);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.z"), cz);
+        }
+
+        private static void BakeRotationCurveY(AnimationClip clip, string relPath, float duration, int samples, Func<float, float> angleEval)
+        {
+            AnimationCurve cx = new AnimationCurve();
+            AnimationCurve cy = new AnimationCurve();
+            AnimationCurve cz = new AnimationCurve();
+            for (int i = 0; i <= samples; i++)
+            {
+                float u = i / (float)samples;
+                float t = u * duration;
+                cx.AddKey(t, 0f);
+                cy.AddKey(t, angleEval(u));
+                cz.AddKey(t, 0f);
+            }
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.x"), cx);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.y"), cy);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.z"), cz);
+        }
+
+        private static void BakeRotationCurveZ(AnimationClip clip, string relPath, float duration, int samples, Func<float, float> angleEval)
+        {
+            AnimationCurve cx = new AnimationCurve();
+            AnimationCurve cy = new AnimationCurve();
+            AnimationCurve cz = new AnimationCurve();
+            for (int i = 0; i <= samples; i++)
+            {
+                float u = i / (float)samples;
+                float t = u * duration;
+                cx.AddKey(t, 0f);
+                cy.AddKey(t, 0f);
+                cz.AddKey(t, angleEval(u));
+            }
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.x"), cx);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.y"), cy);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "localEulerAnglesRaw.z"), cz);
+        }
+
+        private static void BakePositionCurveZ(AnimationClip clip, string relPath, float duration, int samples, Vector3 basePos, Func<float, float> zEval)
+        {
+            AnimationCurve cx = new AnimationCurve();
+            AnimationCurve cy = new AnimationCurve();
+            AnimationCurve cz = new AnimationCurve();
+            for (int i = 0; i <= samples; i++)
+            {
+                float u = i / (float)samples;
+                float t = u * duration;
+                cx.AddKey(t, basePos.x);
+                cy.AddKey(t, basePos.y);
+                cz.AddKey(t, zEval(u));
+            }
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "m_LocalPosition.x"), cx);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "m_LocalPosition.y"), cy);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(relPath, typeof(Transform), "m_LocalPosition.z"), cz);
+        }
+
+        private static GameObject AddBracketPart(Transform parent, PrimitiveType type, string name, Vector3 pos, Vector3 scale, Material mat, Vector3 eulerRot = default)
+        {
+            GameObject go = GameObject.CreatePrimitive(type);
+            go.name = name;
+            UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = pos;
+            go.transform.localRotation = Quaternion.Euler(eulerRot);
+            go.transform.localScale = scale;
+            if (mat != null)
+            {
+                go.GetComponent<Renderer>().sharedMaterial = mat;
+            }
+            return go;
+        }
+
+        /// <summary>
+        /// Builds asset-specific, physically logical seismic securing hardware that NEVER obstructs functional fronts
+        /// (never crosses TV screen, Bookcase open shelves, Refrigerator doors, AC vents/LED, WaterHeater dial, or FireCabinet hinged door).
+        /// Note: In Unity local space of imported FBX models, +Z is FRONT, -Z is BACK (Wall), +Y is UP, and ±X is LEFT/RIGHT.
+        /// </summary>
+        private static GameObject BuildSteelLBracketVisual(string codeName, Transform parent, Bounds b, Dictionary<string, Material> materials)
         {
             GameObject group = new GameObject("SecuredBracket");
             group.transform.SetParent(parent, false);
@@ -451,49 +810,217 @@ namespace YarkinAssets.Editor
             materials.TryGetValue("M_SilverMetal", out Material steelMat);
             materials.TryGetValue("M_Yellow", out Material boltMat);
 
-            float topY = Mathf.Clamp(b.max.y * 0.82f, 0.15f, 1.65f);
-            float backZ = b.max.z + 0.015f;
-            float offsetX = Mathf.Max(0.06f, b.extents.x * 0.62f);
+            float[] leftRight = { -1f, 1f };
 
-            float[] sides = new[] { -offsetX, offsetX };
-            foreach (float x in sides)
+            switch (codeName)
             {
-                // Steel L-plate vertical arm
-                GameObject vPlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                vPlate.name = "LBracket_WallPlate";
-                UnityEngine.Object.DestroyImmediate(vPlate.GetComponent<Collider>());
-                vPlate.transform.SetParent(group.transform, false);
-                vPlate.transform.localPosition = new Vector3(x, topY + 0.04f, backZ);
-                vPlate.transform.localScale = new Vector3(0.045f, 0.11f, 0.015f);
-                if (steelMat != null) vPlate.GetComponent<Renderer>().sharedMaterial = steelMat;
+                case "Television":
+                {
+                    // Television: Left & Right Outer Side-Bezel Clamps + Rear Wall Tension Struts + Base Stand Locks
+                    // Screen is at |x| <= 0.445, z = +0.030. Clamps sit strictly at x = ±0.486 (outer edge) and extend to -Z (back wall).
+                    foreach (float s in leftRight)
+                    {
+                        float xEdge = s * 0.486f;
+                        // Outer side frame clamp bar
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "TV_SideBezelClamp",
+                            new Vector3(xEdge, 0.37f, 0.0f), new Vector3(0.026f, 0.38f, 0.076f), strapMat);
+                        // Upper & lower outer bezel grip tabs (only gripping outer 1.5cm bezel rim, 0% screen overlap!)
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "TV_SideGripTop",
+                            new Vector3(s * 0.474f, 0.53f, 0.0f), new Vector3(0.032f, 0.042f, 0.080f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "TV_SideGripBot",
+                            new Vector3(s * 0.474f, 0.21f, 0.0f), new Vector3(0.032f, 0.042f, 0.080f), steelMat);
+                        // Rear steel tension arms going backward (-Z) to the wall
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "TV_RearTensionArmTop",
+                            new Vector3(xEdge, 0.50f, -0.085f), new Vector3(0.022f, 0.028f, 0.14f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "TV_RearTensionArmBot",
+                            new Vector3(xEdge, 0.24f, -0.085f), new Vector3(0.022f, 0.028f, 0.14f), steelMat);
+                        // Rear wall mounting plate & bolts (-Z)
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "TV_RearWallPlate",
+                            new Vector3(xEdge, 0.37f, -0.155f), new Vector3(0.058f, 0.34f, 0.016f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "TV_WallBoltTop",
+                            new Vector3(xEdge, 0.50f, -0.165f), new Vector3(0.028f, 0.014f, 0.028f), boltMat, new Vector3(90f, 0f, 0f));
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "TV_WallBoltBot",
+                            new Vector3(xEdge, 0.24f, -0.165f), new Vector3(0.028f, 0.014f, 0.028f), boltMat, new Vector3(90f, 0f, 0f));
+                        // Base stand anti-slip clamps on left/right edges of StandBase
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "TV_StandClamp",
+                            new Vector3(s * 0.225f, 0.020f, -0.02f), new Vector3(0.045f, 0.026f, 0.18f), strapMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "TV_StandBolt",
+                            new Vector3(s * 0.225f, 0.032f, -0.07f), new Vector3(0.024f, 0.012f, 0.024f), boltMat);
+                    }
+                    break;
+                }
 
-                // Steel L-plate horizontal brace
-                GameObject hPlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                hPlate.name = "LBracket_TopArm";
-                UnityEngine.Object.DestroyImmediate(hPlate.GetComponent<Collider>());
-                hPlate.transform.SetParent(group.transform, false);
-                hPlate.transform.localPosition = new Vector3(x, topY, backZ - 0.04f);
-                hPlate.transform.localScale = new Vector3(0.045f, 0.016f, 0.09f);
-                if (steelMat != null) hPlate.GetComponent<Renderer>().sharedMaterial = steelMat;
+                case "Bookcase":
+                {
+                    // Bookcase: 3 Top-Crown L-Brackets (Left, Center Divider, Right) + Exterior Left/Right Side-Wall Anchors.
+                    // Front open shelves (+Z) of both vertical compartments remain 100% open!
+                    float[] topXs = { -0.36f, 0.0f, 0.36f };
+                    foreach (float x in topXs)
+                    {
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "Bookcase_TopL_Horiz",
+                            new Vector3(x, 1.812f, -0.12f), new Vector3(0.055f, 0.018f, 0.14f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "Bookcase_TopL_Wall",
+                            new Vector3(x, 1.87f, -0.188f), new Vector3(0.055f, 0.13f, 0.018f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "Bookcase_TopBolt",
+                            new Vector3(x, 1.89f, -0.198f), new Vector3(0.030f, 0.014f, 0.030f), boltMat, new Vector3(90f, 0f, 0f));
+                    }
+                    float[] shelfHeights = { 1.34f, 0.90f };
+                    foreach (float s in leftRight)
+                    {
+                        foreach (float y in shelfHeights)
+                        {
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Bookcase_SideStrap",
+                                new Vector3(s * 0.490f, y, -0.09f), new Vector3(0.024f, 0.055f, 0.19f), strapMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Bookcase_SideWallWing",
+                                new Vector3(s * 0.525f, y, -0.188f), new Vector3(0.080f, 0.078f, 0.018f), steelMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cylinder, "Bookcase_SideWallBolt",
+                                new Vector3(s * 0.538f, y, -0.198f), new Vector3(0.028f, 0.014f, 0.028f), boltMat, new Vector3(90f, 0f, 0f));
+                        }
+                    }
+                    break;
+                }
 
-                // High-vis Safety Strap wrapping the fixture
-                GameObject strap = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                strap.name = "SafetyStrap_Band";
-                UnityEngine.Object.DestroyImmediate(strap.GetComponent<Collider>());
-                strap.transform.SetParent(group.transform, false);
-                strap.transform.localPosition = new Vector3(x, b.center.y, b.center.z);
-                strap.transform.localScale = new Vector3(0.036f, b.size.y * 0.75f, b.size.z + 0.022f);
-                if (strapMat != null) strap.GetComponent<Renderer>().sharedMaterial = strapMat;
+                case "Refrigerator":
+                {
+                    // Refrigerator: Top-Roof Heavy L-Brackets + Left/Right Side-Panel Rear Seismic Straps.
+                    // Front Upper Freezer Door & Lower Fridge Door (+Z) are 100% clear to open!
+                    foreach (float s in leftRight)
+                    {
+                        float xTop = s * 0.25f;
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "Fridge_TopL_Horiz",
+                            new Vector3(xTop, 1.768f, -0.24f), new Vector3(0.060f, 0.018f, 0.22f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "Fridge_TopL_Wall",
+                            new Vector3(xTop, 1.83f, -0.356f), new Vector3(0.060f, 0.14f, 0.018f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "Fridge_TopBolt",
+                            new Vector3(xTop, 1.85f, -0.366f), new Vector3(0.032f, 0.015f, 0.032f), boltMat, new Vector3(90f, 0f, 0f));
 
-                // Heavy Bolt Anchor
-                GameObject bolt = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                bolt.name = "WallAnchorBolt";
-                UnityEngine.Object.DestroyImmediate(bolt.GetComponent<Collider>());
-                bolt.transform.SetParent(group.transform, false);
-                bolt.transform.localPosition = new Vector3(x, topY + 0.055f, backZ + 0.008f);
-                bolt.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                bolt.transform.localScale = new Vector3(0.026f, 0.014f, 0.026f);
-                if (boltMat != null) bolt.GetComponent<Renderer>().sharedMaterial = boltMat;
+                        float[] sideYs = { 1.38f, 0.78f };
+                        foreach (float y in sideYs)
+                        {
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Fridge_SideSeismicStrap",
+                                new Vector3(s * 0.388f, y, -0.15f), new Vector3(0.024f, 0.065f, 0.42f), strapMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Fridge_SideBuckle",
+                                new Vector3(s * 0.390f, y, 0.05f), new Vector3(0.030f, 0.080f, 0.055f), steelMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Fridge_RearWallWing",
+                                new Vector3(s * 0.425f, y, -0.356f), new Vector3(0.090f, 0.090f, 0.020f), steelMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cylinder, "Fridge_SideWallBolt",
+                                new Vector3(s * 0.438f, y, -0.366f), new Vector3(0.032f, 0.015f, 0.032f), boltMat, new Vector3(90f, 0f, 0f));
+                        }
+                    }
+                    break;
+                }
+
+                case "AirConditioner":
+                {
+                    // AirConditioner: Left & Right Wall L-Console Support Arms + Side Cheek Clamps.
+                    // Front vents and LED display (+Z) are 100% clear!
+                    foreach (float s in leftRight)
+                    {
+                        float xSide = s * 0.436f;
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "AC_WallRail",
+                            new Vector3(xSide, 0.14f, -0.125f), new Vector3(0.042f, 0.32f, 0.018f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "AC_BottomConsoleArm",
+                            new Vector3(xSide, -0.008f, -0.02f), new Vector3(0.042f, 0.020f, 0.21f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "AC_SideCheekClamp",
+                            new Vector3(xSide, 0.14f, -0.02f), new Vector3(0.024f, 0.22f, 0.16f), strapMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "AC_WallBoltTop",
+                            new Vector3(xSide, 0.27f, -0.135f), new Vector3(0.028f, 0.014f, 0.028f), boltMat, new Vector3(90f, 0f, 0f));
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "AC_WallBoltBot",
+                            new Vector3(xSide, 0.03f, -0.135f), new Vector3(0.028f, 0.014f, 0.028f), boltMat, new Vector3(90f, 0f, 0f));
+                    }
+                    break;
+                }
+
+                case "WaterHeater":
+                {
+                    // WaterHeater: Upper & Mid-Height Side Seismic Clamp Rings & Rear Wall Struts.
+                    // Front thermostat dial box (y=0.27, z=+0.23) and bottom pipes (y=0.03) are 100% clear!
+                    float[] ringHeights = { 0.68f, 0.46f };
+                    foreach (float y in ringHeights)
+                    {
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "Heater_RearWallBeam",
+                            new Vector3(0f, y, -0.255f), new Vector3(0.58f, 0.065f, 0.022f), steelMat);
+                        foreach (float s in leftRight)
+                        {
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Heater_SideClampPad",
+                                new Vector3(s * 0.242f, y, -0.02f), new Vector3(0.028f, 0.058f, 0.22f), strapMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Heater_RearTensionStrut",
+                                new Vector3(s * 0.248f, y, -0.14f), new Vector3(0.024f, 0.042f, 0.23f), steelMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cylinder, "Heater_WallBolt",
+                                new Vector3(s * 0.26f, y, -0.268f), new Vector3(0.030f, 0.015f, 0.030f), boltMat, new Vector3(90f, 0f, 0f));
+                        }
+                    }
+                    break;
+                }
+
+                case "FireCabinet":
+                {
+                    // FireCabinet: Exterior Left/Right Side-Wall Flanges & Top-Rear L-Brackets.
+                    // Front hinged door (CabinetDoor_Hinge at +Z) swings open +105 deg outward with 0% obstruction!
+                    foreach (float s in leftRight)
+                    {
+                        float xTop = s * 0.14f;
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "Cabinet_TopL_Horiz",
+                            new Vector3(xTop, 0.828f, -0.10f), new Vector3(0.045f, 0.016f, 0.12f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "Cabinet_TopL_Wall",
+                            new Vector3(xTop, 0.875f, -0.155f), new Vector3(0.045f, 0.10f, 0.016f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "Cabinet_TopBolt",
+                            new Vector3(xTop, 0.89f, -0.165f), new Vector3(0.026f, 0.014f, 0.026f), boltMat, new Vector3(90f, 0f, 0f));
+
+                        float[] sideYs = { 0.66f, 0.18f };
+                        foreach (float y in sideYs)
+                        {
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Cabinet_SideClamp",
+                                new Vector3(s * 0.226f, y, -0.07f), new Vector3(0.022f, 0.065f, 0.16f), strapMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Cabinet_WallFlange",
+                                new Vector3(s * 0.255f, y, -0.155f), new Vector3(0.075f, 0.080f, 0.018f), steelMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cylinder, "Cabinet_SideWallBolt",
+                                new Vector3(s * 0.265f, y, -0.166f), new Vector3(0.028f, 0.014f, 0.028f), boltMat, new Vector3(90f, 0f, 0f));
+                        }
+                    }
+                    break;
+                }
+
+                case "SturdyTable":
+                {
+                    // SturdyTable: 4 Floor-Anchored Foot Clamps around the bottom of the 4 legs (y = 0..0.08m).
+                    // Tabletop and under-table Life Triangle / Shelter space remain 100% open!
+                    float[] legXs = { -0.61f, 0.61f };
+                    float[] legZs = { -0.35f, 0.35f };
+                    foreach (float lx in legXs)
+                    {
+                        foreach (float lz in legZs)
+                        {
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Table_LegCollar",
+                                new Vector3(lx, 0.045f, lz), new Vector3(0.092f, 0.075f, 0.092f), strapMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cube, "Table_FloorFlange",
+                                new Vector3(lx, 0.008f, lz), new Vector3(0.145f, 0.016f, 0.145f), steelMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cylinder, "Table_FloorBoltX",
+                                new Vector3(lx + Mathf.Sign(lx) * 0.055f, 0.018f, lz), new Vector3(0.024f, 0.014f, 0.024f), boltMat);
+                            AddBracketPart(group.transform, PrimitiveType.Cylinder, "Table_FloorBoltZ",
+                                new Vector3(lx, 0.018f, lz + Mathf.Sign(lz) * 0.055f), new Vector3(0.024f, 0.014f, 0.024f), boltMat);
+                        }
+                    }
+                    break;
+                }
+
+                default:
+                {
+                    // Fallback non-obstructing side-rear wall brackets
+                    float topY = Mathf.Clamp(b.max.y * 0.85f, 0.15f, 1.75f);
+                    float backZ = b.min.z - 0.012f;
+                    foreach (float s in leftRight)
+                    {
+                        float xSide = s * (b.extents.x + 0.012f);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "SideRearStrap",
+                            new Vector3(xSide, topY, b.min.z + b.extents.z * 0.4f), new Vector3(0.024f, 0.06f, b.extents.z * 0.8f), strapMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cube, "RearWallPlate",
+                            new Vector3(xSide + s * 0.025f, topY, backZ), new Vector3(0.07f, 0.08f, 0.016f), steelMat);
+                        AddBracketPart(group.transform, PrimitiveType.Cylinder, "WallBolt",
+                            new Vector3(xSide + s * 0.03f, topY, backZ - 0.01f), new Vector3(0.026f, 0.014f, 0.026f), boltMat, new Vector3(90f, 0f, 0f));
+                    }
+                    break;
+                }
             }
 
             return group;
@@ -507,7 +1034,17 @@ namespace YarkinAssets.Editor
             Vector3 stageOrigin = new Vector3(500f, 500f, 500f);
             GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             instance.transform.position = stageOrigin;
-            instance.transform.rotation = Quaternion.Euler(0f, -28f, 0f);
+            instance.transform.rotation = Quaternion.Euler(0f, 6f, 0f);
+
+            // For FireCabinet icon, open the door outward (+95 deg) so both the hinged door and the FireExtinguisher inside are clearly visible!
+            if (spec.CodeName == "FireCabinet")
+            {
+                var itemComp = instance.GetComponent<DisasterPrepItem>();
+                if (itemComp != null && itemComp.cabinetDoorHinge != null)
+                {
+                    itemComp.cabinetDoorHinge.localRotation = Quaternion.Euler(0f, 95f, 0f);
+                }
+            }
 
             Bounds b = CalculateBounds(instance);
             float maxExtent = Mathf.Max(b.extents.x, Mathf.Max(b.extents.y, b.extents.z));
@@ -526,10 +1063,21 @@ namespace YarkinAssets.Editor
             camGo.transform.position = b.center + viewDir * 6f;
             camGo.transform.LookAt(b.center);
 
+            Light[] sceneLights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+            var enabledLights = new List<Light>();
+            foreach (var sl in sceneLights)
+            {
+                if (sl != null && sl.enabled)
+                {
+                    sl.enabled = false;
+                    enabledLights.Add(sl);
+                }
+            }
+
             GameObject keyLightGo = new GameObject("IconKeyLight");
             Light keyLight = keyLightGo.AddComponent<Light>();
             keyLight.type = LightType.Directional;
-            keyLight.intensity = 1.30f;
+            keyLight.intensity = 1.25f;
             keyLight.color = new Color(1f, 0.97f, 0.92f);
             keyLightGo.transform.rotation = Quaternion.Euler(45f, 155f, 0f);
 
@@ -552,6 +1100,11 @@ namespace YarkinAssets.Editor
             UnityEngine.Object.DestroyImmediate(keyLightGo);
             UnityEngine.Object.DestroyImmediate(camGo);
             UnityEngine.Object.DestroyImmediate(instance);
+
+            foreach (var sl in enabledLights)
+            {
+                if (sl != null) sl.enabled = true;
+            }
 
             AssetDatabase.ImportAsset(iconPath, ImportAssetOptions.ForceUpdate);
             TextureImporter ti = AssetImporter.GetAtPath(iconPath) as TextureImporter;
@@ -608,7 +1161,7 @@ namespace YarkinAssets.Editor
             GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             floor.name = "ShowcaseFloor";
             floor.transform.position = Vector3.zero;
-            floor.transform.localScale = new Vector3(2.4f, 1f, 2.0f);
+            floor.transform.localScale = new Vector3(2.6f, 1f, 2.2f);
             if (materials.TryGetValue("M_RubberBlack", out Material floorMat))
             {
                 floor.GetComponent<Renderer>().sharedMaterial = floorMat;
@@ -617,20 +1170,20 @@ namespace YarkinAssets.Editor
             // 3. 1.8m Human Scale Reference Capsule
             GameObject humanRef = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             humanRef.name = "HumanScaleRef_1.8m";
-            humanRef.transform.position = new Vector3(-6.2f, 0.9f, 0f);
+            humanRef.transform.position = new Vector3(-6.4f, 0.9f, 0f);
             humanRef.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
             if (materials.TryGetValue("M_SafetyOrange", out Material humanMat))
             {
                 humanRef.GetComponent<Renderer>().sharedMaterial = humanMat;
             }
 
-            // 4. Grid Layout for all 32 Prefabs (8 columns x 4 rows) + Secured Demo Pair
-            int cols = 8;
-            float spacingX = 1.55f;
+            // 4. Grid Layout for all 33 Prefabs + Secured Demo Row
+            int cols = 9;
+            float spacingX = 1.50f;
             float spacingZ = 1.85f;
-            Vector3 startPos = new Vector3(-4.8f, 0f, -2.7f);
+            Vector3 startPos = new Vector3(-5.6f, 0f, -2.7f);
 
-            GameObject container = new GameObject("DisasterPrepAssets_All32");
+            GameObject container = new GameObject("DisasterPrepAssets_All33");
             container.AddComponent<DisasterWaveEvaluator>();
             for (int i = 0; i < prefabs.Count; i++)
             {
@@ -643,9 +1196,20 @@ namespace YarkinAssets.Editor
                 instance.transform.position = pos;
             }
 
-            // Also place a Side-by-Side "Secured L-Bracket Demo" row in front so user can immediately see State 1 (Secured) in scene!
+            // 5. Side-by-Side "Secured L-Bracket & Closed Valve Demo" row in front so user can immediately see all 10 Interactive/Securable Assets in scene!
             GameObject securedDemoGroup = new GameObject("Secured_LBracket_LiveComparison");
-            string[] securableDemoNames = { "PF_Television", "PF_AirConditioner", "PF_Bookcase", "PF_Refrigerator", "PF_WaterHeater" };
+            string[] securableDemoNames = {
+                "PF_GasValve",
+                "PF_WaterValve",
+                "PF_BreakerBox",
+                "PF_FireCabinet",
+                "PF_Television",
+                "PF_Bookcase",
+                "PF_Refrigerator",
+                "PF_AirConditioner",
+                "PF_WaterHeater",
+                "PF_SturdyTable"
+            };
             for (int i = 0; i < securableDemoNames.Length; i++)
             {
                 GameObject pf = prefabs.Find(p => p.name == securableDemoNames[i]);
@@ -654,21 +1218,26 @@ namespace YarkinAssets.Editor
                     GameObject secInst = (GameObject)PrefabUtility.InstantiatePrefab(pf);
                     secInst.name = pf.name + "_SECURED_DEMO";
                     secInst.transform.SetParent(securedDemoGroup.transform, false);
-                    secInst.transform.position = new Vector3(-3.6f + i * 1.95f, 0f, 5.2f);
+                    secInst.transform.position = new Vector3(-6.2f + i * 1.40f, 0f, 5.2f);
                     var itemComp = secInst.GetComponent<DisasterPrepItem>();
                     if (itemComp != null)
                     {
-                        itemComp.SetSecuredOrClosed(true);
+                        itemComp.SetSecuredOrClosed(true, instant: true);
+                        // Also swing open the FireCabinet & Refrigerator doors in the demo row so the user sees the animated doors + wall brackets!
+                        if (securableDemoNames[i] == "PF_FireCabinet" || securableDemoNames[i] == "PF_Refrigerator")
+                        {
+                            itemComp.SetCabinetDoorOpen(true, instant: true);
+                        }
                     }
                 }
             }
 
-            // 5. True Isometric Orthographic Camera (Pitch: 35.264, Yaw: 45)
+            // 6. True Isometric Orthographic Camera (Pitch: 35.264, Yaw: 45)
             GameObject camGo = new GameObject("Main Camera");
             camGo.tag = "MainCamera";
             Camera mainCam = camGo.AddComponent<Camera>();
             mainCam.orthographic = true;
-            mainCam.orthographicSize = 5.4f;
+            mainCam.orthographicSize = 5.6f;
             mainCam.clearFlags = CameraClearFlags.SolidColor;
             mainCam.backgroundColor = new Color(0.11f, 0.13f, 0.16f, 1f);
             mainCam.nearClipPlane = -15f;

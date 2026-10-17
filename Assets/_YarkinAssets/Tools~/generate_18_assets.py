@@ -205,9 +205,11 @@ def finalize_and_export(asset_name, parts, toybox_scale=1.0):
     obj = bpy.context.active_object
     obj.name = f"SM_{asset_name}"
 
-    if toybox_scale != 1.0:
-        obj.scale = (toybox_scale, toybox_scale, toybox_scale)
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    if toybox_scale != 1.0:
+        for v in obj.data.vertices:
+            v.co *= toybox_scale
+        obj.data.update()
 
     for poly in obj.data.polygons:
         poly.use_smooth = True
@@ -243,6 +245,95 @@ def finalize_and_export(asset_name, parts, toybox_scale=1.0):
         object_types={'MESH'}
     )
     print(f"[OK] Exported SM_{asset_name}.fbx (scale={toybox_scale}x, {len(obj.data.polygons)} polys)")
+
+def finalize_and_export_multipart(asset_name, body_name, body_parts, moving_groups, toybox_scale=1.0):
+    """
+    Exports a multi-part FBX hierarchy where the static body (`body_name`) has its origin at the
+    bottom-center of the combined assembly, and each moving sub-mesh (`child_name`) has its local
+    origin at its exact mechanical axle/hinge pivot (`pivot_xyz * toybox_scale + offset`).
+    """
+    bpy.ops.object.select_all(action='DESELECT')
+    for p in body_parts:
+        p.select_set(True)
+    bpy.context.view_layer.objects.active = body_parts[0]
+    if len(body_parts) > 1:
+        bpy.ops.object.join()
+    body_obj = bpy.context.active_object
+    body_obj.name = body_name
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    if toybox_scale != 1.0:
+        for v in body_obj.data.vertices:
+            v.co *= toybox_scale
+        body_obj.data.update()
+    for poly in body_obj.data.polygons:
+        poly.use_smooth = True
+
+    joined_children = []
+    for child_name, child_parts, pivot_xyz in moving_groups:
+        bpy.ops.object.select_all(action='DESELECT')
+        for p in child_parts:
+            p.select_set(True)
+        bpy.context.view_layer.objects.active = child_parts[0]
+        if len(child_parts) > 1:
+            bpy.ops.object.join()
+        c_obj = bpy.context.active_object
+        c_obj.name = child_name
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        if toybox_scale != 1.0:
+            for v in c_obj.data.vertices:
+                v.co *= toybox_scale
+            c_obj.data.update()
+        for poly in c_obj.data.polygons:
+            poly.use_smooth = True
+        joined_children.append((c_obj, Vector(pivot_xyz) * toybox_scale))
+
+    all_objs = [body_obj] + [c[0] for c in joined_children]
+    all_verts = [v.co for o in all_objs for v in o.data.vertices]
+    min_x = min(v.x for v in all_verts)
+    max_x = max(v.x for v in all_verts)
+    min_y = min(v.y for v in all_verts)
+    max_y = max(v.y for v in all_verts)
+    min_z = min(v.z for v in all_verts)
+
+    cx = (min_x + max_x) * 0.5
+    cy = (min_y + max_y) * 0.5
+    offset = Vector((-cx, -cy, -min_z))
+
+    for v in body_obj.data.vertices:
+        v.co += offset
+    body_obj.data.update()
+    body_obj.location = (0.0, 0.0, 0.0)
+
+    total_polys = len(body_obj.data.polygons)
+    for c_obj, pivot_scaled in joined_children:
+        for v in c_obj.data.vertices:
+            v.co -= pivot_scaled
+        c_obj.data.update()
+        c_obj.location = pivot_scaled + offset
+        total_polys += len(c_obj.data.polygons)
+
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in all_objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = body_obj
+
+    blend_path = os.path.join(OUT_BLEND_DIR, f"SM_{asset_name}.blend")
+    fbx_path = os.path.join(OUT_MESH_DIR, f"SM_{asset_name}.fbx")
+    bpy.ops.wm.save_as_mainfile(filepath=blend_path)
+    bpy.ops.export_scene.fbx(
+        filepath=fbx_path,
+        use_selection=True,
+        global_scale=1.0,
+        apply_unit_scale=True,
+        apply_scale_options='FBX_SCALE_NONE',
+        axis_forward='-Z',
+        axis_up='Y',
+        use_mesh_modifiers=True,
+        mesh_smooth_type='EDGE',
+        bake_space_transform=True,
+        object_types={'MESH'}
+    )
+    print(f"[OK] Exported Multi-Part SM_{asset_name}.fbx ({len(all_objs)} parts, scale={toybox_scale}x, {total_polys} polys)")
 
 # ==============================================================================
 # PART A: ORIGINAL 18 ASSETS (Upgraded Isometric Silhouette + Toy-Box Scale)
@@ -543,117 +634,363 @@ def build_emergency_radio():
     ]
     finalize_and_export("EmergencyRadio", parts, toybox_scale=1.35)
 
-# 18. AirConditioner (Klima - 1.00x wedge profile so isometric camera sees vents & display)
+# 18. AirConditioner (Klima - 1.00x wedge profile + motorized louver flap & LED)
 def build_air_conditioner():
     clear_scene()
-    parts = [
+    body_parts = [
         add_box("Chassis", (0.86, 0.24, 0.28), (0, 0, 0.14), "White", bevel=0.042, segs=5, subsurf=1),
         add_box("SlopedFront", (0.83, 0.045, 0.18), (0, -0.105, 0.165), "OffWhite", rot=(math.radians(-12), 0, 0), bevel=0.018, segs=5, subsurf=1),
         add_box("ChromeStrip", (0.82, 0.016, 0.014), (0, -0.122, 0.102), "SilverMetal", bevel=0.004),
-        add_box("VentFlap1", (0.78, 0.038, 0.016), (0, -0.110, 0.044), "DarkMetal", rot=(math.radians(28), 0, 0), bevel=0.004),
-        add_box("VentFlap2", (0.78, 0.032, 0.014), (0, -0.102, 0.024), "DarkMetal", rot=(math.radians(28), 0, 0), bevel=0.004),
-        add_box("TempLED", (0.095, 0.016, 0.038), (0.26, -0.120, 0.175), "GlowGreen", rot=(math.radians(-12), 0, 0), bevel=0.004),
+        add_box("VentSlotRecess", (0.79, 0.036, 0.048), (0, -0.098, 0.042), "RubberBlack", bevel=0.004),
+        add_box("TempLEDBezel", (0.108, 0.014, 0.048), (0.26, -0.116, 0.175), "ScreenBlack", rot=(math.radians(-12), 0, 0), bevel=0.004),
     ]
-    finalize_and_export("AirConditioner", parts, toybox_scale=1.00)
+    # Motorized horizontal louver deflector flap pivoted along horizontal X axle at (0.0, -0.114, 0.042)
+    flap_parts = [
+        add_cyl("FlapAxlePinL", 0.009, 0.030, (-0.38, -0.114, 0.042), "SilverMetal", 16, rot=(0, math.radians(90), 0), bevel=0.002),
+        add_cyl("FlapAxlePinR", 0.009, 0.030, (0.38, -0.114, 0.042), "SilverMetal", 16, rot=(0, math.radians(90), 0), bevel=0.002),
+        add_box("VentFlapBlade", (0.78, 0.048, 0.014), (0, -0.132, 0.034), "SafetyOrange", rot=(math.radians(24), 0, 0), bevel=0.004),
+        add_box("VentFlapTrim", (0.78, 0.018, 0.012), (0, -0.148, 0.028), "SilverMetal", rot=(math.radians(24), 0, 0), bevel=0.003),
+    ]
+    led_parts = [
+        add_box("TempLED", (0.094, 0.016, 0.036), (0.26, -0.122, 0.175), "GlowGreen", rot=(math.radians(-12), 0, 0), bevel=0.003),
+    ]
+    finalize_and_export_multipart(
+        "AirConditioner",
+        "AirConditionerBody",
+        body_parts,
+        [
+            ("VentFlap_Pivot", flap_parts, (0.0, -0.114, 0.042)),
+            ("StatusLED_Pivot", led_parts, (0.26, -0.122, 0.175)),
+        ],
+        toybox_scale=1.00
+    )
 
 # ==============================================================================
 # PART B: 14 NEW IMO DISASTER EXPANSION ASSETS (Infrastructure, Fixtures, Kits)
 # ==============================================================================
 
-# 19. GasValve (Doğalgaz Ana Kesme Vanası — Stops post-quake Fire Wave)
+# 19. GasValve (Doğalgaz Ana Kesme Vanası — Coaxial Quarter-Turn Ball Valve + Manometer Needle)
 def build_gas_valve():
     clear_scene()
-    parts = [
-        add_box("WallPlate", (0.24, 0.035, 0.42), (0, 0.06, 0.21), "DarkMetal", bevel=0.008),
+    body_parts = [
+        add_box("WallPlate", (0.26, 0.035, 0.42), (0, 0.06, 0.21), "DarkMetal", bevel=0.008),
         add_cyl("PipeLower", 0.032, 0.20, (0, 0, 0.10), "Yellow", 32, bevel=0.004),
         add_cyl("PipeUpper", 0.032, 0.20, (0, 0, 0.32), "Yellow", 32, bevel=0.004),
-        add_sphere("ValveValveBody", 0.055, (0, 0, 0.21), "Brass", 32, 20),
+        add_box("PipeClampLow", (0.088, 0.046, 0.024), (0, 0.028, 0.065), "DarkMetal", bevel=0.004),
+        add_box("PipeClampHigh", (0.088, 0.046, 0.024), (0, 0.028, 0.365), "DarkMetal", bevel=0.004),
+        add_sphere("ValveValveBody", 0.056, (0, 0, 0.21), "Brass", 32, 20),
         add_cyl("FlangeTop", 0.052, 0.022, (0, 0, 0.265), "Brass", 28, bevel=0.004),
         add_cyl("FlangeBot", 0.052, 0.022, (0, 0, 0.155), "Brass", 28, bevel=0.004),
-        add_cyl("ValveStem", 0.022, 0.045, (0, -0.055, 0.21), "Brass", 24, rot=(math.radians(90), 0, 0), bevel=0.003),
-        add_box("LeverHandle", (0.038, 0.022, 0.19), (0, -0.082, 0.27), "Red", bevel=0.006),
-        add_cyl("GasGauge", 0.038, 0.024, (0.068, -0.01, 0.31), "White", 28, rot=(math.radians(90), 0, 0), bevel=0.004),
+        add_cyl("ValveStemBoss", 0.024, 0.042, (0, -0.050, 0.21), "Brass", 24, rot=(math.radians(90), 0, 0), bevel=0.003),
+        # Mechanical 90-degree stop lugs on brass body
+        add_box("StopLugOpen", (0.014, 0.018, 0.014), (-0.022, -0.064, 0.232), "Brass", bevel=0.002),
+        add_box("StopLugClosed", (0.014, 0.018, 0.014), (0.026, -0.064, 0.188), "Brass", bevel=0.002),
+        # Manometer mounted on upper-left (-X_B) so clockwise +90 deg lever sweep to +X_B is 100% clear!
+        add_cyl("GaugeTapPipe", 0.011, 0.072, (-0.040, 0, 0.315), "Brass", 20, rot=(0, math.radians(90), 0), bevel=0.002),
+        add_cyl("GasGaugeCase", 0.040, 0.024, (-0.072, -0.010, 0.315), "SilverMetal", 28, rot=(math.radians(90), 0, 0), bevel=0.004),
+        add_cyl("GasGaugeDial", 0.034, 0.006, (-0.072, -0.022, 0.315), "White", 28, rot=(math.radians(90), 0, 0), bevel=0.001),
+        add_box("GaugeGreenZone", (0.015, 0.004, 0.009), (-0.084, -0.024, 0.328), "Green", rot=(0, math.radians(32), 0), bevel=0.001),
     ]
-    finalize_and_export("GasValve", parts, toybox_scale=1.25)
+    # Coaxial Quarter-Turn Lever Handle pivoted strictly at ValveStem axis (0.0, -0.076, 0.210)
+    handle_parts = [
+        add_cyl("StemShaft", 0.016, 0.028, (0, -0.068, 0.210), "Brass", 24, rot=(math.radians(90), 0, 0), bevel=0.002),
+        add_cyl("LeverHubCollar", 0.026, 0.020, (0, -0.076, 0.210), "Red", 24, rot=(math.radians(90), 0, 0), bevel=0.004),
+        add_box("LeverArm", (0.034, 0.020, 0.172), (0, -0.076, 0.286), "Red", bevel=0.006),
+        add_box("LeverVinylGrip", (0.038, 0.024, 0.105), (0, -0.076, 0.322), "SafetyOrange", bevel=0.006),
+        add_cyl("StemLockNut", 0.013, 0.010, (0, -0.088, 0.210), "Brass", 6, rot=(math.radians(90), 0, 0), bevel=0.002),
+    ]
+    # Manometer Pressure Needle pivoted strictly at dial center (-0.072, -0.026, 0.315)
+    needle_parts = [
+        add_cyl("NeedleCap", 0.0065, 0.006, (-0.072, -0.026, 0.315), "RubberBlack", 16, rot=(math.radians(90), 0, 0), bevel=0.001),
+        add_box("NeedlePointer", (0.0055, 0.004, 0.024), (-0.072, -0.026, 0.325), "Red", bevel=0.001),
+    ]
+    finalize_and_export_multipart(
+        "GasValve",
+        "GasValveBody",
+        body_parts,
+        [
+            ("ValveHandle_Pivot", handle_parts, (0.0, -0.076, 0.210)),
+            ("GaugeNeedle_Pivot", needle_parts, (-0.072, -0.026, 0.315)),
+        ],
+        toybox_scale=1.25
+    )
 
-# 20. WaterValve (Su Sayacı ve Ana Kesme Vanası — Stops Flood Wave)
+# 20. WaterValve (Su Sayacı, Yana Bakan Rising-Stem Ana Kesme Vanası & Tahliye Musluğu)
 def build_water_valve():
     clear_scene()
-    parts = [
-        add_box("MountBoard", (0.38, 0.035, 0.30), (0, 0.06, 0.15), "DarkMetal", bevel=0.008),
-        add_cyl("PipeHoriz", 0.030, 0.36, (0, 0, 0.15), "SilverMetal", 32, rot=(0, math.radians(90), 0), bevel=0.004),
-        add_cyl("MeterBody", 0.058, 0.085, (-0.06, 0, 0.165), "Brass", 32, bevel=0.006),
-        add_cyl("MeterGlass", 0.048, 0.015, (-0.06, 0, 0.210), "WaterBlue", 32, bevel=0.003),
-        add_cyl("ValveStem", 0.020, 0.065, (0.075, 0, 0.195), "Brass", 24, bevel=0.003),
-        add_torus("WheelRim", 0.062, 0.012, (0.075, 0, 0.230), "Blue", 32, 14),
-        add_box("WheelSpoke1", (0.12, 0.014, 0.012), (0.075, 0, 0.230), "Blue", bevel=0.003),
-        add_box("WheelSpoke2", (0.014, 0.12, 0.012), (0.075, 0, 0.230), "Blue", bevel=0.003),
+    body_parts = [
+        add_box("MountBoard", (0.44, 0.035, 0.30), (0, 0.06, 0.155), "DarkMetal", bevel=0.008),
+        add_cyl("PipeHoriz", 0.028, 0.42, (0, 0, 0.155), "SilverMetal", 32, rot=(0, math.radians(90), 0), bevel=0.004),
+        add_box("PipeBracketL", (0.024, 0.048, 0.076), (-0.185, 0.028, 0.155), "DarkMetal", bevel=0.004),
+        add_box("PipeBracketR", (0.024, 0.048, 0.076), (0.185, 0.028, 0.155), "DarkMetal", bevel=0.004),
+        # Left (-0.118): Sideways/Outward-Facing Water Meter (Yana bakan su sayacı)
+        add_cyl("MeterBody", 0.050, 0.074, (-0.118, -0.010, 0.155), "Brass", 32, rot=(math.radians(90), 0, 0), bevel=0.006),
+        add_cyl("MeterDialFace", 0.042, 0.006, (-0.118, -0.048, 0.155), "White", 32, rot=(math.radians(90), 0, 0), bevel=0.001),
+        add_torus("MeterGlassRim", 0.043, 0.006, (-0.118, -0.051, 0.155), "WaterBlue", 32, 14, rot=(math.radians(90), 0, 0)),
+        # Center (+0.020): Main Globe Valve Body & Sideways/Outward-Facing Hex Bonnet (Yana bakan vana gövdesi ve boynu)
+        add_sphere("GlobeValveChamber", 0.048, (0.020, 0, 0.155), "Brass", 28, 18),
+        add_cyl("ValveBonnetHex", 0.025, 0.052, (0.020, -0.042, 0.155), "Brass", 6, rot=(math.radians(90), 0, 0), bevel=0.003),
+        # Right (+0.145): Sideways-Facing Brass Drain Faucet / Tap (Tahliye Musluğu)
+        add_cyl("FaucetTeeBody", 0.033, 0.048, (0.145, 0, 0.155), "Brass", 24, rot=(0, math.radians(90), 0), bevel=0.003),
+        add_cyl("FaucetBonnet", 0.016, 0.038, (0.145, -0.028, 0.155), "Brass", 20, rot=(math.radians(90), 0, 0), bevel=0.002),
+        add_cyl("FaucetSpoutNozzle", 0.013, 0.044, (0.145, -0.024, 0.122), "Brass", 20, bevel=0.002),
     ]
-    finalize_and_export("WaterValve", parts, toybox_scale=1.25)
+    # 1. Sideways-Facing Rising-Stem Handwheel (Yana bakan ana su vanası volanı) pivoted coaxially at (0.020, -0.102, 0.155)
+    wheel_parts = [
+        add_cyl("RisingSpindle", 0.013, 0.064, (0.020, -0.075, 0.155), "SilverMetal", 24, rot=(math.radians(90), 0, 0), bevel=0.002),
+        add_torus("WheelRim", 0.060, 0.013, (0.020, -0.102, 0.155), "Blue", 32, 14, rot=(math.radians(90), 0, 0)),
+        add_box("WheelSpoke1", (0.114, 0.012, 0.015), (0.020, -0.102, 0.155), "Blue", bevel=0.003),
+        add_box("WheelSpoke2", (0.015, 0.012, 0.114), (0.020, -0.102, 0.155), "Blue", bevel=0.003),
+        add_cyl("WheelHubNut", 0.019, 0.016, (0.020, -0.109, 0.155), "Brass", 6, rot=(math.radians(90), 0, 0), bevel=0.003),
+        add_cyl("WheelIndexKnob", 0.011, 0.024, (0.020 + 0.054, -0.116, 0.155), "Yellow", 18, rot=(math.radians(90), 0, 0), bevel=0.003),
+    ]
+    # 2. Sideways-Facing Drain Faucet Butterfly Tap Handle (Musluk Kelebeği) pivoted coaxially at (0.145, -0.056, 0.155)
+    tap_parts = [
+        add_cyl("TapSpindle", 0.0085, 0.026, (0.145, -0.046, 0.155), "SilverMetal", 16, rot=(math.radians(90), 0, 0), bevel=0.002),
+        add_box("TapButterflyBar", (0.016, 0.014, 0.064), (0.145, -0.058, 0.155), "WaterBlue", bevel=0.004),
+        add_cyl("TapIndexCap", 0.011, 0.010, (0.145, -0.065, 0.155), "Red", 16, rot=(math.radians(90), 0, 0), bevel=0.002),
+    ]
+    # 3. Sideways-Facing Water Meter Impeller Star (Su Sayacı Çarkı) pivoted coaxially at (-0.118, -0.052, 0.155)
+    turbine_parts = [
+        add_box("TurbineBlade1", (0.054, 0.006, 0.010), (-0.118, -0.052, 0.155), "Red", bevel=0.002),
+        add_box("TurbineBlade2", (0.010, 0.006, 0.054), (-0.118, -0.052, 0.155), "Red", bevel=0.002),
+        add_cyl("TurbineCenterPin", 0.009, 0.008, (-0.118, -0.054, 0.155), "Brass", 16, rot=(math.radians(90), 0, 0), bevel=0.002),
+    ]
+    # 4. Faucet Spout Water Droplet (Musluk Su Damlası) at nozzle tip (0.145, -0.024, 0.088)
+    drop_parts = [
+        add_sphere("WaterDroplet", 0.012, (0.145, -0.024, 0.086), "WaterBlue", 18, 14, scale=(0.85, 0.85, 1.35)),
+    ]
+    finalize_and_export_multipart(
+        "WaterValve",
+        "WaterValveBody",
+        body_parts,
+        [
+            ("ValveHandle_Pivot", wheel_parts, (0.020, -0.102, 0.155)),
+            ("FaucetTap_Pivot", tap_parts, (0.145, -0.056, 0.155)),
+            ("MeterTurbine_Pivot", turbine_parts, (-0.118, -0.052, 0.155)),
+            ("WaterDrop_Pivot", drop_parts, (0.145, -0.024, 0.088)),
+        ],
+        toybox_scale=1.25
+    )
 
-# 21. BreakerBox (Elektrik Ana Sigorta Panosu — Stops Electrical Fire/Shock)
+# 21. BreakerBox (Elektrik Ana Sigorta Panosu — Tek Büyük Ana Şalter Kollu & Yüksek Görünürlüklü)
 def build_breaker_box():
     clear_scene()
-    parts = [
+    body_parts = [
         add_box("Cabinet", (0.36, 0.11, 0.48), (0, 0, 0.24), "DarkMetal", bevel=0.014, segs=5),
         add_box("FrontFrame", (0.33, 0.022, 0.44), (0, -0.052, 0.24), "SilverMetal", bevel=0.008),
-        add_box("HazardSign", (0.12, 0.012, 0.11), (0, -0.062, 0.37), "Yellow", bevel=0.004),
-        add_box("MainSwitchSlot", (0.24, 0.018, 0.14), (0, -0.058, 0.21), "RubberBlack", bevel=0.005),
-        add_box("MainBreakerToggle", (0.065, 0.038, 0.065), (-0.05, -0.072, 0.21), "Red", bevel=0.006),
-        add_box("SubBreaker1", (0.032, 0.030, 0.050), (0.02, -0.068, 0.21), "Blue", bevel=0.004),
-        add_box("SubBreaker2", (0.032, 0.030, 0.050), (0.065, -0.068, 0.21), "Blue", bevel=0.004),
-        add_sphere("StatusLED", 0.014, (0.11, -0.065, 0.37), "GlowGreen", 20, 14),
+        # Top-Left Hazard Warning Badge
+        add_box("HazardSign", (0.11, 0.012, 0.095), (-0.055, -0.062, 0.375), "Yellow", bevel=0.004),
+        add_box("LightningIcon", (0.022, 0.014, 0.060), (-0.055, -0.065, 0.375), "RubberBlack", rot=(0, math.radians(18), 0), bevel=0.002),
+        # Top-Right Oversized Power Status Indicator Dome (AÇIK=Parlak Yeşil, KAPALI=Koyu Kırmızı)
+        add_cyl("StatusLEDBezel", 0.032, 0.016, (0.085, -0.058, 0.375), "DarkMetal", 24, rot=(math.radians(90), 0, 0), bevel=0.003),
+        add_sphere("StatusLEDOffCore", 0.022, (0.085, -0.062, 0.375), "DarkRed", 20, 14),
+        # Center Oversized Single Main Breaker Bay with High-Contrast ON (Top Green) / OFF (Bottom Red) Zones
+        add_box("MainSwitchSlot", (0.24, 0.020, 0.23), (0, -0.056, 0.185), "RubberBlack", bevel=0.006),
+        add_box("MCBHousingMain", (0.18, 0.022, 0.20), (0, -0.060, 0.185), "OffWhite", bevel=0.005),
+        add_box("TopOnZoneBar", (0.15, 0.016, 0.034), (0, -0.066, 0.262), "Green", bevel=0.003),
+        add_box("BotOffZoneBar", (0.15, 0.016, 0.034), (0, -0.066, 0.108), "DarkRed", bevel=0.003),
     ]
-    finalize_and_export("BreakerBox", parts, toybox_scale=1.15)
+    # 1. Single Giant Industrial Main Breaker Switch Lever (Tek Büyük Ana Şalter Kolu)
+    # Pivoted on horizontal X-axis axle at (0.0, -0.072, 0.185) — swings from -48° (HIGH UP = ON) to +48° (LOW DOWN = OFF)
+    main_toggle_parts = [
+        add_cyl("MainToggleDrum", 0.032, 0.132, (0.0, -0.072, 0.185), "Red", 28, rot=(0, math.radians(90), 0), bevel=0.005),
+        add_box("MainToggleArmL", (0.026, 0.076, 0.024), (-0.048, -0.106, 0.185), "Red", bevel=0.004),
+        add_box("MainToggleArmR", (0.026, 0.076, 0.024), (0.048, -0.106, 0.185), "Red", bevel=0.004),
+        add_box("MainToggleCenterWeb", (0.082, 0.056, 0.018), (0.0, -0.098, 0.185), "Red", bevel=0.004),
+        add_box("MainToggleCrossbar", (0.160, 0.034, 0.038), (0.0, -0.142, 0.185), "SafetyOrange", bevel=0.006),
+        add_box("MainToggleGripStripe", (0.130, 0.036, 0.014), (0.0, -0.144, 0.185), "Yellow", bevel=0.003),
+    ]
+    # 2. Oversized Green Live Power Indicator Dome (Completely covers DarkRed core when ON)
+    led_parts = [
+        add_sphere("StatusLED", 0.026, (0.085, -0.066, 0.375), "GlowGreen", 24, 16),
+    ]
+    finalize_and_export_multipart(
+        "BreakerBox",
+        "BreakerBoxBody",
+        body_parts,
+        [
+            ("MainBreaker_Pivot", main_toggle_parts, (0.0, -0.072, 0.185)),
+            ("StatusLED_Pivot", led_parts, (0.085, -0.066, 0.375)),
+        ],
+        toybox_scale=1.15
+    )
 
-# 22. Bookcase (Büyük Ahşap Kitaplık — Securable Heavy Fixture)
+# 22. Bookcase (Büyük Ahşap Kitaplık — Dikey 2 Bölmeli, İçi Boş)
 def build_bookcase():
     clear_scene()
     parts = [
-        add_box("BackPanel", (0.88, 0.03, 1.78), (0, 0.15, 0.89), "BrownWood", bevel=0.008),
-        add_box("SideWallL", (0.045, 0.34, 1.80), (-0.42, 0, 0.90), "BrownWood", bevel=0.010),
-        add_box("SideWallR", (0.045, 0.34, 1.80), (0.42, 0, 0.90), "BrownWood", bevel=0.010),
-        add_box("Shelf1", (0.84, 0.33, 0.038), (0, 0, 0.04), "BrownWood", bevel=0.008),
-        add_box("Shelf2", (0.84, 0.33, 0.038), (0, 0, 0.48), "BrownWood", bevel=0.008),
-        add_box("Shelf3", (0.84, 0.33, 0.038), (0, 0, 0.92), "BrownWood", bevel=0.008),
-        add_box("Shelf4", (0.84, 0.33, 0.038), (0, 0, 1.36), "BrownWood", bevel=0.008),
-        add_box("TopCrown", (0.90, 0.36, 0.045), (0, 0, 1.78), "BrownWood", bevel=0.012),
-        # Colorful books on shelves
-        add_box("BookCluster1", (0.28, 0.22, 0.30), (-0.22, -0.02, 1.10), "Red", bevel=0.010),
-        add_box("BookCluster2", (0.22, 0.22, 0.28), (0.15, -0.02, 1.09), "Blue", bevel=0.010),
-        add_box("BookCluster3", (0.32, 0.22, 0.31), (0.12, -0.02, 0.66), "Yellow", bevel=0.010),
-        add_box("BookCluster4", (0.24, 0.22, 0.26), (-0.18, -0.02, 1.52), "Green", bevel=0.010),
+        add_box("BackPanel", (0.96, 0.028, 1.80), (0, 0.16, 0.90), "BrownWood", bevel=0.006),
+        add_box("LeftOuterWall", (0.042, 0.35, 1.80), (-0.46, 0, 0.90), "BrownWood", bevel=0.010),
+        add_box("RightOuterWall", (0.042, 0.35, 1.80), (0.46, 0, 0.90), "BrownWood", bevel=0.010),
+        # Central vertical divider creating 2 vertical compartments (Dikey 2 bölmeli)
+        add_box("CenterVerticalDivider", (0.038, 0.34, 1.72), (0.0, 0.005, 0.90), "BrownWood", bevel=0.008),
+        # Horizontal shelves spanning across
+        add_box("BottomPlinth", (0.92, 0.35, 0.055), (0, 0, 0.0275), "BrownWood", bevel=0.010),
+        add_box("Shelf1", (0.90, 0.34, 0.036), (0, 0.005, 0.46), "BrownWood", bevel=0.008),
+        add_box("Shelf2", (0.90, 0.34, 0.036), (0, 0.005, 0.90), "BrownWood", bevel=0.008),
+        add_box("Shelf3", (0.90, 0.34, 0.036), (0, 0.005, 1.34), "BrownWood", bevel=0.008),
+        add_box("TopCrown", (0.98, 0.37, 0.048), (0, 0, 1.78), "BrownWood", bevel=0.012),
     ]
     finalize_and_export("Bookcase", parts, toybox_scale=1.00)
 
-# 23. Refrigerator (Mutfak Buzdolabı — Securable Heavy Fixture)
+# 33. FireCabinet (Yangın Tüpü Dolabı — Açılabilir Kapaklı & Duvara Sabitlenebilir)
+def build_fire_cabinet():
+    clear_scene()
+    # 1. Cabinet Body (hollow 0.44m x 0.32m x 0.82m box so FireExtinguisher fits comfortably inside!)
+    body_parts = [
+        add_box("BackWall", (0.44, 0.028, 0.82), (0, 0.146, 0.41), "Red", bevel=0.008),
+        add_box("BottomWall", (0.44, 0.32, 0.032), (0, 0, 0.016), "Red", bevel=0.008),
+        add_box("TopWall", (0.44, 0.32, 0.032), (0, 0, 0.804), "Red", bevel=0.008),
+        add_box("LeftWall", (0.030, 0.32, 0.76), (-0.205, 0, 0.41), "Red", bevel=0.008),
+        add_box("RightWall", (0.030, 0.32, 0.76), (0.205, 0, 0.41), "Red", bevel=0.008),
+        add_box("InnerShelfCradle", (0.34, 0.24, 0.016), (0, 0.01, 0.036), "DarkMetal", bevel=0.004),
+        add_box("BackMountClamp", (0.16, 0.024, 0.065), (0, 0.122, 0.44), "DarkMetal", bevel=0.004),
+    ]
+    bpy.ops.object.select_all(action='DESELECT')
+    for p in body_parts:
+        p.select_set(True)
+    bpy.context.view_layer.objects.active = body_parts[0]
+    bpy.ops.object.join()
+    cabinet_body = bpy.context.active_object
+    cabinet_body.name = "CabinetBody"
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    for poly in cabinet_body.data.polygons:
+        poly.use_smooth = True
+
+    # 2. Hinged Door (Separate mesh with local origin at Left Front Hinge (-0.205, -0.162, 0.41))
+    hinge_pos = Vector((-0.205, -0.162, 0.41))
+    door_parts = [
+        # Top, Bottom, Left, Right frame bars of the door so the center window is genuinely open/transparent into the cabinet!
+        add_box("DoorFrameLeft", (0.050, 0.024, 0.76), (-0.180, -0.162, 0.41), "Red", bevel=0.006),
+        add_box("DoorFrameRight", (0.050, 0.024, 0.76), (0.180, -0.162, 0.41), "Red", bevel=0.006),
+        add_box("DoorFrameTop", (0.32, 0.024, 0.060), (0, -0.162, 0.760), "Red", bevel=0.006),
+        add_box("DoorFrameBot", (0.32, 0.024, 0.060), (0, -0.162, 0.060), "Red", bevel=0.006),
+        # Glass trim bezel strips
+        add_box("GlassTrimLeft", (0.014, 0.028, 0.64), (-0.150, -0.163, 0.41), "White", bevel=0.003),
+        add_box("GlassTrimRight", (0.014, 0.028, 0.64), (0.150, -0.163, 0.41), "White", bevel=0.003),
+        add_box("GlassTrimTop", (0.314, 0.028, 0.014), (0, -0.163, 0.725), "White", bevel=0.003),
+        add_box("GlassTrimBot", (0.314, 0.028, 0.014), (0, -0.163, 0.095), "White", bevel=0.003),
+        # Door Handle & Latch on right edge
+        add_box("LatchBase", (0.028, 0.024, 0.095), (0.182, -0.176, 0.41), "SilverMetal", bevel=0.004),
+        add_box("PullHandle", (0.018, 0.036, 0.120), (0.182, -0.194, 0.41), "Yellow", bevel=0.005),
+        # Hinge barrels on left edge
+        add_cyl("HingeTop", 0.012, 0.060, (-0.205, -0.162, 0.64), "SilverMetal", 20, bevel=0.002),
+        add_cyl("HingeBot", 0.012, 0.060, (-0.205, -0.162, 0.18), "SilverMetal", 20, bevel=0.002),
+    ]
+    bpy.ops.object.select_all(action='DESELECT')
+    for p in door_parts:
+        p.select_set(True)
+    bpy.context.view_layer.objects.active = door_parts[0]
+    bpy.ops.object.join()
+    door_obj = bpy.context.active_object
+    door_obj.name = "CabinetDoor_Hinge"
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    # Shift door vertices so its local origin is exactly at hinge_pos
+    for v in door_obj.data.vertices:
+        v.co -= hinge_pos
+    door_obj.data.update()
+    door_obj.location = hinge_pos
+    for poly in door_obj.data.polygons:
+        poly.use_smooth = True
+
+    # Export multi-part hierarchy (CabinetBody + CabinetDoor_Hinge)
+    bpy.ops.object.select_all(action='SELECT')
+    blend_path = os.path.join(OUT_BLEND_DIR, "SM_FireCabinet.blend")
+    fbx_path = os.path.join(OUT_MESH_DIR, "SM_FireCabinet.fbx")
+    bpy.ops.wm.save_as_mainfile(filepath=blend_path)
+    bpy.ops.export_scene.fbx(
+        filepath=fbx_path,
+        use_selection=True,
+        global_scale=1.0,
+        apply_unit_scale=True,
+        apply_scale_options='FBX_SCALE_NONE',
+        axis_forward='-Z',
+        axis_up='Y',
+        use_mesh_modifiers=True,
+        mesh_smooth_type='EDGE',
+        bake_space_transform=True,
+        object_types={'MESH'}
+    )
+    print(f"[OK] Exported SM_FireCabinet.fbx (with separate hinged CabinetDoor_Hinge)")
+
+# 23. Refrigerator (Mutfak Buzdolabı — Hinged Upper Freezer & Lower Fridge Doors)
 def build_refrigerator():
     clear_scene()
-    parts = [
-        add_box("MainCabinet", (0.76, 0.70, 1.76), (0, 0, 0.88), "White", bevel=0.035, segs=5, subsurf=1),
-        add_box("LowerDoor", (0.74, 0.055, 1.06), (0, -0.35, 0.55), "OffWhite", bevel=0.022, segs=5),
-        add_box("UpperFreezerDoor", (0.74, 0.055, 0.58), (0, -0.35, 1.44), "OffWhite", bevel=0.022, segs=5),
-        add_box("GapTrim", (0.75, 0.065, 0.025), (0, -0.35, 1.11), "DarkMetal", bevel=0.005),
+    body_parts = [
+        add_box("MainCabinetBack", (0.76, 0.56, 1.76), (0, 0.07, 0.88), "White", bevel=0.032, segs=5, subsurf=1),
+        add_box("LeftSideWall", (0.048, 0.68, 1.76), (-0.356, 0.01, 0.88), "White", bevel=0.012),
+        add_box("RightSideWall", (0.048, 0.68, 1.76), (0.356, 0.01, 0.88), "White", bevel=0.012),
+        add_box("TopRoofWall", (0.76, 0.68, 0.050), (0, 0.01, 1.735), "White", bevel=0.012),
+        add_box("BottomFloorWall", (0.76, 0.68, 0.055), (0, 0.01, 0.0275), "White", bevel=0.012),
+        add_box("CenterDividerMullion", (0.75, 0.68, 0.045), (0, 0.005, 1.11), "DarkMetal", bevel=0.006),
+        add_box("InteriorShelf1", (0.66, 0.52, 0.020), (0, 0.02, 0.42), "GlassCyan", bevel=0.004),
+        add_box("InteriorShelf2", (0.66, 0.52, 0.020), (0, 0.02, 0.78), "GlassCyan", bevel=0.004),
+        add_box("FreezerShelf", (0.66, 0.52, 0.020), (0, 0.02, 1.38), "GlassCyan", bevel=0.004),
+    ]
+    # Hinges on Right edge (x_B = +0.355, y_B = -0.35), Handles on Left edge (x_B = -0.30)
+    lower_door_parts = [
+        add_box("LowerDoor", (0.74, 0.055, 1.04), (0, -0.35, 0.55), "OffWhite", bevel=0.020, segs=5),
         add_cyl("HandleLower", 0.016, 0.42, (-0.30, -0.40, 0.78), "SilverMetal", 24, bevel=0.004),
+        add_cyl("HingePinLow", 0.014, 0.050, (0.355, -0.35, 0.12), "SilverMetal", 18, bevel=0.002),
+    ]
+    upper_door_parts = [
+        add_box("UpperFreezerDoor", (0.74, 0.055, 0.58), (0, -0.35, 1.44), "OffWhite", bevel=0.020, segs=5),
         add_cyl("HandleUpper", 0.016, 0.28, (-0.30, -0.40, 1.42), "SilverMetal", 24, bevel=0.004),
         add_box("DigitalPanel", (0.14, 0.015, 0.08), (0, -0.38, 1.52), "GlowGreen", bevel=0.004),
+        add_cyl("HingePinHigh", 0.014, 0.050, (0.355, -0.35, 1.70), "SilverMetal", 18, bevel=0.002),
     ]
-    finalize_and_export("Refrigerator", parts, toybox_scale=1.00)
+    finalize_and_export_multipart(
+        "Refrigerator",
+        "RefrigeratorBody",
+        body_parts,
+        [
+            ("CabinetDoor_Hinge", lower_door_parts, (0.355, -0.35, 0.55)),
+            ("UpperDoor_Hinge", upper_door_parts, (0.355, -0.35, 1.44)),
+        ],
+        toybox_scale=1.00
+    )
 
-# 24. WaterHeater (Banyo Termosifonu / Şofben — High-Risk Securable Fixture)
+# 24. WaterHeater (Banyo Termosifonu / Şofben — Rotary Thermostat Knob & Cold-Water Shutoff Tap)
 def build_water_heater():
     clear_scene()
-    parts = [
-        add_cyl("TankCylinder", 0.23, 0.74, (0, 0, 0.44), "White", 40, bevel=0.025),
-        add_sphere("TopDome", 0.23, (0, 0, 0.81), "White", 40, 20, (1, 1, 0.45)),
-        add_sphere("BotDome", 0.23, (0, 0, 0.07), "White", 40, 20, (1, 1, 0.45)),
-        add_box("ThermostatDialBox", (0.16, 0.04, 0.12), (0, -0.22, 0.26), "DarkMetal", bevel=0.008),
-        add_cyl("TempKnob", 0.032, 0.025, (-0.03, -0.24, 0.26), "SafetyOrange", 24, rot=(math.radians(90), 0, 0), bevel=0.004),
-        add_sphere("HeatLED", 0.014, (0.04, -0.24, 0.26), "Red", 18, 12),
-        add_cyl("PipeHot", 0.018, 0.09, (-0.07, 0, 0.03), "Red", 20, bevel=0.003),
-        add_cyl("PipeCold", 0.018, 0.09, (0.07, 0, 0.03), "Blue", 20, bevel=0.003),
+    body_parts = [
+        add_cyl("TankCylinder", 0.23, 0.70, (0, 0, 0.48), "White", 40, bevel=0.025),
+        add_sphere("TopDome", 0.23, (0, 0, 0.83), "White", 40, 20, (1, 1, 0.42)),
+        add_sphere("BotDome", 0.23, (0, 0, 0.13), "White", 40, 20, (1, 1, 0.35)),
+        add_box("ThermostatDialBox", (0.16, 0.04, 0.12), (0, -0.22, 0.28), "DarkMetal", bevel=0.008),
+        add_sphere("HeatLEDOffBase", 0.012, (0.04, -0.236, 0.28), "DarkRed", 16, 12),
+        # Hot (left, Red) and Cold (right, Blue) bottom plumbing pipes positioned at front-bottom so tap is clearly visible
+        add_cyl("PipeHot", 0.020, 0.13, (-0.075, -0.145, 0.065), "Red", 22, bevel=0.003),
+        add_cyl("PipeCold", 0.020, 0.13, (0.075, -0.145, 0.065), "Blue", 22, bevel=0.003),
+        add_sphere("ColdValveBody", 0.028, (0.075, -0.145, 0.055), "Brass", 22, 16),
+        add_cyl("ColdValveStem", 0.013, 0.036, (0.075, -0.172, 0.055), "Brass", 18, rot=(math.radians(90), 0, 0), bevel=0.002),
     ]
-    finalize_and_export("WaterHeater", parts, toybox_scale=1.05)
+    # Cold-water inlet quarter-turn butterfly shutoff valve on PipeCold (0.075, -0.192, 0.055)
+    inlet_tap_parts = [
+        add_cyl("InletTapHub", 0.016, 0.016, (0.075, -0.192, 0.055), "Brass", 18, rot=(math.radians(90), 0, 0), bevel=0.002),
+        add_box("InletTapHandle", (0.022, 0.016, 0.078), (0.075, -0.196, 0.076), "Red", bevel=0.004),
+    ]
+    # Front rotary thermostat dial knob at (-0.03, -0.242, 0.28)
+    knob_parts = [
+        add_cyl("TempKnob", 0.034, 0.025, (-0.03, -0.242, 0.28), "SafetyOrange", 24, rot=(math.radians(90), 0, 0), bevel=0.004),
+        add_box("TempKnobPointer", (0.010, 0.014, 0.030), (-0.03, -0.255, 0.292), "White", bevel=0.002),
+    ]
+    led_parts = [
+        add_sphere("HeatLED", 0.016, (0.04, -0.242, 0.28), "GlowGreen", 18, 12),
+    ]
+    finalize_and_export_multipart(
+        "WaterHeater",
+        "WaterHeaterBody",
+        body_parts,
+        [
+            ("ValveHandle_Pivot", inlet_tap_parts, (0.075, -0.192, 0.055)),
+            ("ThermostatKnob_Pivot", knob_parts, (-0.03, -0.242, 0.28)),
+            ("StatusLED_Pivot", led_parts, (0.04, -0.242, 0.28)),
+        ],
+        toybox_scale=1.05
+    )
+
 
 # 25. SturdyTable (Sağlam Ahşap/Çelik Masa — Safe Zone / Triangle of Life Prop)
 def build_sturdy_table():
@@ -680,19 +1017,7 @@ def build_emergency_whistle():
     ]
     finalize_and_export("EmergencyWhistle", parts, toybox_scale=1.85)
 
-# 27. DocumentPouch (Su Geçirmez Evrak Dosyası — Tapu/DASK/Kimlik - 1.35x)
-def build_document_pouch():
-    clear_scene()
-    parts = [
-        add_box("WaterproofSleeve", (0.32, 0.24, 0.028), (0, 0, 0.014), "WaterBlue", bevel=0.009, segs=5, subsurf=1),
-        add_box("ZipperHeader", (0.33, 0.032, 0.034), (0, 0.11, 0.017), "SafetyOrange", bevel=0.006),
-        add_box("DocumentPaper", (0.26, 0.18, 0.030), (-0.01, -0.01, 0.015), "White", bevel=0.004),
-        add_box("OfficialSealBadge", (0.065, 0.045, 0.033), (0.07, -0.03, 0.016), "Red", bevel=0.004),
-        add_box("IDCard", (0.085, 0.055, 0.032), (-0.06, -0.04, 0.016), "Yellow", bevel=0.004),
-    ]
-    finalize_and_export("DocumentPouch", parts, toybox_scale=1.35)
-
-# 28. WorkGloves (Ağır Hizmet İş Eldiveni - 1.45x)
+# 27. WorkGloves (Ağır Hizmet İş Eldiveni - 1.45x)
 def build_work_gloves():
     clear_scene()
     parts = [
@@ -704,7 +1029,7 @@ def build_work_gloves():
     ]
     finalize_and_export("WorkGloves", parts, toybox_scale=1.45)
 
-# 29. MultiTool (Çok Amaçlı Pense / Çakı - 1.65x)
+# 28. MultiTool (Çok Amaçlı Pense / Çakı - 1.65x)
 def build_multi_tool():
     clear_scene()
     parts = [
@@ -717,18 +1042,7 @@ def build_multi_tool():
     ]
     finalize_and_export("MultiTool", parts, toybox_scale=1.65)
 
-# 30. DustMask (FFP3 Valfli Toz Maskesi - 1.55x)
-def build_dust_mask():
-    clear_scene()
-    parts = [
-        add_sphere("MaskCup", 0.082, (0, 0, 0.042), "White", 36, 20, scale=(1.10, 1.25, 0.65)),
-        add_box("NoseClip", (0.058, 0.018, 0.016), (0, -0.062, 0.088), "SilverMetal", bevel=0.004),
-        add_cyl("ExhaleValve", 0.024, 0.018, (0.026, -0.015, 0.085), "SafetyOrange", 28, rot=(math.radians(-15), math.radians(18), 0), bevel=0.004),
-        add_torus("ElasticStrap", 0.095, 0.005, (0, 0.02, 0.022), "Yellow", 36, 12, scale=(1.05, 1.20, 0.45)),
-    ]
-    finalize_and_export("DustMask", parts, toybox_scale=1.55)
-
-# 31. ShatteredGlass (Kırık Cam Parçaları — Floor Hazard)
+# 29. ShatteredGlass (Kırık Cam Parçaları — Floor Hazard)
 def build_shattered_glass():
     clear_scene()
     parts = [
@@ -740,17 +1054,71 @@ def build_shattered_glass():
     ]
     finalize_and_export("ShatteredGlass", parts, toybox_scale=1.15)
 
-# 32. RubblePile (Dökülmüş Sıva ve Tuğla Moloz Yığını — Corridor Obstacle)
+# 30. RubblePile (Parçacıklı Yıkıntı, Kırık Tuğla, Beton Plaka, Ahşap Kiriş ve İnşaat Demiri Moloz Yığını — Corridor Obstacle)
 def build_rubble_pile():
     clear_scene()
     parts = [
-        add_sphere("DustMound", 0.34, (0, 0, 0.06), "OffWhite", 32, 16, scale=(1.25, 1.05, 0.32)),
-        add_box("Brick1", (0.20, 0.10, 0.075), (-0.14, -0.08, 0.09), "Red", rot=(math.radians(18), math.radians(-12), math.radians(25)), bevel=0.008),
-        add_box("Brick2", (0.20, 0.10, 0.075), (0.15, 0.06, 0.10), "DarkRed", rot=(math.radians(-15), math.radians(22), math.radians(-35)), bevel=0.008),
-        add_box("ConcreteChunk1", (0.24, 0.18, 0.11), (0.02, -0.04, 0.13), "DarkMetal", rot=(math.radians(12), math.radians(15), math.radians(10)), bevel=0.016, subsurf=1),
-        add_box("ConcreteChunk2", (0.18, 0.15, 0.09), (-0.08, 0.12, 0.09), "OffWhite", rot=(math.radians(-20), math.radians(-8), math.radians(50)), bevel=0.014, subsurf=1),
+        # 1. Multi-Faceted Crushed Rubble & Mortar Base Bed (Gives solid silhouette & grounding)
+        add_cone("RubbleBedCore", 0.34, 0.22, 0.065, (0.0, 0.0, 0.032), "RubberBlack", 7, rot=(0, 0, math.radians(15)), bevel=0.006),
+        add_cone("RubbleBedMoundL", 0.26, 0.15, 0.082, (-0.09, -0.03, 0.041), "ChocBrown", 6, rot=(math.radians(5), math.radians(-6), math.radians(42)), bevel=0.005),
+        add_cone("RubbleBedMoundR", 0.25, 0.14, 0.078, (0.10, 0.04, 0.039), "DarkMetal", 6, rot=(math.radians(-4), math.radians(7), math.radians(-28)), bevel=0.005),
+        add_cone("MortarDustSubMound", 0.24, 0.13, 0.092, (0.01, 0.02, 0.046), "BrownWood", 7, rot=(math.radians(6), math.radians(4), math.radians(75)), bevel=0.005),
+
+        # 2. Fractured Reinforced Concrete Wall Slabs & Mortar Blocks (Kırık Betonarme Bloklar)
+        add_box("ConcreteSlabMain", (0.27, 0.19, 0.056), (-0.04, 0.03, 0.102), "DarkMetal", rot=(math.radians(26), math.radians(-18), math.radians(32)), bevel=0.004, segs=2),
+        add_box("PlasterSlabLayer", (0.22, 0.15, 0.026), (-0.03, 0.02, 0.122), "RubberBlack", rot=(math.radians(26), math.radians(-18), math.radians(32)), bevel=0.003, segs=2),
+        add_box("ConcreteChunkUpper", (0.21, 0.15, 0.062), (0.09, -0.04, 0.128), "DarkMetal", rot=(math.radians(-28), math.radians(-22), math.radians(-40)), bevel=0.004, segs=2),
+        add_box("ConcreteSlabLeft", (0.18, 0.14, 0.050), (-0.18, -0.05, 0.072), "DarkMetal", rot=(math.radians(18), math.radians(28), math.radians(15)), bevel=0.004, segs=2),
+        add_box("ConcreteSlabRight", (0.19, 0.13, 0.048), (0.18, 0.08, 0.070), "RubberBlack", rot=(math.radians(-16), math.radians(-24), math.radians(55)), bevel=0.004, segs=2),
+        add_box("ConcreteBlockFront", (0.15, 0.12, 0.054), (0.02, -0.14, 0.068), "DarkMetal", rot=(math.radians(32), math.radians(12), math.radians(-18)), bevel=0.004, segs=2),
+        add_cone("AngularConcretePeak", 0.11, 0.035, 0.095, (0.02, -0.01, 0.175), "DarkMetal", 5, rot=(math.radians(14), math.radians(-19), math.radians(45)), bevel=0.003),
+
+        # 3. Splintered Structural Timber Beams (Kırık Çatı/Tavan Ahşap Kiriş Parçaları)
+        add_box("BrokenTimberBeam1", (0.32, 0.068, 0.058), (0.04, 0.11, 0.092), "BrownWood", rot=(math.radians(-18), math.radians(24), math.radians(-22)), bevel=0.004, segs=2),
+        add_box("BrokenTimberBeam2", (0.22, 0.056, 0.048), (-0.12, -0.02, 0.115), "ChocBrown", rot=(math.radians(22), math.radians(15), math.radians(48)), bevel=0.004, segs=2),
+
+        # 4. Perforated Red & Terracotta Construction Bricks & Broken Half-Bricks (Delikli İnşaat Tuğlaları)
+        add_box("HollowBrick1", (0.18, 0.092, 0.066), (-0.11, -0.11, 0.086), "Red", rot=(math.radians(22), math.radians(-14), math.radians(28)), bevel=0.004, segs=2),
+        add_box("HollowBrick1_Holes", (0.186, 0.062, 0.022), (-0.11, -0.11, 0.086), "RubberBlack", rot=(math.radians(22), math.radians(-14), math.radians(28)), bevel=0.002),
+        add_box("HollowBrick2", (0.18, 0.092, 0.066), (0.14, -0.09, 0.088), "DarkRed", rot=(math.radians(-19), math.radians(24), math.radians(-38)), bevel=0.004, segs=2),
+        add_box("HollowBrick2_Holes", (0.186, 0.062, 0.022), (0.14, -0.09, 0.088), "RubberBlack", rot=(math.radians(-19), math.radians(24), math.radians(-38)), bevel=0.002),
+        add_box("HollowBrick3_Top", (0.17, 0.088, 0.062), (-0.04, 0.05, 0.168), "Red", rot=(math.radians(-30), math.radians(16), math.radians(64)), bevel=0.004, segs=2),
+        add_box("HollowBrick3_Holes", (0.176, 0.058, 0.020), (-0.04, 0.05, 0.168), "RubberBlack", rot=(math.radians(-30), math.radians(16), math.radians(64)), bevel=0.002),
+        add_box("HalfBrick4", (0.11, 0.088, 0.060), (0.08, 0.16, 0.072), "Red", rot=(math.radians(15), math.radians(28), math.radians(110)), bevel=0.004, segs=2),
+        add_box("HalfBrick5", (0.12, 0.086, 0.058), (-0.16, 0.12, 0.074), "DarkRed", rot=(math.radians(-24), math.radians(-15), math.radians(-22)), bevel=0.004, segs=2),
+        add_box("HalfBrick6", (0.10, 0.082, 0.055), (0.23, -0.02, 0.054), "Red", rot=(math.radians(12), math.radians(-30), math.radians(18)), bevel=0.004, segs=2),
+        add_box("BrickShard7", (0.088, 0.070, 0.048), (-0.24, 0.02, 0.044), "DarkRed", rot=(math.radians(-10), math.radians(20), math.radians(48)), bevel=0.003, segs=2),
+        add_box("BrickShard8", (0.092, 0.065, 0.045), (-0.01, -0.20, 0.045), "Red", rot=(math.radians(25), math.radians(8), math.radians(-15)), bevel=0.003, segs=2),
+
+        # 5. Protruding Bent Steel Rebar Rods (Beton Bloklardan Çıkan Eğrilmiş İnşaat Demirleri / Filizler)
+        add_cyl("RebarRod1", 0.0080, 0.28, (-0.08, 0.02, 0.17), "SilverMetal", 12, rot=(math.radians(48), math.radians(-32), math.radians(15)), bevel=0.001),
+        add_cyl("RebarRod2", 0.0080, 0.25, (0.11, -0.03, 0.16), "Copper", 12, rot=(math.radians(-42), math.radians(38), math.radians(-25)), bevel=0.001),
+        add_cyl("RebarRod3", 0.0075, 0.22, (0.02, 0.10, 0.15), "SilverMetal", 12, rot=(math.radians(-55), math.radians(-18), math.radians(40)), bevel=0.001),
+        add_cyl("RebarHook4", 0.0075, 0.12, (-0.15, -0.04, 0.22), "SilverMetal", 12, rot=(math.radians(72), math.radians(25), 0), bevel=0.001),
+
+        # 6. Dense Particulate Gravel, Crushed Concrete & Brick Chips on Pile & Perimeter (20 Parçacıklı Moloz Taşı)
+        add_cone("ParticulateChunk1", 0.062, 0.022, 0.048, (-0.09, -0.02, 0.145), "BrownWood", 5, rot=(math.radians(18), 0, math.radians(25)), bevel=0.002),
+        add_cone("ParticulateChunk2", 0.058, 0.020, 0.045, (0.06, 0.05, 0.152), "DarkMetal", 6, rot=(math.radians(-15), math.radians(12), math.radians(50)), bevel=0.002),
+        add_cone("ParticulateChunk3", 0.054, 0.018, 0.042, (0.01, -0.09, 0.135), "Red", 4, rot=(math.radians(22), math.radians(-10), math.radians(15)), bevel=0.002),
+        add_cone("ParticulateChunk4", 0.050, 0.018, 0.038, (-0.14, 0.04, 0.118), "ChocBrown", 5, rot=(0, math.radians(20), math.radians(-35)), bevel=0.002),
+        add_cone("ParticulateChunk5", 0.052, 0.018, 0.040, (0.15, 0.01, 0.115), "DarkRed", 5, rot=(math.radians(-12), 0, math.radians(65)), bevel=0.002),
+        add_cone("ParticulateChunk6", 0.048, 0.016, 0.036, (-0.05, 0.14, 0.110), "DarkMetal", 6, rot=(math.radians(10), math.radians(-15), math.radians(40)), bevel=0.002),
+        add_cone("DebrisStone1", 0.054, 0.020, 0.040, (-0.28, -0.12, 0.020), "DarkMetal", 5, rot=(0, 0, math.radians(15)), bevel=0.002),
+        add_cone("DebrisStone2", 0.046, 0.016, 0.034, (-0.22, -0.21, 0.017), "Red", 4, rot=(0, 0, math.radians(55)), bevel=0.002),
+        add_cone("DebrisStone3", 0.058, 0.022, 0.042, (0.27, -0.14, 0.021), "ChocBrown", 6, rot=(0, 0, math.radians(-30)), bevel=0.002),
+        add_cone("DebrisStone4", 0.044, 0.015, 0.032, (0.30, 0.04, 0.016), "DarkMetal", 5, rot=(0, 0, math.radians(42)), bevel=0.002),
+        add_cone("DebrisStone5", 0.050, 0.018, 0.036, (0.22, 0.21, 0.018), "DarkRed", 4, rot=(0, 0, math.radians(78)), bevel=0.002),
+        add_cone("DebrisStone6", 0.055, 0.020, 0.038, (-0.12, 0.25, 0.019), "BrownWood", 5, rot=(0, 0, math.radians(-60)), bevel=0.002),
+        add_cone("DebrisStone7", 0.042, 0.014, 0.030, (-0.29, 0.14, 0.015), "DarkMetal", 4, rot=(0, 0, math.radians(25)), bevel=0.002),
+        add_cone("DebrisStone8", 0.045, 0.016, 0.032, (0.13, -0.25, 0.016), "Red", 5, rot=(0, 0, math.radians(-45)), bevel=0.002),
+        add_cone("DebrisStone9", 0.038, 0.014, 0.028, (-0.09, -0.27, 0.014), "DarkMetal", 5, rot=(0, 0, math.radians(12)), bevel=0.002),
+        add_cone("DebrisStone10", 0.040, 0.015, 0.028, (0.05, 0.27, 0.014), "Red", 4, rot=(0, 0, math.radians(33)), bevel=0.002),
+        add_cone("DebrisStone11", 0.034, 0.012, 0.024, (-0.33, -0.02, 0.012), "DarkRed", 5, rot=(0, 0, math.radians(19)), bevel=0.002),
+        add_cone("DebrisStone12", 0.036, 0.013, 0.025, (0.33, -0.05, 0.013), "Red", 4, rot=(0, 0, math.radians(-22)), bevel=0.002),
+        add_cone("DebrisStone13", 0.035, 0.012, 0.024, (-0.19, -0.26, 0.012), "DarkMetal", 5, rot=(0, 0, math.radians(64)), bevel=0.002),
+        add_cone("DebrisStone14", 0.034, 0.012, 0.024, (0.19, -0.22, 0.012), "ChocBrown", 4, rot=(0, 0, math.radians(-14)), bevel=0.002),
     ]
-    finalize_and_export("RubblePile", parts, toybox_scale=1.10)
+    finalize_and_export("RubblePile", parts, toybox_scale=1.12)
 
 if __name__ == "__main__":
     generate_color_swatch_png()
@@ -773,7 +1141,7 @@ if __name__ == "__main__":
     build_flashlight()
     build_emergency_radio()
     build_air_conditioner()
-    # Part B: 14 New IMO Disaster Expansion Assets
+    # Part B: 13 IMO Disaster Expansion Assets (DocumentPouch & DustMask removed)
     build_gas_valve()
     build_water_valve()
     build_breaker_box()
@@ -782,10 +1150,9 @@ if __name__ == "__main__":
     build_water_heater()
     build_sturdy_table()
     build_emergency_whistle()
-    build_document_pouch()
     build_work_gloves()
     build_multi_tool()
-    build_dust_mask()
     build_shattered_glass()
     build_rubble_pile()
-    print("=== ALL 32 ISOMETRIC 3D DISASTER ASSETS & SWATCH ATLAS GENERATED SUCCESSFULLY ===")
+    build_fire_cabinet()
+    print("=== ALL 31 ISOMETRIC 3D DISASTER ASSETS & SWATCH ATLAS GENERATED SUCCESSFULLY ===")

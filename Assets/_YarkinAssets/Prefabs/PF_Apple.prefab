@@ -135,10 +135,36 @@ MonoBehaviour:
   isSecuredOrClosed: 0
   triggersSecondaryHazard: 0
   currentState: 0
+  mechanismKind: 0
   visualRoot: {fileID: 4544155571101196419}
   securedBracketObject: {fileID: 0}
   valveHandleTransform: {fileID: 0}
+  secondaryMovingPart: {fileID: 0}
+  tertiaryMovingPart: {fileID: 0}
+  quaternaryMovingPart: {fileID: 0}
+  mechanicalAnimator: {fileID: 0}
+  valveAnimationDuration: 0.68
+  isContainerCabinet: 0
+  cabinetDoorHinge: {fileID: 0}
+  isCabinetDoorOpen: 0
+  doorOpenAngleY: 105
+  doorAnimationDuration: 0.52
+  containedItemSlot: {fileID: 0}
+  containedItem: {fileID: 0}
   inventoryIcon: {fileID: 21300000, guid: 7a38231a455dc964b892f73a8b58aa64, type: 3}
+  _initialVisualLocalPos: {x: 0, y: 0, z: 0}
+  _initialVisualLocalRot: {x: 0, y: 0, z: 0, w: 1}
+  _initialVisualLocalScale: {x: 1, y: 1, z: 1}
+  _handleBasePos: {x: 0, y: 0, z: 0}
+  _handleBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _secondaryBasePos: {x: 0, y: 0, z: 0}
+  _secondaryBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _tertiaryBasePos: {x: 0, y: 0, z: 0}
+  _tertiaryBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _quaternaryBasePos: {x: 0, y: 0, z: 0}
+  _quaternaryBaseScale: {x: 1, y: 1, z: 1}
+  _doorBaseRot: {x: 0, y: 0, z: 0, w: 1}
+  _hasCapturedRestPose: 1
 --- !u!114 &8960270261635743652
 MonoBehaviour:
   m_ObjectHideFlags: 0
