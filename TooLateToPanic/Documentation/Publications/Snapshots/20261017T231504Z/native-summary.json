@@ -1,0 +1,474 @@
+{
+  "utc": "2026-10-17T22:42:51.7431804Z",
+  "dllSha256": "FBA51C5B1C9A9D3C2818A347A6020534DDF728E5987393CB2A7166F263167E1E",
+  "error": "",
+  "evidence": "Native production API and live graphical ScreenCapture framebuffer files. Two ordinary-frame 16-second openings; explicit hazard assignments and one separate notebook model fixture. No active-world clock/age assignment, manual Model.Tick, direct Warp or Camera.Render. No OS input, human acceptance, listening or full campaign acceptance.",
+  "captureLimit": "PNG presence and dimensions prove framebuffer capture only. Text fit, legibility and final visual acceptance require owner inspection of the captured pixels.",
+  "complete": true,
+  "passed": true,
+  "osInput": false,
+  "humanAcceptance": false,
+  "listening": false,
+  "seconds": 39.34349060058594,
+  "productionStartGameCalls": 3,
+  "productionJuryStartCalls": 1,
+  "hazardAssignments": 3,
+  "separateModelFixtures": 1,
+  "activeClockAssignments": 0,
+  "cinematicAgeAssignments": 0,
+  "directWarpCalls": 0,
+  "manualTickCalls": 0,
+  "cameraRenderCalls": 0,
+  "checks": [
+    {
+      "id": "launch.driver-registered",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 15
+    },
+    {
+      "id": "launch.fresh-guid-score-isolated",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 15
+    },
+    {
+      "id": "launch.live-graphical-background",
+      "status": "PASS",
+      "detail": "Graphics=Direct3D11; background=True",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 15
+    },
+    {
+      "id": "story.kktc-guzelyurt-kalkanli-fiction",
+      "status": "PASS",
+      "detail": "KKTC · Güzelyurt · Kalkanlı; Oyundaki kişiler ve afet olayları kurmacadır.",
+      "layer": "NATIVE_CATALOG_API",
+      "frame": 15
+    },
+    {
+      "id": "story.family-premise-no-vadidere",
+      "status": "PASS",
+      "detail": "Checks catalog strings used by opening/menu/diary/short-flow; source scan remains separate.",
+      "layer": "NATIVE_CATALOG_API",
+      "frame": 15
+    },
+    {
+      "id": "story.model-timings-and-supplies",
+      "status": "PASS",
+      "detail": "Existing model constants feed actual copy.",
+      "layer": "NATIVE_CATALOG_API",
+      "frame": 15
+    },
+    {
+      "id": "story.shelter-copy-two-routes",
+      "status": "PASS",
+      "detail": "Flood route is upper room; other campaign route is basement.",
+      "layer": "NATIVE_CATALOG_API",
+      "frame": 15
+    },
+    {
+      "id": "resolution.1600x900",
+      "status": "PASS",
+      "detail": "Actual graphical framebuffer=1600x900",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 37
+    },
+    {
+      "id": "capture.title-1600",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Production title; KKTC/Zeytinova location and family premise require pixel review.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 40
+    },
+    {
+      "id": "resolution.960x540",
+      "status": "PASS",
+      "detail": "Actual graphical framebuffer=960x540",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 62
+    },
+    {
+      "id": "capture.title-960",
+      "status": "PASS",
+      "detail": "Captured=960x540; Production title at actual 960x540; pixel review required.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 64
+    },
+    {
+      "id": "resolution.1600x900",
+      "status": "PASS",
+      "detail": "Actual graphical framebuffer=1600x900",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 87
+    },
+    {
+      "id": "opening.started.Earthquake.1",
+      "status": "PASS",
+      "detail": "Production StartGame resets its own actor; smoke assigns only hazard, never clock/age/actor.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 89
+    },
+    {
+      "id": "opening.beat.Earthquake.0",
+      "status": "PASS",
+      "detail": "Natural age=0,653; KKTC, Güzelyurt, Kalkanlı. Ailen güvenli alanda; aile evi sana emanet.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 127
+    },
+    {
+      "id": "capture.opening-earthquake-beat0",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=0; age=0,653; text=KKTC, Güzelyurt, Kalkanlı. Ailen güvenli alanda; aile evi sana emanet.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 130
+    },
+    {
+      "id": "opening.beat.Earthquake.1",
+      "status": "PASS",
+      "detail": "Natural age=4,654; 120 saniye: malzeme topla, eşyaları sabitle, evini güçlendir.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 367
+    },
+    {
+      "id": "capture.opening-earthquake-beat1",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=1; age=4,654; text=120 saniye: malzeme topla, eşyaları sabitle, evini güçlendir.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 370
+    },
+    {
+      "id": "opening.beat.Earthquake.2",
+      "status": "PASS",
+      "detail": "Natural age=8,654; Son 45 saniye göz hizasında: E / F ile erzak al. Bir su ve bir gıda yeter.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 607
+    },
+    {
+      "id": "capture.opening-earthquake-beat2",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=2; age=8,654; text=Son 45 saniye göz hizasında: E / F ile erzak al. Bir su ve bir gıda yeter.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 609
+    },
+    {
+      "id": "opening.beat.Earthquake.3",
+      "status": "PASS",
+      "detail": "Natural age=12,654; Bu dalgada bodrum sığınağına in; kapakta E ile gir. Selde üst kat panik odası kullanılır.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 847
+    },
+    {
+      "id": "capture.opening-earthquake-beat3",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=3; age=12,654; text=Bu dalgada bodrum sığınağına in; kapakta E ile gir. Selde üst kat panik odası kullanılır.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 850
+    },
+    {
+      "id": "opening.clock-actor-held.Earthquake",
+      "status": "PASS",
+      "detail": "frames=948; clock drift=0; actor drift=0",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1048
+    },
+    {
+      "id": "opening.sixteen-seconds-four-beats.Earthquake",
+      "status": "PASS",
+      "detail": "Observed last age=15,98797; wall=15,98008; no age/Tick assignment.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1048
+    },
+    {
+      "id": "opening.natural-resolves-once.Earthquake",
+      "status": "PASS",
+      "detail": "Before=0; after=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1048
+    },
+    {
+      "id": "opening.control-and-clock-resume.Earthquake",
+      "status": "PASS",
+      "detail": "Original controller and ordinary preparation clock resume once.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1108
+    },
+    {
+      "id": "opening.started.Flood.2",
+      "status": "PASS",
+      "detail": "Production StartGame resets its own actor; smoke assigns only hazard, never clock/age/actor.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1110
+    },
+    {
+      "id": "opening.beat.Flood.0",
+      "status": "PASS",
+      "detail": "Natural age=0,650; KKTC, Güzelyurt, Kalkanlı. Ailen güvenli alanda; aile evi sana emanet.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1147
+    },
+    {
+      "id": "capture.opening-flood-beat0",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=0; age=0,650; text=KKTC, Güzelyurt, Kalkanlı. Ailen güvenli alanda; aile evi sana emanet.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1150
+    },
+    {
+      "id": "opening.beat.Flood.1",
+      "status": "PASS",
+      "detail": "Natural age=4,650; 120 saniye: malzeme topla, eşyaları sabitle, evini güçlendir.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1387
+    },
+    {
+      "id": "capture.opening-flood-beat1",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=1; age=4,650; text=120 saniye: malzeme topla, eşyaları sabitle, evini güçlendir.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1390
+    },
+    {
+      "id": "opening.beat.Flood.2",
+      "status": "PASS",
+      "detail": "Natural age=8,651; Son 45 saniye göz hizasında: E / F ile erzak al. Bir su ve bir gıda yeter.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1627
+    },
+    {
+      "id": "capture.opening-flood-beat2",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=2; age=8,651; text=Son 45 saniye göz hizasında: E / F ile erzak al. Bir su ve bir gıda yeter.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1629
+    },
+    {
+      "id": "opening.beat.Flood.3",
+      "status": "PASS",
+      "detail": "Natural age=12,652; Bu sel dalgasında üst kat panik odasına çık; işaretli yerde E ile gir.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 1867
+    },
+    {
+      "id": "capture.opening-flood-beat3",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Natural Opening beat=3; age=12,652; text=Bu sel dalgasında üst kat panik odasına çık; işaretli yerde E ile gir.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 1870
+    },
+    {
+      "id": "opening.clock-actor-held.Flood",
+      "status": "PASS",
+      "detail": "frames=947; clock drift=0; actor drift=0",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2068
+    },
+    {
+      "id": "opening.sixteen-seconds-four-beats.Flood",
+      "status": "PASS",
+      "detail": "Observed last age=15,98635; wall=15,9709; no age/Tick assignment.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2068
+    },
+    {
+      "id": "opening.natural-resolves-once.Flood",
+      "status": "PASS",
+      "detail": "Before=0; after=1",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2068
+    },
+    {
+      "id": "opening.control-and-clock-resume.Flood",
+      "status": "PASS",
+      "detail": "Original controller and ordinary preparation clock resume once.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2129
+    },
+    {
+      "id": "opening.started.Fire.3",
+      "status": "PASS",
+      "detail": "Production StartGame resets its own actor; smoke assigns only hazard, never clock/age/actor.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2131
+    },
+    {
+      "id": "opening.explicit-skip-idempotent-same-frame",
+      "status": "PASS",
+      "detail": "Two production skip calls resolve once and consume the same input frame.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2131
+    },
+    {
+      "id": "opening.explicit-skip-idempotent-later",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2147
+    },
+    {
+      "id": "notebook.opens-production",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2147
+    },
+    {
+      "id": "notebook.story-and-live-note-separate",
+      "status": "PASS",
+      "detail": "Story fields and dynamic Note retain separate owners.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2175
+    },
+    {
+      "id": "notebook.live-model-expedition-counts",
+      "status": "PASS",
+      "detail": "Live storage slots, materials, budget and packed supplies.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2175
+    },
+    {
+      "id": "notebook.real-capacities",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2175
+    },
+    {
+      "id": "capture.notebook-rooms-1600",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Production notebook Rooms; personal story footer plus real live state.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 2177
+    },
+    {
+      "id": "notebook.inventory-page",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2231
+    },
+    {
+      "id": "capture.notebook-inventory-1600",
+      "status": "PASS",
+      "detail": "Captured=1600x900; Production Inventory page; counts are Model/Expedition values.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 2233
+    },
+    {
+      "id": "resolution.960x540",
+      "status": "PASS",
+      "detail": "Actual graphical framebuffer=960x540",
+      "layer": "NATIVE_GRAPHICAL_SURFACE",
+      "frame": 2255
+    },
+    {
+      "id": "capture.notebook-inventory-960",
+      "status": "PASS",
+      "detail": "Captured=960x540; Same production Inventory page at actual 960x540 framebuffer.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 2256
+    },
+    {
+      "id": "notebook.flood-page",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2310
+    },
+    {
+      "id": "capture.notebook-flood-960",
+      "status": "PASS",
+      "detail": "Captured=960x540; Production Flood page; story footer and real preparation checks.",
+      "layer": "NATIVE_FRAMEBUFFER_FILE",
+      "frame": 2311
+    },
+    {
+      "id": "notebook.readonly-and-clock-held",
+      "status": "PASS",
+      "detail": "Navigation did not mutate stock/budget/score/cheat state.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2311
+    },
+    {
+      "id": "notebook.releases-own-gate",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2345
+    },
+    {
+      "id": "notebook.fixture-flood-ready-upper-room",
+      "status": "PASS",
+      "detail": "Separate model fixture only: Flood, final45s, water2/food1; Su ve gıda hazır. Üst kat panik odasına git.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 2345
+    },
+    {
+      "id": "notebook.fixture-nonzero-live-counts",
+      "status": "PASS",
+      "detail": "Positive fixture values rule out static demonstration counts.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 2345
+    },
+    {
+      "id": "notebook.fixture-other-ready-basement",
+      "status": "PASS",
+      "detail": "Separate model fixture; Su ve gıda hazır. Bodrumdaki sığınağa git.",
+      "layer": "NATIVE_MODEL_FIXTURE",
+      "frame": 2345
+    },
+    {
+      "id": "shortflow.localized-heading-retains-movement",
+      "status": "PASS",
+      "detail": "Kalkanlı'daki evimiz; Aile evini hazırla. WASD / oklarla yürü; çanta son 45 saniyede.",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2346
+    },
+    {
+      "id": "finish.runtime-errors",
+      "status": "PASS",
+      "detail": "",
+      "layer": "NATIVE_API_FRAME",
+      "frame": 2346
+    },
+    {
+      "id": "scores.real-score-unchanged",
+      "status": "PASS",
+      "detail": "Before=62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C; after=62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C",
+      "layer": "NATIVE_FILE_HASH",
+      "frame": 2346
+    },
+    {
+      "id": "scores.write-target-remains-isolated",
+      "status": "PASS",
+      "detail": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V53-20261018\\manager\\native-r3-40e3a9b9-3934-433d-97e8-0e25dc1a8d06\\isolated-home-scores.json",
+      "layer": "NATIVE_FILE_PATH",
+      "frame": 2346
+    }
+  ],
+  "timelines": [
+    {
+      "hazard": "Earthquake",
+      "wallSeconds": 15.980081558227539,
+      "lastObservedAge": 15.9879732131958,
+      "maxClockDrift": 0.0,
+      "maxActorDrift": 0.0,
+      "observedFrames": 948,
+      "observedBeats": 4,
+      "naturalExit": true
+    },
+    {
+      "hazard": "Flood",
+      "wallSeconds": 15.970903396606445,
+      "lastObservedAge": 15.986349105834961,
+      "maxClockDrift": 0.0,
+      "maxActorDrift": 0.0,
+      "observedFrames": 947,
+      "observedBeats": 4,
+      "naturalExit": true
+    }
+  ],
+  "errors": []
+}

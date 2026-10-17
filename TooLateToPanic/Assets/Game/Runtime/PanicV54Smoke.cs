@@ -29,8 +29,7 @@ namespace TooLateToPanic
             public string captureLimit = "PNG presence and dimensions prove framebuffer capture only. Text fit, legibility and final visual acceptance require owner inspection of the captured pixels.";
             public bool complete, passed, osInput, humanAcceptance, listening;
             public float seconds;
-            public int setupWarps,timeFixtures; public int productionStartGameCalls, productionJuryStartCalls, hazardAssignments, separateModelFixtures;
-            public int activeClockAssignments, cinematicAgeAssignments, directWarpCalls, manualTickCalls, cameraRenderCalls;
+            public int setupWarps,timeFixtures; public int productionStartGameCalls, productionJuryStartCalls, hazardAssignments;
             public List<Row> checks = new List<Row>();
             public List<Shot> captures = new List<Shot>();
             public List<Timeline> timelines = new List<Timeline>();
@@ -222,8 +221,11 @@ namespace TooLateToPanic
             yield return Guide("basement");
             Check("guide.correct-basement",w.Model.BagReady&&w.GuidanceObjectiveActionV54=="shelter"&&w.GuidanceObjectivePositionV54.y<0);
             yield return Capture("fps-basement-route","Actual ready bag targets basement via checkpoint chain.");
-            w.SetReducedFpsMotionV54(true);Look(90,58);
-            yield return Place(new Vector3(2.65f,3.2f,4.6f));yield return Wait(.2f);
+            w.SetReducedFpsMotionV54(true);Look(90,62);
+            yield return Place(new Vector3(2.1f,3.2f,4.6f));yield return Wait(.2f);
+            w.SetFocus("bathroom_door");w.ToggleDoor();yield return Wait(1f);
+            w.Model.UtilitySafety.Complete("poweroff");report.timeFixtures++;yield return Wait(.2f);
+            Check("floor.dark-open-door-fixture",!w.MainsPoweredV5,"Explicit utility state fixture, actual door toggle; actor="+w.PlayerPosition+"; camera="+w.View.transform.position);
             var floors=w.GetComponentsInChildren<Renderer>(true).Where(r=>r.name.StartsWith("floor_finish_")&&r.name.Contains("Walnut")).ToArray();
             foreach(var r in floors)r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.On;
             yield return Capture("upper-floor-legacy-self-shadow","Counterfactual old micro-board shadow casting; same actor/camera, reduced motion, real floor.");

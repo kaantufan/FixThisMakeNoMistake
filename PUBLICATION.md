@@ -14,10 +14,10 @@ ZIP SHA256: `B79E33208FADD73B809AF94FAF2295AA6E5C977B1A1176AE255DB3B2637EA171` (
 
 Selected snapshot: 3941 files, 1265 generated dependencies, 0 missing GUIDs. Compared with the recorded build: 24 mismatched C# files out of 146; 25 mismatched selected asset files. Exact paths/hashes are recorded below. Static publication checks are not a fresh Unity import/build/native test.
 
-[Source manifest](TooLateToPanic/Documentation/Publications/Snapshots/20261017T230503Z/source-sha256.json), [source/build comparison](TooLateToPanic/Documentation/Publications/Snapshots/20261017T230503Z/source-vs-build.json), [native summary](TooLateToPanic/Documentation/Publications/Snapshots/20261017T230503Z/native-summary.json), [original local package metadata](TooLateToPanic/Documentation/Publications/Snapshots/20261017T230503Z/local-latest-original.json), [delivery](TooLateToPanic/Documentation/HOME-V5.3-KKTC-DELIVERY-2026-10-18.md).
+[Source manifest](TooLateToPanic/Documentation/Publications/Snapshots/20261017T231504Z/source-sha256.json), [source/build comparison](TooLateToPanic/Documentation/Publications/Snapshots/20261017T231504Z/source-vs-build.json), [native summary](TooLateToPanic/Documentation/Publications/Snapshots/20261017T231504Z/native-summary.json), [original local package metadata](TooLateToPanic/Documentation/Publications/Snapshots/20261017T231504Z/local-latest-original.json), [delivery](TooLateToPanic/Documentation/HOME-V5.3-KKTC-DELIVERY-2026-10-18.md).
 
 Live sources, players and saves are unchanged by this publication. Existing licenses and historical publications are retained. Cache, Builds, Evidence, private saves/keys, the separate legacy FPS project and deferred legacy audio remain excluded. Public README/download/metadata links are adapted only inside the publication copy.
 
-[Evidence layers and acceptance limits](TooLateToPanic/Documentation/Publications/Snapshots/20261017T230503Z/acceptance-layers.json).
+[Evidence layers and acceptance limits](TooLateToPanic/Documentation/Publications/Snapshots/20261017T231504Z/acceptance-layers.json).
 
-Existing older generated asset paths are retained in Git without deletion; they are outside the current GUID-selected source manifest. [Retention record](TooLateToPanic/Documentation/Publications/Snapshots/20261017T230503Z/retained-generated-paths.json).
+Existing older generated asset paths are retained in Git without deletion; they are outside the current GUID-selected source manifest. [Retention record](TooLateToPanic/Documentation/Publications/Snapshots/20261017T231504Z/retained-generated-paths.json).
