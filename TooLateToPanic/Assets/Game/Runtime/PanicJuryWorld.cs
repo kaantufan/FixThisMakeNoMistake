@@ -24,6 +24,7 @@ namespace TooLateToPanic
             if (effects) effects.OnPhase(Model.Phase);
             UpdateContext();
             RefreshPreparationVisibility();
+            ResetOverhaulRunV414(); BeginIntroStoryV414();
         }
 
         /// <summary>Advance the short flow only while the shared pause/notebook clock gate is open.</summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -474,7 +474,7 @@ namespace TooLateToPanic
                 Source("bookshelf", "Salon kitaplığı", "bookshelf", new Vector3(-6,0,4.8f),0,Stack("bracket",1),Stack("screws",2)),
                 Source("up_cabinet", "Üst kat dolabı", "cabinet", new Vector3(4.6f,3.2f,-4.5f),1,Stack("plank",2),Stack("screws",2)),
                 Source("up_bookshelf", "Üst kat kitaplığı", "bookshelf",new Vector3(-6,3.2f,-3.8f),1,Stack("bracket",1),Stack("screws",2)),
-                Source("bath_cabinet", "Banyo dolabı", "medicinecabinet",new Vector3(2.24f,3.2f,4.15f),1,Stack("screws",2)),
+                Source("bath_cabinet", "Banyo dolabı", "medicinecabinet",new Vector3(2.24f,3.2f,2.5f),1,Stack("screws",2)),
                 Source("garage_tools", "Garaj alet kutusu", "toolbox",new Vector3(14,0,5),0,Stack("screws",4),Stack("bracket",3),Stack("extinguisher",1)),
                 Source("basement_pantry", "Bodrum deposu", "supplycrate",new Vector3(-5,-3.2f,4),-1,Stack("sandbag",4),Stack("plank",4),Stack("seedling",3),Stack("hose",1),Stack("extinguisher",1))
             };

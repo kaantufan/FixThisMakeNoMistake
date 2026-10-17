@@ -8,6 +8,9 @@ namespace TooLateToPanic
     {
         public Transform Wheel;
         public Quaternion WheelRest=Quaternion.identity;
+        [NonSerialized] Mesh ownedTransitionMesh;
+        [NonSerialized] Material ownedTransitionFallback;
+        [NonSerialized] bool ownsRuntimeTransition;
         public static bool Install(GameObject existingHatch)
         {
             if(!existingHatch)return false;
@@ -41,12 +44,16 @@ namespace TooLateToPanic
             art.transform.localPosition=new Vector3(0,.035f,-.57f)-bounds.center*fit;
             foreach(var r in leaf.GetComponentsInChildren<Renderer>(true))
                 if(!r.transform.IsChildOf(art.transform))r.enabled=false;
-            CreateOpenTransitionRing(existingHatch.transform);
-            var adapter=existingHatch.AddComponent<PanicCuratedBunkerLid>();adapter.Wheel=wheel;if(wheel)adapter.WheelRest=wheel.localRotation;
+            var ringMesh=CreateOpenTransitionRing(existingHatch.transform,out var fallbackMaterial);
+            var adapter=existingHatch.AddComponent<PanicCuratedBunkerLid>();
+            adapter.ownedTransitionMesh=ringMesh;adapter.ownedTransitionFallback=fallbackMaterial;
+            adapter.ownsRuntimeTransition=Application.isPlaying;
+            adapter.Wheel=wheel;if(wheel)adapter.WheelRest=wheel.localRotation;
             return true;
         }
-        static void CreateOpenTransitionRing(Transform parent)
+        static Mesh CreateOpenTransitionRing(Transform parent,out Material ownedFallback)
         {
+            ownedFallback=null;
             // Square legacy collar to round source lid. Centre stays an actual 1.02m opening.
             const int count=64;var v=new Vector3[count*2];var triangles=new int[count*6];
             for(int i=0;i<count;i++)
@@ -61,8 +68,28 @@ namespace TooLateToPanic
             var mesh=new Mesh{name="V414_Bunker_OpenSquareToCircleRing"};mesh.vertices=v;mesh.triangles=triangles;mesh.RecalculateNormals();mesh.RecalculateBounds();
             var g=new GameObject("V414_OpenHatchTransitionRing");g.transform.SetParent(parent,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;
             var material=Resources.Load<Material>("CuratedBunker414/M_DarkMetal");
-            if(!material)material=new Material(Shader.Find("Standard")){name="V414_BunkerTransitionSteel",color=new Color(.14f,.17f,.18f)};
+            if(!material)
+            {
+                material=new Material(Shader.Find("Standard")){name="V414_BunkerTransitionSteel",color=new Color(.14f,.17f,.18f)};
+                ownedFallback=material;
+            }
             g.AddComponent<MeshRenderer>().sharedMaterial=material;
+            return mesh;
+        }
+        void OnDestroy()
+        {
+            // Runtime-owned instances only. Editor-persisted assets and Resources materials are never owned here.
+            if(!ownsRuntimeTransition)return;
+            ownsRuntimeTransition=false;
+            if(ownedTransitionMesh)
+            {
+                if(Application.isPlaying)Destroy(ownedTransitionMesh);else DestroyImmediate(ownedTransitionMesh);
+            }
+            if(ownedTransitionFallback)
+            {
+                if(Application.isPlaying)Destroy(ownedTransitionFallback);else DestroyImmediate(ownedTransitionFallback);
+            }
+            ownedTransitionMesh=null;ownedTransitionFallback=null;
         }
         public void Sample(bool open,float dt)
         {

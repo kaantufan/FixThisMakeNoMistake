@@ -27,7 +27,12 @@ namespace TooLateToPanic
             var deck = Group(root, "Floor"); var back = Group(root, "BackWalls");
             var low = Group(root, "FrontLowWalls"); var high = Group(root, "FrontHighWalls");
             Group(root, "Roof");
-            Solid(deck, "basement_slab", V(0,-.13f,0), V(16,.24f,12), M.Concrete);
+            // Keep the central stair's bottom floor solid; cut ONLY the retained bunker mouth.
+            // Collar inner wood bounds x[-5.1525,-3.8475],z[2.6475,3.7525] cover these cut edges.
+            Solid(deck,"floor_basement_left",V(-6.575f,-.13f,0),V(2.85f,.24f,12),M.Concrete);
+            Solid(deck,"floor_basement_right",V(2.075f,-.13f,0),V(11.85f,.24f,12),M.Concrete);
+            Solid(deck,"floor_basement_front",V(-4.5f,-.13f,-1.675f),V(1.30f,.24f,8.65f),M.Concrete);
+            Solid(deck,"floor_basement_back",V(-4.5f,-.13f,4.875f),V(1.30f,.24f,2.25f),M.Concrete);
             Solid(back, "basement_north", V(0,1.6f,6), V(16,3.2f,.26f), M.Brick);
             Solid(back, "basement_west", V(-8,1.6f,0), V(.26f,3.2f,12), M.Brick);
             Solid(low, "basement_south_low", V(0,.25f,-6), V(16,.5f,.26f), M.Brick);
@@ -35,8 +40,23 @@ namespace TooLateToPanic
             Solid(low, "basement_east_low", V(8,.25f,0), V(.26f,.5f,12), M.Brick);
             Solid(high, "basement_east_high", V(8,1.85f,0), V(.26f,2.7f,12), M.Brick);
             var b = new Builder();
-            for (int x=0;x<20;x++) for(int z=0;z<15;z++)
-                b.Box(V(-7.6f+x*.8f,-.002f,-5.6f+z*.8f),V(.786f,.02f,.786f), (x+z)%7==0?M.Tile:M.Concrete,.004f);
+            void BasementTilePatch(float left,float right,float near,float far,M material)
+            { if(right-left>.006f&&far-near>.006f)b.Box(V((left+right)*.5f,-.002f,(near+far)*.5f),V(right-left,.02f,far-near),material,.004f); }
+            const float cutLeft=-5.15f,cutRight=-3.85f,cutNear=2.65f,cutFar=3.75f;
+            for(int x=0;x<20;x++)for(int z=0;z<15;z++)
+            {
+                float cx=-7.6f+x*.8f,cz=-5.6f+z*.8f,left=cx-.393f,right=cx+.393f,near=cz-.393f,far=cz+.393f;
+                M material=(x+z)%7==0?M.Tile:M.Concrete;
+                if(right<=cutLeft||left>=cutRight||far<=cutNear||near>=cutFar)BasementTilePatch(left,right,near,far,material);
+                else
+                {
+                    BasementTilePatch(left,Mathf.Min(right,cutLeft),near,far,material);
+                    BasementTilePatch(Mathf.Max(left,cutRight),right,near,far,material);
+                    float innerLeft=Mathf.Max(left,cutLeft),innerRight=Mathf.Min(right,cutRight);
+                    BasementTilePatch(innerLeft,innerRight,near,Mathf.Min(far,cutNear),material);
+                    BasementTilePatch(innerLeft,innerRight,Mathf.Max(near,cutFar),far,material);
+                }
+            }
             // Brick joints and lower salt marks retain a distinct, useful cellar identity.
             for(int r=0;r<12;r++)
             {
@@ -89,19 +109,20 @@ namespace TooLateToPanic
             return root;
         }
 
-        /// <summary>Upper bath localY0, x[2,8],z[1.8,6]. Root is placed y3.2.</summary>
+        /// <summary>Upper bath localY0, x[2,8],z[1.8,6], direct west hall doorz4.6. Root is placed y3.2.</summary>
         public static GameObject BuildBathroom()
         {
             Init(); var root=new GameObject("HomeV4_Bathroom");
             var floor=Group(root,"Floor"); var walls=Group(root,"Partitions");
             var high=Group(root,"FrontHighWalls"); Group(root,"Roof");
-            // The only entrance now faces the upper room, away from the stair landing.
-            // The west wall is continuous; tight south pieces leave x[2.65,3.85] clear.
-            Solid(walls,"bath_west",V(2,.58f,3.9f),V(.13f,1.16f,4.2f),M.Cream);
-            Solid(walls,"bath_south_left",V(2.325f,.58f,1.8f),V(.65f,1.16f,.13f),M.Cream);
-            Solid(walls,"bath_south_right",V(5.925f,.58f,1.8f),V(4.15f,1.16f,.13f),M.Cream);
-            Solid(high,"bath_south_jamb_left",V(2.615f,1.12f,1.8f),V(.07f,2.24f,.2f),M.DarkWood);
-            Solid(high,"bath_south_jamb_right",V(3.885f,1.12f,1.8f),V(.07f,2.24f,.2f),M.DarkWood);
+            // V4.14 full-floor-plan decision: one direct west hall door, no entry through the study.
+            // West gapz[3.92,5.28] matches canonical bathroom_door center4.6/yaw90.
+            Solid(walls,"v414_partition_bath_west_south",V(2,.58f,2.86f),V(.13f,1.16f,2.12f),M.Cream);
+            Solid(walls,"v414_partition_bath_west_north",V(2,.58f,5.64f),V(.13f,1.16f,.72f),M.Cream);
+            Solid(walls,"v414_partition_bath_south",V(5,.58f,1.8f),V(6,1.16f,.13f),M.Cream);
+            Solid(high,"bath_west_jamb_south",V(2,1.12f,3.885f),V(.2f,2.24f,.07f),M.DarkWood);
+            Solid(high,"bath_west_jamb_north",V(2,1.12f,5.315f),V(.2f,2.24f,.07f),M.DarkWood);
+            Solid(high,"bath_west_lintel",V(2,2.74f,4.6f),V(.13f,.92f,1.36f),M.Cream);
             var b=new Builder();
             // One continuous pale field absorbs the former x[2,3] strip, with no border at old x=3.
             b.Box(V(5,.009f,3.9f),V(6,.012f,4.2f),M.Paper,.002f);
@@ -111,13 +132,11 @@ namespace TooLateToPanic
             for(int x=0;x<22;x++) for(int y=0;y<4;y++)
             {
                 float lo=2.02f+x*.272f,hi=lo+.26f;
-                float leftHi=Mathf.Min(hi,2.65f),rightLo=Mathf.Max(lo,3.85f);
-                if(leftHi-lo>.01f)b.Box(V((lo+leftHi)*.5f,.14f+y*.25f,1.878f),V(leftHi-lo,.237f,.018f),y==2?M.Teal:M.Ceramic,.002f);
-                if(hi-rightLo>.01f)b.Box(V((rightLo+hi)*.5f,.14f+y*.25f,1.878f),V(hi-rightLo,.237f,.018f),y==2?M.Teal:M.Ceramic,.002f);
+                b.Box(V((lo+hi)*.5f,.14f+y*.25f,1.878f),V(hi-lo,.237f,.018f),y==2?M.Teal:M.Ceramic,.002f);
             }
-            b.Box(V(2.325f,1.172f,1.8f),V(.65f,.045f,.16f),M.Honey,.006f);
-            b.Box(V(5.925f,1.172f,1.8f),V(4.15f,.045f,.16f),M.Honey,.006f);
-            b.Box(V(2,1.172f,3.9f),V(.16f,.045f,4.2f),M.Honey,.006f);
+            b.Box(V(5,1.172f,1.8f),V(6,.045f,.16f),M.Honey,.006f);
+            b.Box(V(2,1.172f,2.86f),V(.16f,.045f,2.12f),M.Honey,.006f);
+            b.Box(V(2,1.172f,5.64f),V(.16f,.045f,.72f),M.Honey,.006f);
             // The bath mat belongs beside the tub, outside the door swing and main crossing path.
             b.Box(V(6.04f,.046f,4.2f),V(.48f,.024f,1.14f),M.Teal,.04f);
             b.Box(V(6.04f,.06f,4.2f),V(.4f,.004f,1.04f),M.Mint,.022f);

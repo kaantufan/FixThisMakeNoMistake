@@ -220,6 +220,8 @@ namespace TooLateToPanic
                 var item = Model.Items.Find(i => i.Id == pair.Key);
                 bool open = source != null ? source.Open : hinges.TryGetValue(pair.Key, out var hinge) && hinge.open;
                 PanicCuratedAssetArt.SyncVisualState(pair.Value, open, item != null && (item.FloodProtected || item.FireProtected), item != null && item.Anchored, dt);
+                var bunkerAdapter = pair.Value.GetComponent<PanicCuratedBunkerLid>();
+                if (bunkerAdapter) bunkerAdapter.Sample(open, dt);
             }
             foreach (var pair in sourceObjects)
             {

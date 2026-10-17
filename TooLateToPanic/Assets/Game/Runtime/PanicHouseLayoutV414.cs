@@ -23,7 +23,7 @@ namespace TooLateToPanic
             new DoorSeat("door_parent","Ebeveyn odası",-2.2f,3.2f,3.9f,90),
             new DoorSeat("door_child","Çocuk odası",-2.2f,3.2f,-3.2f,90),
             new DoorSeat("door_study","Çalışma odası",2,3.2f,-2.6f,90),
-            new DoorSeat("bathroom_door","Banyo",3.25f,3.2f,1.8f),
+            new DoorSeat("bathroom_door","Banyo",2f,3.2f,4.6f,90),
             new DoorSeat("door_balcony","Balkon",0,3.2f,-6),
             new DoorSeat("door_garage_inner","Garaj iç kapısı",8.1f,0,2.2f,90)};
         public static System.Collections.Generic.IReadOnlyList<DoorSeat> Doors {get;}=Array.AsReadOnly(doors);

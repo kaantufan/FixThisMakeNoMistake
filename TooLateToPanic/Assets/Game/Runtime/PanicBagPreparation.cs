@@ -177,7 +177,7 @@ namespace TooLateToPanic
             if (Expedition.FindWorldSupply(focusId) != null) { TakeWorldSupply(); return; }
             if (!CanInteract) return;
             if (focusId == "@bagstation") { hud.OpenPhysicalBag(); return; }
-            if (focusId == "@bunker" || focusId == "bunker") { Model.EnterBunker(); return; }
+            if (focusId == "@bunker" || focusId == "bunker") { EnterPresentationSafeBunkerV414(); return; }
             if (focusId != null && hinges.TryGetValue(focusId,out var hinge) && hinge.directionalDoor) { bagOpenAge=0;ToggleDoor();return; }
             if (focusId == "@garage") { garageOpen=!garageOpen;bagOpenAge=0;effects.Play("garage",.45f);return; }
             Notice("Açıktaki su ve gıdayı al; ardından bodrumdaki sığınağa gir.");
@@ -196,7 +196,7 @@ namespace TooLateToPanic
         void RefreshBagRayFocus()
         {
             focusCandidates.Clear();
-            if(BagFirstPersonActive)View.transform.position=PlayerPosition+Vector3.up*1.62f;
+            if(BagFirstPersonActive)ApplyBagPoseV414();
             string target = BagRayTarget();
             if (target != null) focusCandidates.Add(target);
             if (focusId != target) SetFocus(target); else UpdateContext();

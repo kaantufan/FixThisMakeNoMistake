@@ -77,10 +77,18 @@ namespace TooLateToPanic
             else
             {
                 Vector3 bag = Model.Items.Find(i => i.Id == "bagstation")?.Position ?? new Vector3(1.55f, 0, -2.3f);
-                camera = Vector3.Lerp(bag + new Vector3(3.3f, 2.2f, -3.2f), bag + new Vector3(2.4f, 1.7f, -2.5f), SmoothResidence01((age - 6) / 3));
+                camera = Vector3.Lerp(bag + new Vector3(-1.3f, 1.4f, -1.8f), bag + new Vector3(-.8f, 1.15f, -1.3f), SmoothResidence01((age - 6) / 3));
                 target = bag + Vector3.up * .35f; fov = 51;
             }
             return true;
+        }
+
+        void EnterPresentationSafeBunkerV414()
+        {
+            if (!controller || !controller.isGrounded) { Model.Notify("Sığınağa girmek için kapak yanında yere bas."); return; }
+            if (!BuildBunkerApproachRouteV414(PlayerPosition, BunkerPosition + new Vector3(0, .04f, -1.18f)))
+            { Model.Notify("Kapak önüne açık yoldan yaklaş; sığınak girişini boş bırak."); return; }
+            Model.EnterBunker();
         }
 
         void BeginBunkerSequenceV414()
@@ -94,6 +102,7 @@ namespace TooLateToPanic
             cinematicBagV414.transform.localScale *= .68f;
             foreach (var c in cinematicBagV414.GetComponentsInChildren<Collider>(true)) c.enabled = false;
             foreach (var body in cinematicBagV414.GetComponentsInChildren<Rigidbody>(true)) { body.isKinematic = true; body.detectCollisions = false; }
+            BuildBunkerApproachRouteV414(cinematicActorStart, cinematicHatchApproach);
             SetBunkerLidPoseV414(0f);
         }
 
@@ -107,17 +116,18 @@ namespace TooLateToPanic
         void TickBunkerSequenceV414()
         {
             float age = residenceCinematicAge;
+            if (!BunkerApproachRouteValidV414) { CinematicShowsActor = false; BunkerSequenceStageV414 = "routeblocked"; CleanupBunkerBagV414(); return; }
             Vector3 shaft = BunkerPosition + new Vector3(0, .04f, -.10f);
-            if (age < .8f)
+            if (age < 1.65f)
             {
                 BunkerSequenceStageV414 = "open";
                 CinematicShowsActor = true;
-                player.position = Vector3.Lerp(cinematicActorStart, cinematicHatchApproach, SmoothResidence01(age / .65f));
+                player.position = SampleBunkerApproachRouteV414(Mathf.Clamp01(age));
                 FaceResidenceActor(BunkerPosition - player.position);
-                SetResidenceActorFlags(false, false, age < .65f ? .4f : 0);
-                SetBunkerLidPoseV414(SmoothResidence01(age / .65f));
+                SetResidenceActorFlags(false, age >= 1f, age < 1f ? .85f : 0);
+                SetBunkerLidPoseV414(SmoothResidence01((age - 1f) / .65f));
             }
-            else if (age < 1.65f)
+            else if (age < 2.5f)
             {
                 BunkerSequenceStageV414 = "bagthrow";
                 CinematicShowsActor = true;
@@ -125,22 +135,21 @@ namespace TooLateToPanic
                 SetResidenceActorFlags(false, false, 0);
                 SetBunkerLidPoseV414(1);
             }
-            else if (age < 3.2f)
+            else if (age < 4.05f)
             {
                 BunkerSequenceStageV414 = "jump";
                 CinematicShowsActor = true;
-                if (age < 2.1f)
+                if (age < 2.95f)
                 {
-                    float t = Mathf.Clamp01((age - 1.65f) / .45f);
+                    float t = Mathf.Clamp01((age - 2.5f) / .45f);
                     player.position = Vector3.Lerp(cinematicHatchApproach, shaft, SmoothResidence01(t)) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * .26f);
                 }
                 else
                 {
-                    float t = SmoothResidence01((age - 2.1f) / 1.1f);
+                    float t = SmoothResidence01((age - 2.95f) / 1.1f);
                     player.position = shaft + Vector3.down * (t * 2.45f);
                 }
-                // Close only after the actor's head clears the collar; the final pull accompanies the fall.
-                SetBunkerLidPoseV414(1f - SmoothResidence01((age - 2.95f) / .25f));
+                SetBunkerLidPoseV414(1f - SmoothResidence01((age - 3.8f) / .25f));
                 SetResidenceActorFlags(true, true, 0);
             }
             else
@@ -154,7 +163,7 @@ namespace TooLateToPanic
             }
             if (cinematicBagV414)
             {
-                if (age < 1.05f)
+                if (age < 1.85f)
                 {
                     var hand = PanicCharacterArt.GetCharacterBone(hero.gameObject, animator, HumanBodyBones.RightHand);
                     cinematicBagV414.transform.SetPositionAndRotation(hand ? hand.position : player.position + new Vector3(.25f, .85f, .2f), Quaternion.Euler(0, facingYaw, -12));
@@ -164,10 +173,13 @@ namespace TooLateToPanic
                 else
                 {
                     BunkerBagReleasedV414 = true;
-                    float t = Mathf.Clamp01((age - 1.05f) / .7f);
-                    cinematicBagV414.transform.position = Vector3.Lerp(bagReleasePositionV414, shaft + Vector3.down * 1.8f, t) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * .65f);
+                    float flight = age - 1.85f;
+                    float t = Mathf.Clamp01(flight / .65f);
+                    Vector3 mouth = BunkerPosition + Vector3.up * .76f;
+                    cinematicBagV414.transform.position = flight < .3f ? Vector3.Lerp(bagReleasePositionV414, mouth, SmoothResidence01(flight / .3f)) + Vector3.up * (Mathf.Sin(flight / .3f * Mathf.PI) * .25f) :
+                        Vector3.Lerp(mouth, BunkerPosition + Vector3.down * 1.8f, SmoothResidence01((flight - .3f) / .35f));
                     cinematicBagV414.transform.rotation = bagReleaseRotationV414 * Quaternion.Euler(t * 160, t * 70, t * 30);
-                    cinematicBagV414.SetActive(age < 2.1f);
+                    cinematicBagV414.SetActive(age < 2.5f);
                 }
             }
         }
@@ -177,9 +189,10 @@ namespace TooLateToPanic
             if (!CinematicActive) return false;
             if (CinematicKind == "Disaster" && !Model.IsSimulation)
             {
-                if (residenceCinematicAge < .8f) { PanicCharacterArt.SetMotion(hero.gameObject, animator, 0, true, 0, Time.deltaTime); PanicCharacterArt.SetTaskPose(hero.gameObject, animator, "gather", .5f); }
-                else if (residenceCinematicAge < 1.65f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "throw", Mathf.Clamp01((residenceCinematicAge - .8f) / .85f));
-                else PanicCharacterArt.SetCinematicPose(hero.gameObject, "jump", Mathf.Clamp01((residenceCinematicAge - 1.65f) / 1.55f));
+                if (residenceCinematicAge < 1f) PanicCharacterArt.SetMotion(hero.gameObject, animator, BunkerApproachRouteLengthV414, true, 0, Time.deltaTime);
+                else if (residenceCinematicAge < 1.65f) { PanicCharacterArt.SetMotion(hero.gameObject, animator, 0, true, 0, Time.deltaTime); PanicCharacterArt.SetTaskPose(hero.gameObject, animator, "gather", .5f); }
+                else if (residenceCinematicAge < 2.5f) PanicCharacterArt.SetCinematicPose(hero.gameObject, "throw", Mathf.Clamp01((residenceCinematicAge - 1.65f) / .85f));
+                else PanicCharacterArt.SetCinematicPose(hero.gameObject, "jump", Mathf.Clamp01((residenceCinematicAge - 2.5f) / 1.55f));
             }
             return true;
         }

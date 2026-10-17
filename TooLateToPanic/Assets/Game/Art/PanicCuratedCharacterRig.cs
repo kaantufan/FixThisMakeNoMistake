@@ -38,7 +38,7 @@ namespace TooLateToPanic
             for(int i=0;i<verts.Count;i++)verts[i]=(verts[i]-origin)*factor;
             rig.BuildSkeleton();
             var skin=new Mesh{name="DefterSurvivor_V414_LocallyWeighted"};skin.indexFormat=verts.Count>65535?IndexFormat.UInt32:IndexFormat.UInt16;
-            skin.SetVertices(verts);skin.SetNormals(normals);skin.SetUVs(0,uv);skin.SetTriangles(tris,0);
+            skin.SetVertices(verts);skin.SetNormals(normals);skin.SetUVs(0,uv);skin.SetTriangles(tris,0);skin.RecalculateTangents();
             var bindposes=new Matrix4x4[rig.Bones.Length];for(int i=0;i<bindposes.Length;i++)bindposes[i]=rig.Bones[i].worldToLocalMatrix*root.transform.localToWorldMatrix;
             skin.bindposes=bindposes;
             var weights=new BoneWeight[verts.Count];for(int i=0;i<weights.Length;i++)weights[i]=rig.Weight(verts[i]);skin.boneWeights=weights;skin.RecalculateBounds();

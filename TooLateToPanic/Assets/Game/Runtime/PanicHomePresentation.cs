@@ -290,6 +290,7 @@ namespace TooLateToPanic
 
         void OnDisable()
         {
+            SuspendExperienceFeedbackV414();
             // Stop/restore our own presentation only. Unity/root remains lifecycle owner.
             ResetPresentation();
         }

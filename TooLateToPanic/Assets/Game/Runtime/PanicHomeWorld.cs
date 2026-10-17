@@ -84,6 +84,7 @@ namespace TooLateToPanic
             bool hudConceptSmoke = Array.IndexOf(args, "--hud-concept-smoke") >= 0;
             bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
             bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
+            if (Array.IndexOf(args, "--overhaul414-smoke") >= 0) Application.runInBackground = true;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
             if (fullFlowSmoke)
@@ -429,7 +430,7 @@ namespace TooLateToPanic
             controller.Move((desiredVelocity + Vector3.up * gravitySpeed) * dt);
             if (!groundedBeforeMove && controller.isGrounded) effects.Play(StepSurface(), fallingSpeed < -8 ? .55f : .36f);
             Vector3 p = player.position;
-            if (Mathf.Abs(p.x) > 21.3f || Mathf.Abs(p.z) > 21.3f) { p.x = Mathf.Clamp(p.x, -21.3f, 21.3f); p.z = Mathf.Clamp(p.z, -21.3f, 21.3f); Warp(p); }
+            if (p.x < -23f || p.x > 21.3f || Mathf.Abs(p.z) > 21.3f) { p.x = Mathf.Clamp(p.x, -23f, 21.3f); p.z = Mathf.Clamp(p.z, -21.3f, 21.3f); Warp(p); }
             if (desiredVelocity.sqrMagnitude > .025f)
             {
                 float targetYaw = Mathf.Atan2(desiredVelocity.x, desiredVelocity.z) * Mathf.Rad2Deg;
@@ -532,7 +533,7 @@ namespace TooLateToPanic
                 // The actual art bounds outline the loose object, not its generous pick trigger.
                 foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
                 {
-                    if (!renderer || renderer is LineRenderer || !renderer.gameObject.activeInHierarchy) continue;
+                    if (!renderer || renderer is LineRenderer || !renderer.gameObject.activeInHierarchy || renderer.GetComponent<PanicPermanentlyHiddenV414>()) continue;
                     if (!any) { bounds = renderer.bounds; any = true; } else bounds.Encapsulate(renderer.bounds);
                 }
                 if (any) return true;
@@ -626,10 +627,11 @@ namespace TooLateToPanic
             if (TryJuryInteract()) return;
             if (Expedition.FindWorldSupply(focusId) != null) { TakeWorldSupply(); return; }
             if (!CanInteract || WorkActive || IsMoving) { Model.Notify("Etkileşmek için hedefe yaklaş."); return; }
+            if (TryInteractUtilityV414()) return;
             if (focusId == "@bunker" || Selected != null && Selected.Id == "bunker")
             {
                 if (!BagFinalStageActive) { Notice("Çanta hazırlığı son 30 saniyede başlar; önce evdeki önlemleri tamamla."); return; }
-                Model.EnterBunker(); return;
+                EnterPresentationSafeBunkerV414(); return;
             }
             var source = NearestSource;
             if (source != null)
@@ -705,8 +707,8 @@ namespace TooLateToPanic
             if (action == "plant" && !TreeRowClearOfActor(target)) { Model.Notify("Ağaç gövdesinin yerinden biraz uzaklaş, sonra kurulumu başlat."); return; }
             SetFocus(target);
             workAction = action; workTarget = target; workAge = 0;
-            Expedition.Work.Begin(action, target, Model.IsJuryDemo); InventoryOpen = false;
             ResetManualWorkPointerV414();
+            Expedition.Work.Begin(action, target, Model.IsJuryDemo); InventoryOpen = false;
             if (PositionOf(target, out var taskPosition)) { var toward = Flat(taskPosition-player.position); if (toward.sqrMagnitude>.01f) { facingYaw=Mathf.Atan2(toward.x,toward.z)*Mathf.Rad2Deg; hero.rotation=Quaternion.Euler(0,facingYaw,0); } }
             animator.SetBool("Working", true); animator.SetBool("Kneeling", action == "drain" || action == "anchorfloor");
             var hand = PanicCharacterArt.GetCharacterBone(hero.gameObject, animator, HumanBodyBones.RightHand);
@@ -715,7 +717,7 @@ namespace TooLateToPanic
             { workRig = PanicWorkArt.CreateWorkRig(action); workRig.transform.position = new Vector3(100, 100, 100); LayerRecursive(workRig, 30); workCamera.enabled = true; }
             else { StartDirectConstruction(action, target); Expedition.Work.TryClick(0); }
             var actorCue = GetComponent<PanicActorOcclusion>(); if (actorCue) actorCue.RefreshCandidates();
-            Model.Notify(Expedition.Work.IsWorldConstruction ? "Kuruluyor" : "Vidaların üzerine tıkla");
+            Model.Notify(Expedition.Work.StepHint);
         }
         void UpdateWork(float dt)
         {
@@ -761,6 +763,7 @@ namespace TooLateToPanic
         public void CancelWork()
         {
             if (Expedition == null) return;
+            ResetManualWorkPointerV414();
             if (WorkActive) CancelFrame=Time.frameCount;
             CancelDirectConstruction();
             Expedition.Work.Cancel();
@@ -793,7 +796,7 @@ namespace TooLateToPanic
             CancelWork(); CancelMove();
             if (Model.Phase != PanicPhase.Title && Model.Phase != PanicPhase.GameOver) Model.ReturnToTitle();
             Model.StartRun(tutorial); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; focusId = null; InventoryOpen = false; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); effects.OnPhase(Model.Phase); QueueRadio(DisasterVoiceId());
-            
+            ResetOverhaulRunV414(); BeginIntroStoryV414();
         }
         public void FinishTutorial() { CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); QueueRadio(DisasterVoiceId()); }
         public void FinishInspection() { if (JuryActive) AdvanceJuryDemo(); else if (Model.IsSimulation) ReturnToMenu(); else Model.FinishInspection(); }
@@ -951,7 +954,7 @@ namespace TooLateToPanic
             ApplyCameraOrbit(ref offset);
             bool constructionShot = ApplyConstructionCamera(ref aim, ref offset);
             if (Model.Phase == PanicPhase.Disaster) { float t = Mathf.Clamp01(1-Model.PhaseTime/8f); offset=Quaternion.Euler(0,Mathf.Lerp(-5,7,t),0)*offset; size=Mathf.Lerp(13,11.5f,t); }
-            Vector3 shake = Model.Phase == PanicPhase.Disaster && Model.Disaster == DisasterType.Earthquake ? new Vector3(Mathf.Sin(Time.time * 29), Mathf.Cos(Time.time * 31), 0) * .06f : Vector3.zero;
+            Vector3 shake = Model.Phase == PanicPhase.Disaster && effects ? effects.DisasterVisualImpulseV414 : Vector3.zero;
             View.transform.position = Vector3.Lerp(View.transform.position, aim + offset + shake, dt * (constructionShot ? 14 : 5));
             View.transform.rotation = Quaternion.LookRotation(-offset.normalized);
             View.orthographicSize = Mathf.Lerp(View.orthographicSize, size, dt * 4);

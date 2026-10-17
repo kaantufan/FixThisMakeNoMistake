@@ -78,6 +78,7 @@ namespace TooLateToPanic
         GUIStyle _title;
         GUIStyle _heading;
         GUIStyle _body;
+        GUIStyle _story;
         GUIStyle _small;
         GUIStyle _tiny;
         GUIStyle _center;
@@ -413,6 +414,8 @@ namespace TooLateToPanic
             _mega = MakeStyle(_displayFont, 142, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
             _logo = MakeStyle(_displayFont, 116, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
             _body = MakeStyle(_condensedFont, 23, FontStyle.Bold, MainText, TextAnchor.MiddleLeft);
+            _story = MakeStyle(_bodyFont, 26, FontStyle.Normal, MainText, TextAnchor.MiddleLeft);
+            _story.wordWrap = true;
             _small = MakeStyle(_bodyFont, 18, FontStyle.Normal, SoftText, TextAnchor.MiddleLeft);
             _tiny = MakeStyle(_condensedFont, 16, FontStyle.Bold, Muted, TextAnchor.MiddleLeft);
             _center = MakeStyle(_condensedFont, 21, FontStyle.Bold, MainText, TextAnchor.MiddleCenter);
@@ -987,9 +990,9 @@ namespace TooLateToPanic
             Fill(new Rect(0, CanvasHeight - band - 18, CanvasWidth, band + 18), new Color(.035f, .03f, .025f, .97f));
             DrawDot(new Rect(64, 53, 9, 9), Ember);
             Label(new Rect(88, 42, 900, 31), "TOO LATE TO PANIC!  /  " + DisasterName(World.Model.Disaster), _tiny);
-            string title = string.IsNullOrEmpty(World.CinematicTitle) ? "KURTARMA" : Clip(World.CinematicTitle, 70);
+            string title = string.IsNullOrEmpty(World.CinematicTitle) ? "KURTARMA" : World.IntroStoryActiveV414 ? World.CinematicTitle : Clip(World.CinematicTitle, 70);
             Brush(new Rect(72, CanvasHeight - 116, 24, 68), Rust);
-            Label(new Rect(116, CanvasHeight - 120, 1394, 73), title, _title);
+            Label(new Rect(116, CanvasHeight - 120, 1394, 80), title, World.IntroStoryActiveV414 ? _story : _title);
             DrawBar(new Rect(78, CanvasHeight - 29, 1444, 4), World.CinematicProgress, Brass);
             Region(new Rect(0, 0, CanvasWidth, band));
             Region(new Rect(0, CanvasHeight - band - 18, CanvasWidth, band + 18));

@@ -8,6 +8,7 @@ namespace TooLateToPanic
     public static class PanicDisasterArt
     {
         const int WaterCells = 40;
+        static readonly float[] QuakeStarts={.35f,1.15f,2.35f,4.15f,6.4f,8.8f};
         static readonly int ColorId = Shader.PropertyToID("_Color");
 
         public static GameObject Create(DisasterType type)
@@ -43,7 +44,7 @@ namespace TooLateToPanic
             {
                 var e = s.Emitters[i];
                 var emission = e.System.emission;
-                emission.rateOverTime = e.Rate * s.Strength;
+                emission.rateOverTime=e.Rate*s.Strength*(s.Type==DisasterType.Earthquake?.18f+QuakePulse(s.Clock)*1.45f:1f);
             }
             if (s.Type == DisasterType.Flood) AnimateFlood(s);
             else if (s.Type == DisasterType.Earthquake) AnimateQuake(s);
@@ -92,7 +93,7 @@ namespace TooLateToPanic
             Rain(s, soft, new Vector3(0, 12, 15), new Vector2(46, 17));
             Rain(s, soft, new Vector3(0, 12, -15), new Vector2(46, 17));
             Rain(s, soft, new Vector3(-16, 12, 0), new Vector2(15, 12));
-            Rain(s, soft, new Vector3(16, 12, 0), new Vector2(15, 12));
+            Rain(s, soft, new Vector3(23, 12, 0), new Vector2(15, 12));
 
             var dripPoints = new List<Vector3>();
             for (int floor = 0; floor < 2; floor++)
@@ -126,7 +127,7 @@ namespace TooLateToPanic
 
         static void AnimateFlood(PanicDisasterArtState s)
         {
-            float t = s.Clock, front = 25 - Mathf.Min(t, 8) * 6.1f;
+            float t = s.Clock, front = -23 + Mathf.Min(t, 9) * 5.2f;
             // Peak water is retained during aftermath, rather than draining when intensity drops.
             float level = -.08f + s.Peak * .47f;
             for (int i = 0; i < s.WaterVertices.Length; i++)
@@ -145,13 +146,19 @@ namespace TooLateToPanic
             for (int i = 0; i < 72; i++)
             {
                 bool leading = i < 28;
-                float x = leading ? -22.5f + i * 1.67f : Mathf.Lerp(-21, 21, Hash(i * 7 + 6));
-                float z = leading ? front + Mathf.Sin(x * .42f + t) * .65f : Mathf.Repeat(Hash(i * 13) * 44 - t * .48f + 22, 44) - 22;
+                float x = leading ? front + Mathf.Sin((-22.5f+i*1.67f)*.42f+t)*.65f : Mathf.Repeat(Hash(i*7+6)*44+t*.95f+22,44)-22;
+                float z = leading ? -22.5f+i*1.67f : Mathf.Lerp(-21,21,Hash(i*13));
+                if(!leading && i>=56)
+                {
+                    int corner=(i-56)%4;float eddyAngle=t*.9f+i*1.37f;
+                    x=(corner<2?-8.3f:8.3f)+Mathf.Cos(eddyAngle)*(.3f+(i%4)*.10f);
+                    z=(corner%2==0?-6.3f:6.3f)+Mathf.Sin(eddyAngle)*(.35f+(i%3)*.1f);
+                }
                 float wet = Wetness(x, z, front);
                 float y = WaterHeight(x, z, t, front, level, wet) + .026f;
                 float length = leading ? 1.2f : .35f + Hash(i * 11) * .85f;
                 float width = leading ? .15f : .06f;
-                float angle = leading ? Mathf.Sin(x * .42f + t) * .25f : Hash(i * 5) * 6.28f + t * .035f;
+                float angle = leading ? Mathf.PI*.5f+Mathf.Sin(z*.42f+t)*.15f : i>=56 ? t*.9f+i*1.37f : Mathf.PI*.5f+.15f*Mathf.Sin(t+i);
                 Vector3 across = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * length;
                 Vector3 along = new Vector3(-Mathf.Sin(angle), 0, Mathf.Cos(angle)) * width;
                 Vector3 center = new Vector3(x, y, z);
@@ -159,7 +166,7 @@ namespace TooLateToPanic
                 s.FoamVertices[v] = center - across - along; s.FoamVertices[v + 1] = center - across + along;
                 s.FoamVertices[v + 2] = center + across + along; s.FoamVertices[v + 3] = center + across - along;
                 float alpha = wet * (leading ? .42f : .16f + .09f * Mathf.Sin(t * 1.3f + i)) * Mathf.Clamp01(s.Peak * 3);
-                if (leading && front < -23) alpha = 0;
+                if (leading && front > 23) alpha = 0;
                 Color c = new Color(.66f, .79f, .75f, alpha);
                 s.FoamColors[v] = c; s.FoamColors[v + 1] = c; s.FoamColors[v + 2] = c; s.FoamColors[v + 3] = c;
             }
@@ -169,13 +176,13 @@ namespace TooLateToPanic
 
         static float Wetness(float x, float z, float front)
         {
-            float edge = front + Mathf.Sin(x * .42f) * .7f;
-            return Mathf.SmoothStep(0, 1, (z - edge + 1.2f) * .6f);
+            float edge = front + Mathf.Sin(z*.42f)*.7f;
+            return Mathf.SmoothStep(0,1,(edge-x+1.2f)*.6f);
         }
 
         static float WaterHeight(float x, float z, float t, float front, float level, float wet)
         {
-            float edge = z - front - Mathf.Sin(x * .42f) * .7f;
+            float edge = x-front-Mathf.Sin(z*.42f)*.7f;
             float crest = Mathf.Exp(-edge * edge * .8f) * .15f;
             float ripples = Mathf.Sin(x * .81f + z * .56f - t * 2.1f) * .038f + Mathf.Sin(x * -.49f + z * 1.17f - t * 2.8f) * .022f;
             return -.24f + wet * (level + .24f + ripples + crest);
@@ -213,9 +220,9 @@ namespace TooLateToPanic
         {
             if (s.CrackObject && s.Peak > .14f) s.CrackObject.SetActive(true);
             // A few localized impacts, once per event. Rubble then stays where it landed.
-            while (s.DustBurst < 4 && s.Clock >= .7f + s.DustBurst * 1.8f)
+            while (s.DustBurst < 6 && s.Clock >= QuakeStarts[s.DustBurst])
             {
-                if (s.Dust) s.Dust.Emit(46);
+                if(s.Dust)s.Dust.Emit(34+s.DustBurst*3);
                 s.DustBurst++;
             }
             AnimateDebris(s, s.Clock, 0, 0);
@@ -227,8 +234,9 @@ namespace TooLateToPanic
             var smokeMat = ParticleMaterial(s, "Dusk smoke", softTexture, false);
             var emberMat = ParticleMaterial(s, "Hot embers", softTexture, true);
             // Localized points: kitchen, a living-room corner and an upstairs window.
-            var sites = new[] { new Vector3(6.15f, .36f, 4.35f), new Vector3(-5.8f, .18f, -3.7f), new Vector3(-5.8f, 3.4f, -3.65f), new Vector3(4.25f, 3.45f, 4.9f) };
-            var source = EmitterMesh(s, sites, .55f);
+            var sites = new[] { new Vector3(2.75f,.99f,4.38f),new Vector3(-6.3f,.18f,-4.6f),new Vector3(5.25f,3.4f,-4.9f),new Vector3(-5.4f,3.4f,4.5f) };
+            var source = EmitterMesh(s, sites, .38f);
+            CreateFlameSheets(s,flame,sites);
             var outer = Particles(s, "Broken orange flame tongues", flame, 240, 145, .6f, 1.15f, .55f, 1.1f);
             MeshEmitter(outer, source);
             var om = outer.main; om.startSpeed = new ParticleSystem.MinMaxCurve(.95f, 1.85f); om.startRotation = new ParticleSystem.MinMaxCurve(-.22f, .22f);
@@ -246,7 +254,7 @@ namespace TooLateToPanic
             var mm = smoke.main; mm.startSpeed = new ParticleSystem.MinMaxCurve(.55f, .95f); mm.startRotation = new ParticleSystem.MinMaxCurve(0, Mathf.PI * 2);
             var mv = smoke.velocityOverLifetime; mv.enabled = true; mv.x = .28f; mv.z = .12f; mv.y = .18f;
             AddNoise(smoke, .42f, .45f); Grow(smoke, .45f, 2.5f);
-            SetGradient(smoke, new Color(.13f, .125f, .11f, .03f), new Color(.16f, .16f, .15f, .44f), new Color(.28f, .29f, .28f, 0));
+            SetGradient(smoke, new Color(.075f,.07f,.065f,.06f),new Color(.10f,.095f,.09f,.66f),new Color(.23f,.235f,.23f,0));
             var spin = smoke.rotationOverLifetime; spin.enabled = true; spin.z = new ParticleSystem.MinMaxCurve(-.16f, .16f);
 
             var embers = Particles(s, "Rising sparks and falling embers", emberMat, 170, 42, 1.5f, 3.2f, .025f, .065f);
@@ -298,13 +306,14 @@ namespace TooLateToPanic
             var velocity = plume.velocityOverLifetime; velocity.enabled = true;
             velocity.x = drift.x; velocity.y = drift.y; velocity.z = drift.z;
             AddNoise(plume, .18f, .45f); Grow(plume, .55f, 2.5f);
-            SetGradient(plume, new Color(.22f, .21f, .19f, 0), new Color(.40f, .39f, .36f, .54f), new Color(.47f, .47f, .44f, 0));
+            SetGradient(plume, new Color(.10f,.09f,.08f,0),new Color(.16f,.15f,.14f,.66f),new Color(.31f,.31f,.29f,0));
             var spin = plume.rotationOverLifetime; spin.enabled = true;
             spin.z = new ParticleSystem.MinMaxCurve(-.12f, .12f);
         }
 
         static void AnimateFire(PanicDisasterArtState s)
         {
+            AnimateFlameSheets(s);
             if (s.CrackObject && s.Peak > .25f) s.CrackObject.SetActive(true);
             for (int i = 0; i < s.FireLights.Length; i++)
             {
@@ -312,6 +321,63 @@ namespace TooLateToPanic
                 float flicker = .82f + .12f * Mathf.Sin(t * 17.3f) + .08f * Mathf.Sin(t * 10.1f) + .06f * Mathf.Sin(t * 29.7f);
                 s.FireLights[i].intensity = s.Strength * 1.35f * flicker;
             }
+        }
+
+        // Optional presentation sample. The caller retains camera/house ownership.
+        public static Vector3 SampleVisualImpulse(GameObject root)
+        {
+            if(!root)return Vector3.zero;
+            var s=root.GetComponent<PanicDisasterArtState>();
+            if(!s||s.Type!=DisasterType.Earthquake)return Vector3.zero;
+            float t=s.Clock,p=QuakePulse(t)*s.Strength;
+            return new Vector3(Mathf.Sin(t*41.7f)+.45f*Mathf.Sin(t*67.3f),Mathf.Sin(t*34.1f)*.3f,Mathf.Cos(t*47.3f))*(p*.075f);
+        }
+        static float QuakePulse(float t)
+        {
+            float power=0;
+            foreach(float start in QuakeStarts)
+            {float age=t-start;if(age>=0)power+=Mathf.Exp(-age*2.25f)*(.65f+.35f*Mathf.Abs(Mathf.Sin(age*11)));}
+            return Mathf.Clamp01(power);
+        }
+        static void CreateFlameSheets(PanicDisasterArtState s,Material material,Vector3[] sites)
+        {
+            const int tongues=5,slices=7;
+            s.FlameSites=sites;s.FlameVertices=new Vector3[sites.Length*tongues*slices*2];s.FlameColors=new Color[s.FlameVertices.Length];
+            var triangles=new int[sites.Length*tongues*(slices-1)*6];var uv=new Vector2[s.FlameVertices.Length];
+            int write=0;
+            for(int strip=0;strip<sites.Length*tongues;strip++)for(int j=0;j<slices;j++)
+            {
+                int v=strip*slices*2+j*2;float q=j/(float)(slices-1);
+                uv[v]=new Vector2(0,q);uv[v+1]=new Vector2(1,q);
+                if(j<slices-1){triangles[write++]=v;triangles[write++]=v+2;triangles[write++]=v+1;triangles[write++]=v+1;triangles[write++]=v+2;triangles[write++]=v+3;}
+            }
+            s.FlameMesh=MeshObject(s,"Anchored tapering base-to-tip flame sheets",material,s.FlameVertices,triangles,uv);
+            s.FlameMesh.colors=s.FlameColors;s.FlameMesh.MarkDynamic();s.FlameMesh.bounds=new Bounds(new Vector3(0,4,0),new Vector3(20,12,16));
+        }
+        static void AnimateFlameSheets(PanicDisasterArtState s)
+        {
+            if(!s.FlameMesh)return;
+            float t=s.Clock;
+            for(int site=0;site<s.FlameSites.Length;site++)for(int tongue=0;tongue<5;tongue++)
+            {
+                int strip=site*5+tongue;float phase=tongue*2.1f+site*.71f;
+                float life=Mathf.Repeat(t*.72f+phase*.19f,1);
+                float breath=.78f+.18f*Mathf.Sin(t*8.3f+phase)+.1f*Mathf.Sin(t*14.7f+phase);
+                float height=(1.20f+.38f*Mathf.Sin(phase))*breath*(.45f+.65f*s.Strength);
+                Vector3 across=new Vector3(Mathf.Cos(phase),0,Mathf.Sin(phase));
+                Vector3 basePoint=s.FlameSites[site]+new Vector3(Mathf.Cos(phase)*.24f,0,Mathf.Sin(phase)*.24f);
+                for(int j=0;j<7;j++)
+                {
+                    float q=j/6f,width=(1-q)*(.18f+.07f*Mathf.Sin(phase+1));
+                    float curl=Mathf.Sin(q*7-t*7.2f+phase)*q*q*.22f;
+                    Vector3 center=basePoint+new Vector3(curl+q*q*.16f,q*height,Mathf.Sin(q*5+t*5+phase)*q*q*.10f);
+                    int v=strip*14+j*2;s.FlameVertices[v]=center-across*width;s.FlameVertices[v+1]=center+across*width;
+                    Color color=Color.Lerp(new Color(1,.88f,.28f,.62f),new Color(.85f,.105f,.012f,0),Mathf.Pow(q,.7f));
+                    color.a*=s.Strength*(.75f+.25f*Mathf.Sin(life*Mathf.PI));
+                    s.FlameColors[v]=s.FlameColors[v+1]=color;
+                }
+            }
+            s.FlameMesh.vertices=s.FlameVertices;s.FlameMesh.colors=s.FlameColors;
         }
 
         static void CreateDebris(PanicDisasterArtState s, int count, bool floating)
@@ -326,6 +392,7 @@ namespace TooLateToPanic
                 if (floating)
                 {
                     d.Origin = new Vector3(-21 + Hash(i * 3 + 1) * 42, 0, -21 + Hash(i * 7 + 6) * 42);
+                    if(Mathf.Abs(d.Origin.z)<7)d.Origin.z=d.Origin.z<0?-7.2f:7.2f;
                     d.Scale = new Vector3(.25f + Hash(i * 9 + 3) * .8f, .04f + Hash(i * 13 + 8) * .09f, .12f + Hash(i * 11 + 2) * .23f);
                 }
                 else
@@ -336,7 +403,7 @@ namespace TooLateToPanic
                     d.Floor = baseFloor;
                     d.Scale = Vector3.one * (.07f + Hash(i * 17 + 3) * .17f); d.Scale.y *= .4f + Hash(i * 5) * .5f;
                     d.Velocity = new Vector3((Hash(i * 11 + 2) - .5f) * 1.6f, .35f + Hash(i * 19) * .9f, (Hash(i * 23) - .5f) * 1.2f);
-                    d.Delay = .35f + Hash(i * 29 + 5) * 5.6f;
+                    d.Delay=QuakeStarts[i%6]+Hash(i*29+5)*.18f;
                 }
                 d.Rotation = new Vector3(Hash(i * 31) * 160, Hash(i * 37 + 1) * 360, Hash(i * 41) * 170);
                 s.Debris[i] = d;
@@ -353,7 +420,7 @@ namespace TooLateToPanic
                 var d = s.Debris[i]; Vector3 p; Quaternion q;
                 if (s.Type == DisasterType.Flood)
                 {
-                    p = d.Origin; p.x += Mathf.Sin(clock * .17f + i) * .45f; p.z = Mathf.Repeat(p.z - clock * (.24f + Hash(i * 17) * .21f) + 23, 46) - 23;
+                    p = d.Origin;p.x=Mathf.Repeat(p.x+clock*(.68f+Hash(i*17)*.6f)+23,46)-23;p.z+=Mathf.Sin(clock*.7f+i)*.28f;
                     float wet = Wetness(p.x, p.z, front);
                     p.y = WaterHeight(p.x, p.z, clock, front, waterLevel, wet) + .04f;
                     if (wet < .55f) p.y = -.5f;
@@ -604,7 +671,8 @@ namespace TooLateToPanic
         public readonly List<Object> Owned = new List<Object>(20);
         public readonly List<Emitter> Emitters = new List<Emitter>(10);
         public float Clock, LastAge, Strength, Peak;
-        public Mesh WaterMesh, FoamMesh, DebrisMesh, Cracks;
+        public Mesh WaterMesh, FoamMesh, DebrisMesh, Cracks,FlameMesh;
+        public Vector3[] FlameSites,FlameVertices;public Color[] FlameColors;
         public Material WaterMaterial;
         public Vector3[] WaterVertices, WaterNormals, FoamVertices, DebrisVertices, DebrisNormals;
         public Color[] FoamColors;

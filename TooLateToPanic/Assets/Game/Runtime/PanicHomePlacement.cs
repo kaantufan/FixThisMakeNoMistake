@@ -235,7 +235,7 @@ namespace TooLateToPanic
             var footprint = RotatedFootprint(item.Size, rotation) * .5f;
             if (Mathf.Abs(p.x) + footprint.x > 7.65f || Mathf.Abs(p.z) + footprint.y > 5.65f)
             { reason = "Eşyayı evin içinde bırak."; return false; }
-            if (Mathf.Abs(p.x) < footprint.x + 1.05f && p.z + footprint.y > -1 && p.z - footprint.y < 5.2f)
+            if (Mathf.Abs(p.x) < footprint.x + 1.12f && p.z + footprint.y > PanicHouseLayoutV414.StairSouth - .12f && p.z - footprint.y < PanicHouseLayoutV414.StairNorth + .12f)
             { reason = "Merdiven ve geçiş koridorunu açık bırak."; return false; }
             if (!PlacementHasFloor(item, p, rotation, floorY))
             { reason = "Eşyanın tamamı sağlam zeminde olmalı."; return false; }

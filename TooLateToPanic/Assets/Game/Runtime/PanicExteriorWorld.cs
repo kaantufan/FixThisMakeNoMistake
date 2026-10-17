@@ -23,7 +23,16 @@ namespace TooLateToPanic
             {
                 if(neighbors.Count!=4)return false;
                 foreach(var neighbor in neighbors)
-                    if(!neighbor.animator||!neighbor.animator.runtimeAnimatorController||neighbor.animator.runtimeAnimatorController.animationClips.Length<2||neighbor.animator.applyRootMotion)return false;
+                {
+                    if(!neighbor.visual||!neighbor.animator||!neighbor.animator.runtimeAnimatorController||neighbor.animator.applyRootMotion)return false;
+                    var rig=neighbor.visual.GetComponent<PanicCuratedCharacterRig>();
+                    var skin=neighbor.visual.GetComponent<SkinnedMeshRenderer>();
+                    if(!rig||rig.Bones==null||rig.Bones.Length!=19||rig.BindPositions==null||rig.BindPositions.Length!=19||
+                        !skin||!skin.sharedMesh||skin.sharedMesh.vertexCount==0||skin.sharedMesh.bindposes.Length!=19)return false;
+                    var rendererBones=skin.bones;
+                    if(rendererBones==null||rendererBones.Length!=19)return false;
+                    for(int i=0;i<19;i++)if(!rig.Bones[i]||rendererBones[i]!=rig.Bones[i])return false;
+                }
                 return true;
             }
         }
@@ -95,6 +104,7 @@ namespace TooLateToPanic
                     neighbor.visual.transform.rotation=Quaternion.Slerp(neighbor.visual.transform.rotation,target,1-Mathf.Exp(-dt*5));
                 }
                 if(neighbor.animator)neighbor.animator.SetFloat("Speed",speed,.15f,Mathf.Max(.001f,dt));
+                PanicCharacterArt.SetMotion(neighbor.visual,neighbor.animator,speed,true,0,dt);
             }
             if(JuryActive&&JuryDemo!=null)
             {

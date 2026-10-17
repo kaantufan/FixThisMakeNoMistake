@@ -17,6 +17,7 @@ namespace TooLateToPanic
         readonly System.Collections.Generic.Dictionary<string,float> last = new System.Collections.Generic.Dictionary<string,float>();
         public int PlayedCount { get; private set; }
         public string LastPlayed { get; private set; }
+        public Vector3 DisasterVisualImpulseV414 { get { return PanicDisasterArt.SampleVisualImpulse(weather); } }
         void Awake()
         {
             oneShot = gameObject.AddComponent<AudioSource>(); oneShot.volume = .65f;

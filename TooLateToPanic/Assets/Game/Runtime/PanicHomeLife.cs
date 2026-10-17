@@ -149,7 +149,7 @@ namespace TooLateToPanic
             AddDecor("decor_coats","coat_rack",new Vector3(-1.8f,0,-4.5f));
             AddPhysicalBagStation();
             AddBagStationGuideV414();
-            AddDecor("decor_bath_firstaid_table","sidetable",new Vector3(3.1f,3.2f,4.7f));
+            AddDecor("decor_bath_firstaid_table","sidetable",new Vector3(3.1f,3.2f,3.5f));
             // Loose floor lamps had no model/work contract; keep those walk areas clear.
             AddDecor("decor_lounge_rug","rug",new Vector3(-4.35f,.025f,-1.65f),0,false);
             AddDecor("decor_bed_rug","rug",new Vector3(-5.4f,3.225f,2.25f),0,false);floorItems[floorItems.Count-1].transform.localScale=new Vector3(.68f,1,.5f);
@@ -163,20 +163,19 @@ namespace TooLateToPanic
             }
 
             AddDecor("decor_wallart","wallart",new Vector3(-2.7f,1.5f,5.78f),0,false);
-            if(items.TryGetValue("bunker",out var bunker)){bunkerLeaf=bunker.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="DoorLeaf");if(bunkerLeaf)bunkerClosed=bunkerLeaf.localRotation;}
+            if(items.TryGetValue("bunker",out var bunker))
+            {
+                PanicCuratedAssetArt.TryReplaceBunkerLid(bunker);
+                foreach (var r in bunker.GetComponentsInChildren<Renderer>(true))
+                    if (!r.enabled && !r.GetComponent<PanicPermanentlyHiddenV414>()) r.gameObject.AddComponent<PanicPermanentlyHiddenV414>();
+                visibilityRenderers.Remove(bunker.GetInstanceID());
+                bunkerLeaf=bunker.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="DoorLeaf");
+                if(bunkerLeaf)bunkerClosed=bunkerLeaf.localRotation;
+            }
         }
         void AddBagStationGuideV414()
         {
-            var mat=new Material(Shader.Find("Standard")){name="HomeV4_BagGuideAmber",color=new Color(.93f,.59f,.13f)};
-            mat.EnableKeyword("_EMISSION");mat.SetColor("_EmissionColor",new Color(.22f,.11f,.015f));
-            var root=new GameObject("Bag station floor guide");root.transform.position=PanicHouseLayoutV414.BagPosition;floorItems.Add(root);
-            for(int i=0;i<4;i++)
-            {
-                var bar=GameObject.CreatePrimitive(PrimitiveType.Cube);bar.name="Amber bag guide "+i;bar.transform.SetParent(root.transform,false);
-                bool across=i<2;bar.transform.localPosition=new Vector3(across?0:(i==2?-.42f:.42f),-.015f,across?(i==0?-.35f:.35f):0);
-                bar.transform.localScale=across?new Vector3(.88f,.012f,.035f):new Vector3(.035f,.012f,.74f);
-                var col=bar.GetComponent<Collider>();col.enabled=false;Destroy(col);bar.GetComponent<Renderer>().sharedMaterial=mat;
-            }
+            var root=new GameObject("Bag station warm light");root.transform.position=PanicHouseLayoutV414.BagPosition;floorItems.Add(root);
             var lamp=new GameObject("Bag amber pin light").AddComponent<Light>();lamp.transform.SetParent(root.transform,false);lamp.transform.localPosition=new Vector3(0,.9f,0);lamp.type=LightType.Point;lamp.color=new Color(1,.65f,.24f);lamp.range=2.0f;lamp.intensity=.7f;
         }
         Vector3 ResidenceFocusPosition(GameObject target){var p=target.transform.position;p.y=Mathf.Round(p.y/3.2f)*3.2f;return p;}

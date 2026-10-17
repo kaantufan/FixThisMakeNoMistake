@@ -1,6 +1,10 @@
-> Public provenance and current audio policy: [V4.11 adaptation](Publications/v0.4.11/ADAPTATION.md), [V4.12 publication](Publications/v0.4.12/ADAPTATION.md). Older version notes below are historical.
-
 # Too Late to Panic! — asset kaynakları
+
+## Home V4.14 — 17 Ekim 2026
+
+`defter-mockup` dalı `00377265c740fdc973039d0266cefc8c913633b9` karakter mesh/kaplamaları ve `yarkin-assets` dalı `29bf309fa0c7ccfdafd0a935e93512a44f550c9e` bunker kapağı/kilit meshleri seçilerek alındı. Kaynak karakterde rig veya klip yoktur; gerçek mesh için yerel19kemikli iskelet, ağırlıklar ve prosedürel hareket/iş/atlama pozları üretildi. FPS el rig'i, oda/tesisat geometrileri, yerel nabız/nefes sesleri, afet VFX ve yardım aracı düzenlemeleri bu görevdeki yerel kod üretimidir. Harici ücretli servis veya kredi kullanılmadı.
+
+Yeni karakterin sivil NPC/kurtarma kopyaları da aynı Meshy kaynağından gelir; eski Quaternius CC0 lisansı bunlara uygulanmaz. Karakter/bunker için kamuya yeniden dağıtım lisansı ayrıca doğrulanmış değildir; yeni bir genel lisans atanmadı. Kaynak provenansı, hashler ve açık artist sınırları: [V4.14 asset notları](HOME-V4.14-ASSETS-2026-10-17.md). GitHub'a yayın yapılmadı.
 
 ## Home V4.12 — 17 Ekim 2026
 
@@ -9,7 +13,7 @@ Mevcut olgun ağaç meshleri yeni tam sıra yerleşimine uyarlandı; model/mater
 
 ## Home V4.11 güncel kaynaklar — 17 Ekim 2026
 
-Yarkın `yarkin-assets` dalının `11f12b4cf1f6bf676dcf3dc5055e1b66c8b1ff57` sürümünden31FBX, temizlenmiş prefablar,14klip/7mekanizma ve Built-In materyaller alındı. Mevcut eşyaların eşdeğerleri değiştirildi; yeni oynanış kimliği bulunmayan modeller kaynak olarak korunur. Üst dalın fizik/girdi/model scriptleri aktarılmadı. Kliplerde oyuncuda pasif örnekleme için yalnız Legacy bayrağı düzeltildi; eğriler, zamanlar, olaylar ve GUID'ler korundu. Yeni bir genel lisans atanmadı. Tam provenans: [Yarkın V4.11](Publications/v0.4.11/upstream-assets-original.md).
+Yarkın `yarkin-assets` dalının `11f12b4cf1f6bf676dcf3dc5055e1b66c8b1ff57` sürümünden31FBX, temizlenmiş prefablar,14klip/7mekanizma ve Built-In materyaller alındı. Mevcut eşyaların eşdeğerleri değiştirildi; yeni oynanış kimliği bulunmayan modeller kaynak olarak korunur. Üst dalın fizik/girdi/model scriptleri aktarılmadı. Kliplerde oyuncuda pasif örnekleme için yalnız Legacy bayrağı düzeltildi; eğriler, zamanlar, olaylar ve GUID'ler korundu. Yeni bir genel lisans atanmadı. Tam provenans: [Yarkın V4.11](../../Evidence/GamejamOrchestra/TLTP-REVISION-V411-20261017/assets/UPSTREAM-ASSET-MANIFEST-AND-LICENSES.md).
 
 Defter, `defter-mockup` dalı `07ecbccb097ea796067afd8a35af615563857d43` HTML tasarımının yerel Unity uyarlamasıdır; mockup sayıları yerine gerçek Model/Expedition kayıtları kullanılır. Yeni el/kol modeli ve kemerli şömine bu görev için yerel kaynakta üretildi. Eski V2 üçüncü şahıs görünümü korunur. Bu görevde ücretli servis, kredi veya yeni ses üretimi yapılmadı. Önceki lisanslar ve ses politikası korunur. [Eksik/eşdeğer asset listesi](MISSING-ASSETS-V411.md).
 

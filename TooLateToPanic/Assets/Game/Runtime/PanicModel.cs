@@ -610,7 +610,7 @@ namespace TooLateToPanic
                 // Optional valid precautions share the real target/recipe validator.
                 // The short flow still requires only one hero anchor; no extra goal/time.
                 return action == "anchorwall" || action == "anchorfloor" || action == "upgrade" ||
-                    action == "flood" || action == "plant" || action == "drain" || action == "hose" || action == "fire";
+                    action == "flood" || action == "plant" || action == "drain" || action == "hose" || action == "fire" || PanicUtilitySafetyV414.IsAction(action);
             if (JuryActionScope == "drain")
                 return action == "drain" && (targetId == "drain_west" || targetId == "drain_east");
             return JuryActionScope == "fire" && action == "fire";
