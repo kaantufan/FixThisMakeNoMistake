@@ -51,7 +51,9 @@ namespace YarkinAssets.Runtime
         /// <summary>Banyo Termosifonu: Alt soğuk su giriş kelebek musluğu (+90°) + ön termostat komütatör düğmesi (-120°) + pilot LED.</summary>
         WaterHeaterIsolation = 4,
         /// <summary>Duvar Kliması: Yatay menteşe ekseni etrafında kapanan motorlu üfleme kanatçığı (louver flap) + LED ekran.</summary>
-        AirConditionerLouver = 5
+        AirConditionerLouver = 5,
+        /// <summary>Zemin Sığınak Kapağı (Bunker Hatch): Merkez kilit volanı (-360°), kauçuk conta kurtulma popu, yüksek eylemsizlikli 240 kg çelik kapak menteşe açılışı (-108° X ekseni) ve çift hidrolik amortisör takibi.</summary>
+        HeavyBunkerHatch = 6
     }
 
     [ExecuteAlways]
@@ -470,18 +472,52 @@ namespace YarkinAssets.Runtime
         {
             _FlowPhase += dt;
 
-            // 1. HINGED CABINET & APPLIANCE DOORS (FireCabinet, Refrigerator)
+            // 1. HINGED CABINET, APPLIANCE & HEAVY FLOOR BUNKER HATCH DOORS (FireCabinet, Refrigerator, BunkerHatch)
             if (cabinetDoorHinge != null)
             {
-                float sDoor = EvaluateDoorHingeCurve(uDoor);
-                cabinetDoorHinge.localRotation = _doorBaseRot * Quaternion.Euler(0f, sDoor * doorOpenAngleY, 0f);
-
-                // If Refrigerator has an Upper Freezer Door assigned to secondaryMovingPart, open it with a 0.08s stagger
-                if (isContainerCabinet && mechanismKind == ValveMechanismKind.None && secondaryMovingPart != null)
+                if (mechanismKind == ValveMechanismKind.HeavyBunkerHatch)
                 {
-                    float uUpper = Mathf.Clamp01((uDoor - 0.12f) / 0.88f);
-                    float sUpper = EvaluateDoorHingeCurve(uUpper);
-                    secondaryMovingPart.localRotation = _secondaryBaseRot * Quaternion.Euler(0f, sUpper * (doorOpenAngleY * 0.88f), 0f);
+                    // HEAVY ARMORED FLOOR BUNKER HATCH (240 kg Yuvarlak Zemin Sığınak Kapağı):
+                    // Stage 1 (u = 0..0.24): Central 6-spoked locking handwheel spins -360° and rises +18mm on its threaded spindle to retract 4 radial dog bars.
+                    // Stage 2 (u = 0.22..0.34): Compressed EPDM rubber seal pops (-4.5°) followed by rotational inertia hesitation (I = 165 kg*m^2).
+                    // Stage 3 (u = 0.34..0.88): Heavy rotational heave around the Ø90mm rear steel hinge pin to -111.5° (compressing rear rubber stop bumpers).
+                    // Stage 4 (u = 0.88..1.00): Damped rebound off the rear forged stanchion stops, settling at -108°.
+                    float openTargetAngleX = -Mathf.Abs(doorOpenAngleY > 1f ? doorOpenAngleY : 108f);
+                    float sLid = EvaluateBunkerHatchLidCurve(uDoor);
+                    float lidAngleX = sLid * openTargetAngleX;
+                    Quaternion lidRot = Quaternion.Euler(lidAngleX, 0f, 0f);
+                    cabinetDoorHinge.localRotation = _doorBaseRot * lidRot;
+
+                    if (secondaryMovingPart != null)
+                    {
+                        float sWheel = EvaluateBunkerWheelSpinCurve(uDoor);
+                        float wheelSpinY = -360f * sWheel;
+                        float wheelLiftY = 0.018f * sWheel;
+                        Vector3 hingePivotPos = cabinetDoorHinge.localPosition;
+                        Vector3 wheelOffsetFromHinge = (_secondaryBasePos - hingePivotPos) + new Vector3(0f, wheelLiftY, 0f);
+                        secondaryMovingPart.localPosition = hingePivotPos + (lidRot * wheelOffsetFromHinge);
+                        secondaryMovingPart.localRotation = lidRot * _secondaryBaseRot * Quaternion.Euler(0f, wheelSpinY, 0f);
+                    }
+
+                    if (tertiaryMovingPart != null)
+                    {
+                        float sPiston = Mathf.Clamp01(sLid);
+                        tertiaryMovingPart.localRotation = _tertiaryBaseRot * Quaternion.Euler(-36f * sPiston, 0f, 0f);
+                        tertiaryMovingPart.localPosition = _tertiaryBasePos + new Vector3(0f, 0.042f * sPiston, -0.052f * sPiston);
+                    }
+                }
+                else
+                {
+                    float sDoor = EvaluateDoorHingeCurve(uDoor);
+                    cabinetDoorHinge.localRotation = _doorBaseRot * Quaternion.Euler(0f, sDoor * doorOpenAngleY, 0f);
+
+                    // If Refrigerator has an Upper Freezer Door assigned to secondaryMovingPart, open it with a 0.08s stagger
+                    if (isContainerCabinet && mechanismKind == ValveMechanismKind.None && secondaryMovingPart != null)
+                    {
+                        float uUpper = Mathf.Clamp01((uDoor - 0.12f) / 0.88f);
+                        float sUpper = EvaluateDoorHingeCurve(uUpper);
+                        secondaryMovingPart.localRotation = _secondaryBaseRot * Quaternion.Euler(0f, sUpper * (doorOpenAngleY * 0.88f), 0f);
+                    }
                 }
             }
 
@@ -629,6 +665,12 @@ namespace YarkinAssets.Runtime
                     break;
                 }
 
+                case ValveMechanismKind.HeavyBunkerHatch:
+                {
+                    // Handled above via cabinetDoorHinge + secondaryMovingPart + tertiaryMovingPart
+                    break;
+                }
+
                 default:
                 {
                     if (valveHandleTransform != null && isUtilityValve)
@@ -745,6 +787,70 @@ namespace YarkinAssets.Runtime
             float smooth = u * u * (3f - 2f * u);
             float checkStrapSettle = Mathf.Sin(u * Mathf.PI) * 0.025f * u;
             return Mathf.Clamp(smooth + checkStrapSettle, 0f, 1.02f);
+        }
+
+        /// <summary>
+        /// 240 kg Zırhlı Zemin Sığınak Kapağı (Heavy Bunker Hatch) Merkez Kilit Volanı Dönüş Eğrisi:
+        /// İlk %24'lük fazda (u = 0..0.24) 1 tam tur (-360°) dönerek 4 yönlü çelik sürgüleri geri çeker.
+        /// </summary>
+        public static float EvaluateBunkerWheelSpinCurve(float u)
+        {
+            u = Mathf.Clamp01(u);
+            if (u <= 0f) return 0f;
+            if (u >= 0.24f) return 1f;
+            return EvaluateMultiTurnWheelCurve(u / 0.24f);
+        }
+
+        /// <summary>
+        /// 240 kg Zırhlı Zemin Sığınak Kapağı (Heavy Bunker Hatch) 4 Fazlı Fiziksel Menteşe Eğrisi:
+        /// - Faz 1 (u = 0.00..0.22): Kilit volanı çözülürken kapak sabit (0.00).
+        /// - Faz 2 (u = 0.22..0.34): EPDM vakum/conta kurtulma sıçraması (0 -> 0.042 = ~4.5°) ve ağır kütle eylemsizlik duraksaması.
+        /// - Faz 3 (u = 0.34..0.88): Torsiyon yayı + hidrolik amortisör destekli ağır açısal ivmelenme ve arka kauçuk stoper sıkışması (0.042 -> 1.032 = ~111.5°).
+        /// - Faz 4 (u = 0.88..1.00): Arka döküm stoperde sönümlü sekme ve tam -108° denge açısına oturma (1.032 -> 0.990 -> 1.000).
+        /// </summary>
+        public static float EvaluateBunkerHatchLidCurve(float u)
+        {
+            u = Mathf.Clamp01(u);
+            if (u <= 0.22f) return 0f;
+            if (u >= 1f) return 1f;
+
+            if (u < 0.29f)
+            {
+                // Seal pop-off (0 -> 0.042)
+                float t = (u - 0.22f) / 0.07f;
+                float pop = 1f - (1f - t) * (1f - t);
+                return 0.042f * pop;
+            }
+            if (u < 0.35f)
+            {
+                // Heavy dead-weight hesitation before main heave (0.042 -> 0.052)
+                float t = (u - 0.29f) / 0.06f;
+                return Mathf.Lerp(0.042f, 0.052f, t * t);
+            }
+            if (u < 0.88f)
+            {
+                // High-inertia rotational heave with torsion spring counterbalance (0.052 -> 1.032)
+                float t = (u - 0.35f) / 0.53f;
+                // Quartic ease-in transitioning into strong angular momentum
+                float heave = t < 0.55f
+                    ? 2.2f * t * t * t
+                    : 1f - Mathf.Pow(1f - t, 2.6f) * 0.82f;
+                heave = Mathf.Clamp01(t * t * (3f - 2f * t) * 0.65f + heave * 0.35f);
+                return Mathf.Lerp(0.052f, 1.032f, heave);
+            }
+            if (u < 0.95f)
+            {
+                // Rebound off rear forged-steel rubber stop block (1.032 -> 0.991)
+                float t = (u - 0.88f) / 0.07f;
+                float smooth = t * t * (3f - 2f * t);
+                return Mathf.Lerp(1.032f, 0.991f, smooth);
+            }
+            else
+            {
+                // Final settle onto stop block (0.991 -> 1.000)
+                float t = (u - 0.95f) / 0.05f;
+                return Mathf.Lerp(0.991f, 1.0f, t * (2f - t));
+            }
         }
 
         private static float EvaluateStopLugSettleCurve(float u)

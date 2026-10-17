@@ -22,11 +22,14 @@ namespace YarkinAssets.Editor
 
         private static void AutoBuildIfNeeded()
         {
-            // Automatically trigger full 33-asset build if the new mechanical animation controllers & previews are not built yet
-            if (AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>($"{AnimationsDir}/AC_WaterValve.controller") == null &&
-                AssetDatabase.LoadAssetAtPath<GameObject>($"{MeshesDir}/SM_WaterValve.fbx") != null)
+            // Automatically trigger full 32-asset build if the new BunkerHatch prefab, AnimatorController or 4-state preview is not built yet
+            bool needsBunkerBuild =
+                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>($"{AnimationsDir}/AC_BunkerHatch.controller") == null ||
+                !File.Exists($"{PreviewsDir}/Preview_BunkerHatch_4States.png");
+
+            if (needsBunkerBuild && File.Exists($"{MeshesDir}/SM_BunkerHatch.fbx"))
             {
-                Debug.Log("[YarkinAssetPipelineBuilder] Auto-building all 33 prefabs with physically-based Valve/Faucet/Breaker/Door animations, AnimatorControllers, icons & isometric scene...");
+                Debug.Log("[YarkinAssetPipelineBuilder] Auto-building all 32 prefabs including PF_BunkerHatch, AnimatorControllers, icons & isometric scene...");
                 BuildAll();
             }
         }
@@ -168,6 +171,7 @@ namespace YarkinAssets.Editor
             new AssetSpec("ShatteredGlass",    "shattered_glass",    "Kırık Cam Tehlikesi",  DisasterItemCategory.EnvironmentalHazard, 0.00f,  0, false, false, false, SecondaryHazardType.None,             ColliderKind.Box),
             new AssetSpec("RubblePile",        "rubble_pile",        "Dökülmüş Moloz Yığını",DisasterItemCategory.EnvironmentalHazard, 0.00f,  0, false, false, false, SecondaryHazardType.CorridorBlockage, ColliderKind.Box),
             new AssetSpec("FireCabinet",       "fire_cabinet",       "Yangın Tüpü Dolabı",   DisasterItemCategory.FireSafety,         14.00f, 35, false, true,  false, SecondaryHazardType.FireWave,         ColliderKind.Box),
+            new AssetSpec("BunkerHatch",       "bunker_hatch",       "Zemin Sığınak Kapağı (Bunker)", DisasterItemCategory.HouseholdFixture, 240.00f, 60, false, false, false, SecondaryHazardType.None,      ColliderKind.Box),
         };
 
         [MenuItem("Tools/Yarkin Assets/Build All 33 Prefabs, Multi-State Brackets, Icons & Isometric Scene")]
@@ -204,9 +208,14 @@ namespace YarkinAssets.Editor
 
             AssetDatabase.SaveAssets();
             BuildDemoShowcaseScene(prefabs, materials);
+            GameObject bunkerPrefab = prefabs.Find(p => p != null && p.name == "PF_BunkerHatch");
+            if (bunkerPrefab != null)
+            {
+                RenderBunkerHatchVerificationSheet(bunkerPrefab, materials);
+            }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[YarkinAssetPipelineBuilder] Successfully built {prefabs.Count} prefabs (with custom non-obstructing 3D brackets, hinged FireCabinet & Valve states), {Palette.Length} semantic materials, 33 icons, and True Isometric Demo_YarkinAssets scene!");
+            Debug.Log($"[YarkinAssetPipelineBuilder] Successfully built {prefabs.Count} prefabs (including PF_BunkerHatch with 2.1m stencil-portal dark well & cutscene controller), {Palette.Length} semantic materials, {prefabs.Count} icons, and True Isometric Demo_YarkinAssets scene!");
         }
 
         private static void EnsureFolders()
@@ -291,6 +300,42 @@ namespace YarkinAssets.Editor
             atlasMat.enableInstancing = true;
             EditorUtility.SetDirty(atlasMat);
 
+            // Create Bunker Portal Mask & Deep Shaft Materials for PF_BunkerHatch's subterranean dark well
+            Shader portalShader = Shader.Find("YarkinAssets/BunkerPortalMask") ?? stdShader;
+            string portalMatPath = $"{MaterialsDir}/M_BunkerPortalMask.mat";
+            Material portalMat = AssetDatabase.LoadAssetAtPath<Material>(portalMatPath);
+            if (portalMat == null)
+            {
+                portalMat = new Material(portalShader);
+                AssetDatabase.CreateAsset(portalMat, portalMatPath);
+            }
+            portalMat.shader = portalShader;
+            portalMat.SetColor("_AbyssColor", new Color(0.004f, 0.008f, 0.016f, 1.0f));
+            EditorUtility.SetDirty(portalMat);
+            dict["M_BunkerPortalMask"] = portalMat;
+
+            Shader deepShaftShader = Shader.Find("YarkinAssets/BunkerDeepShaft") ?? stdShader;
+            foreach (var p in Palette)
+            {
+                string dsName = "M_DeepShaft_" + p.Key;
+                string dsPath = $"{MaterialsDir}/{dsName}.mat";
+                Material dsMat = AssetDatabase.LoadAssetAtPath<Material>(dsPath);
+                if (dsMat == null)
+                {
+                    dsMat = new Material(deepShaftShader);
+                    AssetDatabase.CreateAsset(dsMat, dsPath);
+                }
+                dsMat.shader = deepShaftShader;
+                dsMat.color = p.Color;
+                dsMat.SetColor("_AbyssColor", new Color(0.004f, 0.008f, 0.016f, 1.0f));
+                dsMat.SetColor("_RimGlowColor", new Color(0.16f, 0.24f, 0.34f, 1.0f));
+                dsMat.SetFloat("_MouthHeight", 0.02f);
+                dsMat.SetFloat("_DarknessFalloff", 1.15f);
+                dsMat.SetFloat("_AbyssFloorDepth", 1.95f);
+                EditorUtility.SetDirty(dsMat);
+                dict[dsName] = dsMat;
+            }
+
             AssetDatabase.SaveAssets();
             return dict;
         }
@@ -358,6 +403,35 @@ namespace YarkinAssets.Editor
 
             foreach (var r in renderers)
             {
+                string objName = r.gameObject.name;
+                if (objName.Contains("WellPortal_Disc") && materials.TryGetValue("M_BunkerPortalMask", out Material portalMat))
+                {
+                    r.sharedMaterials = new[] { portalMat };
+                    r.shadowCastingMode = ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                    continue;
+                }
+                if (objName.Contains("WellShaft_Deep"))
+                {
+                    var deepMats = r.sharedMaterials;
+                    for (int i = 0; i < deepMats.Length; i++)
+                    {
+                        if (deepMats[i] != null)
+                        {
+                            string cleanName = deepMats[i].name.Split(' ')[0];
+                            string dsKey = cleanName.StartsWith("M_") ? ("M_DeepShaft_" + cleanName.Substring(2)) : cleanName;
+                            if (materials.TryGetValue(dsKey, out Material dsMapped))
+                            {
+                                deepMats[i] = dsMapped;
+                            }
+                        }
+                    }
+                    r.sharedMaterials = deepMats;
+                    r.shadowCastingMode = ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                    continue;
+                }
+
                 var sharedMats = r.sharedMaterials;
                 for (int i = 0; i < sharedMats.Length; i++)
                 {
@@ -511,6 +585,22 @@ namespace YarkinAssets.Editor
                         item.containedItem = mountedExt.GetComponent<DisasterPrepItem>();
                     }
                     break;
+
+                case "BunkerHatch":
+                    item.mechanismKind = ValveMechanismKind.HeavyBunkerHatch;
+                    item.isContainerCabinet = true;
+                    item.doorOpenAngleY = 108f;
+                    item.doorAnimationDuration = 1.65f;
+                    item.valveAnimationDuration = 1.65f;
+                    item.cabinetDoorHinge = FindChildByKeyword(visual.transform, "HatchLid_Hinge");
+                    item.secondaryMovingPart = FindChildByKeyword(visual.transform, "LockWheel_Pivot");
+                    item.tertiaryMovingPart = FindChildByKeyword(visual.transform, "HydraulicPiston_Pivot");
+
+                    var cutsceneCtrl = root.AddComponent<BunkerCutsceneController>();
+                    cutsceneCtrl.bunkerHatchItem = item;
+                    cutsceneCtrl.emergencyBackpackPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabsDir}/PF_EmergencyBackpack.prefab");
+                    cutsceneCtrl.EnsureAnchorPoints();
+                    break;
             }
 
             // Capture exact FBX rest positions of all mechanical pivots BEFORE evaluating initial poses
@@ -575,10 +665,10 @@ namespace YarkinAssets.Editor
             AnimationClip openClip = new AnimationClip { name = $"Anim_{codeName}_Open", frameRate = 60f };
             AnimationClip closeClip = new AnimationClip { name = $"Anim_{codeName}_Close", frameRate = 60f };
 
-            const int samples = 30;
-            float duration = item.isContainerCabinet && item.mechanismKind == ValveMechanismKind.None
-                ? item.doorAnimationDuration
-                : item.valveAnimationDuration;
+            const int samples = 36;
+            bool isDoorDriven = item.isContainerCabinet &&
+                                (item.mechanismKind == ValveMechanismKind.None || item.mechanismKind == ValveMechanismKind.HeavyBunkerHatch);
+            float duration = isDoorDriven ? item.doorAnimationDuration : item.valveAnimationDuration;
             if (duration < 0.2f) duration = 0.55f;
 
             switch (item.mechanismKind)
@@ -639,6 +729,21 @@ namespace YarkinAssets.Editor
                     break;
                 }
 
+                case ValveMechanismKind.HeavyBunkerHatch:
+                {
+                    float openTargetAngleX = -Mathf.Abs(item.doorOpenAngleY > 1f ? item.doorOpenAngleY : 108f);
+                    BakeRotationCurveX(openClip, "Visual/HatchLid_Hinge", duration, samples, u => DisasterPrepItem.EvaluateBunkerHatchLidCurve(u) * openTargetAngleX);
+                    BakeRotationCurveX(closeClip, "Visual/HatchLid_Hinge", duration, samples, u => DisasterPrepItem.EvaluateBunkerHatchLidCurve(1f - u) * openTargetAngleX);
+
+                    Vector3 hingePos = item.cabinetDoorHinge != null ? item.cabinetDoorHinge.localPosition : new Vector3(0f, 0.425f, -0.72f);
+                    Vector3 wheelBasePos = item.secondaryMovingPart != null ? item.secondaryMovingPart.localPosition : new Vector3(0f, 0.535f, 0f);
+                    Vector3 pistonBasePos = item.tertiaryMovingPart != null ? item.tertiaryMovingPart.localPosition : new Vector3(0f, 0.455f, -0.44f);
+
+                    BakeBunkerWheelAndPistonCurves(openClip, duration, samples, hingePos, wheelBasePos, pistonBasePos, openTargetAngleX, isOpening: true);
+                    BakeBunkerWheelAndPistonCurves(closeClip, duration, samples, hingePos, wheelBasePos, pistonBasePos, openTargetAngleX, isOpening: false);
+                    break;
+                }
+
                 default:
                 {
                     if (item.isContainerCabinet)
@@ -669,7 +774,7 @@ namespace YarkinAssets.Editor
             controller.AddParameter("IsDoorOpen", AnimatorControllerParameterType.Bool);
 
             AnimatorStateMachine sm = controller.layers[0].stateMachine;
-            bool isDoorOnly = item.isContainerCabinet && item.mechanismKind == ValveMechanismKind.None;
+            bool isDoorOnly = isDoorDriven;
 
             AnimatorState defaultState = sm.AddState(isDoorOnly ? "Door_Closed" : "Valve_Open_Default");
             defaultState.motion = isDoorOnly ? closeClip : openClip;
@@ -691,6 +796,68 @@ namespace YarkinAssets.Editor
 
             EditorUtility.SetDirty(controller);
             return controller;
+        }
+
+        private static void BakeBunkerWheelAndPistonCurves(
+            AnimationClip clip,
+            float duration,
+            int samples,
+            Vector3 hingePos,
+            Vector3 wheelBasePos,
+            Vector3 pistonBasePos,
+            float openTargetAngleX,
+            bool isOpening)
+        {
+            AnimationCurve wx = new AnimationCurve(), wy = new AnimationCurve(), wz = new AnimationCurve();
+            AnimationCurve wrx = new AnimationCurve(), wry = new AnimationCurve(), wrz = new AnimationCurve();
+            AnimationCurve px = new AnimationCurve(), py = new AnimationCurve(), pz = new AnimationCurve();
+            AnimationCurve prx = new AnimationCurve(), pry = new AnimationCurve(), prz = new AnimationCurve();
+
+            for (int i = 0; i <= samples; i++)
+            {
+                float rawU = i / (float)samples;
+                float t = rawU * duration;
+                float u = isOpening ? rawU : (1f - rawU);
+
+                float sLid = DisasterPrepItem.EvaluateBunkerHatchLidCurve(u);
+                float lidAngleX = sLid * openTargetAngleX;
+                Quaternion lidRot = Quaternion.Euler(lidAngleX, 0f, 0f);
+
+                float sWheel = DisasterPrepItem.EvaluateBunkerWheelSpinCurve(u);
+                float wheelSpinY = -360f * sWheel;
+                float wheelLiftY = 0.018f * sWheel;
+                Vector3 wheelOffset = (wheelBasePos - hingePos) + new Vector3(0f, wheelLiftY, 0f);
+                Vector3 wheelPos = hingePos + (lidRot * wheelOffset);
+
+                wx.AddKey(t, wheelPos.x);
+                wy.AddKey(t, wheelPos.y);
+                wz.AddKey(t, wheelPos.z);
+                wrx.AddKey(t, lidAngleX);
+                wry.AddKey(t, wheelSpinY);
+                wrz.AddKey(t, 0f);
+
+                float sPiston = Mathf.Clamp01(sLid);
+                px.AddKey(t, pistonBasePos.x);
+                py.AddKey(t, pistonBasePos.y + 0.042f * sPiston);
+                pz.AddKey(t, pistonBasePos.z - 0.052f * sPiston);
+                prx.AddKey(t, -36f * sPiston);
+                pry.AddKey(t, 0f);
+                prz.AddKey(t, 0f);
+            }
+
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/LockWheel_Pivot", typeof(Transform), "m_LocalPosition.x"), wx);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/LockWheel_Pivot", typeof(Transform), "m_LocalPosition.y"), wy);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/LockWheel_Pivot", typeof(Transform), "m_LocalPosition.z"), wz);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/LockWheel_Pivot", typeof(Transform), "localEulerAnglesRaw.x"), wrx);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/LockWheel_Pivot", typeof(Transform), "localEulerAnglesRaw.y"), wry);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/LockWheel_Pivot", typeof(Transform), "localEulerAnglesRaw.z"), wrz);
+
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/HydraulicPiston_Pivot", typeof(Transform), "m_LocalPosition.x"), px);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/HydraulicPiston_Pivot", typeof(Transform), "m_LocalPosition.y"), py);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/HydraulicPiston_Pivot", typeof(Transform), "m_LocalPosition.z"), pz);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/HydraulicPiston_Pivot", typeof(Transform), "localEulerAnglesRaw.x"), prx);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/HydraulicPiston_Pivot", typeof(Transform), "localEulerAnglesRaw.y"), pry);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("Visual/HydraulicPiston_Pivot", typeof(Transform), "localEulerAnglesRaw.z"), prz);
         }
 
         private static void CreateOrReplaceClipAsset(AnimationClip clip, string path)
@@ -1045,6 +1212,14 @@ namespace YarkinAssets.Editor
                     itemComp.cabinetDoorHinge.localRotation = Quaternion.Euler(0f, 95f, 0f);
                 }
             }
+            else if (spec.CodeName == "BunkerHatch")
+            {
+                var itemComp = instance.GetComponent<DisasterPrepItem>();
+                if (itemComp != null)
+                {
+                    itemComp.SetCabinetDoorOpen(true, instant: true);
+                }
+            }
 
             Bounds b = CalculateBounds(instance);
             float maxExtent = Mathf.Max(b.extents.x, Mathf.Max(b.extents.y, b.extents.z));
@@ -1055,11 +1230,13 @@ namespace YarkinAssets.Editor
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.12f, 0.14f, 0.18f, 0f);
             cam.orthographic = true;
-            cam.orthographicSize = maxExtent * 1.22f;
+            cam.orthographicSize = spec.CodeName == "BunkerHatch" ? maxExtent * 1.08f : maxExtent * 1.22f;
             cam.nearClipPlane = 0.01f;
             cam.farClipPlane = 25f;
 
-            Vector3 viewDir = new Vector3(-0.42f, 0.44f, 0.78f).normalized;
+            Vector3 viewDir = spec.CodeName == "BunkerHatch"
+                ? new Vector3(-0.38f, 0.62f, 0.68f).normalized
+                : new Vector3(-0.42f, 0.44f, 0.78f).normalized;
             camGo.transform.position = b.center + viewDir * 6f;
             camGo.transform.LookAt(b.center);
 
@@ -1124,10 +1301,157 @@ namespace YarkinAssets.Editor
         private static Bounds CalculateBounds(GameObject go)
         {
             Renderer[] rs = go.GetComponentsInChildren<Renderer>();
-            if (rs.Length == 0) return new Bounds(go.transform.position, Vector3.one * 0.2f);
-            Bounds b = rs[0].bounds;
-            for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
+            bool has = false;
+            Bounds b = new Bounds(go.transform.position, Vector3.one * 0.2f);
+            for (int i = 0; i < rs.Length; i++)
+            {
+                string rName = rs[i].gameObject.name;
+                if (rName.Contains("WellShaft_Deep") || rName.Contains("WellPortal_Disc"))
+                {
+                    continue;
+                }
+                if (!has)
+                {
+                    b = rs[i].bounds;
+                    has = true;
+                }
+                else
+                {
+                    b.Encapsulate(rs[i].bounds);
+                }
+            }
             return b;
+        }
+
+        private static void RenderBunkerHatchVerificationSheet(GameObject bunkerPrefab, Dictionary<string, Material> materials)
+        {
+            const int panelW = 600;
+            const int panelH = 600;
+            Texture2D sheet = new Texture2D(panelW * 2, panelH * 2, TextureFormat.RGBA32, false);
+
+            Vector3 stageOrigin = new Vector3(800f, 800f, 800f);
+            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            floor.transform.position = stageOrigin;
+            floor.transform.localScale = new Vector3(1.5f, 1f, 1.5f);
+            if (materials.TryGetValue("M_RubberBlack", out Material floorMat))
+            {
+                floor.GetComponent<Renderer>().sharedMaterial = floorMat;
+            }
+
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(bunkerPrefab);
+            instance.transform.position = stageOrigin;
+            instance.transform.rotation = Quaternion.identity;
+
+            var itemComp = instance.GetComponent<DisasterPrepItem>();
+            var cutsceneCtrl = instance.GetComponent<BunkerCutsceneController>();
+
+            Light[] sceneLights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+            var enabledLights = new List<Light>();
+            foreach (var sl in sceneLights)
+            {
+                if (sl != null && sl.enabled)
+                {
+                    sl.enabled = false;
+                    enabledLights.Add(sl);
+                }
+            }
+
+            GameObject keyLightGo = new GameObject("VerifyKeyLight");
+            Light keyLight = keyLightGo.AddComponent<Light>();
+            keyLight.type = LightType.Directional;
+            keyLight.intensity = 1.30f;
+            keyLight.color = new Color(1f, 0.97f, 0.92f);
+            keyLight.shadows = LightShadows.Soft;
+            keyLightGo.transform.rotation = Quaternion.Euler(48f, 152f, 0f);
+
+            GameObject rimLightGo = new GameObject("VerifyRimLight");
+            Light rimLight = rimLightGo.AddComponent<Light>();
+            rimLight.type = LightType.Directional;
+            rimLight.intensity = 0.48f;
+            rimLight.color = new Color(0.82f, 0.92f, 1f);
+            rimLightGo.transform.rotation = Quaternion.Euler(35f, -32f, 0f);
+
+            GameObject camGo = new GameObject("VerifyCam");
+            Camera cam = camGo.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.11f, 0.13f, 0.17f, 1f);
+            cam.orthographic = true;
+            cam.nearClipPlane = 0.05f;
+            cam.farClipPlane = 30f;
+
+            RenderTexture rt = new RenderTexture(panelW, panelH, 24, RenderTextureFormat.ARGB32);
+            cam.targetTexture = rt;
+
+            // Panel 0 (Top-Left): CLOSED & LOCKED (showing circular armored lid, 6-spoked central handwheel, massive rear hinge, front steps)
+            if (cutsceneCtrl != null) cutsceneCtrl.StopAndResetCutscene();
+            if (itemComp != null) itemComp.SetCabinetDoorOpen(false, instant: true);
+            RenderVerificationPanel(cam, rt, sheet, 0, panelH, panelW, panelH,
+                stageOrigin + new Vector3(0f, 0.35f, -0.05f),
+                new Vector3(-0.46f, 0.56f, 0.69f).normalized,
+                1.28f);
+
+            // Panel 1 (Top-Right): FULLY OPEN (-108 deg) HIGH-ANGLE WELL VIEW (showing dark cylindrical well, cast-iron rings, steel ladder rungs & lid underside dog-bars)
+            if (itemComp != null) itemComp.SetCabinetDoorOpen(true, instant: true);
+            RenderVerificationPanel(cam, rt, sheet, panelW, panelH, panelW, panelH,
+                stageOrigin + new Vector3(0f, 0.52f, -0.18f),
+                new Vector3(-0.34f, 0.68f, 0.65f).normalized,
+                1.42f);
+
+            // Panel 2 (Bottom-Left): CUTSCENE PHASE 2 — THROWING EMERGENCY BACKPACK INTO THE DARK WELL
+            if (cutsceneCtrl != null) cutsceneCtrl.PreviewCutsceneAtNormalizedTime(0.56f);
+            RenderVerificationPanel(cam, rt, sheet, 0, 0, panelW, panelH,
+                stageOrigin + new Vector3(0f, 0.62f, 0.08f),
+                new Vector3(-0.52f, 0.54f, 0.66f).normalized,
+                1.62f);
+
+            // Panel 3 (Bottom-Right): CUTSCENE PHASE 3 — CHARACTER JUMPING INTO THE DARK WELL
+            if (cutsceneCtrl != null) cutsceneCtrl.PreviewCutsceneAtNormalizedTime(0.84f);
+            RenderVerificationPanel(cam, rt, sheet, panelW, 0, panelW, panelH,
+                stageOrigin + new Vector3(0f, 0.54f, -0.04f),
+                new Vector3(-0.45f, 0.58f, 0.68f).normalized,
+                1.55f);
+
+            if (cutsceneCtrl != null) cutsceneCtrl.CleanupSpawnedPreviewObjects();
+
+            sheet.Apply();
+            string outPath = $"{PreviewsDir}/Preview_BunkerHatch_4States.png";
+            File.WriteAllBytes(outPath, sheet.EncodeToPNG());
+
+            cam.targetTexture = null;
+            RenderTexture.active = null;
+            UnityEngine.Object.DestroyImmediate(rt);
+            UnityEngine.Object.DestroyImmediate(sheet);
+            UnityEngine.Object.DestroyImmediate(camGo);
+            UnityEngine.Object.DestroyImmediate(keyLightGo);
+            UnityEngine.Object.DestroyImmediate(rimLightGo);
+            UnityEngine.Object.DestroyImmediate(instance);
+            UnityEngine.Object.DestroyImmediate(floor);
+
+            foreach (var sl in enabledLights)
+            {
+                if (sl != null) sl.enabled = true;
+            }
+        }
+
+        private static void RenderVerificationPanel(
+            Camera cam,
+            RenderTexture rt,
+            Texture2D targetSheet,
+            int destX,
+            int destY,
+            int w,
+            int h,
+            Vector3 lookTarget,
+            Vector3 viewDir,
+            float orthoSize)
+        {
+            cam.orthographicSize = orthoSize;
+            cam.transform.position = lookTarget + viewDir * 8f;
+            cam.transform.LookAt(lookTarget);
+            cam.Render();
+
+            RenderTexture.active = rt;
+            targetSheet.ReadPixels(new Rect(0, 0, w, h), destX, destY);
         }
 
         private static void BuildDemoShowcaseScene(List<GameObject> prefabs, Dictionary<string, Material> materials)
@@ -1161,7 +1485,7 @@ namespace YarkinAssets.Editor
             GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             floor.name = "ShowcaseFloor";
             floor.transform.position = Vector3.zero;
-            floor.transform.localScale = new Vector3(2.6f, 1f, 2.2f);
+            floor.transform.localScale = new Vector3(2.8f, 1f, 2.4f);
             if (materials.TryGetValue("M_RubberBlack", out Material floorMat))
             {
                 floor.GetComponent<Renderer>().sharedMaterial = floorMat;
@@ -1177,26 +1501,30 @@ namespace YarkinAssets.Editor
                 humanRef.GetComponent<Renderer>().sharedMaterial = humanMat;
             }
 
-            // 4. Grid Layout for all 33 Prefabs + Secured Demo Row
+            // 4. Grid Layout for all 32 Prefabs + Secured Demo Row
             int cols = 9;
             float spacingX = 1.50f;
             float spacingZ = 1.85f;
             Vector3 startPos = new Vector3(-5.6f, 0f, -2.7f);
 
-            GameObject container = new GameObject("DisasterPrepAssets_All33");
+            GameObject container = new GameObject("DisasterPrepAssets_All32");
             container.AddComponent<DisasterWaveEvaluator>();
             for (int i = 0; i < prefabs.Count; i++)
             {
                 int row = i / cols;
                 int col = i % cols;
                 Vector3 pos = startPos + new Vector3(col * spacingX, 0f, row * spacingZ);
+                if (prefabs[i].name == "PF_BunkerHatch")
+                {
+                    pos += new Vector3(0.45f, 0f, 0.15f);
+                }
 
                 GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefabs[i]);
                 instance.transform.SetParent(container.transform, false);
                 instance.transform.position = pos;
             }
 
-            // 5. Side-by-Side "Secured L-Bracket & Closed Valve Demo" row in front so user can immediately see all 10 Interactive/Securable Assets in scene!
+            // 5. Side-by-Side "Secured L-Bracket, Closed Valve & Open Bunker Hatch Demo" row in front!
             GameObject securedDemoGroup = new GameObject("Secured_LBracket_LiveComparison");
             string[] securableDemoNames = {
                 "PF_GasValve",
@@ -1208,7 +1536,8 @@ namespace YarkinAssets.Editor
                 "PF_Refrigerator",
                 "PF_AirConditioner",
                 "PF_WaterHeater",
-                "PF_SturdyTable"
+                "PF_SturdyTable",
+                "PF_BunkerHatch"
             };
             for (int i = 0; i < securableDemoNames.Length; i++)
             {
@@ -1218,13 +1547,16 @@ namespace YarkinAssets.Editor
                     GameObject secInst = (GameObject)PrefabUtility.InstantiatePrefab(pf);
                     secInst.name = pf.name + "_SECURED_DEMO";
                     secInst.transform.SetParent(securedDemoGroup.transform, false);
-                    secInst.transform.position = new Vector3(-6.2f + i * 1.40f, 0f, 5.2f);
+                    float xOffset = securableDemoNames[i] == "PF_BunkerHatch" ? (-6.2f + i * 1.40f + 0.55f) : (-6.2f + i * 1.40f);
+                    secInst.transform.position = new Vector3(xOffset, 0f, 5.2f);
                     var itemComp = secInst.GetComponent<DisasterPrepItem>();
                     if (itemComp != null)
                     {
                         itemComp.SetSecuredOrClosed(true, instant: true);
-                        // Also swing open the FireCabinet & Refrigerator doors in the demo row so the user sees the animated doors + wall brackets!
-                        if (securableDemoNames[i] == "PF_FireCabinet" || securableDemoNames[i] == "PF_Refrigerator")
+                        // Swing open FireCabinet, Refrigerator, AND BunkerHatch in the live comparison row so the dark well is immediately visible!
+                        if (securableDemoNames[i] == "PF_FireCabinet" ||
+                            securableDemoNames[i] == "PF_Refrigerator" ||
+                            securableDemoNames[i] == "PF_BunkerHatch")
                         {
                             itemComp.SetCabinetDoorOpen(true, instant: true);
                         }
@@ -1237,7 +1569,7 @@ namespace YarkinAssets.Editor
             camGo.tag = "MainCamera";
             Camera mainCam = camGo.AddComponent<Camera>();
             mainCam.orthographic = true;
-            mainCam.orthographicSize = 5.6f;
+            mainCam.orthographicSize = 5.8f;
             mainCam.clearFlags = CameraClearFlags.SolidColor;
             mainCam.backgroundColor = new Color(0.11f, 0.13f, 0.16f, 1f);
             mainCam.nearClipPlane = -15f;

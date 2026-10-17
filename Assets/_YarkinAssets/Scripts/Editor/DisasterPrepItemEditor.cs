@@ -75,6 +75,24 @@ namespace YarkinAssets.Editor
                     GUI.backgroundColor = Color.white;
                 }
 
+                var cutsceneCtrl = item.GetComponent<BunkerCutsceneController>();
+                if (cutsceneCtrl != null)
+                {
+                    EditorGUILayout.Space(6);
+                    EditorGUILayout.LabelField("Sığınak (Bunker) Kaçış Cutscene Testi", EditorStyles.boldLabel);
+                    GUI.backgroundColor = new Color(0.95f, 0.72f, 0.22f);
+                    if (GUILayout.Button("🎬 Cutscene Oynat: Kapağı Aç -> Çanta At -> Kuyuya Atla", GUILayout.Height(30f)))
+                    {
+                        cutsceneCtrl.PlayCutscene();
+                    }
+                    GUI.backgroundColor = new Color(0.75f, 0.75f, 0.78f);
+                    if (GUILayout.Button("⏹ Cutscene Sıfırla & Kapağı Kapat", GUILayout.Height(24f)))
+                    {
+                        cutsceneCtrl.StopAndResetCutscene();
+                    }
+                    GUI.backgroundColor = Color.white;
+                }
+
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.Space(6);
             }

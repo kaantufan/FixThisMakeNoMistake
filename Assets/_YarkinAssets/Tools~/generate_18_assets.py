@@ -195,6 +195,43 @@ def add_torus(name, major_r, minor_r, loc, mat_key, major_seg=36, minor_seg=16, 
     assign_mat_and_uv(obj, mat_key)
     return obj
 
+def add_hollow_frustum(name, r_in_bot, r_out_bot, r_in_top, r_out_top, depth, loc, mat_key, segs=48, bevel=0.006, bevel_segs=3):
+    """Creates a manifold quad-mesh hollow cylindrical tube or conical frustum centered at loc."""
+    mesh = bpy.data.meshes.new(name + "_Mesh")
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.location = loc
+
+    bm = bmesh.new()
+    half_d = depth * 0.5
+    in_bot, out_bot, out_top, in_top = [], [], [], []
+    for i in range(segs):
+        ang = 2.0 * math.pi * i / segs
+        ca, sa = math.cos(ang), math.sin(ang)
+        in_bot.append(bm.verts.new((r_in_bot * ca, r_in_bot * sa, -half_d)))
+        out_bot.append(bm.verts.new((r_out_bot * ca, r_out_bot * sa, -half_d)))
+        out_top.append(bm.verts.new((r_out_top * ca, r_out_top * sa, half_d)))
+        in_top.append(bm.verts.new((r_in_top * ca, r_in_top * sa, half_d)))
+
+    for i in range(segs):
+        j = (i + 1) % segs
+        bm.faces.new((in_bot[i], in_top[i], in_top[j], in_bot[j]))     # Inner wall (points inward)
+        bm.faces.new((out_bot[i], out_bot[j], out_top[j], out_top[i])) # Outer wall (points outward)
+        bm.faces.new((in_top[i], out_top[i], out_top[j], in_top[j]))   # Top annular face (+Z)
+        bm.faces.new((out_bot[i], in_bot[i], in_bot[j], out_bot[j]))   # Bottom annular face (-Z)
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(mesh)
+    bm.free()
+
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    if bevel > 0.0:
+        apply_bevel(obj, bevel, segments=bevel_segs)
+    assign_mat_and_uv(obj, mat_key)
+    return obj
+
 def finalize_and_export(asset_name, parts, toybox_scale=1.0):
     bpy.ops.object.select_all(action='DESELECT')
     for p in parts:
@@ -246,11 +283,11 @@ def finalize_and_export(asset_name, parts, toybox_scale=1.0):
     )
     print(f"[OK] Exported SM_{asset_name}.fbx (scale={toybox_scale}x, {len(obj.data.polygons)} polys)")
 
-def finalize_and_export_multipart(asset_name, body_name, body_parts, moving_groups, toybox_scale=1.0):
+def finalize_and_export_multipart(asset_name, body_name, body_parts, moving_groups, toybox_scale=1.0, keep_exact_origin=False):
     """
     Exports a multi-part FBX hierarchy where the static body (`body_name`) has its origin at the
-    bottom-center of the combined assembly, and each moving sub-mesh (`child_name`) has its local
-    origin at its exact mechanical axle/hinge pivot (`pivot_xyz * toybox_scale + offset`).
+    bottom-center of the combined assembly (or exact (0,0,0) if keep_exact_origin=True), and each
+    moving sub-mesh (`child_name`) has its local origin at its exact mechanical axle/hinge pivot.
     """
     bpy.ops.object.select_all(action='DESELECT')
     for p in body_parts:
@@ -288,16 +325,19 @@ def finalize_and_export_multipart(asset_name, body_name, body_parts, moving_grou
         joined_children.append((c_obj, Vector(pivot_xyz) * toybox_scale))
 
     all_objs = [body_obj] + [c[0] for c in joined_children]
-    all_verts = [v.co for o in all_objs for v in o.data.vertices]
-    min_x = min(v.x for v in all_verts)
-    max_x = max(v.x for v in all_verts)
-    min_y = min(v.y for v in all_verts)
-    max_y = max(v.y for v in all_verts)
-    min_z = min(v.z for v in all_verts)
+    if keep_exact_origin:
+        offset = Vector((0.0, 0.0, 0.0))
+    else:
+        all_verts = [v.co for o in all_objs for v in o.data.vertices]
+        min_x = min(v.x for v in all_verts)
+        max_x = max(v.x for v in all_verts)
+        min_y = min(v.y for v in all_verts)
+        max_y = max(v.y for v in all_verts)
+        min_z = min(v.z for v in all_verts)
 
-    cx = (min_x + max_x) * 0.5
-    cy = (min_y + max_y) * 0.5
-    offset = Vector((-cx, -cy, -min_z))
+        cx = (min_x + max_x) * 0.5
+        cy = (min_y + max_y) * 0.5
+        offset = Vector((-cx, -cy, -min_z))
 
     for v in body_obj.data.vertices:
         v.co += offset
@@ -1120,6 +1160,228 @@ def build_rubble_pile():
     ]
     finalize_and_export("RubblePile", parts, toybox_scale=1.12)
 
+# 32. BunkerHatch (Zemin Sığınak Kapağı / Kapısı — Yuvarlak, Kalın Menteşeli, Ağır Zırhlı & Derin Karanlık Kuyulu)
+def build_bunker_hatch():
+    clear_scene()
+    body_parts = [
+        # 1. Heavy Reinforced Concrete & Steel Ground Foundation Apron (Bottom strictly at z = 0.000m)
+        add_hollow_frustum("FoundationBase", 0.575, 0.96, 0.575, 0.89, 0.120, (0, 0, 0.060), "DarkMetal", segs=16, bevel=0.012),
+        add_hollow_frustum("SlopedBlastCurb", 0.575, 0.88, 0.575, 0.74, 0.230, (0, 0, 0.235), "RubberBlack", segs=36, bevel=0.010),
+        add_hollow_frustum("SteelCoamingCollar", 0.575, 0.755, 0.575, 0.735, 0.070, (0, 0, 0.375), "SilverMetal", segs=48, bevel=0.008),
+        add_torus("CollarGasketSeat", 0.612, 0.022, (0, 0, 0.408), "RubberBlack", 48, 16),
+
+        # 2. Front Approach Anti-Slip Tread Steps (y_B < 0 -> +Z Front in Unity where Character stands in Cutscene)
+        add_box("FrontStepLower", (0.76, 0.24, 0.110), (0, -0.94, 0.055), "DarkMetal", bevel=0.008),
+        add_box("FrontStepLowerNosing", (0.74, 0.036, 0.028), (0, -1.045, 0.100), "SafetyOrange", bevel=0.004),
+        add_box("FrontStepUpper", (0.72, 0.22, 0.220), (0, -0.78, 0.110), "DarkMetal", bevel=0.008),
+        add_box("FrontStepUpperNosing", (0.70, 0.036, 0.028), (0, -0.875, 0.210), "Yellow", bevel=0.004),
+        add_box("FrontStepCheekL", (0.042, 0.38, 0.240), (-0.37, -0.85, 0.120), "SilverMetal", rot=(math.radians(18), 0, 0), bevel=0.005),
+        add_box("FrontStepCheekR", (0.042, 0.38, 0.240), (0.37, -0.85, 0.120), "SilverMetal", rot=(math.radians(18), 0, 0), bevel=0.005),
+        add_box("FrontCurbWarningPlate", (0.42, 0.024, 0.075), (0, -0.79, 0.285), "Yellow", rot=(math.radians(24), 0, 0), bevel=0.004),
+        add_box("FrontCurbWarningStripe", (0.36, 0.026, 0.028), (0, -0.795, 0.285), "SafetyOrange", rot=(math.radians(24), 0, 0), bevel=0.003),
+
+        # 3. 4 Inner Collar Latch Strike Pockets (+X, -X, +Y, -Y)
+        add_box("CollarLatchStrikeE", (0.045, 0.11, 0.048), (0.585, 0, 0.365), "Brass", bevel=0.004),
+        add_box("CollarLatchStrikeW", (0.045, 0.11, 0.048), (-0.585, 0, 0.365), "Brass", bevel=0.004),
+        add_box("CollarLatchStrikeN", (0.11, 0.045, 0.048), (0, 0.585, 0.365), "Brass", bevel=0.004),
+        add_box("CollarLatchStrikeS", (0.11, 0.045, 0.048), (0, -0.585, 0.365), "Brass", bevel=0.004),
+
+        # 4. Upper Well Shaft Liner & Top Ladder Rungs (z = 0.008m .. 0.36m, visible right inside open mouth)
+        add_hollow_frustum("UpperShaftWall", 0.568, 0.600, 0.568, 0.600, 0.352, (0, 0, 0.184), "ScreenBlack", segs=48, bevel=0.002),
+        add_torus("UpperShaftRib1", 0.562, 0.018, (0, 0, 0.295), "DarkMetal", 48, 14),
+        add_torus("UpperShaftRib2", 0.562, 0.018, (0, 0, 0.150), "RubberBlack", 48, 14),
+        # Upper Steel Descent Ladder on Back-Inner Wall (y_B = +0.47m, facing camera when hatch is open!)
+        add_cyl("UpperLadderRailL", 0.016, 0.350, (-0.20, 0.485, 0.185), "Yellow", 20, bevel=0.002),
+        add_cyl("UpperLadderRailR", 0.016, 0.350, (0.20, 0.485, 0.185), "Yellow", 20, bevel=0.002),
+        add_box("UpperLadderMountL", (0.032, 0.075, 0.032), (-0.20, 0.525, 0.310), "SilverMetal", bevel=0.003),
+        add_box("UpperLadderMountR", (0.032, 0.075, 0.032), (0.20, 0.525, 0.310), "SilverMetal", bevel=0.003),
+        add_cyl("UpperLadderRung1", 0.015, 0.420, (0, 0.485, 0.310), "SafetyOrange", 24, rot=(0, math.radians(90), 0), bevel=0.003),
+        add_cyl("UpperLadderRung2", 0.015, 0.420, (0, 0.485, 0.130), "Yellow", 24, rot=(0, math.radians(90), 0), bevel=0.003),
+        # Interior Bunker Utility Conduit Pipe along right shaft wall
+        add_cyl("UpperConduitPipe", 0.020, 0.350, (0.46, 0.24, 0.185), "Copper", 20, bevel=0.002),
+        add_box("UpperConduitClamp", (0.055, 0.045, 0.028), (0.48, 0.25, 0.260), "Brass", bevel=0.003),
+
+        # 5. Massive Industrial Rear Hinge Stanchion Assembly (y_B = +0.72m, z_B = 0.425m)
+        add_box("HingePedestalBase", (0.90, 0.28, 0.280), (0, 0.74, 0.140), "DarkMetal", bevel=0.012),
+        add_box("HingeButtressL", (0.085, 0.24, 0.260), (-0.38, 0.82, 0.140), "DarkMetal", rot=(math.radians(-22), 0, 0), bevel=0.008),
+        add_box("HingeButtressR", (0.085, 0.24, 0.260), (0.38, 0.82, 0.140), "DarkMetal", rot=(math.radians(-22), 0, 0), bevel=0.008),
+        # 3 Massive Cast-Steel Hinge Stanchion Towers (Left x=-0.33, Center x=0.0, Right x=+0.33)
+        add_box("HingeStanchionL", (0.115, 0.22, 0.240), (-0.33, 0.72, 0.340), "DarkMetal", bevel=0.010),
+        add_box("HingeStanchionC", (0.125, 0.22, 0.240), (0.00, 0.72, 0.340), "DarkMetal", bevel=0.010),
+        add_box("HingeStanchionR", (0.115, 0.22, 0.240), (0.33, 0.72, 0.340), "DarkMetal", bevel=0.010),
+        add_cyl("StanchionBarrelL", 0.070, 0.115, (-0.33, 0.72, 0.425), "DarkMetal", 32, rot=(0, math.radians(90), 0), bevel=0.006),
+        add_cyl("StanchionBarrelC", 0.070, 0.125, (0.00, 0.72, 0.425), "DarkMetal", 32, rot=(0, math.radians(90), 0), bevel=0.006),
+        add_cyl("StanchionBarrelR", 0.070, 0.115, (0.33, 0.72, 0.425), "DarkMetal", 32, rot=(0, math.radians(90), 0), bevel=0.006),
+        # Continuous 9.0 cm Thick Solid Hardened Steel Hinge Axle Pin & Oversized M48 Brass Lock Nuts
+        add_cyl("MassiveHingeAxlePin", 0.046, 0.96, (0, 0.72, 0.425), "SilverMetal", 32, rot=(0, math.radians(90), 0), bevel=0.005),
+        add_cyl("HingeAxleHexNutL", 0.064, 0.042, (-0.49, 0.72, 0.425), "Brass", 6, rot=(0, math.radians(90), 0), bevel=0.004),
+        add_cyl("HingeAxleHexNutR", 0.064, 0.042, (0.49, 0.72, 0.425), "Brass", 6, rot=(0, math.radians(90), 0), bevel=0.004),
+        add_sphere("HingeGreaseCapL", 0.036, (-0.52, 0.72, 0.425), "SafetyOrange", 20, 14),
+        add_sphere("HingeGreaseCapR", 0.036, (0.52, 0.72, 0.425), "SafetyOrange", 20, 14),
+        # Coaxial Heavy Helical Torsion Springs around Hinge Shaft
+        add_torus("TorsionSpringL1", 0.058, 0.012, (-0.41, 0.72, 0.425), "Copper", 28, 12, rot=(0, math.radians(90), 0)),
+        add_torus("TorsionSpringL2", 0.058, 0.012, (-0.435, 0.72, 0.425), "Copper", 28, 12, rot=(0, math.radians(90), 0)),
+        add_torus("TorsionSpringR1", 0.058, 0.012, (0.41, 0.72, 0.425), "Copper", 28, 12, rot=(0, math.radians(90), 0)),
+        add_torus("TorsionSpringR2", 0.058, 0.012, (0.435, 0.72, 0.425), "Copper", 28, 12, rot=(0, math.radians(90), 0)),
+        # Side Outrigger Brackets & Lower Hydraulic Damper Barrels (x = ±0.56m)
+        add_box("DamperBaseBracketL", (0.10, 0.16, 0.12), (-0.56, 0.56, 0.18), "DarkMetal", bevel=0.006),
+        add_box("DamperBaseBracketR", (0.10, 0.16, 0.12), (0.56, 0.56, 0.18), "DarkMetal", bevel=0.006),
+        add_cyl("DamperLowerCylinderL", 0.034, 0.24, (-0.56, 0.53, 0.29), "SafetyOrange", 24, rot=(math.radians(-18), 0, 0), bevel=0.004),
+        add_cyl("DamperLowerCylinderR", 0.034, 0.24, (0.56, 0.53, 0.29), "SafetyOrange", 24, rot=(math.radians(-18), 0, 0), bevel=0.004),
+    ]
+
+    # Perimeter Ground Anchor Lugs & Collar Flange Bolts
+    for i in range(8):
+        ang = math.radians(i * 45.0 + 22.5)
+        ca, sa = math.cos(ang), math.sin(ang)
+        if abs(sa) < 0.92:  # Skip direct front step & rear hinge center
+            body_parts.append(add_box(f"GroundAnchorLug_{i}", (0.11, 0.14, 0.036), (ca * 0.92, sa * 0.92, 0.018), "SilverMetal", rot=(0, 0, ang), bevel=0.004))
+            body_parts.append(add_cyl(f"GroundAnchorBolt_{i}", 0.022, 0.032, (ca * 0.93, sa * 0.93, 0.042), "Yellow", 6, bevel=0.003))
+
+    for i in range(16):
+        ang = math.radians(i * 22.5)
+        ca, sa = math.cos(ang), math.sin(ang)
+        if sa < 0.88:
+            body_parts.append(add_cyl(f"CollarBolt_{i}", 0.015, 0.018, (ca * 0.695, sa * 0.695, 0.414), "Brass", 6, bevel=0.002))
+
+    # ==========================================================================
+    # MOVING PART 1: HatchLid_Hinge (Massive Round Armored Lid, Pivot at Hinge Axle (0.0, 0.72, 0.425))
+    # ==========================================================================
+    lid_parts = [
+        # 1. Top Armored Circular Blast Plate & Machined Outer Steel Rim (Total Lid Thickness ~16 cm!)
+        add_cyl("LidMainArmorSlab", 0.665, 0.060, (0, 0, 0.440), "OliveGreen", 48, bevel=0.016),
+        add_hollow_frustum("LidOuterSteelArmorRim", 0.575, 0.705, 0.595, 0.685, 0.066, (0, 0, 0.440), "DarkMetal", segs=48, bevel=0.010),
+        add_cyl("LidCenterArmorBoss", 0.245, 0.036, (0, 0, 0.478), "DarkMetal", 36, bevel=0.008),
+        add_torus("LidCenterBossRing", 0.242, 0.012, (0, 0, 0.492), "SilverMetal", 36, 12),
+
+        # 2. Structural Radial & Cross Stiffening Ribs on Top of Lid
+        add_box("LidCrossRibX", (1.18, 0.075, 0.028), (0, 0, 0.474), "DarkMetal", bevel=0.005),
+        add_box("LidFrontRibY", (0.085, 0.56, 0.028), (0, -0.32, 0.474), "DarkMetal", bevel=0.005),
+        add_box("LidDiagRib1", (1.12, 0.056, 0.024), (0, 0, 0.472), "DarkMetal", rot=(0, 0, math.radians(45)), bevel=0.004),
+        add_box("LidDiagRib2", (1.12, 0.056, 0.024), (0, 0, 0.472), "DarkMetal", rot=(0, 0, math.radians(-45)), bevel=0.004),
+
+        # 3. High-Visibility Hazard Badges & Chunky Front Lift Handle (y_B = -0.56m)
+        add_box("LidHazardPlateL", (0.22, 0.095, 0.018), (-0.28, -0.34, 0.472), "Yellow", rot=(0, 0, math.radians(-22)), bevel=0.004),
+        add_box("LidHazardPlateR", (0.22, 0.095, 0.018), (0.28, -0.34, 0.472), "SafetyOrange", rot=(0, 0, math.radians(22)), bevel=0.004),
+        add_box("FrontHandlePostL", (0.042, 0.052, 0.055), (-0.13, -0.555, 0.485), "SilverMetal", bevel=0.005),
+        add_box("FrontHandlePostR", (0.042, 0.052, 0.055), (0.13, -0.555, 0.485), "SilverMetal", bevel=0.005),
+        add_cyl("FrontGrabHandleBar", 0.020, 0.30, (0, -0.555, 0.508), "SafetyOrange", 24, rot=(0, math.radians(90), 0), bevel=0.004),
+        add_cyl("FrontGrabHandleGrip", 0.023, 0.16, (0, -0.555, 0.508), "Yellow", 24, rot=(0, math.radians(90), 0), bevel=0.004),
+
+        # 4. Massive Twin Forged-Steel Hinge Yoke Arms & 14.8cm Coaxial Barrels (Kalın Menteşe Kolları & Kovanları)
+        add_cyl("MovingHingeBarrelL", 0.074, 0.195, (-0.165, 0.72, 0.425), "SilverMetal", 36, rot=(0, math.radians(90), 0), bevel=0.008),
+        add_cyl("MovingHingeBarrelR", 0.074, 0.195, (0.165, 0.72, 0.425), "SilverMetal", 36, rot=(0, math.radians(90), 0), bevel=0.008),
+        add_torus("HingeBearingRingL1", 0.075, 0.009, (-0.245, 0.72, 0.425), "Brass", 32, 12, rot=(0, math.radians(90), 0)),
+        add_torus("HingeBearingRingL2", 0.075, 0.009, (-0.085, 0.72, 0.425), "Brass", 32, 12, rot=(0, math.radians(90), 0)),
+        add_torus("HingeBearingRingR1", 0.075, 0.009, (0.085, 0.72, 0.425), "Brass", 32, 12, rot=(0, math.radians(90), 0)),
+        add_torus("HingeBearingRingR2", 0.075, 0.009, (0.245, 0.72, 0.425), "Brass", 32, 12, rot=(0, math.radians(90), 0)),
+        # Thick Forged Hinge Boom Straps spanning across the lid
+        add_box("ForgedHingeBoomL", (0.115, 1.06, 0.062), (-0.165, 0.22, 0.478), "DarkMetal", bevel=0.010),
+        add_box("ForgedHingeBoomR", (0.115, 1.06, 0.062), (0.165, 0.22, 0.478), "DarkMetal", bevel=0.010),
+        add_box("HingeBoomAccentL", (0.072, 0.88, 0.018), (-0.165, 0.20, 0.508), "SafetyOrange", bevel=0.004),
+        add_box("HingeBoomAccentR", (0.072, 0.88, 0.018), (0.165, 0.20, 0.508), "SafetyOrange", bevel=0.004),
+        # Massive Under-Hinge Gusset Necks (Visible when hatch swings open to -108 deg!)
+        add_box("UnderHingeNeckL", (0.115, 0.26, 0.082), (-0.165, 0.60, 0.405), "SilverMetal", bevel=0.008),
+        add_box("UnderHingeNeckR", (0.115, 0.26, 0.082), (0.165, 0.60, 0.405), "SilverMetal", bevel=0.008),
+        add_box("HingeCrossBridge", (0.48, 0.16, 0.080), (0, 0.76, 0.435), "DarkMetal", bevel=0.010),
+        add_cyl("RearStopBumperL", 0.036, 0.045, (-0.165, 0.835, 0.435), "RubberBlack", 20, rot=(math.radians(90), 0, 0), bevel=0.005),
+        add_cyl("RearStopBumperR", 0.036, 0.045, (0.165, 0.835, 0.435), "RubberBlack", 20, rot=(math.radians(90), 0, 0), bevel=0.005),
+
+        # 5. Deep Stepped Underside Vault Plug, EPDM Gasket & 4-Way Locking Dogs (Visible when Open!)
+        add_cyl("UndersideVaultPlug", 0.552, 0.056, (0, 0, 0.382), "DarkMetal", 48, bevel=0.010),
+        add_hollow_frustum("UndersideCofferRing", 0.19, 0.485, 0.19, 0.485, 0.022, (0, 0, 0.352), "RubberBlack", segs=36, bevel=0.004),
+        add_torus("UndersideRubberGasket", 0.572, 0.026, (0, 0, 0.395), "RubberBlack", 48, 16),
+        add_cyl("UndersideGearBox", 0.140, 0.044, (0, 0, 0.346), "Brass", 32, bevel=0.006),
+        add_cyl("UndersideGearCap", 0.082, 0.052, (0, 0, 0.342), "SilverMetal", 24, bevel=0.005),
+        # 4 Heavy Radial Steel Locking Dog Bars (+X, -X, +Y, -Y)
+        add_box("UndersideLockBarEW", (1.15, 0.060, 0.034), (0, 0, 0.344), "SilverMetal", bevel=0.005),
+        add_box("UndersideLockBarNS", (0.060, 1.15, 0.034), (0, 0, 0.344), "SilverMetal", bevel=0.005),
+        add_box("LockDogWedgeE", (0.095, 0.072, 0.042), (0.555, 0, 0.344), "Brass", bevel=0.005),
+        add_box("LockDogWedgeW", (0.095, 0.072, 0.042), (-0.555, 0, 0.344), "Brass", bevel=0.005),
+        add_box("LockDogWedgeN", (0.072, 0.095, 0.042), (0, 0.555, 0.344), "Brass", bevel=0.005),
+        add_box("LockDogWedgeS", (0.072, 0.095, 0.042), (0, -0.555, 0.344), "Brass", bevel=0.005),
+        add_box("LockBarGuideE", (0.048, 0.092, 0.044), (0.36, 0, 0.346), "SafetyOrange", bevel=0.004),
+        add_box("LockBarGuideW", (0.048, 0.092, 0.044), (-0.36, 0, 0.346), "SafetyOrange", bevel=0.004),
+        add_box("LockBarGuideN", (0.092, 0.048, 0.044), (0, 0.36, 0.346), "SafetyOrange", bevel=0.004),
+        add_box("LockBarGuideS", (0.092, 0.048, 0.044), (0, -0.36, 0.346), "SafetyOrange", bevel=0.004),
+        # Interior Emergency Pull Handle on Underside
+        add_cyl("InteriorPullHandle", 0.018, 0.28, (0, -0.26, 0.320), "Yellow", 20, rot=(0, math.radians(90), 0), bevel=0.003),
+    ]
+
+    for i in range(16):
+        ang = math.radians(i * 22.5 + 11.25)
+        ca, sa = math.cos(ang), math.sin(ang)
+        lid_parts.append(add_cyl(f"LidArmorBolt_{i}", 0.018, 0.022, (ca * 0.635, sa * 0.635, 0.474), "SilverMetal", 6, bevel=0.003))
+
+    for y_b in (-0.22, 0.02, 0.26, 0.48):
+        lid_parts.append(add_cyl(f"BoomBoltL_{y_b:.2f}", 0.018, 0.022, (-0.165, y_b, 0.518), "Brass", 6, bevel=0.003))
+        lid_parts.append(add_cyl(f"BoomBoltR_{y_b:.2f}", 0.018, 0.022, (0.165, y_b, 0.518), "Brass", 6, bevel=0.003))
+
+    # ==========================================================================
+    # MOVING PART 2: LockWheel_Pivot (Coaxial 6-Spoked Central Locking Handwheel, Pivot at (0.0, 0.0, 0.535))
+    # ==========================================================================
+    wheel_parts = [
+        add_cyl("WheelSpindleShaft", 0.040, 0.095, (0, 0, 0.520), "SilverMetal", 28, bevel=0.004),
+        add_cyl("WheelSpindleCollar", 0.065, 0.028, (0, 0, 0.502), "Brass", 6, bevel=0.004),
+        add_torus("WheelOuterRim", 0.245, 0.028, (0, 0, 0.552), "SafetyOrange", 40, 16),
+        add_box("WheelSpokeBar1", (0.47, 0.032, 0.026), (0, 0, 0.552), "Yellow", bevel=0.005),
+        add_box("WheelSpokeBar2", (0.47, 0.032, 0.026), (0, 0, 0.552), "Yellow", rot=(0, 0, math.radians(60)), bevel=0.005),
+        add_box("WheelSpokeBar3", (0.47, 0.032, 0.026), (0, 0, 0.552), "Yellow", rot=(0, 0, math.radians(120)), bevel=0.005),
+        add_cyl("WheelCenterHub", 0.072, 0.042, (0, 0, 0.556), "Brass", 28, bevel=0.006),
+        add_cyl("WheelCenterLockNut", 0.042, 0.024, (0, 0, 0.582), "SilverMetal", 6, bevel=0.003),
+        add_cyl("WheelCrankSpinner", 0.024, 0.062, (0.235, 0, 0.592), "Yellow", 20, bevel=0.005),
+    ]
+
+    # ==========================================================================
+    # MOVING PART 3: HydraulicPiston_Pivot (Twin Side Assist Pistons, Pivot at (0.0, 0.44, 0.455))
+    # ==========================================================================
+    piston_parts = [
+        add_box("PistonTopClevisL", (0.056, 0.095, 0.052), (-0.56, 0.44, 0.455), "DarkMetal", bevel=0.005),
+        add_box("PistonTopClevisR", (0.056, 0.095, 0.052), (0.56, 0.44, 0.455), "DarkMetal", bevel=0.005),
+        add_cyl("PistonChromeRodL", 0.020, 0.22, (-0.56, 0.48, 0.375), "SilverMetal", 20, rot=(math.radians(-18), 0, 0), bevel=0.002),
+        add_cyl("PistonChromeRodR", 0.020, 0.22, (0.56, 0.48, 0.375), "SilverMetal", 20, rot=(math.radians(-18), 0, 0), bevel=0.002),
+    ]
+
+    # ==========================================================================
+    # PART 4: WellPortal_Disc (Floor-Cutout Depth/Stencil Portal Mask at z = 0.008m)
+    # ==========================================================================
+    portal_parts = [
+        add_cyl("WellPortalMaskDisc", 0.574, 0.004, (0, 0, 0.008), "ScreenBlack", 48, bevel=0.0),
+    ]
+
+    # ==========================================================================
+    # PART 5: WellShaft_Deep (2.1m Deep Underground Cylindrical Well Shaft & Descending Steel Ladder)
+    # ==========================================================================
+    deep_shaft_parts = [
+        add_hollow_frustum("DeepShaftWall", 0.568, 0.618, 0.568, 0.618, 2.108, (0, 0, -1.046), "ScreenBlack", segs=48, bevel=0.002),
+        add_cyl("DeepShaftAbyssFloor", 0.615, 0.040, (0, 0, -2.100), "ScreenBlack", 48, bevel=0.002),
+        add_cyl("DeepLadderRailL", 0.016, 2.02, (-0.20, 0.485, -1.00), "DarkMetal", 20, bevel=0.002),
+        add_cyl("DeepLadderRailR", 0.016, 2.02, (0.20, 0.485, -1.00), "DarkMetal", 20, bevel=0.002),
+        add_cyl("DeepConduitPipe", 0.020, 2.02, (0.46, 0.24, -1.00), "Copper", 20, bevel=0.002),
+    ]
+    for idx, z_rib in enumerate((-0.16, -0.46, -0.76, -1.06, -1.36, -1.66)):
+        mat_r = "DarkMetal" if idx < 2 else ("RubberBlack" if idx < 4 else "ScreenBlack")
+        deep_shaft_parts.append(add_torus(f"DeepShaftRib_{idx}", 0.562, 0.018, (0, 0, z_rib), mat_r, 48, 12))
+
+    for idx, z_rung in enumerate((-0.05, -0.25, -0.45, -0.65, -0.85, -1.05, -1.25)):
+        mat_rung = "SafetyOrange" if idx == 0 else ("Yellow" if idx == 1 else ("SilverMetal" if idx < 4 else "DarkMetal"))
+        deep_shaft_parts.append(add_cyl(f"DeepLadderRung_{idx}", 0.015, 0.420, (0, 0.485, z_rung), mat_rung, 24, rot=(0, math.radians(90), 0), bevel=0.002))
+
+    finalize_and_export_multipart(
+        "BunkerHatch",
+        "BunkerBaseBody",
+        body_parts,
+        [
+            ("HatchLid_Hinge", lid_parts, (0.0, 0.72, 0.425)),
+            ("LockWheel_Pivot", wheel_parts, (0.0, 0.0, 0.535)),
+            ("HydraulicPiston_Pivot", piston_parts, (0.0, 0.44, 0.455)),
+            ("WellPortal_Disc", portal_parts, (0.0, 0.0, 0.008)),
+            ("WellShaft_Deep", deep_shaft_parts, (0.0, 0.0, 0.008)),
+        ],
+        toybox_scale=1.00,
+        keep_exact_origin=True
+    )
+
 if __name__ == "__main__":
     generate_color_swatch_png()
     # Part A: Original 18 Upgraded Assets
@@ -1141,7 +1403,7 @@ if __name__ == "__main__":
     build_flashlight()
     build_emergency_radio()
     build_air_conditioner()
-    # Part B: 13 IMO Disaster Expansion Assets (DocumentPouch & DustMask removed)
+    # Part B: 14 IMO Disaster Expansion Assets (including Heavy Round Hinged BunkerHatch)
     build_gas_valve()
     build_water_valve()
     build_breaker_box()
@@ -1155,4 +1417,5 @@ if __name__ == "__main__":
     build_shattered_glass()
     build_rubble_pile()
     build_fire_cabinet()
-    print("=== ALL 31 ISOMETRIC 3D DISASTER ASSETS & SWATCH ATLAS GENERATED SUCCESSFULLY ===")
+    build_bunker_hatch()
+    print("=== ALL 32 ISOMETRIC 3D DISASTER ASSETS & SWATCH ATLAS GENERATED SUCCESSFULLY ===")

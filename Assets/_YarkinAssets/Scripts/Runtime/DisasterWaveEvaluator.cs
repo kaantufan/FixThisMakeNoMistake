@@ -199,14 +199,24 @@ namespace YarkinAssets.Runtime
             return totalPreparednessScore;
         }
 
+        [ContextMenu("Test: Sığınak (Bunker) Kaçış Cutscene Oynat")]
+        public void TriggerBunkerCutscene()
+        {
+            var cutscenes = FindObjectsByType<BunkerCutsceneController>(FindObjectsSortMode.None);
+            foreach (var ctrl in cutscenes)
+            {
+                ctrl.PlayCutscene();
+            }
+        }
+
         private void OnGUI()
         {
             if (!showInteractiveDemoHud || !Application.isPlaying) return;
 
-            GUI.Box(new Rect(14, 14, 370, 250), "Mekanik Açma/Kapama Animasyon Test Paneli");
+            GUI.Box(new Rect(14, 14, 370, 284), "Mekanik Açma/Kapama & Bunker Cutscene Test Paneli");
 
             GUIStyle subStyle = new GUIStyle(GUI.skin.label) { fontSize = 11, wordWrap = true };
-            GUI.Label(new Rect(24, 38, 350, 32), "Sahnedeki vanalara, musluğa, sigortaya veya dolaplara fareyle tıklayabilir ya da aşağıdaki butonları kullanabilirsiniz:", subStyle);
+            GUI.Label(new Rect(24, 38, 350, 32), "Sahnedeki vanalara, musluğa, sigortaya, dolaplara veya sığınak kapağına tıklayabilir ya da butonları kullanabilirsiniz:", subStyle);
 
             if (GUI.Button(new Rect(24, 74, 350, 26), "[1] Tüm Vana, Musluk & Sigortaları Aç / Kapat"))
             {
@@ -229,7 +239,7 @@ namespace YarkinAssets.Runtime
                 ToggleSpecificItemById("water_heater");
                 ToggleSpecificItemById("air_conditioner");
             }
-            if (GUI.Button(new Rect(24, 164, 350, 26), "[2] Yangın Dolabı & Buzdolabı Kapaklarını Aç / Kapat"))
+            if (GUI.Button(new Rect(24, 164, 350, 26), "[2] Dolap & Zemin Sığınak Kapaklarını Aç / Kapat"))
             {
                 ToggleAllCabinetDoors();
             }
@@ -237,8 +247,12 @@ namespace YarkinAssets.Runtime
             {
                 ToggleAllSecurableFixtures();
             }
+            if (GUI.Button(new Rect(24, 224, 350, 28), "🎬 [4] BUNKER CUTSCENE: Aç -> Çanta At -> Kuyuya Atla"))
+            {
+                TriggerBunkerCutscene();
+            }
 
-            autoCycleValvesInDemo = GUI.Toggle(new Rect(24, 226, 350, 22), autoCycleValvesInDemo, " Otomatik Döngü (Her 2.2 sn'de Aç/Kapat Testi)");
+            autoCycleValvesInDemo = GUI.Toggle(new Rect(24, 258, 350, 22), autoCycleValvesInDemo, " Otomatik Döngü (Her 2.2 sn'de Aç/Kapat Testi)");
         }
     }
 }
