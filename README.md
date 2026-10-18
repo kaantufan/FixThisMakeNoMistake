@@ -6,7 +6,7 @@ Unity 6000.0.73f1 · Built-In Render Pipeline · Windows 64-bit · çevrimdış�
 
 ## Oyna
 
-Güncel yerel paket **Home V5.9-r7 / 0.5.9**. Çalışma alanında [başlatıcıyı](Play-TooLateToPanic.cmd) kullanın. İndirilen Windows ZIP'ini tamamen çıkarıp `TooLateToPanic.exe` dosyasını veri klasörleriyle birlikte çalıştırın. Kaynak deposu oyun paketini içermez; yayımlanmış paketler [GitHub Releases](https://github.com/kaantufan/FixThisMakeNoMistake/releases) sayfasındadır. Her paketin sürümünü kendi sürüm notlarıyla eşleştirin.
+Güncel yerel ve GitHub ön sürüm paketi **Home V5.9-r7 / 0.5.9**: [R7 sürüm notları](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r7) · [Windows ZIP'ini indir](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.9-r7/TooLateToPanic-Home-V5.9-r7-20261018-portable.zip). Çalışma alanında [başlatıcıyı](Play-TooLateToPanic.cmd) kullanın. İndirilen Windows ZIP'ini tamamen çıkarıp `TooLateToPanic.exe` dosyasını veri klasörleriyle birlikte çalıştırın. Kaynak deposu oyun paketini içermez. R7 kullanıcı oynanış testi bekleyen bir ön sürümdür.
 
 Normal kampanyada **90 saniye önlem + 40 saniye erzak/FPS**, başlangıç bütçesi **1500**. İlk dalga Deprem, ikinci dalga Sel + Fırtına; sonraki dalgalarda afetler rastgele seçilir. Her dalgada ortak 20 yuvalı envanterden bir su ve bir gıda kullanılır. Sel varsa üst kattaki panik odasına, diğer afetlerde oyunun bodrum sığınağına fiziksel olarak ulaşın. %75 ve üzeri hasar kayıptır. Bu kurallar oyun tasarımıdır; gerçek afetlerde resmî kurumların yönlendirmesi izlenmelidir.
 

@@ -1,8 +1,8 @@
 # Too Late to Panic! — Unity projesi
 
-Güncel yerel sürüm **Home V5.9-r7 / 0.5.9**, Unity **6000.0.73f1**, Built-In, Windows64 ve çevrimdışı tek oyunculu.
+Güncel yerel ve GitHub ön sürümü **Home V5.9-r7 / 0.5.9**, Unity **6000.0.73f1**, Built-In, Windows64 ve çevrimdışı tek oyunculu. R7 kullanıcı oynanış testi bekler.
 
-[Oyunu başlat](Play-TooLateToPanic.cmd) · [Güncel kimlik](LATEST-BUILD.json) · [R7 teslimi](Documentation/HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md) · [Ana README](../README.md).
+[Windows R7 ZIP'ini indir](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.9-r7/TooLateToPanic-Home-V5.9-r7-20261018-portable.zip) · [R7 sürüm notları](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r7) · [Oyunu başlat](Play-TooLateToPanic.cmd) · [Güncel kimlik](LATEST-BUILD.json) · [R7 teslimi](Documentation/HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md) · [Ana README](../README.md).
 
 Normal kampanya 90 saniye önlem + 40 saniye erzak/FPS, başlangıç bütçesi 1500. İlk dalga Deprem, ikinci Sel + Fırtına; sonrası RNG. Selde üst panik odası, diğer afetlerde oyunun bodrum sığınağı kullanılır. Gerçek maliyet, sonlu stok, fiziksel giriş, ücretsiz iptal ve %75 kayıp sınırı korunur.
 

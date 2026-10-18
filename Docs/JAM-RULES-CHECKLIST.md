@@ -1,6 +1,6 @@
 # Too Late to Panic! - yarışma ve teslim kontrolü
 
-18 Ekim 2026. **Yerel hedef Home V5.9-r7 /0.5.9. Henüz hiçbir yarışma teslimi yapılmadı.** Bu liste GitHub/belge düzenlemesinin parçasıdır; form gönderimi veya uygunluk kararı değildir.
+18 Ekim 2026. **Yerel ve GitHub ön sürüm hedefi Home V5.9-r7 /0.5.9. Henüz hiçbir yarışma teslimi yapılmadı.** Bu liste GitHub/belge düzenlemesinin parçasıdır; form gönderimi veya uygunluk kararı değildir.
 
 ## Güncel dayanak ve eski bilgi ayrımı
 
@@ -29,8 +29,8 @@ Tarihsel kaynaklar: [resmî v05 PDF](https://game.ktimo.com.tr/assets/CIVIL_GAME
 | Oyuna özgü üretim zamanı / hazır kaynak ayrımı | v05 s.2 madde 1.3; s.3 madde 3.1 | Tarihli sözleşme/source manifest/receipt'ler | **AÇIK** - 16 Ekim 18.00 UTC+3 öncesi oyuna özgü çalışma varsa niteliğini açıklama; organizatör kararı varsayılmaz |
 | Yerel Windows paketi | Güncel duyuru; v05 s.3 madde 3.2 | `TooLateToPanic/LATEST-BUILD.json`, r7 teslim kaydı ve portable ZIP | **YEREL KANIT VAR** - Windows build/API/render; farklı makine ve insan turu ayrı |
 | Kurulum/kontrol/bilinen sınır metni | v05 s.9 A.3 | README, `TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md`, oyun içi F1 | **METİN HAZIR** - final paket adıyla son eşleştirme |
-| Oynanabilir ZIP'in yüklenmesi | Güncel duyuru | r7 yerel ZIP/SHA256; r5 public release ayrı | **YAPILMADI** - kullanıcı hiçbir şey göndermediğini belirtti; yükleme bu işin kapsamı değil |
-| Public Git kaynak repo / tam commit / aynı build | Güncel duyuru; v05 s.3 madde 3.6-3.7; s.9 A.2 | Önceki r5 yayın receipt'i; r7 kaynak/build manifestleri | **AÇIK** - seçilen final paketin eşleşen public tam commit'i ve hesapsız erişim kontrolü; dal/etiket kullanılmaz |
+| Oynanabilir ZIP'in yüklenmesi | Güncel duyuru | R7 yerel ZIP/SHA256 ve `v0.5.9-r7` GitHub ön sürümü; yarışma yüklemesi ayrı | **YAPILMADI** - kullanıcı hiçbir şey göndermediğini belirtti; yükleme bu işin kapsamı değil |
+| Public Git kaynak repo / tam commit / aynı build | Güncel duyuru; v05 s.3 madde 3.6-3.7; s.9 A.2 | [R7 yayın kaydı](../PUBLICATION.md), `v0.5.9-r7`, kaynak commit'i `a1cb8e2b6a790d3a16df8c2b0146bf316d74eee9`, eşleşen ZIP SHA256/boyutu | **GITHUB YAYIN KANITI VAR** - yarışma için seçilen final paket ve hesapsız erişim son kez kontrol edilir; forma tam kaynak commit'i girilir, sonraki belge commit'i kullanılmaz |
 | En fazla 60 s MP4/AVI video; ayrı yükleme | Güncel duyuru | Bu görevde doğrulanmış final video yok; 69 görüntü video değildir | **HAZIRLIK/YÜKLEME YAPILMADI** - oyun görüntüsü/fragman; süre/format ve final sürümü kontrol edilir |
 | Video dahil 180 s sahne planı | Güncel duyuru | `JAM-3-DAKIKA-SUNUM.md` taslağı | **PROVA NOT_RUN** - metin/prova tamamlandı demek değildir |
 | Hazır kaynakların tam beyanı | Güncel duyuru; v05 s.3 madde 3.3-3.5; s.9 A.4 | `ASSET-CREDITS.md`, oyuncu/HUD/ses/Yarkın provenansı; teslim beyanı | **AÇIK** - final dosya listesinde her kaynak/izin/kullanım/değişiklik eşleştirilsin |
@@ -44,7 +44,7 @@ Tarihsel kaynaklar: [resmî v05 PDF](https://game.ktimo.com.tr/assets/CIVIL_GAME
 ## Son teslimden önce temsilcinin yapacağı işler
 
 - [ ] Kesin takım/temsilci ve hak sahibi izinleri ile üretim zamanı açıklamaları tamamlandı.
-- [ ] Tek final oyun paketi seçildi; yerel r7 ile public r5 karıştırılmadı. Public Git'te aynı kaynak ve tam commit doğrulandı.
+- [ ] Tek final oyun paketi seçildi; R7 ön sürümünün tam kaynak commit'i `a1cb8e2b6a790d3a16df8c2b0146bf316d74eee9` ve ZIP kimliği son kez doğrulandı. R5 tarihsel tutuldu; sonraki belge commit'i paket kaynak kimliği yerine kullanılmadı.
 - [ ] Hazır kaynak tablosu, ham asset paylaşım koşulları ve son public ağacın gizli bilgi taraması tamamlandı.
 - [ ] Görsel/ses/kod/metin/diğer AI alanlarının hepsi doğru seçim ve ayrıntıyla doldurulmaya hazır; bilinmeyen araçlar açıklığa kavuştu.
 - [ ] Oynanabilir paket ZIP, ayrı video MP4/AVI; video en fazla 60 s ve oyun görüntüsü/fragman içeriyor. İkisinin sürümü kontrol edildi.

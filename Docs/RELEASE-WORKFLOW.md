@@ -19,6 +19,8 @@ Bu düzen bütün sonraki güncellemeler için geçerlidir. Yarışmaya gönderi
 8. **Kaynak ve paket ilişkisini belirt.** Kaynak commit'i, varsa release tag commit'i ve ZIP digest'ini ayrı yaz. Belge güncellemesi veya ilerideki kaynak snapshot'ı mevcut paketin yeniden test edildiği anlamına gelmez. Etiketli oyun paketi immutable kalır.
 9. **Sonra eski çıktıyı temizle.** Yeni paket açılıp ilgili kontrol geçtikten sonra yalnız artık kullanılmayan build/ZIP'leri kaldır. Önce mutlak hedefleri, süreç bağımlılıklarını ve reparse noktalarını doğrula; küçük metin/hash/receipt/lisans kayıtlarını koru. Çalışan player'ın klasörü istisnadır. Normal durumda Builds'te tek güncel build + tek portable ZIP kalır.
 
+Oynanabilir paket yayımlanırken önce draft release oluşturulur ve asset digest/boyutu yerel ZIP ile eşleştirilir; sonra uygun ön sürüm/stable durumu ile görünür yapılır. `requiresUserPlaytest` açık olan paket ön sürüm olarak işaretlenir. README, PUBLICATION ve LATEST gerçek doğrulanmış indirme bağlantısıyla birlikte güncellenir. Etiket kabul edilmiş kaynak commit'inde sabit kalır; daha sonraki belge commit'i için taşınmaz. Eski release/tag/asset korunur.
+
 ## Belge güncellemesi
 
 Yalnız README/yarışma/dizin değiştiyse yeni oyun build'i gerekmez. Mevcut kaynak, DLL ve ZIP kimlikleri korunur; belge değişikliği ayrı commit ve makbuzla izlenir. Manifestin kapsadığı bir kaynak dosyası değişirse eski kaynak eşleşmesi yeni dosyaya aktarılmaz.

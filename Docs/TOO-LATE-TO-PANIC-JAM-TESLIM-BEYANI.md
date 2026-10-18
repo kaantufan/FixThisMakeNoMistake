@@ -1,6 +1,6 @@
 # Too Late to Panic! - CIVIL GAME JAM teslim beyanı
 
-18 Ekim 2026. **Güncel yerel aday: Home V5.9-r7 /0.5.9.** Kullanıcı açıklamasına göre **henüz hiçbir yarışma teslimi yapılmadı**; bu görevin kapsamı GitHub ve proje belgelerinin düzenlenmesidir. Takım bilgisi, üretim zamanı, hak sahipliği ve aşağıdaki açık alanlar temsilci tarafından doğrulanmalıdır.
+18 Ekim 2026. **Güncel yerel ve GitHub ön sürüm adayı: Home V5.9-r7 /0.5.9.** Kullanıcı açıklamasına göre **henüz hiçbir yarışma teslimi yapılmadı**; bu görevin kapsamı GitHub ve proje belgelerinin düzenlenmesidir. Takım bilgisi, üretim zamanı, hak sahipliği ve aşağıdaki açık alanlar temsilci tarafından doğrulanmalıdır.
 
 Güncel teslim dayanağı, kullanıcının **18 Ekim 2026'da doğrudan ilettiği resmî organizasyon duyurusu** ve [etkinlik sitesi](https://game.ktimo.com.tr/)'dir. Duyuruya göre teslim **18 Ekim 12.00-18.15 UTC+3**, takım PIN'iyle yapılır. Video **en fazla 1 dakika**, oyun görüntüsü veya fragman olabilir; **MP4/AVI** olarak oynanabilir **ZIP'ten ayrı yüklenir**. Toplam sahne süresi **video dahil 3 dakika**; sunum performansı puanlanmaz, jüri oyunu izler ve oynar. Public Git kaynak reposu gerekir; web bağlantısı yalnız web build içindir. AI'nin görsel/ses/kod/metin/diğer kategorileri ayrı Kullanıldı/Kullanılmadı seçimi ve ayrıntıyla bildirilir; hazır kaynaklar ayrıca beyan edilir. Yüklemelerden sonra doğrulama ve makbuz kontrol edilir.
 
@@ -30,22 +30,22 @@ Oyuncu önce evi yukarıdan okuyup hangi riske para ve zaman ayıracağını se�
 
 Yerel aday kimliğinin kaynağı [LATEST-BUILD.json](../TooLateToPanic/LATEST-BUILD.json) ve [V5.9-r7 teslim kaydı](../TooLateToPanic/Documentation/HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md)'dır.
 
-| Alan | Doğrulanmış yerel değer / açık durum |
+| Alan | Doğrulanmış yerel/yayın değeri / açık durum |
 |---|---|
 | Yerel EXE | `TooLateToPanic/Builds/Home-V5.9-r7-20261018/TooLateToPanic.exe` |
 | Yerel DLL SHA256 | `68BB4573E7ECC81250E2EB17488DF92987F3B0CFF2129C0CCA21C8B954AB5F29` |
 | Yerel ZIP SHA256 | `7A9031DBE96EA6FD291FED2911A0FCE1825F015A4997D017BEB1F93F4EC3D3A9` |
 | Yerel ZIP boyutu | 215.324.804 bayt |
 | Public repo adresi | [kaantufan/FixThisMakeNoMistake](https://github.com/kaantufan/FixThisMakeNoMistake) - son teslim anında erişim yeniden doğrulanacak |
-| Önceki yayın kaydı | `v0.5.9-r5`, tam commit `873422231245baf6f354c8a3a80220e6006e2c54`; r7 değildir |
+| Tarihsel önceki yayın kaydı | `v0.5.9-r5`, tam commit `873422231245baf6f354c8a3a80220e6006e2c54`; R5 release/tag/asset'i korunur |
 | Önceki r5 ZIP SHA256 | `4738918CAF0BC26150ACC5F72C331D2648633661EB32708677F75D67DF9EAFBF` |
-| r7 GitHub paket bağlantısı | **OLUŞTURULMADI** - bu güncelleme kaynak/belge snapshot'ıdır; R7 yerel paket olarak korunur. Windows için yarışma ZIP yüklemesi ayrıca yapılır. |
-| r7 ile eşleşen kaynak commit'i | Bu kaynak snapshot'ının tam commit'i: `git rev-parse HEAD`. [Yayın kaydı](../PUBLICATION.md) ve [213 C#/shader hash eşlemesi](../TooLateToPanic/Documentation/Publications/repository-layout-2026-10-18/source-and-build.json). Yarışma için seçilen paketle tam commit son kez doğrulanır. |
+| r7 GitHub paket bağlantısı | [v0.5.9-r7 ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r7) · [Windows portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.9-r7/TooLateToPanic-Home-V5.9-r7-20261018-portable.zip); kullanıcı oynanış testi bekler. GitHub ZIP'i yerel R7 SHA256 ve boyutuyla eşleşir. Windows için yarışma ZIP yüklemesi ayrıca yapılır. |
+| r7 ile eşleşen kaynak commit'i | `a1cb8e2b6a790d3a16df8c2b0146bf316d74eee9`; `v0.5.9-r7` etiketi bu kabul edilmiş kaynakta sabittir. [Yayın kaydı](../PUBLICATION.md) ve [tarihsel 213 C#/shader hash eşlemesi](../TooLateToPanic/Documentation/Publications/repository-layout-2026-10-18/source-and-build.json). Bu belgenin sonraki commit'i paket kaynak commit'i yerine kullanılmaz; yarışma için seçilen paketle tam commit son kez doğrulanır. |
 | En fazla 1 dakikalık video | **HAZIRLANDIĞI DOĞRULANMADI** - MP4 veya AVI, oyun görüntüsü/fragman; ZIP'ten ayrı yüklenir |
 | Oynanabilir ZIP yüklemesi | **YAPILMADI** - kullanıcının açık beyanı |
 | Yarışma teslim makbuzu | **YOK** - kullanıcının açık beyanına göre henüz teslim yok |
 
-Önceki yayın bilgisi yerel `TLTP-GITHUB-AUTOPUSH-20261017/checks/20261018T100013Z/publication-state.json` kaydından gelir; güncel ağ erişimi testi değildir. `20261018T102014Z/user-stop-receipt.json`, otomatik yayının kullanıcı tarafından durdurulduğunu ve r7 yayınının tamamlanmadığını kaydeder. Yerel r7 kabulü, r5 release'ine veya eski `v0.4.13` release'ine aktarılmaz. Forma seçilen oynanabilir paketle eşleşen **tam commit** girilir (v05 s.3 madde 3.7; s.9 A.2).
+Güncel R7 ön sürümü [GitHub sürüm kaydı](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r7), tam kaynak commit'i ve yukarıdaki ZIP kimliğiyle bağlıdır. Önceki R5 bilgisi `TLTP-GITHUB-AUTOPUSH-20261017/checks/20261018T100013Z/publication-state.json` içinde tarihsel olarak korunur. `20261018T102014Z/user-stop-receipt.json`, o önceki otomatik yayın denemesinin kullanıcı tarafından durdurulduğunu kaydeder; otomatik takip yeniden başlatılmadı. R7 bu ayrı, doğrudan yetkilendirilmiş yayın işlemidir. R5 release/tag/asset'i ve önceki stable/latest `v0.4.13` korunur. R7 kabulü eski release'lere aktarılmaz. Forma seçilen oynanabilir paketle eşleşen **tam commit** girilir (v05 s.3 madde 3.7; s.9 A.2); sonraki belge commit'i yeni build veya test sayılmaz.
 
 ## Hazır kaynak ve üretim beyanı
 
