@@ -69,3 +69,8 @@ Home V4.7 son dış dünya eki: dere yatağı/akışPNGsi/foam, Sgaraj yolu ve k
 
 
 Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zamanlı kesintisiz rota + 189/189 regresyon,0runtime hata. Kısa akış49.67sn, dört doğal simülasyon; test Warp/Tick/hile0. Üretim API girdisi, OS/insan keyif kabulü değildir. LATEST ve HOME-V4.8-DELIVERY-2026-10-17.md yeniDLL/manifesti bağlar; eskiV4.7 açıkoyun korunur.
+
+
+## Home V5.10 — 18 Ekim 2026
+
+OpenAI Codex ile stok durumuna bağlı loot yüzey shaderı, yakınlık/bakış otomatik hedef seçimi, ilk dalga yönlendirme kodu ve Türkçe arayüz metinleri geliştirildi. Yeni görsel model, dış ses kaydı veya üçüncü taraf asset eklenmedi. Yeni sağlayıcı/kredi/ödeme kullanımı 0; önceki kaynakların lisans ve provenansı korunur. Kod/metin ve prosedürel shader beyanı bu sürüme dahildir.

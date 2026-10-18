@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -388,7 +388,8 @@ namespace TooLateToPanic
                 else
                 {
                     MovePlayer(dt, ReadMove());
-                    focusClock -= dt; if (focusClock <= 0) { focusClock = BagFirstPersonActive ? .035f : .12f; RefreshFocus(false); }
+                    if (BagFirstPersonActive) { focusClock -= dt; if (focusClock <= 0) { focusClock = .035f; RefreshFocus(false); } }
+                    else RefreshFocus(false);
                     DispatchWorldInput(new[] { KeyCode.E, KeyCode.F, KeyCode.Q, KeyCode.T, KeyCode.Z, KeyCode.X, KeyCode.Space, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Tab, KeyCode.B, KeyCode.PageUp, KeyCode.PageDown }.Where(Input.GetKeyDown), Input.GetMouseButtonDown(0), hud.PointerOverUi);
                     if (!BagFirstPersonActive && !IsMoving && Mathf.Abs(Input.mouseScrollDelta.y) > .1f && !hud.PointerOverUi) cameraSize = Mathf.Clamp(cameraSize - Input.mouseScrollDelta.y * .35f, 4, 10);
                 }
@@ -409,12 +410,14 @@ namespace TooLateToPanic
             gatherPoseTime = Mathf.Max(0, gatherPoseTime - dt);
             TickHouseAudio();
             TickExperienceFeedbackV414(dt);
+            TickFirstWaveOnboardingV510();
             TickGuidanceV54();
             if (hud) hud.TickSecondaryAlertV55(dt);
         }
 
         void LateUpdate()
         {
+            TickLootSourceShimmerV510();
             TickNotebookLocalGlowV59();
             if (!hero || !animator || Model.IsPaused || Model.WaveLedgerOpenV56 || Model.KeyboardHelpOpenV56 || NotebookBlocksInput) return;
             if (ApplyCinematicCharacterPoseV414()) return;
@@ -494,30 +497,7 @@ namespace TooLateToPanic
         }
 
         void RefreshFocus(bool cycle)
-        {
-            if (BagFirstPersonActive) { RefreshBagRayFocus(); return; }
-            // Candidate membership uses the reachable surface, not a long wall's origin.
-            // A blocked selected object stays selected until it leaves range or Q/click changes it.
-            Physics.SyncTransforms();
-            focusCandidates.Clear();
-            foreach (var item in Model.Items)
-                if (item.Id != "bagstation" && item.Installed && (item.Kind == ItemKind.Roof || SameLevel(item.Position)) &&
-                    !(BagFinalStageActive && Expedition.Sources.Exists(source => source.Id == item.Id)) && InteractionDistance(item.Id) < 2.8f) focusCandidates.Add(item.Id);
-            if (!BagFinalStageActive) foreach (var source in Expedition.Sources)
-                if (SameLevel(source.Position) && InteractionDistance(source.Id) < 2.8f && !focusCandidates.Contains(source.Id)) focusCandidates.Add(source.Id);
-            if (!BagFinalStageActive) foreach (var site in gardenSites)
-                if (!site.done && InteractionDistance(site.id) < 2.8f) focusCandidates.Add(site.id);
-            foreach (var pair in residenceTargets)
-                if (pair.Value && SameLevel(ResidenceFocusPosition(pair.Value)) && InteractionDistance(pair.Key) < 2.8f && !focusCandidates.Contains(pair.Key)) focusCandidates.Add(pair.Key);
-            if (!items.ContainsKey("bunker") && InteractionDistance("@bunker") < 2.8f) focusCandidates.Add("@bunker");
-            if (BagFinalStageActive) foreach (var supply in Expedition.WorldSupplies)
-                if (supply.Count > 0 && supply.Floor == ActiveFloor && InteractionDistance(supply.Id) < 2.4f) focusCandidates.Add(supply.Id);
-            focusCandidates.Sort((a, b) => { int score = FocusScore(a).CompareTo(FocusScore(b)); return score != 0 ? score : string.CompareOrdinal(a, b); });
-            var available = focusCandidates.Where(id => PositionOf(id, out var point) && InteractionPathClear(id, point)).ToList();
-            if (cycle && available.Count > 0) SetFocus(available[(available.IndexOf(focusId) + 1) % available.Count]);
-            else if (!focusCandidates.Contains(focusId)) SetFocus(available.Count > 0 ? available[0] : null);
-            UpdateContext();
-        }
+        { RefreshAutomaticFocusCoreV510(cycle); }
         bool SameLevel(Vector3 p) { return Mathf.Abs(p.y - (ActiveFloor * 3.2f)) < .9f; }
         float DistanceTo(string id) { return InteractionDistance(id); }
         float FocusScore(string id) { var data = Model.Items.Find(i => i.Id == id); return DistanceTo(id) + (data != null && data.Kind == ItemKind.Roof ? 3 : data != null && data.Kind == ItemKind.Wall ? .35f : 0); }
@@ -631,6 +611,7 @@ namespace TooLateToPanic
             focusId = id;
             if (Selected != null && items.TryGetValue(Selected.Id, out var next)) PanicArt.SetSelected(next, true);
             UpdateContext();
+            ObserveExplicitFocusV510();
         }
         void UpdateContext()
         {
@@ -841,13 +822,21 @@ namespace TooLateToPanic
             if (Model.Phase != PanicPhase.Title && Model.Phase != PanicPhase.GameOver) Model.ReturnToTitle();
             Model.StartRun(tutorial); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; focusId = null; InventoryOpen = false; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); effects.OnPhase(Model.Phase); QueueRadio(DisasterVoiceId());
             ResetAssistantV55();
+            ResetFirstWaveOnboardingV510();
             if (hud) hud.ResetSecondaryAlertV55();
             ResetOverhaulRunV414(); BeginIntroStoryV414();
             if (hud) hud.BeginFreeplayOnboardingV414();
         }
-        public void FinishTutorial() { CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); QueueRadio(DisasterVoiceId()); }
+        public void FinishTutorial()
+        {
+            CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife();
+            previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f));
+            ResetAssistantV55(); ResetFirstWaveOnboardingV510();
+            SyncVisuals(true); QueueRadio(DisasterVoiceId());
+            if (hud) hud.BeginFreeplayOnboardingV414();
+        }
         public void FinishInspection() { if (JuryActive) AdvanceJuryDemo(); else if (Model.IsSimulation) ReturnToMenu(); else Model.FinishInspection(); }
-        public void ReturnToMenu() { ClearNotebookTargetV57(); if(hud)hud.ResetKeyboardHelpPresentationV56(); if(hud)hud.CloseSimulationSelector(); ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation(); CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
+        public void ReturnToMenu() { ClearFirstWaveOnboardingV510(); ClearNotebookTargetV57(); if(hud)hud.ResetKeyboardHelpPresentationV56(); if(hud)hud.CloseSimulationSelector(); ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation(); CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
         void ClearGarden() { foreach (var s in gardenSites) { s.done = false; s.marker.SetActive(true); if (s.built) Destroy(s.built); s.built = null; } }
         public void Warp(Vector3 p) { controller.enabled = false; player.position = p; controller.enabled = true; gravitySpeed = -2; desiredVelocity = Vector3.zero; }
         public void SmokeMove(Vector2 direction, float dt) { MovePlayer(dt, direction); }

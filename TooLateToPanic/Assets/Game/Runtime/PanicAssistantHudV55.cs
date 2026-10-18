@@ -22,6 +22,7 @@ namespace TooLateToPanic
         {
             get
             {
+                if (World && World.FirstWaveOnboardingRequiredV510) return false;
                 if (!World || World.Model == null || !World.AssistantEnabledV55 || World.HasNotebookTargetV57 || !World.GuidanceVisibleV54 ||
                     _paused || _developerMenuOpen || _helpVisible || DeveloperInputBlockedThisFrame ||
                     FreeplayOnboardingInputBlockedV414 || World.NotebookBlocksInput || World.CinematicActive || World.LossAnnounced ||

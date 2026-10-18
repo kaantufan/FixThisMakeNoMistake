@@ -87,6 +87,7 @@ foreach ($path in @($selected)) {
 $includeDirectories = @('TooLateToPanic\Packages', 'TooLateToPanic\ProjectSettings', 'TooLateToPanic\Documentation', 'Docs', 'Tools')
 foreach ($relative in $includeDirectories) {
     foreach ($file in @(Get-ChildItem -LiteralPath (Join-Path $source $relative) -Recurse -File -Force)) {
+        if ($file.FullName -match '[\\/](__pycache__|\.pytest_cache)[\\/]' -or $file.Extension -in @('.pyc', '.pyo')) { continue }
         [void]$selected.Add($file.FullName)
     }
 }
@@ -118,7 +119,7 @@ $manifest = [ordered]@{
     generatedDependencyAssets = $neededGenerated.Count
     generatedGroups = $generatedGroups
     missingGuids = @($missing)
-    excluded = @('TooLateToPanicFPS/', '.claude/', 'Evidence/', '**/Library/', '**/Temp/', '**/Logs/', '**/Builds/', '**/UserSettings/', 'persistent saves and scores', 'Assets/Game/Deferred/Radio-legacy/ (unverified synthesized-audio redistribution terms)', 'unreferenced historical generated meshes/materials')
+    excluded = @('TooLateToPanicFPS/', '.claude/', 'Evidence/', '**/__pycache__/', '**/.pytest_cache/', '*.pyc/*.pyo', '**/Library/', '**/Temp/', '**/Logs/', '**/Builds/', '**/UserSettings/', 'persistent saves and scores', 'Assets/Game/Deferred/Radio-legacy/ (unverified synthesized-audio redistribution terms)', 'unreferenced historical generated meshes/materials')
     notes = @('No local source or build files are removed.', 'No Git or remote mutations are performed.', 'Local metadata paths in historical docs/LATEST-BUILD remain original; evidence directories are not published.', 'Quaternius vendor files and both CC0 notices are preserved.', 'This static GUID closure is not a fresh Unity import/build test. Root must run after source freeze and verify current build separately.')
     files = $entries
 }

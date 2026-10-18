@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -291,6 +291,7 @@ namespace TooLateToPanic
         }
         void ResetResidenceLife()
         {
+            ResetAutoFocusV510();
             residenceAftermathWaveV56 = -1; ResidenceAftermathSetupCountV56 = 0;
             if (hud) hud.CancelFreeplayOnboardingV414();
             InventoryIndex=0;AnchorMode="wall";focusId=null;

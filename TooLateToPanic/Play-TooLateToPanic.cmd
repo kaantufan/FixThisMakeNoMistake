@@ -1,2 +1,2 @@
 @echo off
-start "Too Late to Panic! V5.9" "%~dp0Builds\Home-V5.9-r7-20261018\TooLateToPanic.exe"
+start "Too Late to Panic! V5.10" "%~dp0Builds\Home-V5.10-r2-20261018\TooLateToPanic.exe"

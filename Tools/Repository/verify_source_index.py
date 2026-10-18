@@ -90,7 +90,7 @@ def main():
                     preserved_adaptations.add(rel)
     adapted = set(args.allow_adaptation)
     assert adapted <= set(selected)
-    forbidden = {"library", "temp", "logs", "build", "builds", "obj", "usersettings", "evidence", "toolatetopanicfps", ".codex", ".claude", "saves"}
+    forbidden = {"library", "temp", "logs", "build", "builds", "obj", "usersettings", "evidence", "toolatetopanicfps", ".codex", ".claude", "saves", "__pycache__", ".pytest_cache"}
     secret = re.compile(rb"(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,}|sk-[A-Za-z0-9_-]{32,}|AKIA[0-9A-Z]{16}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)")
     yaml_suffixes = {".meta", ".prefab", ".unity", ".asset", ".mat", ".controller", ".anim", ".shader", ".overrideController", ".asmdef", ".asmref"}
     guids, refs, expected = {}, set(), []
@@ -99,7 +99,7 @@ def main():
         for rel, oid in sorted(index.items()):
             path = PurePosixPath(rel)
             assert not {x.lower() for x in path.parts} & forbidden, rel
-            assert not path.name.startswith(".env") and path.suffix.lower() not in {".pem", ".key", ".pfx", ".exe", ".dll", ".zip", ".7z"}, rel
+            assert not path.name.startswith(".env") and path.suffix.lower() not in {".pem", ".key", ".pfx", ".exe", ".dll", ".zip", ".7z", ".pyc", ".pyo"}, rel
             assert not (path.name.lower().startswith(("highscore", "score-profile", "audio-profile")) and path.suffix.lower() == ".json"), rel
             batch.stdin.write((oid + "\n").encode())
             batch.stdin.flush()

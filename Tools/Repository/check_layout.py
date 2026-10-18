@@ -3,9 +3,32 @@ from pathlib import Path
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 from urllib.parse import unquote
+
+
+def running_executable(pid):
+    """Read-only Windows identity check for the explicitly preserved old player."""
+    if os.name != 'nt':
+        return None
+    import ctypes
+    from ctypes import wintypes
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    handle = kernel.OpenProcess(0x1000, False, int(pid))
+    if not handle:
+        return None
+    try:
+        buffer = ctypes.create_unicode_buffer(32768)
+        size = wintypes.DWORD(len(buffer))
+        return Path(buffer.value).resolve() if kernel.QueryFullProcessImageNameW(handle, 0, buffer, ctypes.byref(size)) else None
+    finally:
+        kernel.CloseHandle(handle)
 
 
 def main():
@@ -65,8 +88,18 @@ def main():
         exe, archive = project / latest['executable'], project / latest['portableZip']
         dll = exe.parent / 'TooLateToPanic_Data/Managed/Assembly-CSharp.dll'
         allowed = {exe.parent.resolve(), archive.resolve()}
+        # Working policy protects an already running user's old player. An index
+        # declaration alone cannot exempt a stale folder: verify PID + exact EXE.
+        for preserved in latest.get('preservedRunningBuilds', []):
+            old_exe = (project / preserved['executable']).resolve()
+            if not old_exe.is_relative_to((project / 'Builds').resolve()) or old_exe.name != 'TooLateToPanic.exe':
+                errors.append('Invalid preserved old-player path')
+            elif running_executable(preserved['pid']) != old_exe:
+                errors.append('Preserved build no longer has its declared running player: ' + str(old_exe))
+            else:
+                allowed.add(old_exe.parent)
         if {p.resolve() for p in (project / 'Builds').iterdir()} != allowed:
-            errors.append('Builds must contain only the current build and portable ZIP')
+            errors.append('Builds must contain current build/ZIP plus verified running-player exceptions only')
         for path, expected in [(archive, latest['portableZipSha256']), (dll, latest['assemblyCSharpSha256'])]:
             if not path.is_file():
                 errors.append('Missing current artifact: ' + str(path))

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -85,7 +85,7 @@ namespace TooLateToPanic
                 (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial || manualTarget && Model.Phase == PanicPhase.Inspection) &&
                 !Model.IsPaused && !NotebookBlocksInput && !InputLocked && !CinematicActive && !LossAnnounced &&
                 !BagCameraTransitionActive && !InventoryOpen && !WorkActive && !IsMoving && JuryAllowsMovement &&
-                (AssistantEnabledV55 || manualTarget) && !(hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
+                (AssistantEnabledV55 || manualTarget || FirstWaveOnboardingRequiredV510) && !(hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
         }
 
         // Hook once at the end of the normal Update, after hinges/visibility and actual model progress.
@@ -138,6 +138,11 @@ namespace TooLateToPanic
             foreach (var s in Expedition.WorldSupplies) b.Append('|').Append(s.Id).Append(':').Append(s.Count);
             foreach (var h in hinges) if (h.Value.directionalDoor) b.Append('|').Append(h.Key).Append(':').Append(h.Value.open);
             if (JuryActive && JurySnapshot != null) b.Append('|').Append(JurySnapshot.TargetId).Append('|').Append(JurySnapshot.Hint);
+            if (FirstWaveOnboardingRequiredV510)
+            {
+                var first = FirstWaveOnboardingV510;
+                b.Append("|FIRST:").Append((int)first.Step).Append(':').Append(first.TargetId).Append(':').Append(first.Fallback);
+            }
             return b.ToString();
         }
 
@@ -148,6 +153,7 @@ namespace TooLateToPanic
             GuidanceObjectiveLabelV54 = "Önlemlerini gözden geçir";
             guidanceGoalsV54.Clear(); guidancePlanGroupsV54.Clear(); guidanceNoRouteV54 = "Açık yolu kontrol et";
             // A notebook mark is navigation only; it cannot select or operate a remote object.
+            if (QueueFirstWaveGuidanceV510()) return;
             if (HasNotebookTargetV57)
             {
                 Vector3 point = NotebookTargetPositionV57;

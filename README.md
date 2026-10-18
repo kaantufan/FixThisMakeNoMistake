@@ -1,56 +1,17 @@
 # Too Late to Panic!
 
-**Afet gelmeden önce hangi önlemi alacaksın?** KKTC · Güzelyurt · Kalkanlı'daki aile evini sınırlı zaman ve bütçeyle hazırla. Mobilyaları sabitle, tesisatı kapat, su ve gıda topla; afetin ardından kararlarının evdeki sonucunu gör. Yer gerçektir; kişiler ve afet olayları kurmacadır.
+Güncel yerel paket **Home V5.10-r2 /0.5.10**. KKTC · Güzelyurt · Kalkanlı'daki aile evini afet gelmeden hazırla. Yer gerçektir; kişiler ve afet olayları kurmacadır. Unity6000.0.73f1 · Built-In · Windows64 · çevrimdışı tek oyunculu.
 
-Unity 6000.0.73f1 · Built-In Render Pipeline · Windows 64-bit · çevrimdışı tek oyunculu.
+Kapaklı stoklar alınıncaya kadar parlar. Yakın ve karakterin baktığı yöndeki uygun nesne otomatik seçilir; Q isteğe bağlı hedef değiştirir. İlk dalgada kapatılamayan rehber gerçek malzeme → sabitleme → tesisat → su → gıda → sığınak adımlarını gösterir.
 
-## Oyna
+Normal90s önlem+40s FPS/erzak, başlangıç1500bütçe. İlk dalga Deprem; ikinci Sel+Fırtına; sonrası RNG. Her dalga1su+1gıda. Selde üst panik odasına, diğer afetlerde bodrum sığınağına fiziksel gir. %75ve üzeri hasar kayıptır.
 
-Güncel yerel ve GitHub ön sürüm paketi **Home V5.9-r7 / 0.5.9**: [R7 sürüm notları](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r7) · [Windows ZIP'ini indir](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.9-r7/TooLateToPanic-Home-V5.9-r7-20261018-portable.zip). Çalışma alanında [başlatıcıyı](Play-TooLateToPanic.cmd) kullanın. İndirilen Windows ZIP'ini tamamen çıkarıp `TooLateToPanic.exe` dosyasını veri klasörleriyle birlikte çalıştırın. Kaynak deposu oyun paketini içermez. R7 kullanıcı oynanış testi bekleyen bir ön sürümdür.
+WASD/oklar hareket, Shift koşu, Space zıplama; E etkileşim, F erzak;1sabitleme. Fareyle gerçek iş hareketlerini uygula. Tab envanter, J defter, F1tuşlar, Esc duraklat. F2/F3 kullanımı skor dışıdır.
 
-Normal kampanyada **90 saniye önlem + 40 saniye erzak/FPS**, başlangıç bütçesi **1500**. İlk dalga Deprem, ikinci dalga Sel + Fırtına; sonraki dalgalarda afetler rastgele seçilir. Her dalgada ortak 20 yuvalı envanterden bir su ve bir gıda kullanılır. Sel varsa üst kattaki panik odasına, diğer afetlerde oyunun bodrum sığınağına fiziksel olarak ulaşın. %75 ve üzeri hasar kayıptır. Bu kurallar oyun tasarımıdır; gerçek afetlerde resmî kurumların yönlendirmesi izlenmelidir.
+[Başlatıcı ](Play-TooLateToPanic.cmd) · [Güncel kimlik](TooLateToPanic/LATEST-BUILD.json) · [Teslim kaydı](TooLateToPanic/Documentation/HOME-V5.10-ONBOARDING-DELIVERY-2026-10-18.md) · [Yayın durumu](PUBLICATION.md)
 
-| Girdi | İşlev |
-| --- | --- |
-| WASD / oklar, Shift, Space | Hareket, koşma, zıplama |
-| E / F / Q | Etkileşim / malzeme-erzak alma / hedef değiştirme |
-| Tab / J | Envanter / hazırlık defteri |
-| Fare ve ekrandaki iş tuşları | Seçme, montaj ve tesisat işleri |
-| F1 / Esc | Tuş rehberi / duraklatma |
+472Editor ve138aynı DLL native API/render kontrolü geçti;10görüntü incelendi. OS girdisi ve insan oynanış/okunurluk/dinleme kabulü NOT_RUN. Açık önceki oyun korunur. Yeni paket GitHub'a henüz aktarılmadı; yayın durumu ayrıca kaydedilir.
 
-F2/F3 geliştirici seçenekleri kullanıldığında koşu skor dışı kalır. FPS yalnız erzak hazırlığı aşamasındadır; bağımsız eski FPS denemesi aktif ürün değildir.
+[Kaynak düzeni](CONTRIBUTING.md) · [Güncelleme düzeni](Docs/RELEASE-WORKFLOW.md) · [AI/asset/lisans](TooLateToPanic/Documentation/ASSET-CREDITS.md) · [Yarışma beyanı](Docs/TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md)
 
-## Sürüm ve doğrulama
-
-[LATEST-BUILD.json](TooLateToPanic/LATEST-BUILD.json), [R7 teslim kaydı](TooLateToPanic/Documentation/HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md) ve [yayın kaydı](PUBLICATION.md) kaynak, yerel build ve GitHub paketinin kimliğini ayrı gösterir.
-
-R7'de **472 Editor kontrolü** ve **524 aynı DLL native UI/yerel parlama kontrolü**, 69 incelenmiş görüntü ve 0 runtime hatası kayıtlıdır. Fiziksel OS girdisi, insan dinlemesi/okunurluğu ve 6–7 dalgalık insan kampanya kabulü **NOT_RUN**. Eski sürüm test sayıları bu pakete aktarılmaz.
-
-## Kaynak düzeni
-
-```text
-TooLateToPanic/
-  Assets/           Oyun kodu, sahne, sanat, ses ve kaynak lisansları
-  Packages/         Unity paket tanımları
-  ProjectSettings/  Unity proje ayarları
-  Documentation/    Teslim, asset ve lisans kayıtları
-  LATEST-BUILD.json  Güncel yerel paketin kimliği
-Docs/               Tasarım, yarışma beyanı ve çalışma düzeni
-Tools/              Üretim ve doğrulama araçları
-```
-
-Yerel `Builds/`, `Evidence/`, Unity cache'leri, kişisel kayıtlar ve korunan `TooLateToPanicFPS/` kaynak yayınına girmez. Yerel kaynaklar taşınmadan korunur; geçmiş manifestlerdeki yollar değiştirilmez.
-
-Unity Hub'dan **TooLateToPanic/** klasörünü tam olarak **6000.0.73f1** ile açın. Ana sahne `Assets/Game/Scenes/TooLateToPanicResidence.unity`; mevcut Windows üreticisi `TooLateToPanic.PanicResidenceBuild.Build` (`Too Late to Panic/Build Home V5` menüsü). Üretici sahne/asset oluşturabilir; kabul edilmiş kaynak üzerinde deneme amacıyla çalıştırmayın. Yeni build ayrı çıktı klasörüne alınır ve kontrol edilmeden LATEST'e geçirilmez.
-
-## Yarışma, AI ve kaynaklar
-
-[Teslim beyanı](Docs/TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md) · [Güncel kurallar ve kontrol listesi](Docs/JAM-RULES-CHECKLIST.md) · [Asset/lisans kayıtları](TooLateToPanic/Documentation/ASSET-CREDITS.md) · [Belge dizini](Docs/README.md).
-
-18 Ekim teslim duyurusuna göre video **en fazla 1 dakika**, MP4/AVI ve build ZIP'inden ayrı; sahne süresi video dahil **3 dakika**. Görsel, ses, kod, metin ve diğer alanlarının her birinde AI kullanımı ayrıca beyan edilir. Bu çalışma kapsamında yarışma formu gönderilmemiştir.
-
-Kaynaklarda ve prosedürel üretimde OpenAI Codex; takım asset üretiminde Antigravity; seçili ses/müzikte ElevenLabs; araştırma ve belgelerde Claude kullanımı kayıtlıdır. Quaternius, fontlar ve takım içi kaynakların lisans/provenansı ilgili dosyalardadır. Depodaki tüm içeriğe ortak bir MIT/CC0 lisansı atanmaz; açık lisans teyitleri teslim beyanında görünür.
-
-## Sonraki güncellemeler
-
-[CONTRIBUTING.md](CONTRIBUTING.md) ve [sürüm güncelleme düzeni](Docs/RELEASE-WORKFLOW.md) her değişiklikte uygulanır: kaynak kimliği, ayrı build, ilgili kontrol, tek güncel launcher/LATEST, sonra ayrı Git yayın kopyası. Oynanabilir sürüm, kaynak snapshot'ı ve yarışmaya teslim durumu birbirinden bağımsız kaydedilir.
+18Ekim duyurusu: video en fazla60s MP4/AVI ve ZIP'ten ayrı; sahne video dahil180s. Yarışma formu gönderilmedi. Kaynaklar/lisanslar/kayıtlar ve bağımsız FPS korunur. Cache, Evidence, Builds ve özel kayıtlar public kaynak yayınına girmez.

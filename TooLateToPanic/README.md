@@ -1,13 +1,17 @@
-# Too Late to Panic! — Unity projesi
+# Too Late to Panic!
 
-Güncel yerel ve GitHub ön sürümü **Home V5.9-r7 / 0.5.9**, Unity **6000.0.73f1**, Built-In, Windows64 ve çevrimdışı tek oyunculu. R7 kullanıcı oynanış testi bekler.
+Güncel yerel paket **Home V5.10-r2 /0.5.10**. KKTC · Güzelyurt · Kalkanlı'daki aile evini afet gelmeden hazırla. Yer gerçektir; kişiler ve afet olayları kurmacadır. Unity6000.0.73f1 · Built-In · Windows64 · çevrimdışı tek oyunculu.
 
-[Windows R7 ZIP'ini indir](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.9-r7/TooLateToPanic-Home-V5.9-r7-20261018-portable.zip) · [R7 sürüm notları](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r7) · [Oyunu başlat](Play-TooLateToPanic.cmd) · [Güncel kimlik](LATEST-BUILD.json) · [R7 teslimi](Documentation/HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md) · [Ana README](../README.md).
+Kapaklı stoklar alınıncaya kadar parlar. Yakın ve karakterin baktığı yöndeki uygun nesne otomatik seçilir; Q isteğe bağlı hedef değiştirir. İlk dalgada kapatılamayan rehber gerçek malzeme → sabitleme → tesisat → su → gıda → sığınak adımlarını gösterir.
 
-Normal kampanya 90 saniye önlem + 40 saniye erzak/FPS, başlangıç bütçesi 1500. İlk dalga Deprem, ikinci Sel + Fırtına; sonrası RNG. Selde üst panik odası, diğer afetlerde oyunun bodrum sığınağı kullanılır. Gerçek maliyet, sonlu stok, fiziksel giriş, ücretsiz iptal ve %75 kayıp sınırı korunur.
+Normal90s önlem+40s FPS/erzak, başlangıç1500bütçe. İlk dalga Deprem; ikinci Sel+Fırtına; sonrası RNG. Her dalga1su+1gıda. Selde üst panik odasına, diğer afetlerde bodrum sığınağına fiziksel gir. %75ve üzeri hasar kayıptır.
 
-WASD/oklar hareket, Shift koşma, Space zıplama; E etkileşim, F alma, Q hedef değiştirme; Tab envanter, J defter, F1 rehber, Esc duraklatma. İşlerin fare/tuş girdileri kendi ekranında gösterilir.
+WASD/oklar hareket, Shift koşu, Space zıplama; E etkileşim, F erzak;1sabitleme. Fareyle gerçek iş hareketlerini uygula. Tab envanter, J defter, F1tuşlar, Esc duraklat. F2/F3 kullanımı skor dışıdır.
 
-R7 için 472 Editor ve 524 aynı DLL native UI/yerel parlama kontrolü, 69 incelenmiş görüntü, 0 runtime hatası kayıtlıdır. OS girdisi, insan oynanış/dinleme/okunurluk ve kampanya kabulü NOT_RUN. Önceki sürümlerin sonuçları yeni DLL kabulü değildir.
+[Başlatıcı ](Play-TooLateToPanic.cmd) · [Güncel kimlik](LATEST-BUILD.json) · [Teslim kaydı](Documentation/HOME-V5.10-ONBOARDING-DELIVERY-2026-10-18.md) · [Yayın durumu](../PUBLICATION.md)
 
-Unity Hub'da bu klasörü açın. `Assets`, `Packages` ve `ProjectSettings` kaynak projenin çekirdeğidir. `Builds` yerel dağıtım alanı; `Library`, `Logs` ve `UserSettings` yerel Unity verileridir. [Lisanslar](Documentation/ASSET-CREDITS.md), [güncelleme düzeni](../Docs/RELEASE-WORKFLOW.md) ve [katkı kuralları](../CONTRIBUTING.md) korunur. Build ZIP'i Git kaynak ağacına eklenmez.
+472Editor ve138aynı DLL native API/render kontrolü geçti;10görüntü incelendi. OS girdisi ve insan oynanış/okunurluk/dinleme kabulü NOT_RUN. Açık önceki oyun korunur. Yeni paket GitHub'a henüz aktarılmadı; yayın durumu ayrıca kaydedilir.
+
+[Kaynak düzeni](../CONTRIBUTING.md) · [Güncelleme düzeni](../Docs/RELEASE-WORKFLOW.md) · [AI/asset/lisans](Documentation/ASSET-CREDITS.md) · [Yarışma beyanı](../Docs/TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md)
+
+18Ekim duyurusu: video en fazla60s MP4/AVI ve ZIP'ten ayrı; sahne video dahil180s. Yarışma formu gönderilmedi. Kaynaklar/lisanslar/kayıtlar ve bağımsız FPS korunur. Cache, Evidence, Builds ve özel kayıtlar public kaynak yayınına girmez.

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -54,7 +54,7 @@ namespace TooLateToPanic
         // Synchronize FIRST: the old Title->Preparing synchronizer otherwise releases our pause next frame.
         public bool BeginFreeplayOnboardingV414()
         {
-            if (!World || World.Model == null || _freeplayOnboardingSeenV414 || _freeplayOnboardingOpenV414 ||
+            if (!World || World.Model == null || (_freeplayOnboardingSeenV414 && !World.FirstWaveOnboardingRequiredV510) || _freeplayOnboardingOpenV414 ||
                 World.Model.Phase != PanicPhase.Preparing || World.Model.IsTutorial || World.Model.IsSimulation ||
                 World.Model.IsJuryDemo || World.JuryActive) return false;
             SynchronizeHudPhase();
@@ -208,10 +208,10 @@ namespace TooLateToPanic
             Fill(LogicalCanvasBounds, new Color32(10, 16, 21, 248));
             Frame(new Rect(44, 34, 1512, 842), new Color32(16, 25, 31, 255), new Color32(132, 149, 158, 255), 1);
             Region(LogicalCanvasBounds);
-            Label(new Rect(80, 57, 1050, 48), "Oyuna başlarken · Kontroller", _freeplayGuideTitleV414);
+            Label(new Rect(80, 57, 1050, 48), "İlk dalga · Aile evini depreme hazırla", _freeplayGuideTitleV414);
             Frame(new Rect(1172, 58, 352, 44), FreeplayKeyFillV414(1), FreeplayKeyEdgeV414(1), 1);
             Label(new Rect(1184, 63, 328, 34), "Duraklatıldı · " + FormatTime(World.Model.TimeRemaining), _freeplayGuideKeyWideV414);
-            Label(new Rect(82, 111, 1436, 31), "Önce evi hazırla, sonra çantanı hazırla ve sığınağa yetiş.", _freeplayGuideBodyV414);
+            Label(new Rect(82, 111, 1436, 31), "Ailen güvende. Sen evi koruyacaksın. İçeri gir; parlayan dolaba yaklaş ve E ile malzeme al.", _freeplayGuideBodyV414);
 
             Frame(new Rect(76, 154, 982, 610), new Color32(17, 27, 34, 255), new Color32(82, 102, 112, 255), 1);
             Frame(new Rect(1080, 154, 444, 610), new Color32(17, 27, 34, 255), new Color32(82, 102, 112, 255), 1);
@@ -249,22 +249,22 @@ namespace TooLateToPanic
             Label(new Rect(876, 474, 152, 30), "Hareket", _freeplayGuideMutedV414);
 
             FreeplayGuideLegendV414(new Rect(104, 534, 452, 42), "WASD / Oklar · Hareket et", 1);
-            FreeplayGuideLegendV414(new Rect(572, 534, 462, 42), "E · Etkileşim   Q · Hedef değiştir", 2);
+            FreeplayGuideLegendV414(new Rect(572, 534, 462, 42), "E · Etkileşim   Q · İsteğe bağlı hedef", 2);
             FreeplayGuideLegendV414(new Rect(104, 582, 452, 42), "Sol Shift · Koş  /  Space · Zıpla", 1);
             FreeplayGuideLegendV414(new Rect(572, 582, 462, 42), "F · Erzak al (son 40 sn)", 2);
             FreeplayGuideLegendV414(new Rect(104, 630, 930, 42), "Tab · Envanter     J · Defter     F1 · Tuşlar     Esc · Duraklat", 3);
             Label(new Rect(104, 681, 930, 28), "1 · Sabitle    3 · Kat duvarlarını güçlendir    Space · İşte vur", _freeplayGuideMutedV414);
             Label(new Rect(104, 718, 930, 32), "Fare: hedef seç · FPS'te fareyle bak, E/F ile erzak al.", _freeplayGuideMutedV414);
 
-            FreeplayGuideStepV414(new Rect(1096, 208, 412, 142), 1, "90 sn · Önlem",
-                "Malzeme topla, eşyaları sabitle.\nDuvar ve tesisatı güvene al.");
-            FreeplayGuideStepV414(new Rect(1096, 364, 412, 158), 2, "Son 40 sn · Çanta",
-                "Kamera otomatik FPS olur.\nE/F ile 1 su + 1 gıda al.");
-            FreeplayGuideStepV414(new Rect(1096, 536, 412, 158), 3, "Süre dolmadan · Sığınak",
-                "Selde üst kat panik odasına çık.\nDiğer afetlerde bodruma in; E ile gir.");
-            Label(new Rect(1100, 714, 408, 34), "Rehber açıkken süre durur.", _freeplayGuideMutedV414);
+            FreeplayGuideStepV414(new Rect(1096, 208, 412, 142), 1, "ŞİMDİ · Malzeme al",
+                "WASD ile eve gir.\nParlayan dolaba yaklaş; E ile al.");
+            FreeplayGuideStepV414(new Rect(1096, 364, 412, 158), 2, "SONRA · Eşyayı sabitle",
+                "Mobilyaya yaklaş ve ona dön.\n1 ile işe gir; iki vidayı çevir.");
+            FreeplayGuideStepV414(new Rect(1096, 536, 412, 158), 3, "40 sn · Topla ve sığın",
+                "FPS’te 1 su + 1 gıda al.\nBodruma in; E ile sığınağa gir.");
+            Label(new Rect(1100, 714, 408, 34), "İlk dalgada adım kartı hep yanında.", _freeplayGuideMutedV414);
 
-            Button(new Rect(76, 782, 1448, 58), "Anladım, başla · Enter / Esc", true, new Color32(255, 211, 138, 255), () => ConfirmFreeplayOnboardingV414());
+            Button(new Rect(76, 782, 1448, 58), "Evi hazırlamaya başla · Enter / Esc", true, new Color32(255, 211, 138, 255), () => ConfirmFreeplayOnboardingV414());
             Label(new Rect(84, 846, 1420, 26), PanicKktcStoryV53.ModeShelterBridgeV56, _freeplayGuideMutedV414);
             Event e = Event.current;
             if (e.type == EventType.KeyDown || e.type == EventType.KeyUp)

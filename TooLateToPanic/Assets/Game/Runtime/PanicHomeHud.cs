@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -387,7 +387,7 @@ namespace TooLateToPanic
                 else DrawContext();
                 DrawSimulationActions();
                 DrawTutorialActions();
-                if (_helpVisible && !World.LootVisible && (World.Model.Phase == PanicPhase.Tutorial || World.Model.Phase == PanicPhase.Preparing))
+                if (_helpVisible && !World.FirstWaveOnboardingRequiredV510 && !World.LootVisible && (World.Model.Phase == PanicPhase.Tutorial || World.Model.Phase == PanicPhase.Preparing))
                     DrawHelpCard();
                 if (World.Model.Phase == PanicPhase.Disaster) DrawDisasterCue();
                 if (RequirementsCardVisible) DrawRequirements();
@@ -396,6 +396,7 @@ namespace TooLateToPanic
 
             if (!WaveLedgerInputBlockedV56 && !KeyboardHelpBlockingV56)
             {
+                DrawFirstWaveOnboardingV510();
                 DrawSelectedTargetHudV56();
                 DrawAssistantHudV55();
                 DrawNotebookCursorV59();

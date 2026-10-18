@@ -29,6 +29,7 @@ namespace TooLateToPanic
         public bool TryGetNotebookGlowStateV59(out string id, out Bounds bounds, out int floor)
         {
             id = string.Empty; bounds = new Bounds(); floor = 0;
+            if (FirstWaveOnboardingRequiredV510) return TryGetFirstWaveLocalGlowV510(out id, out bounds, out floor);
             if (!isActiveAndEnabled || !player || !View || !View.isActiveAndEnabled ||
                 !hud || !hud.NotebookCursorVisibleV59 ||
                 !TryGetNotebookCursorTargetV59(out id, out var label, out bounds, out floor)) return false;
