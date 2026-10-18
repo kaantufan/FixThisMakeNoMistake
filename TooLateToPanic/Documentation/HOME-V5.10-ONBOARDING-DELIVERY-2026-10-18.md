@@ -20,3 +20,7 @@ Fiziksel OS girdisi, insan oynanış/okunurluk/dinleme/konfor ve tüm kampanya k
 | Build manifesti | `6749E913F274451E358B2C0F38DC7792AE0EB126A5ABD9B5101A5F798176C164` |
 
 [Başlatıcı](../Play-TooLateToPanic.cmd) · [Portable ZIP](../Builds/TooLateToPanic-Home-V5.10-r2-20261018-portable.zip) · [Güncel indeks](../LATEST-BUILD.json)
+
+## GitHub yayını
+
+[v0.5.10-r2](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.10-r2) ve [doğrulanmış ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/untagged-425de225332e83db1a80/TooLateToPanic-Home-V5.10-r2-20261018-portable.zip) yayımlandı. Kabul edilmiş kaynak commit’i `4cd9f6377aeb46ef969642f0ad4ee6be655cfbdb`; GitHub ZIP digest/boyutu yerel paketle eşleşir. Belge güncellemeleri yeni native test değildir. Eski release/tag/asset ve stable v0.4.13 korunur.

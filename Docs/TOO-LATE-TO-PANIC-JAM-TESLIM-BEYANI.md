@@ -1,6 +1,6 @@
 # Too Late to Panic! - CIVIL GAME JAM teslim beyanı
 
-18 Ekim 2026. **Güncel yerel aday: Home V5.10-r2 /0.5.10; GitHub güncellemesi hazırlanıyor.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
+18 Ekim 2026. **Güncel yerel aday: Home V5.10-r2 /0.5.10; [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.10-r2) doğrulandı.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
 
 Güncel teslim dayanağı, kullanıcının **18 Ekim 2026'da doğrudan ilettiği resmî organizasyon duyurusu** ve [etkinlik sitesi](https://game.ktimo.com.tr/)'dir. Duyuruya göre teslim **18 Ekim 12.00-18.15 UTC+3**, takım PIN'iyle yapılır. Video **en fazla 1 dakika**, oyun görüntüsü veya fragman olabilir; **MP4/AVI** olarak oynanabilir **ZIP'ten ayrı yüklenir**. Toplam sahne süresi **video dahil 3 dakika**; sunum performansı puanlanmaz, jüri oyunu izler ve oynar. Public Git kaynak reposu gerekir; web bağlantısı yalnız web build içindir. AI'nin görsel/ses/kod/metin/diğer kategorileri ayrı Kullanıldı/Kullanılmadı seçimi ve ayrıntıyla bildirilir; hazır kaynaklar ayrıca beyan edilir. Yüklemelerden sonra doğrulama ve makbuz kontrol edilir.
 
@@ -35,7 +35,7 @@ Oyuncu önce evi yukarıdan okuyup hangi riske para ve zaman ayıracağını se�
 | EXE | `TooLateToPanic/Builds/Home-V5.10-r2-20261018/TooLateToPanic.exe` |
 | DLL SHA256 | `051DBAC0DEBED777D7483581E530DA72E38955C51730FB568FCCA01CA3FA78C2` |
 | ZIP SHA256 / bayt | `1D93A5AE013942BB4A1DAD5ED64061E26F143C4564D8D6CA468E6538159918BA` / 215343480 |
-| Public kaynak / oynanabilir paket | Yeni yayın hazırlanıyor; [yayın kaydı](../PUBLICATION.md) kaynak commit'i ve paket kimliğini ayırır |
+| Public kaynak / oynanabilir paket | [v0.5.10-r2](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.10-r2) · [ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/untagged-425de225332e83db1a80/TooLateToPanic-Home-V5.10-r2-20261018-portable.zip); tam kaynak commit’i `4cd9f6377aeb46ef969642f0ad4ee6be655cfbdb`. [Yayın kaydı](../PUBLICATION.md) |
 | Önceki yayın | v0.5.9-r7 ve eski release/tag/asset'leri korunur |
 | Teknik sonuç | 472 Editor / 138 native API/render / 10 incelenmiş görüntü; OS/insan kabulü NOT_RUN |
 | Video /180s prova | Final video veya prova kabulü NOT_RUN |

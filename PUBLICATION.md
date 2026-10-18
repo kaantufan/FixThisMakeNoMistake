@@ -1,14 +1,17 @@
 # Kaynak ve oynanabilir paket durumu
 
-Güncel yerel paket **Home V5.10-r2 /0.5.10**. [LATEST](TooLateToPanic/LATEST-BUILD.json) ve [teslim kaydı](TooLateToPanic/Documentation/HOME-V5.10-ONBOARDING-DELIVERY-2026-10-18.md) yeni DLL'yi bağlar. Yeni kaynak ve paket GitHub yayını hazırlanıyor; bu belge henüz yapılmış yayın iddiası taşımaz.
+**Home V5.10-r2 /0.5.10 yayımlandı.** [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.10-r2) · [Windows portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/untagged-425de225332e83db1a80/TooLateToPanic-Home-V5.10-r2-20261018-portable.zip). ZIP'i tamamen çıkarıp `TooLateToPanic.exe` dosyasını çalıştırın. [Yerel indeks](TooLateToPanic/LATEST-BUILD.json) ve [teslim kaydı](TooLateToPanic/Documentation/HOME-V5.10-ONBOARDING-DELIVERY-2026-10-18.md) teknik kabulü bağlar.
 
-| Kimlik | Değer |
+| Kimlik | Doğrulanmış değer |
 |---|---|
+| Kabul edilmiş kaynak commit'i | [`4cd9f6377aeb46ef969642f0ad4ee6be655cfbdb`](https://github.com/kaantufan/FixThisMakeNoMistake/commit/4cd9f6377aeb46ef969642f0ad4ee6be655cfbdb) |
+| Sabit etiket | `v0.5.10-r2` |
 | DLL SHA256 | `051DBAC0DEBED777D7483581E530DA72E38955C51730FB568FCCA01CA3FA78C2` |
 | ZIP SHA256 | `1D93A5AE013942BB4A1DAD5ED64061E26F143C4564D8D6CA468E6538159918BA` |
-| ZIP bayt | 215343480 |
-| Yeni kaynak commit / tag | Yayınlanmadı |
+| ZIP boyutu | 215343480 bayt |
 
-Önceki doğrulanmış [v0.5.9-r7 ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r7), kaynak `a1cb8e2b6a790d3a16df8c2b0146bf316d74eee9` ve önceki stable v0.4.13 korunur. Eski ZIP veya test sayıları yeni DLL'nin kanıtı değildir.
+Draft release'e yüklenen ZIP'in GitHub digest/boyutu yerel değişmez paketle eşleştirildi; ardından ön sürüm görünür yapıldı. Önceki v0.5.9-r7 release/tag/asset kimlikleri ve stable/latest v0.4.13 korundu. Force push veya eski etiket taşıma yapılmadı. [Kaynak/build kaydı](TooLateToPanic/Documentation/Publications/v0.5.10-r2/source-and-build.json) ve [yayın makbuzu](TooLateToPanic/Documentation/Publications/v0.5.10-r2/release.json) ayrı tutulur.
 
-Bu sürüm 472 Editor / 138 aynı DLL native API/render kontrolü ve 10 incelenmiş framebuffer ile bağlıdır. OS girdisi, insan oynanış/okunurluk/dinleme/konfor ve tüm kampanya kabulü NOT_RUN. Yarışma sistemine gönderim yapılmadı; yeni sağlayıcı harcaması yoktur.
+Bu sürüm 472 Editor /138 aynı DLL native API/render kontrolü ve10 incelenmiş framebuffer ile bağlıdır. OS girdisi, insan oynanış/okunurluk/dinleme/konfor ve tüm kampanya kabulü NOT_RUN. Kaynak yayını ayrıca GUID kapanımı, altı runtime shader materyali, byte/index, gizli bilgi/LFS/büyük dosya ve dışlanan yol kontrolünden geçti. Bu yayın/belge işlemi yeni oyun testi değildir. Bu dosyanın sonraki belge commit'i yukarıdaki kabul edilmiş kaynak commit'inden farklı olabilir; tag kaynak commit'inde sabit kalır.
+
+Yeni sağlayıcı/kredi/ödeme yoktur. Yarışma formuna gönderim yapılmadı. Kaynak ve asset lisansları kendi dosyalarında korunur.

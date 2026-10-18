@@ -82,7 +82,7 @@
   "newProviderCredits": 0,
   "newPayment": 0,
   "legacyFpsProjectTouched": false,
-  "publishedToGitHub": false,
+  "publishedToGitHub": true,
   "previousDelivered": {
     "version": "Home V5.9 /0.5.9 /r7",
     "executable": "Builds/Home-V5.9-r7-20261018/TooLateToPanic.exe",
@@ -119,5 +119,34 @@
     "Declared actor/view/clock/wave fixtures and API actions; no OS input or natural physical route.",
     "Human readability, listening, comfort and campaign acceptance NOT_RUN."
   ],
-  "preservedRunningBuilds": []
+  "preservedRunningBuilds": [],
+  "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.10-r2",
+  "downloadUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/untagged-425de225332e83db1a80/TooLateToPanic-Home-V5.10-r2-20261018-portable.zip",
+  "publication": {
+    "kind": "VERIFIED_MATCHING_SOURCE_AND_PLAYABLE_PRERELEASE",
+    "sourceCommit": "4cd9f6377aeb46ef969642f0ad4ee6be655cfbdb",
+    "releaseTag": "v0.5.10-r2",
+    "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.10-r2",
+    "downloadUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/untagged-425de225332e83db1a80/TooLateToPanic-Home-V5.10-r2-20261018-portable.zip",
+    "releasePrerelease": true,
+    "releaseDraft": false,
+    "portableZipSha256": "1D93A5AE013942BB4A1DAD5ED64061E26F143C4564D8D6CA468E6538159918BA",
+    "portableZipBytes": 215343480,
+    "remoteZipDigest": "sha256:1d93a5ae013942bb4a1dad5ed64061e26f143c4564d8d6ca468e6538159918ba",
+    "sourceAndBuildRecord": "Documentation/Publications/v0.5.10-r2/source-and-build.json",
+    "releaseReceipt": "Documentation/Publications/v0.5.10-r2/release.json",
+    "verifiedUtc": "2026-10-18T11:22:03.357924+00:00",
+    "newBuildOrNativeRunForPublication": false,
+    "stableReleasePreserved": "v0.4.13",
+    "previousReleasePreserved": "v0.5.9-r7",
+    "documentationCommitMayDifferFromSourceCommit": true,
+    "competitionSubmitted": false
+  },
+  "maintenance": {
+    "cleanupReceipt": "../Evidence/GamejamOrchestra/TLTP-ONBOARDING-V510-20261018/manager/cleanup-receipt.json",
+    "oldPlayerInputOrTermination": false,
+    "oldPlayerObservedAtEnd": false,
+    "realProfilesPreserved": true,
+    "singleCurrentBuildAndZip": true
+  }
 }
