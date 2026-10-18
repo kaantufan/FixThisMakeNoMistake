@@ -8,7 +8,7 @@ namespace TooLateToPanic
 {
     public sealed partial class PanicHomeWorld
     {
-        public static readonly Vector3 PanicRoomPositionV5 = new Vector3(4.2f, 3.2f, .55f);
+        public static readonly Vector3 PanicRoomPositionV5 = new Vector3(7.84f, 3.2f, -2.35f);
         public bool UsesUpperPanicRoomV5 { get { return Model != null && Model.HasActiveDisasterV54(DisasterType.Flood); } }
         public Vector3 ActiveShelterPositionV5 { get { return UsesUpperPanicRoomV5 ? PanicRoomPositionV5 : BunkerPosition; } }
         public string ActiveShelterLabelV5 { get { return UsesUpperPanicRoomV5 ? "Üst kat panik odası" : "Bodrum sığınağı"; } }
@@ -22,7 +22,8 @@ namespace TooLateToPanic
                 int food = Mathf.Max(0, PanicModel.RequiredSupplyPerWave - Model.PackedFood);
                 string missing = water > 0 ? water + " su" : string.Empty;
                 if (food > 0) missing += (missing.Length > 0 ? " + " : string.Empty) + food + " gıda";
-                return missing.Length > 0 ? "E · Afeti başlat · Eksik: " + missing : "E · Hazırlığı bitir, afeti başlat";
+                string action = UsesUpperPanicRoomV5 ? "E · Panik odasını kilitle" : "E · Sığınağa gir";
+                return missing.Length > 0 ? action + " · Eksik: " + missing : action;
             }
         }
         public int MainsLightCountV5 { get { return mainsLightsV5.Count; } }
@@ -221,18 +222,11 @@ namespace TooLateToPanic
             var benchCollider=room.AddComponent<BoxCollider>();benchCollider.center=new Vector3(0,.4f,0);benchCollider.size=new Vector3(2.65f,.78f,.62f);
             floorItems.Add(room);residenceObstacles.Add(benchCollider);
             var marker = new GameObject("@panicroom");marker.transform.position=PanicRoomPositionV5;
-            var sign=new B();
-            sign.Box(new Vector3(0,1.35f,0),new Vector3(.62f,.52f,.08f),M.Olive,.025f);
-            sign.Box(new Vector3(0,1.35f,-.046f),new Vector3(.54f,.44f,.015f),M.Linen,.015f);
-            sign.Box(new Vector3(0,1.28f,-.058f),new Vector3(.055f,.18f,.014f),M.Olive,.003f);
-            sign.Beam(new Vector3(-.12f,1.4f,-.058f),new Vector3(0,1.52f,-.058f),.035f,M.Olive);
-            sign.Beam(new Vector3(0,1.52f,-.058f),new Vector3(.12f,1.4f,-.058f),.035f,M.Olive);
-            sign.Box(new Vector3(0,.65f,.02f),new Vector3(.045f,1.3f,.045f),M.Charcoal,.006f);
-            sign.Box(new Vector3(0,.035f,.02f),new Vector3(.35f,.07f,.26f),M.Charcoal,.015f);
-            sign.Attach(marker,"flood_refuge_sign");
+            marker.transform.rotation=Quaternion.Euler(0,90,0);
             var pick=marker.AddComponent<HomePick>();pick.Id="@panicroom";pick.Kind="shelter";
             var hit=marker.AddComponent<BoxCollider>();hit.center=new Vector3(0,1.35f,0);hit.size=new Vector3(.64f,.54f,.10f);
             residenceTargets["@panicroom"]=marker;floorItems.Add(marker);
+            BuildPanicRoomAffordanceV514(marker);
             panicRoomBeaconV5=new GameObject("Panic room battery emergency lamp").AddComponent<Light>();
             panicRoomBeaconV5.transform.position=PanicRoomPositionV5+new Vector3(0,1.72f,0);
             panicRoomBeaconV5.type=LightType.Point;panicRoomBeaconV5.range=3;panicRoomBeaconV5.color=new Color(.55f,1f,.69f);panicRoomBeaconV5.intensity=.25f;
@@ -259,7 +253,7 @@ namespace TooLateToPanic
             if(focusId!="@panicroom"&&focusId!="bunker"&&focusId!="@bunker")return false;
             bool correct=UsesUpperPanicRoomV5?focusId=="@panicroom":focusId!="@panicroom";
             FocusLabel=focusId=="@panicroom"?"Üst kat panik odası":"Bodrum sığınağı";
-            ShortAction=correct?(BagFinalStageActive?"Afeti başlat":"Çanta aşamasını bekle"):"Diğer güvenli alana git";
+            ShortAction=correct?(BagFinalStageActive?(UsesUpperPanicRoomV5?"Panik odasını kilitle":"Sığınağa gir"):"Çanta aşamasını bekle"):"Diğer güvenli alana git";
             ContextHint=correct?ActiveShelterEntryHintV56:
                 UsesUpperPanicRoomV5?"Sel: üst kat panik odasını kullan":"Bu afette bodrum sığınağını kullan";
             return true;
@@ -286,6 +280,7 @@ namespace TooLateToPanic
                 renderer.SetPropertyBlock(mainsBlockV5);mainsBlockV5.Clear();
             }
             if(panicRoomBeaconV5)panicRoomBeaconV5.enabled=UsesUpperPanicRoomV5&&Model.Phase!=PanicPhase.Title;
+            TickPanicRoomAffordanceV514();
         }
     }
 

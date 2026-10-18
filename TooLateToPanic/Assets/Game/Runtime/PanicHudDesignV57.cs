@@ -138,6 +138,8 @@ namespace TooLateToPanic
             Fill(new Rect(804, 449, 6, 2), MainText);
             Fill(new Rect(799, 440, 2, 6), MainText);
             Fill(new Rect(799, 454, 2, 6), MainText);
+            // The wall button carries its own label; the retained small key bubble is enough.
+            if (World.PanicRoomButtonFocusedV514) return;
             if (string.IsNullOrEmpty(World.FocusLabel)) return;
             const float width = 500f, textWidth = 468f;
             float hintHeight = Mathf.Max(26, uiMessageV57.CalcHeight(new GUIContent(World.ContextHint ?? ""), textWidth));

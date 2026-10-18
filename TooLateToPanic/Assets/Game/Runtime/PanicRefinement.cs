@@ -72,6 +72,9 @@ namespace TooLateToPanic
         bool SelectionMeshVisible(Renderer renderer)
         {
             return renderer && renderer.enabled && renderer.gameObject.activeInHierarchy && !(renderer is LineRenderer) && !(renderer is ParticleSystemRenderer) &&
+                // The emergency button already has its own high-contrast color and lettering.
+                // Preserve those while the retained marker/pole can still receive target glow.
+                !(panicRoomAffordanceV514 && renderer.transform.IsChildOf(panicRoomAffordanceV514.transform)) &&
                 (renderer is MeshRenderer || renderer is SkinnedMeshRenderer) && (View.cullingMask & (1 << renderer.gameObject.layer)) != 0;
         }
 

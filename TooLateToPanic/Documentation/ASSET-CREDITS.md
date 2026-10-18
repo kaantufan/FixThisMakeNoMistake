@@ -99,3 +99,8 @@ OpenAI Codex ile normal otomatik tam ekran başlangıcı ve nesne üzerinde kü�
 ## Home V5.13-r7 — 18 Ekim 2026
 
 OpenAI Codex ile kritik görevler ve ilk dalga yönlendirmesini birlikte açıp kapatan tek rehber düğmesi geliştirildi. Başlangıçta iki rehber kartı kompakt kapalıdır. Üst kartın ceza/koşu sonu açıklamaları ve footer kaldırıldı; ilk dalga kartı kısa başlık/tek cümle/eylem-konum gösterir. Pasif F2 Dev Mod / F3 Skip Wave tuş kapakları ve 310 px sağ hedef menüsü de Codex ile düzenlendi. Mevcut görev ilerleyişi, küçük nesne tuş balonu ve otomatik tam ekran korunur. Yeni dış görsel/model/shader/ses kaydı, sağlayıcı kredisi veya ödeme yoktur.
+
+
+## Home V5.14-r3 — 18 Ekim 2026
+
+OpenAI Codex ile üst panik odasının duvarındaki büyük "Panik odasını kilitle" butonu, üstünde yanıp sönen kırmızı alarm, gerçek tuş istemi, ilgili kod, Türkçe metin ve kontroller düzenlendi. Özgün derinlik testli alfa font shader ve Resources/HUD materyali ile beyaz yazı kontrastı düzeltildi. Yeni dış görsel/model/shader/ses kaydı, sağlayıcı kredisi veya ödeme yoktur. Mevcut asset/lisans/provenans kayıtları korunur.

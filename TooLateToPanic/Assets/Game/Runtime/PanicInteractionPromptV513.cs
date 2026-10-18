@@ -16,7 +16,7 @@ namespace TooLateToPanic
             {
                 bool correct = UsesUpperPanicRoomV5 ? focusId == "@panicroom" : focusId != "@panicroom";
                 if (!bag || !correct) return false;
-                key = "E"; verb = "Güvenli alana gir";
+                key = "E"; verb = focusId == "@panicroom" ? "Panik odasını kilitle" : "Güvenli alana gir";
             }
             else if (BagFirstPersonActive)
             {

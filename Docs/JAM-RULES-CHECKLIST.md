@@ -1,17 +1,17 @@
 # Too Late to Panic! — yarışma ve teslim kontrolü
 
-18 Ekim 2026. Yerel güncel paket **Home V5.13-r7 /0.5.13**; [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r7) doğrulandı. **Yarışma sistemine gönderim yapılmadı.** Güncel kurallar kullanıcının doğrudan ilettiği organizasyon duyurusudur; bu belge yeni form/hesap/yükleme kontrolü değildir.
+18 Ekim 2026. Yerel güncel paket **Home V5.14-r3 /0.5.14**; GitHub güncellemesi hazırlanıyor. **Yarışma sistemine gönderim yapılmadı.** Güncel kurallar kullanıcının doğrudan ilettiği organizasyon duyurusudur; bu belge yeni form/hesap/yükleme kontrolü değildir.
 
 | Konu | Güncel koşul / durum |
 |---|---|
 | Teslim aralığı | 18 Ekim 12.00–18.15 UTC+3, takım PIN'iyle; bu görev form göndermez |
-| Oynanabilir paket | Windows ZIP; yerel kimlik [LATEST](../TooLateToPanic/LATEST-BUILD.json) ve [teslim](../TooLateToPanic/Documentation/HOME-V5.13-CRITICAL-DELIVERY-2026-10-18.md) içinde |
-| Public kaynak ve tam commit | [Yayın kaydı](../PUBLICATION.md); tam kaynak commit’i `a0b531679e0b292f74ba227fda53b19fecb10c08` |
-| Video | Ayrı yerel60s video kaydı korunur; bu kaynak/ZIP yayını video yüklemesi veya yeni V5.13 video kabulü değildir |
+| Oynanabilir paket | Windows ZIP; [LATEST](../TooLateToPanic/LATEST-BUILD.json) ve [teslim](../TooLateToPanic/Documentation/HOME-V5.14-PANIC-ROOM-DELIVERY-2026-10-18.md) |
+| Public kaynak ve tam commit | [Yayın kaydı](../PUBLICATION.md); yeni paketle eşleşen tam kaynak commit'i yayın sonrası yazılır |
+| Video | Ayrı yerel 60 sn video kaydı korunur; bu kaynak/ZIP yayını video yüklemesi veya yeni V5.14 video kabulü değildir |
 | Sahne | Video dahil toplam180 saniye; prova NOT_RUN |
 | AI kategorileri | Görsel/ses/kod/metin/diğer ayrı açıklanır; [beyan](TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md) |
 | Hazır kaynaklar | [Asset/lisans kayıtları](../TooLateToPanic/Documentation/ASSET-CREDITS.md); hak sahibi/ham asset paylaşım izinleri temsilci tarafından doğrulanır |
-| Teknik kabul | 810 Editor, 425 aynı DLL native API/render, 14 incelenmiş görüntü; ayrıca 291 aynı DLL sunum kontrolü/12 kare, 10 tam ekran gözlemi/1 kare; OS/insan kabulü NOT_RUN |
+| Teknik kabul | Yeni Editor kontrolü NOT_RUN; 122 aynı DLL native API/render kontrolü, 15 incelenmiş kare. OS girdisi/insan oynanış, okunurluk, dinleme, konfor ve tam kampanya kabulü NOT_RUN. |
 | Kesin takım/temsilci/üretim zamanı | Temsilci doğrulaması açık; geliştirme rol kaydı resmî katılım onayı değildir |
 | Form yükleme/doğrulama/makbuz | YAPILMADI; GitHub yayını yarışma gönderimi değildir |
 

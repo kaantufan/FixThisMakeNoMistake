@@ -1,6 +1,6 @@
 # Too Late to Panic! - CIVIL GAME JAM teslim beyanı
 
-18 Ekim 2026. **Güncel yerel aday: Home V5.13-r7 /0.5.13; [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r7) doğrulandı.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
+18 Ekim 2026. **Güncel yerel aday: Home V5.14-r3 /0.5.14; GitHub güncellemesi hazırlanıyor.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
 
 Güncel teslim dayanağı, kullanıcının **18 Ekim 2026'da doğrudan ilettiği resmî organizasyon duyurusu** ve [etkinlik sitesi](https://game.ktimo.com.tr/)'dir. Duyuruya göre teslim **18 Ekim 12.00-18.15 UTC+3**, takım PIN'iyle yapılır. Video **en fazla 1 dakika**, oyun görüntüsü veya fragman olabilir; **MP4/AVI** olarak oynanabilir **ZIP'ten ayrı yüklenir**. Toplam sahne süresi **video dahil 3 dakika**; sunum performansı puanlanmaz, jüri oyunu izler ve oynar. Public Git kaynak reposu gerekir; web bağlantısı yalnız web build içindir. AI'nin görsel/ses/kod/metin/diğer kategorileri ayrı Kullanıldı/Kullanılmadı seçimi ve ayrıntıyla bildirilir; hazır kaynaklar ayrıca beyan edilir. Yüklemelerden sonra doğrulama ve makbuz kontrol edilir.
 
@@ -28,20 +28,20 @@ Oyuncu önce evi yukarıdan okuyup hangi riske para ve zaman ayıracağını se�
 
 ## Teslim sürümü ve yayın sınırı
 
-[LATEST](../TooLateToPanic/LATEST-BUILD.json) ve [V5.13-r7 teslim kaydı](../TooLateToPanic/Documentation/HOME-V5.13-CRITICAL-DELIVERY-2026-10-18.md) güncel yerel kimliktir.
+[LATEST](../TooLateToPanic/LATEST-BUILD.json) ve [V5.14-r3 teslim kaydı](../TooLateToPanic/Documentation/HOME-V5.14-PANIC-ROOM-DELIVERY-2026-10-18.md) güncel yerel kimliktir.
 
 | Alan | Güncel değer / açık durum |
 |---|---|
-| EXE | `TooLateToPanic/Builds/Home-V5.13-r7-20261018/TooLateToPanic.exe` |
-| DLL SHA256 | `813B2C2A5F3CF5035B25067755D0C39225FCE3B8ECE60A23261C530A910F8535` |
-| ZIP SHA256 / bayt | `FC148A55BE2F89ECDD643A38B8709C35E49EDFC32A0B4E9BA6A5AE8D6C110D23` / 215414127 |
-| Public kaynak / oynanabilir paket | [v0.5.13-r7](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r7) · [ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.13-r7/TooLateToPanic-Home-V5.13-r7-20261018-portable.zip); tam kaynak commit’i `a0b531679e0b292f74ba227fda53b19fecb10c08`. [Yayın kaydı](../PUBLICATION.md) |
-| Önceki yayın | v0.5.13-r6 ve eski release/tag/asset'ler korunur |
-| Teknik sonuç | 810 Editor / 425 native API/render / 14 incelenmiş görüntü; ayrıca 291 aynı DLL sunum kontrolü/12 kare, 10 tam ekran gözlemi/1 kare; OS/insan kabulü NOT_RUN |
+| EXE | `TooLateToPanic/Builds/Home-V5.14-r3-20261018/TooLateToPanic.exe` |
+| DLL SHA256 | `EE4581BCADE7FF44E3ACDA394391E561536761ACFAF0A365F4BEA5B6AA19A69D` |
+| ZIP SHA256 / bayt | `E97C68B5BB9989776889BEFE473981C9C1B4A9EF2BE724CB8F85EA3B768EF6F7` / 215427119 |
+| Public kaynak / oynanabilir paket | Yeni yayın hazırlanıyor; [yayın kaydı](../PUBLICATION.md) kaynak commit'i ve paket kimliğini ayırır |
+| Önceki yayın | v0.5.13-r7 ve release/tag/asset'ler, stable v0.4.13 korunur |
+| Teknik sonuç | Yeni Editor kontrolü NOT_RUN; 122 aynı DLL native API/render kontrolü, 15 incelenmiş kare. OS girdisi/insan oynanış, okunurluk, dinleme, konfor ve tam kampanya kabulü NOT_RUN. |
 | Video /180s prova | Ayrı video önceki R7 paketiyle bağlıdır; bu DLL için video/prova kabulü NOT_RUN |
 | Yarışma ZIP yüklemesi / makbuz | YAPILMADI |
 
-Bu sürümde kritik görevler ve ilk dalga yönlendirmesinin iki rehber kartı için başlangıçta kompakt kapalı, ortak aç/kapa düğmesi Codex ile geliştirildi. Üst kart açıklama/footer temizliği, pasif F2 Dev Mod / F3 Skip Wave etiketleri ve 310 px sağ hedef menüsü de aynı UI çalışmasıdır; gerçek input/model/maliyet değişmez. Önceki otomatik tam ekran, küçük nesne tuş balonu ve yinelenen sağ alt düğmenin kaldırılması korunur. Kritik görev/ek hasar, grup RNG/kademe kaybı, gerçek eylem tuşu ve yeni dalga duyurusu kodu; korunan panik odası prosedürel görsel detayları, kamera yönlendirmesi, mobilya sabitleme erişimi, yaşam döngüsü/uyarı kodu, Türkçe etiketleri ve kontrolleri Codex ile geliştirildi. Mevcut Yarkın radyo ve oda ekipmanı kendi provenansıyla kullanıldı; yeni dış model/shader/ses veya sağlayıcı kredisi kullanılmadı. Önceki AI kategorileri ve hazır kaynak lisans/provenansı aşağıdaki tablolarda korunur.
+OpenAI Codex ile üst panik odasının duvarındaki büyük "Panik odasını kilitle" butonu, üstünde yanıp sönen kırmızı alarm, gerçek tuş istemi, ilgili kod, Türkçe metin ve kontroller düzenlendi. Özgün derinlik testli alfa font shader ve Resources/HUD materyali ile beyaz yazı kontrastı düzeltildi. Yeni dış görsel/model/shader/ses kaydı, sağlayıcı kredisi veya ödeme yoktur. Mevcut asset/lisans/provenans kayıtları korunur. Üst panik odasının duvarındaki büyük "Panik odasını kilitle" butonu ve üstünde yanıp sönen kırmızı alarm gerçek E etkileşimini belirginleştirir. Önceki AI kategorileri ve hazır kaynak lisans/provenansı aşağıdaki tablolarda korunur.
 
 ## Hazır kaynak ve üretim beyanı
 
