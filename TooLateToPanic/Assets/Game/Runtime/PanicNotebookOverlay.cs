@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -50,7 +50,7 @@ namespace TooLateToPanic
         public Rect PageScreenBounds(PanicNotebookPage page) { Layout(); return ScreenRect(TabRect((int)page)); }
         public bool IntroVisibleV55 { get { return IsVisible && introOpenV55; } }
         public bool IntroSeenV55 { get { return introSeenV55; } }
-        public const string AssistantIntroTextV55 = "Ailen güvenli alanda. Sen Kalkanlı'daki aile evini afete hazırlıyorsun. Bu defter, gerçek ilerlemene bakarak sıradaki küçük adımı önerir. Adımları kendi hızında izle; başka bir önlem seçmekte özgürsün. Normal oyunda 90 saniye önlem, ardından 40 saniye çanta hazırlığı var. Defter açıkken süre durur. J veya Esc ile oyuna dön.";
+        public const string AssistantIntroTextV55 = "Ailen güvende. Kalkanlı'daki evini afete hazırla. Defterden önlemleri ve erzakları takip et. 90 saniye önlem, ardından 40 saniye çanta hazırlığı var. Defter açıkken süre durur. J / Esc ile dön.";
         public Rect IntroContinueScreenBoundsV55 { get { Layout(); return ScreenRect(OffsetToBookV55(IntroContinueRectV55)); } }
         public Rect AssistantToggleScreenBoundsV55 { get { Layout(); return ScreenRect(OffsetToBookV55(AssistantToggleRectV55)); } }
         public PanicNotebookPlanSnapshotV55 PlanSnapshotV55 { get { return planSnapshotV55; } }
@@ -326,25 +326,25 @@ namespace TooLateToPanic
         void DrawAssistantIntroV55()
         {
             float width = PageWidth - 56;
-            Label(new Rect(28, 35, width, 51), "EVİN İÇİN KÜÇÜK ADIMLAR", titleStyle, Ink);
+            Label(new Rect(28, 35, width, 51), "EVİNİ HAZIRLA", titleStyle, Ink);
             Fill(new Rect(28, 98, width, 2), Green);
-            Label(new Rect(28, 119, width, compact ? 114 : 137), "Ailen güvenli alanda. Sen Kalkanlı'daki aile evini afete hazırlıyorsun.", bodyStyle, Ink);
+            Label(new Rect(28, 119, width, compact ? 114 : 137), "Ailen güvende. Kalkanlı'daki evini afete hazırla.", bodyStyle, Ink);
             float y = compact ? 244 : 271;
-            Label(new Rect(28, y, width, 31), "BU DEFTER NE İŞE YARAR?", headingStyle, Green);
-            Label(new Rect(28, y + 43, width, compact ? 125 : 142), "Gerçek ilerlemene bakar ve sıradaki küçük adımı önerir. Tamamlanan işler burada işaretlenir; sonraki adım oyun ekranında kısaca görünür.", smallStyle, Ink);
-            Label(new Rect(28, compact ? 426 : 489, width, compact ? 70 : 102), "İstersen başka bir önlem seç. Yardımcı yalnızca yol gösterir; senin yerine iş yapmaz.", smallStyle, Green);
+            Label(new Rect(28, y, width, 31), "BU DEFTERDE", headingStyle, Green);
+            Label(new Rect(28, y + 43, width, compact ? 125 : 142), "Önlemlerini, erzaklarını ve ev planını takip et. Tamamladığın işler işaretlenir.", smallStyle, Ink);
+            Label(new Rect(28, compact ? 426 : 489, width, compact ? 70 : 102), "Yardımcı sıradaki adımı önerir. Önlemleri istediğin sırayla yapabilirsin.", smallStyle, Green);
             float right = compact ? 28 : PageWidth + 28;
             if (!compact)
             {
                 Label(new Rect(right, 35, width, 51), "DEFTERİ NASIL KULLANIRIM?", titleStyle, Ink);
                 Fill(new Rect(right, 98, width, 2), Green);
-                Label(new Rect(right, 122, width, 108), "Normal oyunda 90 saniye önlem al, ardından 40 saniyede çantanı hazırla. Defter açıkken süre durur.", smallStyle, Ink);
+                Label(new Rect(right, 122, width, 108), "90 saniye önlem + 40 saniye çanta. Defter açıkken süre durur.", smallStyle, Ink);
                 Label(new Rect(right, 256, width, 139), "J / Esc   Defteri kapat\n← / →   Sayfaları değiştir\nE   Aç / topla\nF   Erzak al (FPS)\nTab   Envanter", smallStyle, Ink);
-                Label(new Rect(right, 418, width, 96), "Krokiden eşya seç, OYUNDA GÖSTER'e bas. Oyuna dönünce eşyanın işaretini izle.", smallStyle, Green);
+                Label(new Rect(right, 418, width, 96), "Plandan hedef seç, OYUNDA GÖSTER'e bas. İşareti oyunda gör.", smallStyle, Green);
             }
             else Label(new Rect(28, 515, width, 156), "90 sn önlem + 40 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: aç / topla   ·   F: erzak (FPS)   ·   Tab: envanter\nKrokiden hedef seç: OYUNDA GÖSTER.", smallStyle, Ink);
             DrawButton(IntroContinueRectV55, "REHBERE GEÇ  ·  ENTER", Green, Paper, true);
-            Label(new Rect(right, Book.height - 44, width, 24), "Hazır olduğunda J ile evine dön.", tinyStyle, Green);
+            Label(new Rect(right, Book.height - 44, width, 24), "J ile oyuna dön.", tinyStyle, Green);
         }
 
         void DrawAssistantPageV55(float x, float width)
@@ -353,14 +353,14 @@ namespace TooLateToPanic
             bool enabled = world.AssistantEnabledV55;
             bool available = assistant.Available;
             Label(new Rect(x, 25, width, 43), "HAZIRLIK YARDIMCISI", titleStyle, Ink);
-            Label(new Rect(x, 74, width, 24), "GERÇEK İLERLEMEN  ·  DALGA " + snapshot.Wave, tinyStyle, Green);
+            Label(new Rect(x, 74, width, 24), "DALGA " + snapshot.Wave, tinyStyle, Green);
             Fill(new Rect(x, 101, width, 2), Green);
             Rect note = new Rect(x, 117, width, 123);
             Frame(note, enabled ? new Color(.92f, .94f, .86f) : PaperBack, Rule);
             Label(new Rect(x + 13, 126, width - 26, 25), !enabled ? "YARDIMCI KAPALI" : available ? assistant.Title : "HAZIRLIK NOTU", smallStyle, Green);
-            Label(new Rect(x + 13, 157, width - 26, 43), !enabled ? "Adımlar burada kalır. İstediğinde yeniden açabilirsin." : available ? assistant.Task : "Yeni hazırlık başladığında sıradaki adım burada görünecek.", smallStyle, Ink);
-            Label(new Rect(x + 13, 203, width - 26, 32), enabled && available ? assistant.Hint : "Seçimlerin ve oyun kuralları değişmez.", tinyStyle, Green);
-            Label(new Rect(x, 248, width, 24), "ADIM ADIM HAZIRLIK", tinyStyle, Green);
+            Label(new Rect(x + 13, 157, width - 26, 43), !enabled ? "İstediğinde yeniden açabilirsin." : available ? assistant.Task : "Sonraki hazırlıkta devam et.", smallStyle, Ink);
+            Label(new Rect(x + 13, 203, width - 26, 32), enabled && available ? assistant.Hint : "", tinyStyle, Green);
+            Label(new Rect(x, 248, width, 24), "HAZIRLIK ADIMLARI", tinyStyle, Green);
             var steps = assistant.Steps;
             int count = steps == null ? 0 : steps.Length;
             float rowHeight = compact ? 60 : 48;
@@ -391,9 +391,9 @@ namespace TooLateToPanic
                 DrawButton(CompactPlanSwitchRectV55, "EV PLANINA GEÇ", PaperBack, Ink, true); return;
             }
             GUI.BeginGroup(new Rect(0, 0, PageWidth, Book.height));
-            Label(new Rect(28, 25, PageWidth - 56, 43), PanicNotebookData.PageName(page).ToUpperInvariant(), titleStyle, Ink);
-            string sub = page == PanicNotebookPage.Rooms ? "EVİN GERÇEK KROKİSİ  ·  " + PanicNotebookData.FloorName(floor) :
-                page == PanicNotebookPage.Inventory ? "ENVANTER VE AFET ÇANTASI" : "OYUNDA TAMAMLANAN ÖNLEMLER";
+            Label(new Rect(28, 25, PageWidth - 56, 43), PanicNotebookData.Heading(PanicNotebookData.PageName(page)), titleStyle, Ink);
+            string sub = page == PanicNotebookPage.Rooms ? "KAT: " + PanicNotebookData.FloorName(floor) :
+                page == PanicNotebookPage.Inventory ? "ERZAK VE MALZEMELER" : "ÖNLEM DURUMU";
             Label(new Rect(28, 72, PageWidth - 56, 25), sub, tinyStyle, Green);
             Fill(new Rect(28, 97, PageWidth - 56, 2), Green);
             if (page == PanicNotebookPage.Rooms)
@@ -403,7 +403,7 @@ namespace TooLateToPanic
             }
             else if (page == PanicNotebookPage.Inventory) DrawInventory(data);
             else DrawChecks(page, data);
-            Label(new Rect(28, Book.height - 30, PageWidth - 56, 22), "KAYIT: CANLI OYUN     ·     S. " + ((int)page + 1).ToString("00"), tinyStyle, Green);
+            Label(new Rect(28, Book.height - 30, PageWidth - 56, 22), "SAYFA " + ((int)page + 1).ToString("00"), tinyStyle, Green);
             GUI.EndGroup();
         }
         void DrawChecks(PanicNotebookPage page, PanicNotebookSnapshot data)
@@ -419,10 +419,10 @@ namespace TooLateToPanic
                 Frame(new Rect(rect.x + 11, rect.y + 12, 23, 23), row.Complete ? Green : Paper, Ink);
                 if (row.Complete) Check(new Rect(rect.x + 16, rect.y + 15, 14, 15), Paper);
                 Label(new Rect(rect.x + 45, rect.y + 5, rect.width - 123, 28), row.Label, smallStyle, Ink);
-                Label(new Rect(rect.x + 45, rect.y + 30, rect.width - 63, rowH - 34), row.Detail, tinyStyle, Green);
+                Label(new Rect(rect.x + 45, rect.y + 30, rect.width - 63, rowH - 34), PanicNotebookData.CheckState(row) + " · " + row.Detail, tinyStyle, Green);
                 Label(new Rect(rect.xMax - 72, rect.y + 10, 62, 29), row.Total > 0 ? row.Done + "/" + row.Total : "—", centerStyle, row.Complete ? Green : Ink);
             }
-            Label(new Rect(28, Book.height - 62, PageWidth - 56, 31), "Tikler gerçek iş tamamlanınca güncellenir.", tinyStyle, Ink);
+            Label(new Rect(28, Book.height - 62, PageWidth - 56, 31), "Tamamlanan önlemler işaretlenir.", tinyStyle, Ink);
         }
         void DrawPlan(PanicNotebookSnapshot data)
         {
@@ -454,15 +454,15 @@ namespace TooLateToPanic
             {
                 var pin = data.Pins[i]; if (pin.Empty) empty++;
                 if (i < sourceOffset || i >= sourceOffset + VisibleSourceRows) continue;
-                string state = pin.Empty ? "BOŞ" : pin.Open ? "AÇIK" : "KAPALI";
+                string state = PanicNotebookData.PinState(pin);
                 Rect row = SourceRow(i - sourceOffset);
                 Frame(row, pin.Id == selectedSource ? new Color(.96f, .93f, .72f) : PaperBack, Rule);
-                Label(new Rect(row.x + 9, row.y + 4, row.width - 105, 27), (i + 1) + "  " + pin.Label, smallStyle, Ink);
-                Label(new Rect(row.xMax - 91, row.y + 5, 82, 25), state, tinyStyle, pin.Empty ? Green : Ink);
+                Label(new Rect(row.x + 9, row.y + 4, row.width - 123, 27), (i + 1) + "  " + pin.Label, smallStyle, Ink);
+                Label(new Rect(row.xMax - 109, row.y + 5, 100, 25), state, tinyStyle, pin.Empty ? Green : Ink);
             }
-            Label(new Rect(28, compact?PlanRect.yMax+90:Book.height - 116, PageWidth - 56, 22), "Kırmızı: sen  ·  Gri: duvar  ·  " + empty + "/"+data.Pins.Length+" boş" + (data.Pins.Length > VisibleSourceRows ? "  ·  Liste: tekerlek" : ""), tinyStyle, Green);
+            Label(new Rect(28, compact?PlanRect.yMax+90:Book.height - 116, PageWidth - 56, 22), "Kırmızı: sen  ·  Gri: duvar  ·  " + (data.Pins.Length - empty) + " kaynak kaldı" + (data.Pins.Length > VisibleSourceRows ? "  ·  Kaydır: tekerlek" : ""), tinyStyle, Green);
             bool marked = world && world.HasNotebookTargetV57 && world.NotebookTargetIdV57 == selectedSource;
-            DrawButton(InventoryRect, string.IsNullOrEmpty(selectedSource) ? "KROKİDEN BİR HEDEF SEÇ" : marked ? "İŞARETİ KALDIR" : "OYUNDA GÖSTER", string.IsNullOrEmpty(selectedSource) ? PaperBack : Green, string.IsNullOrEmpty(selectedSource) ? Ink : Paper, true);
+            DrawButton(InventoryRect, string.IsNullOrEmpty(selectedSource) ? "PLANDAN HEDEF SEÇ" : marked ? "İŞARETİ KALDIR" : "OYUNDA GÖSTER", string.IsNullOrEmpty(selectedSource) ? PaperBack : Green, string.IsNullOrEmpty(selectedSource) ? Ink : Paper, true);
         }
         Vector2 MapPoint(Vector3 position)
         {
@@ -557,23 +557,23 @@ namespace TooLateToPanic
             if (data == null) return;
             float x = PageWidth + 28, width = PageWidth - 56;
             if (animationState.RequestedPage == PanicNotebookPage.Rooms) { DrawAssistantPageV55(x, width); return; }
-            Label(new Rect(x, 25, width, 43), data.StoryTitle.ToUpperInvariant(), titleStyle, Ink);
+            Label(new Rect(x, 25, width, 43), PanicNotebookData.Heading(data.StoryTitle), titleStyle, Ink);
             Label(new Rect(x, 74, width, 24), "DALGA " + data.Wave + "  ·  " + data.Disaster + "  ·  " + data.Phase, tinyStyle, Green);
             Fill(new Rect(x, 101, width, 2), Green);
             Stat(new Rect(x, 118, width, 97), "HASAR", "%" + data.Damage.ToString("0"), Alarm);
             Fill(new Rect(x + 14, 201, width - 28, 5), Rule); Fill(new Rect(x + 14, 201, (width - 28) * data.Damage / 100, 5), Alarm);
             float half = (width - 12) / 2;
             Stat(new Rect(x, 228, half, 99), "BÜTÇE", data.Budget, Ink);
-            Stat(new Rect(x + half + 12, 228, half, 99), "ENVANTER YUVALARI", data.InventoryUsed + " / " + data.InventoryCapacity, Ink);
-            Label(new Rect(x, 340, width, 27), "MALZEME KAYDI", smallStyle, Green);
+            Stat(new Rect(x + half + 12, 228, half, 99), "ENVANTER", data.InventoryUsed + " / " + data.InventoryCapacity, Ink);
+            Label(new Rect(x, 340, width, 27), "MALZEMELER", smallStyle, Green);
             DrawMaterialRows(data, new Rect(x, 374, width, 111));
             Rect note = new Rect(x, 493, width, 109); Fill(new Rect(note.x + 3, note.y + 4, note.width, note.height), new Color(.15f, .18f, .14f, .1f)); Fill(note, new Color(.96f, .92f, .66f));
             bool selectedWork = !string.IsNullOrEmpty(data.SelectedAction);
-            Label(new Rect(x + 12, note.y + 9, width - 24, 24), selectedWork ? "SEÇİLİ HEDEF: " + data.SelectedLabel : "BU DALGANIN NOTU", tinyStyle, Green);
+            Label(new Rect(x + 12, note.y + 9, width - 24, 24), selectedWork ? "SEÇİLİ HEDEF: " + data.SelectedLabel : "DALGA NOTU", tinyStyle, Green);
             string noteText = data.Note;
             if (selectedWork)
             {
-                noteText = (data.SelectedAction == "upgrade" ? "Güçlendirme" : "Sabitleme") + " bütçesi: " + data.SelectedBudgetCost;
+                noteText = (data.SelectedAction == "upgrade" ? "Güçlendirme" : "Sabitleme") + " bedeli: " + data.SelectedBudgetCost;
                 for (int i = 0; i < data.SelectedRequirements.Length; i++)
                 {
                     var requirement = data.SelectedRequirements[i];

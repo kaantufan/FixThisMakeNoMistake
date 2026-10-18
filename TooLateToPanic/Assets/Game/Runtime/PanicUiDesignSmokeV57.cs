@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -274,6 +274,15 @@ namespace TooLateToPanic
             Check("notebook.kiler-tuvalet-labels."+width,labelText.Contains("Kiler")&&labelText.Contains("Tuvalet"),"Actual floor"+planFloor+" plan labels: "+labelText,"NATIVE_ACTUAL_REPAINT_TELEMETRY");
             yield return Gui(EventType.Repaint,readonlyProbe:true);
             yield return Capture("notebook-room-plan-"+width,"Settled actual Notebook Rooms page at floor"+planFloor+" with production scene sketch and Kiler/Tuvalet labels; sole live owner inspects final glyph fit.");
+            foreach(PanicNotebookPage page in Enum.GetValues(typeof(PanicNotebookPage)))
+            {
+                if(page==PanicNotebookPage.Rooms)continue;
+                book.RequestPage(page);float pageUntil=Time.realtimeSinceStartup+2f;
+                while((book.Animation.Turning||book.Animation.CurrentPage!=page)&&Time.realtimeSinceStartup<pageUntil)yield return null;
+                yield return Wait(.05f);yield return new WaitForEndOfFrame();
+                Check("v59.notebook.all-pages."+page+"."+width,book.IsVisible&&!book.Animation.Turning&&book.Animation.CurrentPage==page&&PanicNotebookData.Heading("Ev planı")=="EV PLANI","Actual settled production page via RequestPage; UI-only view state and Turkish casing, root inspect short copy/status/glyphs.","NATIVE_ACTUAL_REPAINT_NOTEBOOK");
+                yield return Capture("v59-notebook-"+page+"-"+width,"Actual all-page notebook copy/status/heading at this resolution; no stock/input/mechanics mutation.");
+            }
             book.RequestClose();yield return Wait(.40f);
             Check("notebook.close-releases."+width,!book.IsVisible&&!book.BlocksInput&&!w.InputLocked,"Production notebook close releases only its modal gate.","NATIVE_PRODUCTION_MODAL_API");
         }
@@ -324,6 +333,11 @@ namespace TooLateToPanic
                 {
                     Rect selectedBounds=Read<Rect>(hud,"SelectedTargetHudBoundsV56");
                     Regions("selected-target-requirements."+width,new[]{selectedBounds});
+                    var captionRouter=w.GetComponent<PanicPresentationAudio>();
+                    Declare("v59-caption-marker-repro","Explicit presentation-only real story caption event at selected-target setup; original world focus/actor/recipe fixture retained. Observe actual Repaint marker relocation, not private region insertion.");
+                    Check("v59.caption-marker.fixture-event."+width,captionRouter&&captionRouter.TryCaptionV59("qa:caption-marker",PanicKktcStoryV53.ShortFlowPremise(),100,4f));
+                    yield return Wait(.08f);yield return new WaitForEndOfFrame();
+                    Check("v59.caption-marker.actual-nonoverlap."+width,hud.DialogueSubtitleVisibleV59&&hud.RenderedWorldMarkerBoundsV59.Count>0&&hud.RenderedWorldMarkerBoundsV59.All(rect=>PanicCaptionMarkerPolicyV59.Avoids(rect,hud.DialogueSubtitleBoundsV59)),"Actual caption and actual drawn world popup share no border/text/dot footprint; root inspect complete sentence.","NATIVE_ACTUAL_REPAINT_CAPTION_MARKER");
                     yield return Capture("selected-target-requirements-"+width,"Actual visible production bookshelf selected-target card with canonical missing recipe rows; V57 visual restyle, retained V56 snapshot/visibility/bounds API. No additional actor fixture or visibility bypass.");
                 }
                 w.ToggleInventory();report.productionInventoryOpens++;yield return Wait(.08f);

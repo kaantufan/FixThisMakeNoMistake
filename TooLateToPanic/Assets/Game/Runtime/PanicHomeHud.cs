@@ -1301,6 +1301,13 @@ namespace TooLateToPanic
             Rect rect = new Rect(Mathf.Clamp(logical.x - desired * .5f, 12f, CanvasWidth - desired - 12f),
                 Mathf.Clamp(logical.y, 142f, CanvasHeight - 110f), desired, 41f);
             rect = ReserveWorldMarkerBounds(rect, text);
+            // If the finite placement search has no caption-safe slot, this cosmetic popup yields.
+            if (!WorldMarkerAvoidsDialogueV59(rect))
+            {
+                GUI.matrix = priorMatrix; GUI.color = priorColor; GUI.depth = priorDepth;
+                return;
+            }
+            RecordWorldMarkerBoundsV59(rect);
             WorldMarkerLeader(logical, rect);
             Frame(rect, Night, new Color(Brass.r, Brass.g, Brass.b, .55f), 1f);
             if (key.Length > 0)
@@ -1445,7 +1452,7 @@ namespace TooLateToPanic
 
         bool WorldMarkerClear(Rect marker)
         {
-            if (!WorldMarkerAvoidsAlertV56(marker)) return false;
+            if (!WorldMarkerAvoidsAlertV56(marker) || !WorldMarkerAvoidsDialogueV59(marker)) return false;
             for (int i = 0; i < _topLevelRegions.Count; i++)
             {
                 Rect region = _topLevelRegions[i];

@@ -11,7 +11,7 @@ namespace TooLateToPanic
             PanicWorkSession work = World.Expedition.Work;
             if (work.UsesHammer)
             {
-                Rect panel = new Rect(456, 620, 688, 192);
+                Rect panel = PanicWorkKeyHintLayoutV59.HammerPanel;
                 Frame(panel, Night, Line, 1f); Region(panel);
                 FittedLabel(new Rect(478, 632, 640, 34), work.Label, _heading, MainText, 20);
                 Label(new Rect(480, 670, 620, 28), "BAĞLANTI · " + work.CompletedStrokes + " / " + work.RequiredStrokes + " VURUŞ", ColorText(_body, Brass));
@@ -31,9 +31,9 @@ namespace TooLateToPanic
                         DrawManualArrowV51(new Vector2(nail.center.x+33,nail.y+5),new Vector2(nail.center.x+33,nail.yMax-5),Brass);
                     }
                 }
-                Label(new Rect(480, 753, 432, 23), "Tıkla veya SPACE · Basılı tutmak tekrarlamaz.", _tiny);
-                DrawBar(new Rect(480, 788, 432, 8), work.Progress, Sea);
-                Button(new Rect(934, 751, 184, 42), "İPTAL · ESC", false, Line, World.CancelWork);
+                DrawHammerKeyHintsV59();
+                DrawBar(PanicWorkKeyHintLayoutV59.HammerProgress, work.Progress, Sea);
+                DrawWorkCancelKeyV59(PanicWorkKeyHintLayoutV59.HammerCancel);
                 return true;
             }
             Rect closeup = new Rect(66, 164, 1468, 676);
@@ -70,14 +70,15 @@ namespace TooLateToPanic
             Brush(new Rect(x, 190, w, 38), Rust);
             Label(new Rect(x + 14, 190, w - 26, 36), work.IsUtility ? "TESİSAT GÜVENLİĞİ" : "MANUEL MONTAJ", _body);
             FittedLabel(new Rect(x, 248, w, 54), work.Label, _heading, MainText, 20);
-            Label(new Rect(x, 326, w, 50), work.Action=="poweroff"?"Kolu aşağı sürükle.":work.IsUtility?"Kolu çeyrek tur çevir.":work.Action=="hose"?"Bağlantıyı tut ve çevir.":"Vida başını tut ve çevir.", _heading);
+            DrawWorkMouseHintV59(work);
             Label(new Rect(x, 389, w, 80),work.Action=="poweroff"?"Yukarı: elektrik açık.\nAşağı: elektrik kesik.\nAlternatif: ↓ tuşunu basılı tut.":work.IsUtility?"Kol boruya paralel: açık.\nKol boruya dik: kapalı.\nAlternatif: → tuşunu basılı tut.":work.Action=="hose"?"İşaretli bağlantıyı tut. Saat yönünde yarım tur çevir.\nAlternatif: → tuşunu basılı tut.":"Gerçek vida başını tut. Başın çevresinde saat yönünde döndükçe alet ve vida döner.\nAlternatif: → tuşunu basılı tut.",_wrap);
             Label(new Rect(x, 484, w, 90), work.IsUtility ? PanicUtilitySafetyV414.Effect(work.Action) :
                 work.Action=="hose"?"Bırakınca durur; yeniden tutup devam et.\nGeri hareket ilerlemeyi silmez.":"Bırakınca durur; yeniden tutup devam et.\nGeri hareket ilerlemeyi silmez.\nİki vida bitince eşya sabitlenir.", _wrap);
             Label(new Rect(x, 591, w, 39), work.IsUtility || work.Action == "hose" ? Mathf.RoundToInt(work.Progress * 100) + "%" :
                 work.CompletedSteps + " / " + work.TotalSteps + " VİDA", _display);
             DrawBar(new Rect(x, 656, w, 9), work.Progress, Sea);
-            Button(new Rect(x, 729, w, 58), "İPTAL ET · ESC", false, Line, World.CancelWork);
+            DrawWorkAlternativeKeyV59(work);
+            DrawWorkCancelKeyV59(PanicWorkKeyHintLayoutV59.DirectCancel);
             return true;
         }
         void DrawWorkDirectionV414(Vector2 center, float radius, bool clockwise, Color color, float degrees=90f)

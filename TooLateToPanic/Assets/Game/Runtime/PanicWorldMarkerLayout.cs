@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -58,6 +58,7 @@ namespace TooLateToPanic
         }
         void WorldMarkerLeader(Vector2 origin,Rect rect)
         {
+            if (!WorldMarkerLeaderAvoidsDialogueV59(origin, rect)) return;
             if(origin.x<12||origin.x>CanvasWidth-12||origin.y<142||origin.y>CanvasHeight-65)return;
             Vector2 end=new Vector2(Mathf.Clamp(origin.x,rect.xMin,rect.xMax),Mathf.Clamp(origin.y,rect.yMin,rect.yMax));
             Vector2 delta=end-origin;if(delta.magnitude<12)return;

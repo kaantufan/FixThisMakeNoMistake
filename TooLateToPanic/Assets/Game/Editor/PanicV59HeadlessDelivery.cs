@@ -56,6 +56,18 @@ namespace TooLateToPanic
                 RunGroup("navigation",()=> { var navigation=PanicNavigationEditorProbeV59.Probe(); foreach(var row in navigation.checks)Check(row.id,row.pass,row.detail); });
                 RunGroup("dialogue-import",()=>PanicDialogueSourcePolicyV59.Run(Check));
                 RunGroup("utility-work-labels",()=> { var labels=PanicManualWorkLabelsEditorProbeV59.Probe(); File.WriteAllText(Path.Combine(output,"utility-work-labels.json"),JsonUtility.ToJson(labels,true)); Check("actual-font-art-projection-layout",labels.passed,"Actual authored273poses; "+labels.checks+" bounds checks; no framebuffer/OS/human claim. Failures="+string.Join(",",labels.failures)); });
+                RunGroup("work-key-hints",()=> { var hints=PanicWorkKeyHintsEditorProbeV59.Probe(); File.WriteAllText(Path.Combine(output,"work-key-hints.json"),JsonUtility.ToJson(hints,true)); Check("actual-font-keycap-layout",hints.passed,hints.checks+" actual-font/layout checks; no framebuffer/OS/human claim. Failures="+string.Join(",",hints.failures)); });
+                RunGroup("caption-marker-clearance",()=>PanicCaptionMarkerEditorProbeV59.Run(Check));
+                RunGroup("notebook-copy",()=> {
+                    Check("turkish-heading",PanicNotebookData.Heading("Ev planı")=="EV PLANI"&&PanicNotebookData.Heading("Fırtına")=="FIRTINA"&&PanicNotebookData.Heading("iı")=="İI","Production UI-only tr-TR casing; original IDs/parsers unchanged.");
+                    Check("check-state",PanicNotebookData.CheckState(new PanicNotebookCheck("", "",0,2))=="Yapılmadı"&&PanicNotebookData.CheckState(new PanicNotebookCheck("", "",1,2))=="Kısmen hazır"&&PanicNotebookData.CheckState(new PanicNotebookCheck("", "",2,2))=="Hazır"&&PanicNotebookData.CheckState(new PanicNotebookCheck("", "",0,0))=="Gerekli değil","Production count-derived labels, no gameplay change.");
+                    var font=Resources.Load<Font>("HUD/Barlow");var style=new GUIStyle {font=font,fontSize=17};
+                    Check("stock-status-font-fit",font&&style.CalcSize(new GUIContent("Toplanmadı")).x<=100f,"Actual offline regular17font; source state column100logical pixels, source name shortened by same18pixels.");
+                    var source=new LootSource {Id="qa:pin",Label="fixture",Contents=new List<SupplySlot>{new SupplySlot("plank",1)}};
+                    Check("pin-uncollected",PanicNotebookData.PinState(new PanicNotebookPin(source))=="Toplanmadı","Declared stock-only UI fixture; read-only pin state.");
+                    source.Contents.Clear();Check("pin-empty",PanicNotebookData.PinState(new PanicNotebookPin(source))=="Tükendi","No remaining stock, uncollected source is exhausted.");
+                    source.AutoLooted=true;Check("pin-collected",PanicNotebookData.PinState(new PanicNotebookPin(source))=="Toplandı","Actual AutoLooted flag reflects material collection, independent of cupboard open/closed.");
+                });
                 RunGroup("economy",()=>PanicEconomyChecksV59.Run(Check));
                 RunGroup("final-policy",()=>PanicFinalPolicyChecksV59.Run(Check));
                 RunGroup("clock-boundaries",()=>PanicPreparationClockChecksV59.Run(Check));

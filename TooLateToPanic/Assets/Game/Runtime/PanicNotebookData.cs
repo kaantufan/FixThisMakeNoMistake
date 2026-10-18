@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -24,10 +25,10 @@ namespace TooLateToPanic
     {
         public readonly string Id, Label;
         public readonly Vector3 Position;
-        public readonly bool Open, Empty;
+        public readonly bool Open, Empty, Collected;
         public PanicNotebookPin(LootSource source)
         {
-            Id = source.Id; Label = source.Label; Position = source.Position; Open = source.Open;
+            Id = source.Id; Label = source.Label; Position = source.Position; Open = source.Open; Collected = source.AutoLooted;
             Empty = true;
             if (source.Contents != null) for (int i = 0; i < source.Contents.Count; i++)
                 if (source.Contents[i] != null && source.Contents[i].Count > 0) { Empty = false; break; }
@@ -35,7 +36,7 @@ namespace TooLateToPanic
         public PanicNotebookPin(PanicWorldSupply source)
         {
             Id = source.Id; Label = PanicExpedition.DisplayName(source.ItemId); Position = source.Position;
-            Open = false; Empty = source.Count <= 0;
+            Open = false; Empty = source.Count <= 0; Collected = false;
         }
     }
 
@@ -93,30 +94,30 @@ namespace TooLateToPanic
                 if (item.Kind == ItemKind.Window || item.Kind == ItemKind.Door) { windows++; if (item.Tier > 0) windowsDone++; }
                 if (item.Kind == ItemKind.Roof) { roofs++; if (item.Tier > 0) roofsDone++; }
             }
-            var water = new PanicNotebookCheck("Suyu topla", "Envanterdeki su bu dalga için hazır", model.PackedWater, model.RequiredDays);
-            var food = new PanicNotebookCheck("Gıdayı topla", "Envanterdeki gıda bu dalga için hazır", model.PackedFood, model.RequiredDays);
-            var firstAid = new PanicNotebookCheck("İlk yardım setini al", "Envanterdeki destek ekipmanı", (model.PackedSupportMask & 1) != 0 ? 1 : 0, 1);
-            var flashlight = new PanicNotebookCheck("Pilli el fenerini hazırla", "Envanterdeki destek ekipmanı", (model.PackedSupportMask & 2) != 0 ? 1 : 0, 1);
-            var anchor = new PanicNotebookCheck("Uygun mobilyaları sabitle", "Dünyada tamamlanan ankrajlar", anchors, anchorTotal);
-            var wall = new PanicNotebookCheck("Duvarları güçlendir", "En az bir kademe güçlendirme", wallsDone, walls);
-            var window = new PanicNotebookCheck("Kapı ve pencereleri güçlendir", "En az bir kademe güçlendirme", windowsDone, windows);
+            var water = new PanicNotebookCheck("Su", "Bu dalga için", model.PackedWater, model.RequiredDays);
+            var food = new PanicNotebookCheck("Gıda", "Bu dalga için", model.PackedFood, model.RequiredDays);
+            var firstAid = new PanicNotebookCheck("İlk yardım seti", "Envanterinde", (model.PackedSupportMask & 1) != 0 ? 1 : 0, 1);
+            var flashlight = new PanicNotebookCheck("El feneri", "Pili takılmış", (model.PackedSupportMask & 2) != 0 ? 1 : 0, 1);
+            var anchor = new PanicNotebookCheck("Mobilya sabitleme", "Sabitlenen eşyalar", anchors, anchorTotal);
+            var wall = new PanicNotebookCheck("Duvar güçlendirme", "En az bir seviye", wallsDone, walls);
+            var window = new PanicNotebookCheck("Kapı ve pencere", "En az bir seviye güçlendirme", windowsDone, windows);
             int drains = Committed(expedition, "drain", "drain_west", "drain_east");
             int trees = Committed(expedition, "plant", "plant_west1", "plant_west2", "plant_east");
             var pages = new PanicNotebookCheck[6][];
             pages[(int)PanicNotebookPage.Rooms] = new PanicNotebookCheck[0];
             pages[(int)PanicNotebookPage.Flood] = new[] {
-                new PanicNotebookCheck("Bahçe drenajını kur", "Batı ve doğu gerçek drenaj noktaları", drains, 2),
+                new PanicNotebookCheck("Bahçe drenajı", "Batı ve doğu bahçede", drains, 2),
                 window, wall, water, food };
             pages[(int)PanicNotebookPage.Earthquake] = new[] { anchor, wall, water, food, firstAid, flashlight };
             pages[(int)PanicNotebookPage.Fire] = new[] {
-                new PanicNotebookCheck("Yangın söndürücüyü hazırla", "Yalnız yangın ekipmanı noktasında", expedition.IsWorkCommitted("fire", PanicItemActionRules.FireStationId) ? 1 : 0, 1),
-                new PanicNotebookCheck("Bahçe hortumunu hazırla", "Gerçek hortum istasyonunda", expedition.IsWorkCommitted("hose", "hose_station") ? 1 : 0, 1),
+                new PanicNotebookCheck("Yangın söndürücü", "Yangın ekipmanı noktasında", expedition.IsWorkCommitted("fire", PanicItemActionRules.FireStationId) ? 1 : 0, 1),
+                new PanicNotebookCheck("Bahçe hortumu", "Hortum noktasında", expedition.IsWorkCommitted("hose", "hose_station") ? 1 : 0, 1),
                 firstAid, flashlight, water, food };
             pages[(int)PanicNotebookPage.Storm] = new[] {
-                new PanicNotebookCheck("Bahçe ağaç sıralarını kur", "Üç gerçek bahçe bölgesi", trees, 3),
-                new PanicNotebookCheck("Çatıyı güçlendir", "En az bir kademe güçlendirme", roofsDone, roofs), window, anchor,
-                new PanicNotebookCheck("Pilli radyoyu hazırla", "Envanterdeki destek ekipmanı", (model.PackedSupportMask & 4) != 0 ? 1 : 0, 1),
-                new PanicNotebookCheck("Su ve gıdayı tamamla", "Bu dalga için yeterli erzak", model.BagReady ? 1 : 0, 1) };
+                new PanicNotebookCheck("Ağaç sıraları", "Üç bahçe bölgesi", trees, 3),
+                new PanicNotebookCheck("Çatı güçlendirme", "En az bir seviye", roofsDone, roofs), window, anchor,
+                new PanicNotebookCheck("Pilli radyo", "Pili takılmış", (model.PackedSupportMask & 4) != 0 ? 1 : 0, 1),
+                new PanicNotebookCheck("Su ve gıda", "Bu dalga için", model.BagReady ? 1 : 0, 1) };
             pages[(int)PanicNotebookPage.Inventory] = new[] { water, food, firstAid, flashlight };
             var pins = new List<PanicNotebookPin>();
             if (expedition.Sources != null) foreach (var source in expedition.Sources)
@@ -128,8 +129,8 @@ namespace TooLateToPanic
             var requirements = new PanicMaterialRequirement[sourceRequirements.Count];
             for (int i = 0; i < sourceRequirements.Count; i++) requirements[i] = sourceRequirements[i];
             bool timedJury = jury != null && jury.Active;
-            string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlemleri tamamla. Son 40 saniyede çanta hazırlığı başlayacak." : model.BagReady ? model.HasActiveDisasterV54(DisasterType.Flood) ? "Su ve gıda hazır. Üst kat panik odasına git." : "Su ve gıda hazır. Bodrumdaki sığınağa git." :
-                "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Aldığın erzak envanterinde hazırdır.";
+            string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlem al. Son 40 saniye çanta hazırlığı." : model.BagReady ? model.HasActiveDisasterV54(DisasterType.Flood) ? "Su ve gıda hazır. Üst kat panik odasına git." : "Su ve gıda hazır. Bodrumdaki sığınağa git." :
+                "Eksik erzak: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda. Erzakları topla.";
             return new PanicNotebookSnapshot {
                 StoryLocation = PanicKktcStoryV53.LocationBadge, StoryTitle = PanicKktcStoryV53.DiaryTitle, StoryNote = PanicKktcStoryV53.DiaryPersonalNote,
                 Phase = PhaseName(model.Phase), Disaster = model.ActiveDisasterLabelV54, Wave = model.Wave,
@@ -144,6 +145,13 @@ namespace TooLateToPanic
                 SelectedRequirements = requirements, SelectedBudgetCost = expedition.WorkBudgetCostV414(selectedAction, selected == null ? null : selected.Id)
             };
         }
+
+        public static string Heading(string text)
+        { return (text ?? string.Empty).ToUpper(CultureInfo.GetCultureInfo("tr-TR")); }
+        public static string PinState(PanicNotebookPin pin)
+        { return pin.Collected ? "Toplandı" : pin.Empty ? "Tükendi" : "Toplanmadı"; }
+        public static string CheckState(PanicNotebookCheck check)
+        { return check.Total <= 0 ? "Gerekli değil" : check.Complete ? "Hazır" : check.Done > 0 ? "Kısmen hazır" : "Yapılmadı"; }
 
         public static string PageName(PanicNotebookPage page)
         { switch (page) { case PanicNotebookPage.Rooms: return "Ev planı"; case PanicNotebookPage.Flood: return "Sel"; case PanicNotebookPage.Earthquake: return "Deprem"; case PanicNotebookPage.Fire: return "Yangın"; case PanicNotebookPage.Storm: return "Fırtına"; default: return "Envanter"; } }

@@ -207,6 +207,13 @@ namespace TooLateToPanic
             {
                 Set(w, "workAction", action); Set(w, "workTarget", target);
                 Call(w, "BeginWorkAudioV56");
+                if (w.Expedition.Work.IsUtility)
+                {
+                    var rig = PanicWorkArt.CreateWorkRig(action); rig.transform.position = new Vector3(100, 100, 100);
+                    foreach (var node in rig.GetComponentsInChildren<Transform>(true)) node.gameObject.layer = 30;
+                    Set(w, "workRig", rig); Read<Camera>(w, "workCamera").enabled = true;
+                    Fixture("utility-authored-render-rig", "Actual production CreateWorkRig/action/100,100,100/layer30/workCamera used with existing validated remote work fixture. No extra input, progress, budget, stock or actor write; normal CancelWork owns cleanup.");
+                }
                 Fixture("work-world-binding", action + "/" + target + ": production validated session bound to world audio/input adapter; bypasses only geometric approach for isolated audio test");
             }
             return active;
@@ -230,6 +237,7 @@ namespace TooLateToPanic
                     Check("hammer.accepted-stroke." + stroke, accepted && Read<int>(w, "AcceptedHammerAudioCountV56") == before + stroke && Read<int>(w, "WorkAudioDispatchCountV56") == dispatchedBefore + stroke && Read<string>(w, "LastWorkAudioCueV56") == "v56_hammer_hit",
                         "Actual production StrikeManualWork adapter; one event for each accepted separate-frame stroke");
                     yield return null;
+                    if(stroke==3) yield return HammerKeyHintsV59();
                 }
                 Check("hammer.atomic-cost", target.Tier == tier + 1 && w.Model.Budget == budget - price && costs.All(c => w.Expedition.Count(c.Id) == stocks[c.Id] - c.Required));
                 report.workCommits++; int hitCount = Read<int>(w, "AcceptedHammerAudioCountV56");
@@ -246,6 +254,7 @@ namespace TooLateToPanic
                 if (w.Expedition.Work.UsesLinearDrag) w.Expedition.Work.ApplyLinearDisplacement(.5f, true); else w.Expedition.Work.ApplyRotation(45f, true);
                 report.workInputCalls++; w.StepWork(.02f, 0, false, false, false); yield return null;
                 Check("utility.accepted-motion-cue." + action, Read<string>(w, "LastWorkAudioCueV56") == prefix + "_turn" && Read<int>(w, "WorkAudioDispatchCountV56") > dispatched + 1);
+                yield return UtilityLabelsV59(action);
                 w.CancelWork(); yield return null; Check("utility.cancel-free." + action, w.Model.Budget == budget && !w.Model.UtilitySafety.IsComplete(action) && Read<string>(w, "LastWorkAudioCueV56") == prefix + "_cancel");
                 Check("utility.rebegin." + action, BindWork(action, targetId)); yield return null;
                 w.Expedition.Work.TryClick(0); w.StepWork(.02f, 0, false, false, false); yield return null;
@@ -254,13 +263,161 @@ namespace TooLateToPanic
                 Check("utility.actual-commit." + action, w.Model.UtilitySafety.IsComplete(action) && w.Model.Budget == budget && Read<string>(w, "LastWorkAudioCueV56") == prefix + "_close");
             }
         }
+        bool WorkHintsVisibleV59(string expected)
+        {
+            var areas=hud.WorkKeyHintsRenderedBoundsV59;
+            bool valid=Time.frameCount-hud.WorkKeyHintsDrawFrameV59<=1 && hud.WorkKeyHintsRenderedModeV59==expected && areas!=null && areas.Length>=3;
+            if(areas==null)return false;
+            for(int i=0;i<areas.Length;i++)
+            {
+                valid&=areas[i].xMin>=0&&areas[i].xMax<=1600&&areas[i].yMin>=0&&areas[i].yMax<=900;
+                for(int j=i+1;j<areas.Length;j++)valid&=!areas[i].Overlaps(areas[j]);
+            }
+            return valid;
+        }
+        IEnumerator HammerKeyHintsV59()
+        {
+            int oldWidth=Screen.width,oldHeight=Screen.height;string state=ResolutionFingerprint(),materials=MaterialsV59();
+            Fixture("v59-hammer-keycaps","Observe existing3of4strikes at960and1600; no extra input/progress/cost/actor write; original nail click bounds retained.");
+            try
+            {
+                foreach(int width in new[]{960,1600})
+                {
+                    yield return Resolution(width,width==960?540:900);yield return new WaitForEndOfFrame();
+                    Check("v59.hammer.visible-keycaps."+width,WorkHintsVisibleV59("hammer-distinct-press")&&hud.WorkKeyHintsRenderedTextV59.Contains("SPACE")&&hud.WorkKeyHintsRenderedTextV59.Contains("İŞARETLİ")&&hud.WorkKeyHintsRenderedTextV59.Contains("ESC"),hud.WorkKeyHintsRenderedTextV59,"NATIVE_ACTUAL_REPAINT_KEYCAPS");
+                    Check("v59.hammer.keycaps-no-progress-cost."+width,w.Expedition.Work.CompletedStrokes==3&&state==ResolutionFingerprint()&&materials==MaterialsV59());
+                    yield return Capture("v59-hammer-keycaps-"+width,"Actual3of4strikes, marked click target, mouse/SPACE keycaps and ESC cancel; no held-repeat or new input semantics.");
+                }
+            }
+            finally { if(Screen.width!=oldWidth||Screen.height!=oldHeight)Screen.SetResolution(oldWidth,oldHeight,FullScreenMode.Windowed); }
+        }
+
+        IEnumerator UtilityLabelsV59(string action)
+        {
+            float progress = w.Expedition.Work.Progress; string state = ResolutionFingerprint(), materials = MaterialsV59();
+            int widthBefore = Screen.width, heightBefore = Screen.height;
+            Fixture("utility-label-observation", action + ": existing half-rotation/half-drag held idle; actual production authored work rig and HUD Repaint; no extra input, cost, completion or actor mutation.");
+            try
+            {
+                foreach (int width in new[] { 960, 1600 })
+                {
+                    yield return Resolution(width, width == 960 ? 540 : 900);
+                    int before = hud.ManualUtilityLabelsDrawFrameV59; float until = Time.realtimeSinceStartup + 1f;
+                    while (hud.ManualUtilityLabelsDrawFrameV59 <= before && Time.realtimeSinceStartup < until) yield return null;
+                    yield return new WaitForEndOfFrame();
+                    Rect instruction = hud.ManualUtilityInstructionBoundsV59, badge = hud.ManualUtilityClosedBadgeBoundsV59;
+                    Vector2 a = hud.ManualUtilityInstructionMeasuredV59, b = hud.ManualUtilityClosedMeasuredV59;
+                    Rect viewport = Read<Rect>(w, "manualWorkViewportV414"), hit = w.ManualWorkTargetBoundsV414(0);
+                    Rect content = Rect.MinMaxRect(viewport.xMin + 12f, viewport.yMin + 12f, viewport.xMax - 12f, viewport.yMax - 12f);
+                    bool closedValid = w.ManualWorkClosedGripV414(out var closed);
+                    bool laid = PanicManualWorkLabelPolicyV59.TryLayout(content, hit, closed,
+                        PanicManualWorkLabelPolicyV59.BadgeSize(a), PanicManualWorkLabelPolicyV59.BadgeSize(b), out var layout);
+                    bool repaint = hud.ManualUtilityLabelsDrawFrameV59 > before && Time.frameCount - hud.ManualUtilityLabelsDrawFrameV59 <= 1;
+                    Check("v59.utility.actual-repaint-labels." + action + "." + width, repaint && closedValid && hit.width == 88f && laid &&
+                        instruction.Equals(layout.Instruction) && badge.Equals(layout.ClosedBadge) &&
+                        !PanicManualWorkLabelPolicyV59.Inflate(instruction, 8f).Overlaps(badge) &&
+                        !instruction.Overlaps(layout.ProtectedGrip) && !badge.Overlaps(layout.ProtectedGrip) &&
+                        !instruction.Overlaps(layout.ProtectedClosed) && !badge.Overlaps(layout.ProtectedClosed) &&
+                        PanicManualWorkLabelPolicyV59.Contains(content, instruction) && PanicManualWorkLabelPolicyV59.Contains(content, badge) &&
+                        instruction.width >= a.x + 27f && instruction.height >= a.y && badge.width >= b.x + 27f && badge.height >= b.y && 21f * hud.CanvasScale >= 12.59f,
+                        "Actual HUD Repaint frame=" + hud.ManualUtilityLabelsDrawFrameV59 + "; instruction=" + instruction + "; closedBadge=" + badge + "; real measured text=" + a + "/" + b + "; root inspect pixels.", "NATIVE_ACTUAL_REPAINT_FONT_AND_LAYOUT");
+                    Check("v59.utility.visible-keycaps."+action+"."+width,WorkHintsVisibleV59(action=="poweroff"?"power-down-hold":"clockwise-hold")&&hud.WorkKeyHintsRenderedTextV59.Contains("basılı tut")&&hud.WorkKeyHintsRenderedTextV59.Contains("ESC"),hud.WorkKeyHintsRenderedTextV59,"NATIVE_ACTUAL_REPAINT_KEYCAPS");
+                    Check("v59.utility.observe-no-progress-cost." + action + "." + width,
+                        w.WorkActive && w.Expedition.Work.Action == action && Mathf.Abs(w.Expedition.Work.Progress - progress) < .00001f && !w.Expedition.Work.Complete && state == ResolutionFingerprint() && materials == MaterialsV59(),
+                        "Resolution/Repaint observation leaves existing half-work, materials, budget, score, supplies and committed damage unchanged; preparation clock naturally advances.");
+                    yield return Capture("v59-utility-" + action + "-" + width,
+                        "Actual utility half-state and real-font separated instruction/closed-position labels; production authored rig. Root pixel inspection required; remote work-binding fixture is explicit.");
+                }
+            }
+            finally
+            {
+                if (Screen.width != widthBefore || Screen.height != heightBefore) Screen.SetResolution(widthBefore, heightBefore, FullScreenMode.Windowed);
+            }
+        }
+
+        string MaterialsV59()
+        { return string.Join("|", PanicExpedition.MaterialIds.Select(id => id + ":" + w.Expedition.Count(id)).ToArray()); }
+
+        float ExpectedMusicGainV59()
+        {
+            float gain = PanicMusicMixPolicyV59.Music("fps_tension", w.FpsStressIntensityV414, w.ReducedFpsMotionV54,
+                PanicBackgroundMusic.Volume, PanicAudioSettingsV56.EffectiveMusicGain);
+            if (w.PresentationSpeechActive) gain *= .82f;
+            return gain * Mathf.Lerp(1f, .65f, w.AudioShelterAmount);
+        }
+
+        IEnumerator ImportedMusicV59()
+        {
+            Check("v59.music.isolated-real-fps", PanicAudioSettingsV56.IsolatedProfile && w.BagFirstPersonActive && w.BagFinalStageActive && !w.BagCameraTransitionActive);
+            if (!PanicAudioSettingsV56.IsolatedProfile || !w.BagFirstPersonActive) yield break;
+            float master = PanicAudioSettingsV56.MasterVolume, music = PanicAudioSettingsV56.MusicVolume, sfx = PanicAudioSettingsV56.SfxVolume;
+            bool muted = PanicAudioSettingsV56.Muted, musicEnabled = PanicAudioSettingsV56.MusicEnabled, ownerEnabled = w.enabled;
+            float listener = AudioListener.volume; bool listenerPause = AudioListener.pause;
+            string state = ResolutionFingerprint(), materials = MaterialsV59(); Vector3 actor = w.PlayerPosition; Quaternion look = w.FpsInputRotationV54;
+            Fixture("v59-music-lifecycle", "Isolated master=.5/music=.4/SFX=.3; global mute; World component disabled for three ordinary frames; reenabled with natural two-second fade. No actor/camera, work, model-clock, budget, completion or listener write. Settings and enabled state restored in finally.");
+            try
+            {
+                PanicAudioSettingsV56.SetVolumes(.5f, .4f, .3f); PanicAudioSettingsV56.SetMuted(false); PanicAudioSettingsV56.MusicEnabled = true;
+                yield return Wait(PanicMusicMixPolicyV59.CrossfadeSeconds + .2f); yield return new WaitForEndOfFrame();
+                var owner = PanicBackgroundMusic.Instance;
+                Check("v59.music.singleton-imported-owner", owner && FindObjectsByType<PanicBackgroundMusic>(FindObjectsSortMode.None).Length == 1 &&
+                    owner.CurrentTrack == "fps_tension" && owner.FpsTrackPlayingV59 && owner.FpsTrackClipV59 == PanicBackgroundMusic.LoadTrack("fps_tension") &&
+                    owner.GetComponents<AudioSource>().Length == 2 && owner.GetComponents<AudioSource>().Count(source => source.isPlaying) == 1,
+                    "One actual imported music owner after natural crossfade; two allocated owner sources, one playing, no procedural score.", "NATIVE_ACTUAL_AUDIO_SOURCE_BINDING");
+                if (!owner) yield break;
+                var sources = owner.GetComponents<AudioSource>();
+                Check("v59.music.master-music-multiplied-once", Mathf.Abs(owner.FpsTrackVolumeV59 - ExpectedMusicGainV59()) < .002f && owner.FpsTrackVolumeV59 > 0f,
+                    "Actual source gain=" + owner.FpsTrackVolumeV59 + "; expected current urgency/authored gain*.5*.4=" + ExpectedMusicGainV59() + "; listener preserved.", "NATIVE_ACTUAL_SOURCE_GAIN");
+                Check("v59.body.master-sfx-multiplied-once", w.FpsHeartVolumeV51 > 0 && w.FpsBreathVolumeV51 > 0 &&
+                    Mathf.Abs(w.FpsHeartVolumeV51 - PanicMusicMixPolicyV59.Heart(w.FpsStressIntensityV414, w.ReducedFpsMotionV54, .15f)) < .002f &&
+                    Mathf.Abs(w.FpsBreathVolumeV51 - PanicMusicMixPolicyV59.Breath(w.FpsStressIntensityV414, w.ReducedFpsMotionV54, .15f)) < .002f,
+                    "Actual heart/panting source gains follow current authored urgency*.5*.3 after natural onset; no listening claim.", "NATIVE_ACTUAL_SOURCE_GAIN");
+                PanicAudioSettingsV56.SetMuted(true); yield return null; yield return new WaitForEndOfFrame();
+                Check("v59.music-body-mute-zero", sources.All(source => !source.isPlaying && source.volume == 0f) && !w.FpsFeedbackAudioPlayingV414 && w.FpsHeartVolumeV51 == 0f && w.FpsBreathVolumeV51 == 0f,
+                    "Actual shared global mute stops/pauses music/body sources and zeroes their gains.", "NATIVE_ACTUAL_AUDIO_SOURCE_STATE");
+                PanicAudioSettingsV56.SetMuted(false); yield return Wait(.2f);
+                w.enabled = false;
+                float heldClock = w.Model.TimeRemaining;
+                for (int frame = 0; frame < 3; frame++)
+                {
+                    yield return null; yield return new WaitForEndOfFrame();
+                    Check("v59.music.disabled-world-no-restart." + frame,
+                        !w.isActiveAndEnabled && sources.All(source => !source.isPlaying && source.volume == 0f) && !w.FpsFeedbackAudioPlayingV414 && w.Model.TimeRemaining == heldClock,
+                        "Independent BackgroundMusic ordinary Update ran while World remained disabled; retained FPS flags cannot restart audio.", "NATIVE_ACTUAL_COMPONENT_LIFECYCLE");
+                }
+                w.enabled = ownerEnabled; yield return Wait(.2f); float early = owner.FpsTrackVolumeV59;
+                yield return Wait(PanicMusicMixPolicyV59.CrossfadeSeconds + .15f); yield return new WaitForEndOfFrame();
+                Check("v59.music.owner-resume-natural-fade", w.enabled == ownerEnabled && owner.FpsTrackPlayingV59 && owner.CurrentTrack == "fps_tension" &&
+                    owner.FpsTrackVolumeV59 > early + .002f && Mathf.Abs(owner.FpsTrackVolumeV59 - ExpectedMusicGainV59()) < .002f,
+                    "Actual source rises from early=" + early + " to=" + owner.FpsTrackVolumeV59 + " after natural two-second resume, without forced Play/Update/clip time.", "NATIVE_ACTUAL_COMPONENT_LIFECYCLE");
+                Check("v59.music-observe-no-gameplay-or-listener-write", state == ResolutionFingerprint() && materials == MaterialsV59() && actor.Equals(w.PlayerPosition) &&
+                    Quaternion.Angle(look, w.FpsInputRotationV54) < .05f && AudioListener.volume == listener && AudioListener.pause == listenerPause,
+                    "Temporary isolated gain/mute and component lifecycle preserve real budget/stock/result/RNG/actor/look/listener. Preparation clock naturally advances except declared disabled frames.");
+                var dialogue=w.GetComponent<PanicPresentationAudio>();
+                Fixture("v59-caption-layout","Presentation-only explicit caption event through actual router, real story text, priority100/lifetime3.5; no model/input/progress mutation. Not a natural dialogue trigger claim.");
+                Check("v59.caption.production-router-event",dialogue&&dialogue.TryCaptionV59("qa:caption-layout",PanicKktcStoryV53.OpeningBagCaption(),100,3.5f));
+                foreach(int captionWidth in new[]{960,1600})
+                {
+                    yield return Resolution(captionWidth,captionWidth==960?540:900);yield return Wait(.08f);yield return new WaitForEndOfFrame();
+                    Check("v59.caption.actual-visible-hud."+captionWidth,hud.DialogueSubtitleVisibleV59&&hud.DialogueRenderedLinesV59>=1&&hud.DialogueRenderedLinesV59<=2&&hud.DialogueFontPixelsV59>=14.39f&&!hud.DialogueSubtitleBoundsV59.Overlaps(hud.TimerCardBounds),hud.DialogueRenderedTextV59,"NATIVE_ACTUAL_REPAINT_CAPTION");
+                    yield return Capture("v59-caption-"+captionWidth,"Actual complete bit subtitle in shared themed HUD during FPS; explicit presentation event fixture; human listening/readability separate.");
+                }
+                yield return Capture("v59-imported-fps-music", "Actual FPS HUD after imported single-owner music/mute/disable/resume probe. Bitmap does not establish listening acceptance.");
+            }
+            finally
+            {
+                w.enabled = ownerEnabled;
+                PanicAudioSettingsV56.SetVolumes(master, music, sfx); PanicAudioSettingsV56.SetMuted(muted); PanicAudioSettingsV56.MusicEnabled = musicEnabled;
+            }
+        }
+
         IEnumerator AssistantBudget()
         {
             GatherMaterials(); yield return Wait(.12f); int budget = w.Model.Budget; string target = w.AssistantTargetIdV55;
             var item = w.Model.Items.Find(i => i.Id == target); Check("assistant.fixture-real-materials", item != null && !item.Anchored && w.AssistantV55.Steps[0].Complete, target);
             w.Model.Budget = 0; Fixture("budget", budget + " -> 0 for insufficient-budget recommendation; finite gathered materials retained");
             string before = MutationFingerprint(); var first = w.AssistantV55;
-            Check("assistant.no-budget-selects-free-utility", first.CurrentStep == 3 && !first.Steps[1].Complete && first.Steps[1].Detail.ToLowerInvariant().Contains("bütçe"), first.Task + " / " + first.Steps[1].Detail);
+            Check("assistant.no-budget-selects-free-utility", first.CurrentStep == 3 && !first.Steps[1].Complete && first.Steps[1].Detail.Contains(w.Model.Budget + "/" + PanicExpedition.WorkCost(PanicItemActionRules.PrimaryAction(item), item)), first.Task + " / " + first.Steps[1].Detail);
             float until = Time.realtimeSinceStartup + 7;
             while ((w.GuidancePlanningV54 || !w.GuidanceRouteValidV54 || !w.GuidanceObjectiveActionV54.EndsWith("off", StringComparison.Ordinal)) && Time.realtimeSinceStartup < until) yield return null;
             Check("assistant.free-utility-actual-route", w.GuidanceRouteValidV54 && w.GuidanceObjectiveActionV54.EndsWith("off", StringComparison.Ordinal), w.GuidanceObjectiveIdV54 + " / " + w.GuidanceObjectiveActionV54);
@@ -305,9 +462,9 @@ namespace TooLateToPanic
         }
         IEnumerator BagAndShelter(bool upper, bool incompletePrompt, bool pack = true)
         {
-            w.Model.TimeRemaining = 45f; Fixture("preparation-clock", "TimeRemaining=45; native production 2s camera handoff and clocks run thereafter"); PanicBagDollyChecksV56.Prepare(w); w.TickPreparationStages(); yield return PanicBagDollyChecksV56.Observe(w,hud,(id,pass,detail)=>Check(id,pass,detail));
+            w.Model.TimeRemaining = PanicHomeWorld.BagPreparationSeconds; Fixture("preparation-clock", "TimeRemaining=canonical bag boundary; native production camera handoff and clocks run thereafter"); PanicBagDollyChecksV56.Prepare(w); w.TickPreparationStages(); yield return PanicBagDollyChecksV56.Observe(w,hud,(id,pass,detail)=>Check(id,pass,detail));
             Check("bag.actual-handoff." + report.productionStartCalls, w.BagFinalStageActive && w.BagFirstPersonActive);
-            if (report.productionStartCalls == 2) yield return StableFpsViewV57();
+            if (report.productionStartCalls == 2) { yield return StableFpsViewV57(); yield return ImportedMusicV59(); }
             if (incompletePrompt)
             {
                 yield return Place(new Vector3(-4.5f, -3.16f, 1.4f)); Aim(PanicHomeWorld.BunkerPosition + Vector3.up * .35f); yield return Wait(.15f); w.SetFocus("bunker"); Call(w, "UpdateContext");
@@ -365,6 +522,11 @@ namespace TooLateToPanic
         static float Rms(float[] data) { double sum = 0; foreach (float v in data) sum += v * v; return (float)Math.Sqrt(sum / data.Length); }
         IEnumerator ProbeAudio(string scenario, DisasterType hazard, int samples)
         {
+            // Observe a completed ordinary Update/LateUpdate frame after the camera
+            // predicate changes. Do not compare this frame's new camera with last
+            // frame's AudioSource/filter state. No source or gameplay mutation.
+            yield return null;
+            yield return new WaitForEndOfFrame();
             for (int i = 0; i < samples; i++)
             {
                 var source = (AudioSource)Call(fx, "HazardSourceV56", hazard); var data = new float[4096]; var mixed = new float[4096];
@@ -387,7 +549,7 @@ namespace TooLateToPanic
             {
                 var inside = report.audio.Where(a => a.hazard == type.ToString() && a.scenario == "inside").ToArray(); var outside = report.audio.Where(a => a.hazard == type.ToString() && a.scenario == "exterior").ToArray();
                 Check("audio.shelter-inside-filter." + type, inside.Length == 5 && inside.All(a => a.realShelter && !a.exterior) && inside.Max(a => a.cutoff) < 2000, "Actual near-complete shelter mixing before camera leaves", "NATIVE_SOURCE_FILTER_STATE");
-                Check("audio.exterior-filter-and-gain." + type, outside.Length == 10 && outside.All(a => a.realShelter && a.exterior && a.cutoff >= 15000) && outside.Max(a => a.gain) > inside.Max(a => a.gain) * 2f, "Actual4.7s exterior camera predicate, listener still real admitted shelter", "NATIVE_SOURCE_FILTER_STATE");
+                Check("audio.exterior-filter-and-gain." + type, outside.Length == 10 && outside.All(a => a.realShelter && a.exterior && a.cutoff >= 15000) && outside.Max(a => a.gain) > inside.Max(a => a.gain) * 2f, "Natural exterior camera after4.7s; sample after a completed ordinary Update/LateUpdate frame; listener still real admitted shelter", "NATIVE_SOURCE_FILTER_STATE");
                 Check("audio.exterior-source-pcm." + type, outside.Max(a => a.sourceRms) > .000001f && outside.Max(a => a.listenerRms) > .000001f && outside.Max(a => a.dspTime) > outside.Min(a => a.dspTime) + .2, "Real source GetOutputData and listener GetOutputData plus advancing DSP; no listening/Windows output claim", "NATIVE_SOURCE_AND_LISTENER_PCM");
             }
             var fireSource = (AudioSource)Call(fx, "HazardSourceV56", DisasterType.Fire); float fullGain = fireSource.volume;

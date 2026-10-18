@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -79,9 +79,9 @@ namespace TooLateToPanic
         PanicAssistantSnapshotV55 CaptureAssistantV55()
         {
             var result = new PanicAssistantSnapshotV55 { Title = "Hazırlık yardımcısı", Task = "Defterini gözden geçir", Hint = "J ile aç", CurrentStep = 1, StepCount = 6 };
-            string[] labels = { "Malzemeleri topla", "Bir mobilyayı sabitle", "Tesisatı güvene al", "Bir su al", "Bir gıda al", "Güvenli alana geç" };
+            string[] labels = { "Malzemeleri topla", "Mobilyayı sabitle", "Tesisatı güvene al", "Su topla", "Gıda topla", "Güvenli alana geç" };
             result.Steps = new PanicAssistantStepV55[6];
-            for (int i = 0; i < 6; i++) result.Steps[i] = new PanicAssistantStepV55 { Label = labels[i], Detail = "Sırası gelince burada görünecek" };
+            for (int i = 0; i < 6; i++) result.Steps[i] = new PanicAssistantStepV55 { Label = labels[i], Detail = "Sıradaki adım" };
             if (Model == null || Expedition == null) return result;
             bool preparing = Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial;
             result.Available = preparing;
@@ -91,16 +91,16 @@ namespace TooLateToPanic
             bool utility = AssistantUtilitiesReadyV55();
             bool bag = BagFinalStageActive;
             bool anchorDeferred = !anchored && !AssistantAnchorAffordableV56(item);
-            string budgetReason = anchorDeferred ? "Ankraj bütçesi " + Model.Budget + "/" + PanicExpedition.WorkCost(PanicItemActionRules.PrimaryAction(item), item) : string.Empty;
+            string budgetReason = anchorDeferred ? "Sabitleme bedeli " + Model.Budget + "/" + PanicExpedition.WorkCost(PanicItemActionRules.PrimaryAction(item), item) : string.Empty;
             bool[] done = { materials, anchored, utility, Model.PackedWater >= 1, Model.PackedFood >= 1, Model.ReachedShelterV5 };
-            string target = item == null ? "Uygun mobilyalar zaten sabit" : item.Label;
+            string target = item == null ? "Mobilyalar sabit" : item.Label;
             string[] details = {
-                anchored ? "Yeni ankraj malzemesi gerekmiyor" : materials ? "Ankraj malzemeleri hazır" : target + " için gereken malzemeler",
+                anchored ? "Malzeme gerekmiyor" : materials ? "Malzemeler hazır" : target + " için malzeme",
                 anchorDeferred ? target + " · " + budgetReason + "; tesisat ücretsiz" : target,
-                "Gaz, su vanası ve ana elektrik şalteri",
-                "Son 40 saniyede; aldığın su envanterine eklenir",
-                "Son 40 saniyede; aldığın gıda envanterine eklenir",
-                Model.HasActiveDisasterV54(DisasterType.Flood) ? "Sel var: üst kat panik odası" : "Bodrum sığınağı"
+                "Gaz · su · elektrik",
+                "Çanta aşamasında 1 su topla",
+                "Çanta aşamasında 1 gıda topla",
+                Model.HasActiveDisasterV54(DisasterType.Flood) ? "Üst kat panik odası" : "Bodrum sığınağı"
             };
             // An unaffordable suggestion must not hide the still actionable free utilities.
             // Keep materials/anchor completion truthful; this only changes recommendation order.
@@ -112,14 +112,14 @@ namespace TooLateToPanic
                 step.Complete = done[i]; step.Available = preparing && (bag ? i >= 3 : i < 3);
                 if (!bag && i == 1 && anchorDeferred) step.Available = false;
                 step.Active = step.Available && i == current && !step.Complete;
-                step.Detail = bag && i < 3 && !done[i] ? "Önlem süresi bitti; çantana odaklan" : details[i];
+                step.Detail = bag && i < 3 && !done[i] ? "Önlem süresi bitti" : details[i];
             }
             result.Task = result.Steps[current].Complete ? bag ? "Güvenli alandasın" : "Diğer önlemleri gözden geçir" : labels[current];
-            result.Hint = bag ? details[current] : current < 2 ? target : "Gaz, su ve elektrik noktalarını kontrol et";
-            if (!bag && materials && anchored && utility) result.Hint = "Son 40 saniyede çantanı hazırlayacaksın";
+            result.Hint = bag ? details[current] : current < 2 ? target : "Gazı, suyu ve elektriği kapat";
+            if (!bag && materials && anchored && utility) result.Hint = "Sırada 40 saniye çanta hazırlığı";
             if (GuidanceRouteValidV54 && !string.IsNullOrEmpty(GuidanceObjectiveIdV54))
             {
-                string floor = GuidanceObjectivePositionV54.y > 2 ? "Üst kat" : GuidanceObjectivePositionV54.y < -1 ? "Bodrum" : "Alt kat";
+                string floor = GuidanceObjectivePositionV54.y > 2 ? "Üst kat" : GuidanceObjectivePositionV54.y < -1 ? "Bodrum" : "Zemin kat";
                 string spot = GuidanceObjectiveIdV54 == assistantTargetV55 ? target : GuidanceObjectiveLabelV54.Split('·')[0].Trim();
                 string checkpoint = GuidanceCheckpointLabelV54.Split('·')[0].Trim();
                 result.Hint = floor + " · " + (checkpoint.StartsWith("Kapıyı") || checkpoint.StartsWith("Merdiven") ? checkpoint : spot);
@@ -128,7 +128,7 @@ namespace TooLateToPanic
                 result.Hint = budgetReason + " · " + (utility ? "Diğer önlemleri incele" : "Tesisat ücretsiz · " + result.Hint);
             if (JuryActive && JurySnapshot != null)
             {
-                result.Task = JurySnapshot.Hint; result.Hint = "Defterdeki hazırlık notunu takip et";
+                result.Task = JurySnapshot.Hint; result.Hint = "Hazırlık notuna bak";
                 result.CurrentStep = result.StepCount = 1;
                 result.Steps = new[] { new PanicAssistantStepV55 { Label = result.Task, Detail = result.Hint, Active = preparing, Available = preparing } };
             }
@@ -153,7 +153,7 @@ namespace TooLateToPanic
                                 Label = source.Label + " · " + PanicExpedition.DisplayName(cost.Id) + " al · E", Action = "materials" });
                     }
                 }
-                guidanceNoRouteV54 = "Gereken malzemeyi bulamadın; defterden başka önlemleri incele";
+                guidanceNoRouteV54 = "Malzeme yok; başka bir önlem seç";
             }
             else if (snapshot.CurrentStep == 2 && item != null && !item.Anchored && AssistantAnchorAffordableV56(item))
             {

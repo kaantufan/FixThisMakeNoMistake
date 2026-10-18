@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using System.Collections;
 
@@ -105,7 +105,7 @@ namespace TooLateToPanic
 
             }
 
-            yield return new WaitForSecondsRealtime(1.5f);
+            yield return new WaitForSecondsRealtime(PanicMusicMixPolicyV59.CrossfadeSeconds + .15f);
 
             var music=FindFirstObjectByType<PanicBackgroundMusic>();
 
@@ -137,7 +137,7 @@ namespace TooLateToPanic
 
                 Check("music loop real two-source overlap",sources.Count(s=>s.isPlaying)==2);
 
-                yield return new WaitForSecondsRealtime(1.25f);
+                yield return new WaitForSecondsRealtime(PanicMusicMixPolicyV59.CrossfadeSeconds + .15f);
 
                 Check("music loop outgoing source stopped",sources.Count(s=>s.isPlaying)==1&&music.IsAudible);
 
@@ -145,7 +145,7 @@ namespace TooLateToPanic
 
                 Check("music real disaster phase",world.Model.Phase==PanicPhase.Disaster&&music.CurrentTrack=="disaster"&&music.IsAudible);
 
-                world.ReturnToMenu();yield return new WaitForSecondsRealtime(1.5f);
+                world.ReturnToMenu();yield return new WaitForSecondsRealtime(PanicMusicMixPolicyV59.CrossfadeSeconds + .15f);
 
                 Check("music return calm",music.CurrentTrack=="preparation"&&music.IsAudible&&sources.Count(s=>s.isPlaying)==1);
 
