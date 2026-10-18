@@ -1,0 +1,78 @@
+{
+  "releaseStatus": "READY_FOR_USER_PLAYTEST_NATIVE_API_RENDER_VERIFIED",
+  "requiresUserPlaytest": true,
+  "editor": {
+    "passed": true,
+    "checks": 474,
+    "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\editor-r5-a9258d16-2917-46ea-9fc9-8dde11cc6249\\headless-v59-report.json",
+    "reportSha256": "EC070419C6AC914CA5BAE5009B77B1225B9BB343BF14050E727150A20A4EF801",
+    "utilityLabelStates": 273,
+    "utilityLabelChecks": 2185,
+    "layer": "ACTUAL_UNITY_EDITOR_HEADLESS_IMPORT_MODEL_ART_FONT_PROJECTION_ARITHMETIC"
+  },
+  "native": {
+    "utc": "2026-10-18T09:54:26.628751+00:00",
+    "passed": true,
+    "dllSha256": "1823D53AE0516C48A36085884377C0705EDBB7401FDF6AADE7CD2DB990729274",
+    "layer": "CURRENT_DLL_NATIVE_PRODUCTION_API_FRAMEBUFFER_AND_SOURCE_LISTENER_PCM",
+    "checks": 943,
+    "captures": 90,
+    "allCapturesInspected": true,
+    "visualReview": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\visual-review-r5.json",
+    "visualReviewSha256": "16B17626724D0C8CB00A9FE7A8BE1BB57CF9B0D1635B57BCE776783F9E13F540",
+    "suites": [
+      {
+        "suite": "ui-v57-smoke",
+        "pid": 58896,
+        "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\native-r5-ui-v57-smoke-935354dd-15a5-4bf0-902e-44fa8edd0d96\\ui-v57-smoke.json",
+        "reportSha256": "5BE53F975EEC8A88FBE87D7C36BF09CB4DDC53A6AEF8F931FF942C0056444464",
+        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\process-r5-ui-v57-smoke.json",
+        "processReceiptSha256": "D687EED6067CA8214B24FFE9EAB413FCE97CCFEB46FDF9AD3952F29CAE7F168F",
+        "checks": 527,
+        "captures": 68,
+        "seconds": 37.13747024536133,
+        "errors": 0
+      },
+      {
+        "suite": "v56-smoke",
+        "pid": 49560,
+        "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\native-r5-v56-smoke-116faeb3-b751-4b30-bff7-a696f139342b\\v56-smoke.json",
+        "reportSha256": "939A6CF421037A278134D0DED4DC17C2C4876D5E869E12345EEB4BFAC0BD7D4F",
+        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\process-r5-v56-smoke.json",
+        "processReceiptSha256": "D216C3B83B5ECB9CCDFB523313F68265797FDE681121C7041D6A7739F9083A39",
+        "checks": 207,
+        "captures": 21,
+        "seconds": 51.2840576171875,
+        "errors": 0
+      },
+      {
+        "suite": "audio-smoke",
+        "pid": 50740,
+        "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\native-r5-audio-smoke-cd8186a7-ebf6-4704-be15-06c82f150106\\audio-smoke.json",
+        "reportSha256": "E59975CC09FD96DD1E026D95ACE236B321E8EBC105FE6DD591476C78861B53C6",
+        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\process-r5-audio-smoke.json",
+        "processReceiptSha256": "91F02CB4386718DCD989AEAEE750F253EAFEF262A4989AC7A018435866898314",
+        "checks": 209,
+        "captures": 1,
+        "seconds": null,
+        "errors": 0
+      }
+    ],
+    "OSInput": false,
+    "humanListening": false,
+    "humanCampaign": false,
+    "humanReadability": false,
+    "realProfileUnchanged": true,
+    "oldPlayerInputOrClose": false
+  },
+  "OSInput": "NOT_RUN",
+  "humanListening": "NOT_RUN",
+  "humanCampaign": "NOT_RUN",
+  "knownLimits": [
+    "Yalnız yeni V5.9 izole API/render/ses testi son kullanıcı tarafından onaylandı; önceki açık kullanıcı oyuncusuna girdi/sonlandırma gönderilmedi.",
+    "Aynı DLL üzerindeki tüm sağlanan framebuffer görüntüleri root tarafından incelendi; insan okunurluk/konfor kabulü değildir.",
+    "90 sn fizikselgathering ve6–7 dalga rahatlığı insanla ölçülmedi; ekonomik ufuk gerçekmodel/fixture kanıtıdır.",
+    "İnsan dinleme/konfor ve tam kampanya kabulü yapılmadı.",
+    "Önceki build/ZIP temizlenmedi; eski native sayı bu DLL için kullanılmaz."
+  ]
+}

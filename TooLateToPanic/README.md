@@ -1,11 +1,9 @@
-> **Windows Home V5.7 /0.5.7 /r4:** [Download portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.7-r4). Extract the ZIP and run the EXE beside its data folders. Source checkouts do not contain Builds. Unity 6000.0.73f1 / Built-In.
+> **Windows Home V5.9 /0.5.9 /r5:** [Download portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r5). Extract the ZIP and run the EXE beside its data folders. Source checkouts do not contain Builds. Unity 6000.0.73f1 / Built-In.
 
 # Too Late to Panic!
 
-V5.8 ara adayı: düz garaj yolu, farklı NPC saçları ve akıcı sel geçişi uygulandı; 68/68 headless Unity veri kontrolü geçti. Grafik/OS kontrolü bekliyor; bu düzeltmeler yetkili V5.9 birleşimine aktarılıyor. [Aday notları](Documentation/HOME-V5.8-VISUAL-FIXES-2026-10-18.md).
+Home V5.9: sade menü,1500 bütçe,90 sn önlem+40 sn çanta, ilk Deprem/ikinci Sel+Fırtına/sonrası RNG;6–7 dalga ekonomik ilerleme, defter hedefinde BURADA işareti, ayrı vana/şalter etiketleri ve yenilenen bit/altyazı/gerilim sesleri. V5.8 garaj/NPC/sel düzeltmeleri aynı pakettedir.
 
-Home V5.7: ana menü, duraklatma ve ses sayfası yeniden tasarlandı. Özgün etiketli simgeler, açık süre/bütçe/hasar ve su-gıda durumları, klasik fiziksel klavye ve her tuş için ayrı açıklama içeren F1 rehberi, tek 20 yuvalı envanter ve sabit FPS kamera davranışı birlikte sunulur. Su ve gıda aynı envanterden dalga başına bir kez kullanılır; defter oda yazıları da düzeltilmiştir.
+[Başlat](Play-TooLateToPanic.cmd) · [Teslim ve kesin sınırlar](Documentation/HOME-V5.9-DELIVERY-2026-10-18.md) · [Güncel paket](LATEST-BUILD.json)
 
-[Başlat](Play-TooLateToPanic.cmd) · [Teslim](Documentation/HOME-V5.7-UI-DELIVERY-2026-10-18.md)
-
-981/981 aynı yeni DLL üzerinde dört suite native/API/framebuffer kontrolü; UI suite içinde birleşik envanter model ve görünüm kontrolleri;0 runtime hatası;81 gerçek PNG (UI suite için en az52); Windows turu fiziksel Esc ile yarıda kaldı: dört afet simülasyonu ve yeni normal profil açılışı NOT_RUN; açık izole test penceresi korundu. İnsan oynanış/beğeni ve dinleme kabulü ayrı bekler.
+Windows derlemesi ve 474/474 gerçek Unity Editor kontrolü geçti. Yazı yerleşimi 273 poz/2185 sınır kontrolünde geçti. 943 aynı DLL native API/render/ses kontrolü ve 90 incelenmiş görüntü geçti; OS girdisi yapılmadı; insan okunurluk/dinleme/90 sn fiziksel kampanya kabulü bekler. Açık eski oyun ve bağımsız FPS projesi korunur.

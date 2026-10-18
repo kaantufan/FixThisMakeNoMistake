@@ -1,9 +1,22 @@
 {
+  "version": "Home V5.9 /0.5.9 /r5",
+  "releaseStatus": "READY_FOR_USER_PLAYTEST_NATIVE_API_RENDER_VERIFIED",
+  "requiresUserPlaytest": true,
   "scene": "Assets/Game/Scenes/TooLateToPanicResidence.unity",
   "campaignTiming": {
-    "precautionSeconds": 120,
-    "bagSeconds": 45,
-    "totalSeconds": 165
+    "precautionSeconds": 90,
+    "bagSeconds": 40,
+    "totalSeconds": 130
+  },
+  "startingBudget": 1500,
+  "waveSequence": {
+    "wave1": "Earthquake",
+    "wave2": [
+      "Flood",
+      "Storm"
+    ],
+    "wave2Primary": "Flood",
+    "wave3AndLater": "Retained RNG"
   },
   "waterRequired": 1,
   "foodRequired": 1,
@@ -21,854 +34,126 @@
     "perWaveRestock": "Once guarded by Model.Wave",
     "rng": "Small finite quantity and same-floor distribution"
   },
-  "version": "Home V5.7 /0.5.7 /r4",
-  "releaseStatus": "READY_FOR_USER_PLAYTEST_OS_STOPPED_BY_USER",
-  "requiresUserPlaytest": true,
-  "executable": "Builds/Home-V5.7-r4-20261018/TooLateToPanic.exe",
-  "portableZip": "Builds/TooLateToPanic-Home-V5.7-r4-20261018-portable.zip",
-  "portableZipSha256": "E853DE2D63ED843E963777A3F61046047A98D7E06CC5C2603D8CBC2D041EB12C",
-  "portableZipBytes": 211267930,
-  "portableMatchesNative": true,
-  "assemblyCSharpSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
+  "executable": "Builds/Home-V5.9-r5-20261018/TooLateToPanic.exe",
+  "portableZip": "Builds/TooLateToPanic-Home-V5.9-r5-20261018-portable.zip",
+  "portableZipSha256": "4738918CAF0BC26150ACC5F72C331D2648633661EB32708677F75D67DF9EAFBF",
+  "portableZipBytes": 215327171,
+  "portableMatchesBuild": true,
+  "nativePlayerVerified": true,
+  "assemblyCSharpSha256": "1823D53AE0516C48A36085884377C0705EDBB7401FDF6AADE7CD2DB990729274",
   "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
   "buildErrors": 0,
   "buildWarnings": 0,
-  "buildUtc": "2026-10-18T08:27:23.7460233Z",
-  "promotedUtc": "2026-10-18T08:52:19.014231+00:00",
-  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/final-source-manifest-r4.json",
-  "sourceManifestSha256": "C7383D8694C3BCFDDDD14B5B7EA10074BC69C95FA5AFCF0DD69C47F159F15DA7",
-  "buildManifest": "../Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/final-build-manifest-r4.json",
-  "buildManifestSha256": "ED067508FAA958E8A71641A0720D0255A8ADB52D1A412FE54F74287C61B66515",
-  "frozenCodeShaders": 191,
-  "codeShaderDrift": 0,
-  "sourceFiles": 41043,
-  "buildFiles": 164,
-  "delivery": "Documentation/HOME-V5.7-UI-DELIVERY-2026-10-18.md",
-  "assets": "Documentation/HOME-V5.7-UI-ASSETS-2026-10-18.md",
-  "research": "Documentation/HOME-V5.7-UI-RESEARCH-2026-10-18.md",
-  "knownLimits": [
-    "Windows turu fiziksel Esc ile durdu: dört afet simülasyonu ve yeni normal global profil açılışı NOT_RUN; açık izole gözlemci korunur, sonrasında GUI/girdi/başlatma/kapama yapılmadı.",
-    "Yeni V5.7 DLL için aynı DLL üzerinde UI/API ve Yarkın hibrit kontrolleri geçti; V5.6'nın tarihsel 143 ve ledger'ın 245 kontrolü yeni FPS/tesisat QA uzantılarıyla sıralı korunup çalıştırıldı; OS incelemesi ayrı receipt ile bağlıdır.",
-    "İnsan oynanış, okunurluk, beğeni, konfor, dinleme ve tüm kampanya kabulü yapılmış sayılmaz.",
-    "Eski teslim edilmiş V5.5 DLL kimliği ile teslim edilmemiş V5.6 kaynak/native baseline ayrı tutulur; tarihsel kontroller bu V5.7 DLL yerine geçmez.",
-    "960x540 desteklenir; küçük yardımcı/kroki yazıları daha büyük pencerede daha rahat okunur.",
-    "Eski zemin üçgeni yeniden üretilemediğinden kesin nedensel onarım UNVERIFIED; küçük boyun/yaka birleşimleri korunur."
-  ],
+  "buildUtc": "2026-10-18T09:49:04.2655839Z",
+  "promotedUtc": "2026-10-18T09:55:07.953761+00:00",
+  "delivery": "Documentation/HOME-V5.9-DELIVERY-2026-10-18.md",
+  "assets": "Documentation/HOME-V5.9-AUDIO-ASSETS-2026-10-18.md",
+  "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-MENU-ECONOMY-AUDIO-V59-20261018/manager/final-source-manifest-r5.json",
+  "sourceManifestSha256": "9C70B4A44E73A8AD93DB7CF7E81857CF91FEA08D31A3245722730F86422AB098",
+  "buildManifest": "../Evidence/GamejamOrchestra/TLTP-MENU-ECONOMY-AUDIO-V59-20261018/manager/final-build-manifest-r5.json",
+  "buildManifestSha256": "4C5FFEACE4C6E28B09B6B4664BBCAFAF514FE2F07D874403C919032AD940D3A4",
+  "frozenCodeShaders": 212,
+  "frozenAudio": 97,
+  "sourceDrift": 0,
+  "sourceFiles": 41922,
+  "buildFiles": 167,
+  "editor": {
+    "passed": true,
+    "checks": 474,
+    "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\editor-r5-a9258d16-2917-46ea-9fc9-8dde11cc6249\\headless-v59-report.json",
+    "reportSha256": "EC070419C6AC914CA5BAE5009B77B1225B9BB343BF14050E727150A20A4EF801",
+    "utilityLabelStates": 273,
+    "utilityLabelChecks": 2185,
+    "layer": "ACTUAL_UNITY_EDITOR_HEADLESS_IMPORT_MODEL_ART_FONT_PROJECTION_ARITHMETIC"
+  },
+  "native": {
+    "utc": "2026-10-18T09:54:26.628751+00:00",
+    "passed": true,
+    "dllSha256": "1823D53AE0516C48A36085884377C0705EDBB7401FDF6AADE7CD2DB990729274",
+    "layer": "CURRENT_DLL_NATIVE_PRODUCTION_API_FRAMEBUFFER_AND_SOURCE_LISTENER_PCM",
+    "checks": 943,
+    "captures": 90,
+    "allCapturesInspected": true,
+    "visualReview": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\visual-review-r5.json",
+    "visualReviewSha256": "16B17626724D0C8CB00A9FE7A8BE1BB57CF9B0D1635B57BCE776783F9E13F540",
+    "suites": [
+      {
+        "suite": "ui-v57-smoke",
+        "pid": 58896,
+        "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\native-r5-ui-v57-smoke-935354dd-15a5-4bf0-902e-44fa8edd0d96\\ui-v57-smoke.json",
+        "reportSha256": "5BE53F975EEC8A88FBE87D7C36BF09CB4DDC53A6AEF8F931FF942C0056444464",
+        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\process-r5-ui-v57-smoke.json",
+        "processReceiptSha256": "D687EED6067CA8214B24FFE9EAB413FCE97CCFEB46FDF9AD3952F29CAE7F168F",
+        "checks": 527,
+        "captures": 68,
+        "seconds": 37.13747024536133,
+        "errors": 0
+      },
+      {
+        "suite": "v56-smoke",
+        "pid": 49560,
+        "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\native-r5-v56-smoke-116faeb3-b751-4b30-bff7-a696f139342b\\v56-smoke.json",
+        "reportSha256": "939A6CF421037A278134D0DED4DC17C2C4876D5E869E12345EEB4BFAC0BD7D4F",
+        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\process-r5-v56-smoke.json",
+        "processReceiptSha256": "D216C3B83B5ECB9CCDFB523313F68265797FDE681121C7041D6A7739F9083A39",
+        "checks": 207,
+        "captures": 21,
+        "seconds": 51.2840576171875,
+        "errors": 0
+      },
+      {
+        "suite": "audio-smoke",
+        "pid": 50740,
+        "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\native-r5-audio-smoke-cd8186a7-ebf6-4704-be15-06c82f150106\\audio-smoke.json",
+        "reportSha256": "E59975CC09FD96DD1E026D95ACE236B321E8EBC105FE6DD591476C78861B53C6",
+        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\process-r5-audio-smoke.json",
+        "processReceiptSha256": "91F02CB4386718DCD989AEAEE750F253EAFEF262A4989AC7A018435866898314",
+        "checks": 209,
+        "captures": 1,
+        "seconds": null,
+        "errors": 0
+      }
+    ],
+    "OSInput": false,
+    "humanListening": false,
+    "humanCampaign": false,
+    "humanReadability": false,
+    "realProfileUnchanged": true,
+    "oldPlayerInputOrClose": false
+  },
+  "OSInput": "NOT_RUN",
+  "humanListening": "NOT_RUN",
+  "humanCampaign": "NOT_RUN",
   "newPayment": 0,
-  "newProviderCredits": 0,
+  "newProviderCredits": 457,
   "legacyFpsProjectTouched": false,
   "publishedToGitHub": true,
-  "native": {
-    "passed": true,
-    "checks": 981,
-    "captures": 81,
-    "seconds": 115.31188011169434,
-    "runtimeErrors": 0,
-    "reports": [
-      {
-        "suite": "ui-v57",
-        "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-ui-9a7e8b18-c4c8-4fa1-902a-671002ae874e",
-        "report": "ui-v57-smoke.json",
-        "reportPath": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-ui-9a7e8b18-c4c8-4fa1-902a-671002ae874e\\ui-v57-smoke.json",
-        "reportSha256": "0FD31E226BADE6DE7F54B3FBEBDE04385F597FA510050A25C62524ED61F0DB4B",
-        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-process.json",
-        "processReceiptSha256": "CE5D589E21AEF472DADE2715041F95586A2C7CEE9AB86EFEB3691B8FFF8AD0D5",
-        "processPid": 58864,
-        "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
-        "dllSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
-        "checks": 474,
-        "captures": 54,
-        "seconds": 24.447965621948242
-      },
-      {
-        "suite": "yarkin-hybrid",
-        "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-hybrid-6ddcd34c-407e-4e24-940a-7df8056e6f16",
-        "report": "hybrid-report.json",
-        "reportPath": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-hybrid-6ddcd34c-407e-4e24-940a-7df8056e6f16\\hybrid-report.json",
-        "reportSha256": "DB05D77F58507A07A864DC98443E78DE535ABFCB3D8CDA38F0396622BE13EE38",
-        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-hybrid-process.json",
-        "processReceiptSha256": "504E5387DA9CF5211EB585B4F91914C69A3FE6A51A7D374590261AEE44D2D4E2",
-        "processPid": 47804,
-        "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
-        "dllSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
-        "checks": 75,
-        "captures": 9,
-        "seconds": 35.637733459472656
-      },
-      {
-        "suite": "v56-regression",
-        "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-v56-574175bd-8aff-4e99-80f6-37660e7f6c58",
-        "report": "v56-smoke.json",
-        "reportPath": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-v56-574175bd-8aff-4e99-80f6-37660e7f6c58\\v56-smoke.json",
-        "reportSha256": "419407357348AEC2DFDAC7A99E5494C51C9DA4F0F4F282605E645E9EF970E4A7",
-        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-v56-process.json",
-        "processReceiptSha256": "7AF5BDD3BB734F7C574100930ACC9C07BCFD9FFE4C944AB37D399607B18E43FA",
-        "processPid": 54516,
-        "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
-        "dllSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
-        "checks": 151,
-        "captures": 10,
-        "seconds": 41.726192474365234
-      },
-      {
-        "suite": "wave-ledger-v56-regression",
-        "evidence": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-ledger-ca1fb961-b7c8-4c30-b190-e783e38974dd",
-        "report": "wave-ledger-v56-smoke.json",
-        "reportPath": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-ledger-ca1fb961-b7c8-4c30-b190-e783e38974dd\\wave-ledger-v56-smoke.json",
-        "reportSha256": "358B230DAF8EA1453BF6ED17EC84F290A71849DACEA71F0AC6E97E8AD31E6AC6",
-        "processReceipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-ledger-process.json",
-        "processReceiptSha256": "FAA946F9B5E5D2EC7C6E968719C167AFF0B9D8D83742783D4201C9981D532E11",
-        "processPid": 59564,
-        "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
-        "dllSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
-        "checks": 281,
-        "captures": 8,
-        "seconds": 13.499988555908203
-      }
-    ],
-    "layer": "Four same-DLL isolated production API/model/framebuffer suites, with unified-inventory model and actual UI checks inside the existing UI suite; declared fixtures; no OS input, human taste/listening or whole-campaign acceptance.",
-    "OSInput": false,
-    "humanAcceptance": false,
-    "listening": false
+  "previousDelivered": {
+    "version": "Home V5.7 /0.5.7 /r4",
+    "executable": "Builds/Home-V5.7-r4-20261018/TooLateToPanic.exe",
+    "portableZip": "Builds/TooLateToPanic-Home-V5.7-r4-20261018-portable.zip",
+    "assemblyCSharpSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
+    "indexBackup": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-MENU-ECONOMY-AUDIO-V59-20261018\\manager\\prior-latest-before-v59-r5.json"
   },
-  "visualReview": {
-    "passed": true,
-    "reviewer": "V57 live root",
-    "layer": "Agent inspection of actual native PNG pixels; no human acceptance claim",
-    "receipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\visual-review-r4.json",
-    "receiptSha256": "ED39EF8C564E40394881151AB0D9BB387694904F1D025549C841C2FB663F7EB0"
-  },
-  "uiV57": {
-    "originalSymbolKeys": 33,
-    "mainChoices": 5,
-    "pauseChoices": 7,
-    "audioSettings": true,
-    "allUsedF1Keys": 34,
-    "classicPhysicalKeyboard": true,
-    "keyboardCaps": 56,
-    "sharedInventorySlots": 20,
-    "unifiedInventoryUiReportSha256": "0FD31E226BADE6DE7F54B3FBEBDE04385F597FA510050A25C62524ED61F0DB4B",
-    "nativeWidths": [
-      1600,
-      960
-    ],
-    "style": "Matte charcoal and cream preparedness field notes; labelled original line icons",
-    "trueModelShelterCopy": true,
-    "budgetAndDamageExact": true,
-    "notebookRoomGlyphPadding": true,
-    "paidProviderWork": false
-  },
-  "unifiedInventory": {
-    "slots": 20,
-    "oneSharedGrid": true,
-    "waterFoodConsumeFromSameInventoryOncePerWave": true,
-    "sameDllUiReportSha256": "0FD31E226BADE6DE7F54B3FBEBDE04385F597FA510050A25C62524ED61F0DB4B",
-    "sameDllUiReportPath": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-ui-9a7e8b18-c4c8-4fa1-902a-671002ae874e\\ui-v57-smoke.json",
-    "uiCaptures": 54,
-    "requiredModelCheckIds": [
-      "unified.canonical.20-slots-one-instance",
-      "unified.canonical.all-supplies-are-ready",
-      "unified.canonical.real-stack-limits",
-      "unified.canonical.cross-flags-same-slot-noop",
-      "unified.canonical.flag-agnostic-reorder",
-      "unified.capacity.partial-one-keeps-three",
-      "unified.capacity.full-reject-is-atomic",
-      "unified.capacity.pause-reject-is-atomic",
-      "unified.drag.merge-to-limit-keeps-remainder",
-      "unified.drag.partial-different-type-reject-atomic",
-      "unified.drag.full-stack-swap-conserves-unified-stock",
-      "unified.devices.first-charge-exactly-one",
-      "unified.devices.second-category-costs-one",
-      "unified.devices.exhausted-world-no-repeat-charge",
-      "unified.devices.reorder-no-charge",
-      "unified.devices.compat-pack-unpack-do-not-charge-or-disable",
-      "unified.devices.duplicate-retained-effect-unique",
-      "unified.devices.unpowered-retained-no-support",
-      "unified.devices.one-battery-one-category",
-      "unified.devices.second-category-later",
-      "unified.devices.nonpowered-support-no-battery",
-      "unified.last-slot.existing-battery-frees-slot",
-      "unified.last-slot.incoming-battery-direct-install",
-      "unified.last-slot.charged-device-no-extra-acceptance",
-      "unified.resolution.one-per-type",
-      "unified.resolution.repeated-sync-idempotent",
-      "unified.resolution.remaining-aftermath-no-second-consumption",
-      "unified.shelter.wrong-destination-reject",
-      "unified.deadline.no-fake-shelter",
-      "unified.deadline.contract-boundaries",
-      "unified.deadline.no-loss-real-consumption-no-fake-shelter",
-      "unified.deadline.no-loss-score-isolated",
-      "unified.restock.same-wave-no-reroll",
-      "unified.restock.next-wave-once",
-      "unified.restock.retained-device-not-duplicated",
-      "unified.materials.finite-unchanged-by-unification",
-      "unified.materials.ready-firstaid-no-craft-shortcut",
-      "unified.reset.no-stale-stock-charge-or-score",
-      "unified.reset.retained-new-radio-needs-battery-again",
-      "unified.simulation.real-unified-seed",
-      "unified.simulation.constructor-preserves-real-seed",
-      "unified.shortflow.real-food-seed"
-    ],
-    "requiredUiCheckIds": [
-      "inventory.independent-model-profile-restored",
-      "inventory.one-canonical-20-grid.1600",
-      "inventory.keyboard-reaches-slot20.1600",
-      "inventory.keyboard-wraps20.1600",
-      "inventory.keyboard-five-column-row.1600",
-      "inventory.populated20-actual-font-fit.1600",
-      "inventory.populated20-derived-counts.1600",
-      "inventory.populated20-fingerprint-restored.1600",
-      "inventory.world-resolution-consumes-once.1600",
-      "inventory.world-resolution-repeat-idempotent.1600",
-      "inventory.one-canonical-20-grid.960",
-      "inventory.keyboard-reaches-slot20.960",
-      "inventory.keyboard-wraps20.960",
-      "inventory.keyboard-five-column-row.960",
-      "inventory.populated20-actual-font-fit.960",
-      "inventory.populated20-derived-counts.960",
-      "inventory.populated20-fingerprint-restored.960",
-      "inventory.world-resolution-consumes-once.960",
-      "inventory.world-resolution-repeat-idempotent.960"
-    ],
-    "modelCheckResults": {
-      "path": "Evidence/GamejamOrchestra/TLTP-UNIFIED-INVENTORY-20261018/staging/audit/detached-model-5de3163244/model-check-results.json",
-      "sha256": "82EAC20119858B03D76F7B270FAD25CFC18950A3C6046FB0CC45A788E0F09441"
-    },
-    "checksSource": {
-      "path": "TooLateToPanic/Assets/Game/Runtime/PanicUnifiedInventoryChecks.cs",
-      "sha256": "ACB79B32DECB8CE7A20A117B28878D4551C40F3ADC198E45C02397D0FE3559E7"
-    },
-    "uiSource": {
-      "path": "TooLateToPanic/Assets/Game/Runtime/PanicUiDesignSmokeV57.cs",
-      "sha256": "BE77F4CFCDAA17D9A9456B7B2276509BA3801FC4F99FA79F160B4F43502179C2"
-    },
-    "uiCompositionManifest": {
-      "path": "Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/final-r3-inputs.json",
-      "sha256": "C23D150A3F810086C379FD6318D520DA27A15B55E5EC3DA3CF2F535A2952C689",
-      "approvedBy": "01a14dd9-c97a-7d72-bb53-0ed8ab357b87",
-      "status": "ROOT_REVIEWED_READY_FOR_COMBINED_COMPILE",
-      "uiFile": {
-        "path": "TooLateToPanic/Assets/Game/Runtime/PanicUiDesignSmokeV57.cs",
-        "beforeSha256": "4A7D7CD8E835F4D1C3937B6B625C6724FB6DFF648EDF2542596C6AECB2BF5D01",
-        "afterSha256": "BE77F4CFCDAA17D9A9456B7B2276509BA3801FC4F99FA79F160B4F43502179C2",
-        "payload": "Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/r3-assembled-062f540e68/PanicUiDesignSmokeV57.cs"
-      },
-      "originEvidence": [
-        {
-          "path": "Evidence/GamejamOrchestra/TLTP-UNIFIED-INVENTORY-20261018/payload/manifest.json",
-          "sha256": "604F10229590A856BD71A47AB0D251AC9C034B251E2A05EB210A65296030180F"
-        },
-        {
-          "path": "Evidence/GamejamOrchestra/TLTP-V56-20261018/manager/v57-coordination/notebook-target/qa/manifest.json",
-          "sha256": "A4DFEE56950C96CBB96177148110DC59FEC0F8DFF01982E91F0D56DB2B14FB54"
-        }
-      ]
-    },
-    "approvedManifest": {
-      "path": "Evidence/GamejamOrchestra/TLTP-UNIFIED-INVENTORY-20261018/payload/manifest.json",
-      "sha256": "604F10229590A856BD71A47AB0D251AC9C034B251E2A05EB210A65296030180F"
-    },
-    "nativeLayer": "The required model and UI check IDs passed in the four-suite same-DLL run; screenshots/checks do not claim OS input or human legibility.",
-    "humanAcceptance": false
-  },
-  "fpsV57": {
-    "sourceBehavior": "Stable FPS view with no added panic yaw, pitch, roll, sway or FOV oscillation; player mouse-look remains authoritative and FOV settles at 62 after the existing 2-second dolly.",
-    "transition": "Soft veil retained with existing breath, heartbeat and tension audio; PanikAZ/TAM copy retained.",
-    "stableCameraNoPanicMotion": true,
-    "nativeEvidenceBoundary": "Only measurements and check rows emitted by the four same-DLL reports are copied below; source behavior alone is not a human comfort/listening claim.",
-    "sourceBindings": {
-      "stableCameraOwner": {
-        "path": "TooLateToPanic/Assets/Game/Runtime/PanicFpsStressV414.cs",
-        "sha256": "8F02A20B29023481031BC58445E5B9DD685AB0EC8F6EEB5868DF3EE89FB4E34E"
-      },
-      "lookInputOwner": {
-        "path": "TooLateToPanic/Assets/Game/Runtime/PanicBagPreparation.cs",
-        "sha256": "1CA9D81067CA901B60739C97A7FE519FF59FDE233136AE468B110026B99A882B"
-      },
-      "twoSecondDolly": {
-        "path": "TooLateToPanic/Assets/Game/Runtime/PanicBagDollyV56.cs",
-        "sha256": "A18D35944799DB668DB1BCDF92A8AF9A46AD575BA5DAFF2FF5B30E33F3553FE3"
-      },
-      "softVeilBreathHeartbeatOwner": {
-        "path": "TooLateToPanic/Assets/Game/Runtime/PanicFpsStressV414.cs",
-        "sha256": "8F02A20B29023481031BC58445E5B9DD685AB0EC8F6EEB5868DF3EE89FB4E34E"
-      },
-      "existingTensionAudio": {
-        "path": "TooLateToPanic/Assets/Game/Runtime/PanicFpsTensionV55.cs",
-        "sha256": "CCEBCB39FCBC3F89DE72781C45975AC14CAB46A90D95E7B08C06257D2F0F87B0"
-      },
-      "panicEffectAZTAMCopy": {
-        "path": "TooLateToPanic/Assets/Game/Runtime/PanicHomeHudMenusV57.cs",
-        "sha256": "467032569FB0F0D7AC7339E5EACD27FB23AF6535ECBD20AB9B7EFE85178A26C9"
-      }
-    },
-    "nativeReportFields": [
-      {
-        "suite": "v56-regression",
-        "report": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\native-r4-v56-574175bd-8aff-4e99-80f6-37660e7f6c58\\v56-smoke.json",
-        "reportSha256": "419407357348AEC2DFDAC7A99E5494C51C9DA4F0F4F282605E645E9EF970E4A7",
-        "fields": {
-          "listenerRestored": true,
-          "listenerBefore": 0.0,
-          "listenerAfter": 0.0,
-          "listenerPauseBefore": false,
-          "listenerPauseAfter": false
-        },
-        "checks": [
-          {
-            "id": "audio.settings-no-listener-write",
-            "status": "PASS",
-            "detail": "",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 17
-          },
-          {
-            "id": "dolly.clock-and-actor.1",
-            "status": "PASS",
-            "detail": "Actual natural2s frames retain preparation clock, same actor position and exact CharacterController instance/dimensions; no helper Warp/Tick/time mutation.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 540
-          },
-          {
-            "id": "dolly.visible-approach.1",
-            "status": "PASS",
-            "detail": "Body visible early then hidden near eye; actual camera approaches actor; hands only after handoff; all veil samples<=.12. frames=111",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 540
-          },
-          {
-            "id": "dolly.camera-and-projection.1",
-            "status": "PASS",
-            "detail": "Live pose/FOV/projection trace; maximum observed camera step=1,288194; smooth route must still be reviewed in captured motion/pixels.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 540
-          },
-          {
-            "id": "dolly.collision-path.1",
-            "status": "PASS",
-            "detail": "Production collision-safe camera route telemetry checked on each rendered frame; adjustment count=0. No collider changes.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 540
-          },
-          {
-            "id": "dolly.pause-and-modal-ownership.1",
-            "status": "PASS",
-            "detail": "F1/notebook refused during transition; actual developer-menu pause holds camera age/pose and preparation; resumes same handoff.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 540
-          },
-          {
-            "id": "dolly.stable-real-fps.1",
-            "status": "PASS",
-            "detail": "Natural completion at real actor eye, hands and perspective; actual duration2s, no opaque hold. reducedMotion=False",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 540
-          },
-          {
-            "id": "dolly.representative-frame-files",
-            "status": "PASS",
-            "detail": "Five actual transition framebuffer milestones plus stable FPS; owner inspects valid pixels/body/joins/collision visibility.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 540
-          },
-          {
-            "id": "fps.stable-view-no-sway-or-fov.normal",
-            "status": "PASS",
-            "detail": "Actual no-input frames=48; max angular error from input=0; FOV error from62=0; eye offset=0. No forced camera pose during observation.",
-            "layer": "NATIVE_ACTUAL_FPS_CAMERA_FRAMES",
-            "frame": 590
-          },
-          {
-            "id": "fps.stable-view-keeps-clock-actor-feedback.normal",
-            "status": "PASS",
-            "detail": "Real preparation clock advances with unchanged actor/input; retained nonverbal audio and bounded soft veil stay active. No human comfort/listening claim.",
-            "layer": "NATIVE_ACTUAL_FPS_CAMERA_FRAMES",
-            "frame": 590
-          },
-          {
-            "id": "fps.stable-view-no-sway-or-fov.reduced",
-            "status": "PASS",
-            "detail": "Actual no-input frames=48; max angular error from input=0; FOV error from62=0; eye offset=0. No forced camera pose during observation.",
-            "layer": "NATIVE_ACTUAL_FPS_CAMERA_FRAMES",
-            "frame": 639
-          },
-          {
-            "id": "fps.stable-view-keeps-clock-actor-feedback.reduced",
-            "status": "PASS",
-            "detail": "Real preparation clock advances with unchanged actor/input; retained nonverbal audio and bounded soft veil stay active. No human comfort/listening claim.",
-            "layer": "NATIVE_ACTUAL_FPS_CAMERA_FRAMES",
-            "frame": 639
-          },
-          {
-            "id": "audio.exterior-source-pcm.Fire",
-            "status": "PASS",
-            "detail": "Real source GetOutputData and listener GetOutputData plus advancing DSP; no listening/Windows output claim",
-            "layer": "NATIVE_SOURCE_AND_LISTENER_PCM",
-            "frame": 1053
-          },
-          {
-            "id": "audio.exterior-source-pcm.Storm",
-            "status": "PASS",
-            "detail": "Real source GetOutputData and listener GetOutputData plus advancing DSP; no listening/Windows output claim",
-            "layer": "NATIVE_SOURCE_AND_LISTENER_PCM",
-            "frame": 1053
-          },
-          {
-            "id": "dolly.clock-and-actor.2",
-            "status": "PASS",
-            "detail": "Actual natural2s frames retain preparation clock, same actor position and exact CharacterController instance/dimensions; no helper Warp/Tick/time mutation.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1362
-          },
-          {
-            "id": "dolly.visible-approach.2",
-            "status": "PASS",
-            "detail": "Body visible early then hidden near eye; actual camera approaches actor; hands only after handoff; all veil samples<=.12. frames=120",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1362
-          },
-          {
-            "id": "dolly.camera-and-projection.2",
-            "status": "PASS",
-            "detail": "Live pose/FOV/projection trace; maximum observed camera step=0,3497933; smooth route must still be reviewed in captured motion/pixels.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1362
-          },
-          {
-            "id": "dolly.collision-path.2",
-            "status": "PASS",
-            "detail": "Production collision-safe camera route telemetry checked on each rendered frame; adjustment count=1. No collider changes.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1362
-          },
-          {
-            "id": "dolly.pause-and-modal-ownership.2",
-            "status": "PASS",
-            "detail": "F1/notebook refused during transition; actual developer-menu pause holds camera age/pose and preparation; resumes same handoff.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1362
-          },
-          {
-            "id": "dolly.stable-real-fps.2",
-            "status": "PASS",
-            "detail": "Natural completion at real actor eye, hands and perspective; actual duration2s, no opaque hold. reducedMotion=True",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1362
-          },
-          {
-            "id": "dolly.clock-and-actor.3",
-            "status": "PASS",
-            "detail": "Actual natural2s frames retain preparation clock, same actor position and exact CharacterController instance/dimensions; no helper Warp/Tick/time mutation.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1599
-          },
-          {
-            "id": "dolly.visible-approach.3",
-            "status": "PASS",
-            "detail": "Body visible early then hidden near eye; actual camera approaches actor; hands only after handoff; all veil samples<=.12. frames=120",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1599
-          },
-          {
-            "id": "dolly.camera-and-projection.3",
-            "status": "PASS",
-            "detail": "Live pose/FOV/projection trace; maximum observed camera step=0,3085282; smooth route must still be reviewed in captured motion/pixels.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1599
-          },
-          {
-            "id": "dolly.collision-path.3",
-            "status": "PASS",
-            "detail": "Production collision-safe camera route telemetry checked on each rendered frame; adjustment count=0. No collider changes.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1599
-          },
-          {
-            "id": "dolly.pause-and-modal-ownership.3",
-            "status": "PASS",
-            "detail": "F1/notebook refused during transition; actual developer-menu pause holds camera age/pose and preparation; resumes same handoff.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1599
-          },
-          {
-            "id": "dolly.stable-real-fps.3",
-            "status": "PASS",
-            "detail": "Natural completion at real actor eye, hands and perspective; actual duration2s, no opaque hold. reducedMotion=False",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 1599
-          },
-          {
-            "id": "dolly.clock-and-actor.4",
-            "status": "PASS",
-            "detail": "Actual natural2s frames retain preparation clock, same actor position and exact CharacterController instance/dimensions; no helper Warp/Tick/time mutation.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 2333
-          },
-          {
-            "id": "dolly.visible-approach.4",
-            "status": "PASS",
-            "detail": "Body visible early then hidden near eye; actual camera approaches actor; hands only after handoff; all veil samples<=.12. frames=120",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 2333
-          },
-          {
-            "id": "dolly.camera-and-projection.4",
-            "status": "PASS",
-            "detail": "Live pose/FOV/projection trace; maximum observed camera step=0,3239285; smooth route must still be reviewed in captured motion/pixels.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 2333
-          },
-          {
-            "id": "dolly.collision-path.4",
-            "status": "PASS",
-            "detail": "Production collision-safe camera route telemetry checked on each rendered frame; adjustment count=0. No collider changes.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 2333
-          },
-          {
-            "id": "dolly.pause-and-modal-ownership.4",
-            "status": "PASS",
-            "detail": "F1/notebook refused during transition; actual developer-menu pause holds camera age/pose and preparation; resumes same handoff.",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 2333
-          },
-          {
-            "id": "dolly.stable-real-fps.4",
-            "status": "PASS",
-            "detail": "Natural completion at real actor eye, hands and perspective; actual duration2s, no opaque hold. reducedMotion=False",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 2333
-          },
-          {
-            "id": "listener.exact-state-restored",
-            "status": "PASS",
-            "detail": "",
-            "layer": "NATIVE_API_FRAME",
-            "frame": 2468
-          }
-        ]
-      }
-    ],
-    "humanAcceptance": false,
-    "listening": false
-  },
-  "retainedV56SourceBaseline": {
-    "version": "Home V5.6 /0.5.6 /r3",
-    "sourceCodeShaders": 179,
-    "sourceFreeze": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V56-20261018\\manager\\source-freeze-r3.json",
-    "dllSha256": "F78C5E198F25C8B6F509D69885A3AC76FDC8F12B62BFA3F9CA2D39BCB94189D3",
-    "nativeReports": [
-      {
-        "suite": "v56",
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V56-20261018\\manager\\native-r3-v56-9973fc9b-97e4-4b70-98e3-dab63232b374\\v56-smoke.json",
-        "checks": 143,
-        "sha256": "3BE8EBE295FC1248D1CCE0844071A6686A11A86E19407B5B72B71B76B261462B"
-      },
-      {
-        "suite": "ledger",
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V56-20261018\\manager\\native-r3-wave-ledger-v56-6d116381-df46-4ff1-96e8-d1b9a3ff665a\\wave-ledger-v56-smoke.json",
-        "checks": 245,
-        "sha256": "E9A8726B7D874B7DBE8F5A1B7421E261E43BC3682DD29C755AFFB601FB013832"
-      }
-    ],
-    "nativeChecks": 388,
-    "windowsTest": "PARTIAL_STOPPED_BY_PHYSICAL_ESC",
-    "zip": "NOT_CREATED",
-    "latest": "NOT_PROMOTED_LATEST_REMAINS_V55",
-    "delivery": "UNFINISHED_RETAINED_SOURCE_BASELINE",
-    "newDllAcceptance": false
-  },
-  "previousDeliveredBaseline": {
-    "version": "Home V5.5 /0.5.5 /r2",
-    "dllSha256": "82B570D390EAE53F740944C1A6D7560E2E61E1B2D2FE0F5344B66A489676A789",
-    "delivery": "Documentation/HOME-V5.5-DELIVERY-2026-10-18.md",
-    "indexSnapshot": "../Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/prior-latest.json",
-    "evidenceBoundary": "The previously delivered V5.5 build and unfinished V5.6 source/native baseline are distinct; their historical checks do not certify this V5.7 DLL."
-  },
-  "realScoresUnchanged": true,
-  "osReview": {
-    "revision": "r4",
-    "utc": "2026-10-18T08:46:11.904671+00:00",
-    "status": "STOPPED_BY_USER",
-    "complete": false,
-    "passed": false,
-    "completedChecksPassed": true,
-    "humanStopped": true,
-    "physicalEscapeAtUtc": "2026-10-18T08:43:43Z",
-    "OSInput": true,
-    "OSInputScope": "PARTIAL_ONLY",
-    "playerExe": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.7-r4-20261018\\TooLateToPanic.exe",
-    "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
-    "dllSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
-    "ownPlayerPid": 57064,
-    "scopeEvidence": {
-      "rawStopReceipt": {
-        "path": "Evidence/GamejamOrchestra/TLTP-V56-20261018/manager/v57-coordination/os-review-r4.json",
-        "sha256": "771BAB3008CEBDDEFB7454E883D855C4259B49807E98B5DA59619B4ED61F7967",
-        "layer": "PEER_PHYSICAL_OS_SCOPE_STOP_RECEIPT"
-      },
-      "currentPlayerPreserved": {
-        "path": "Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/current-player-preserved.json",
-        "sha256": "6291B12EBA3EC43BBFC54EA026793E60A650FFBE279211B79D32A449733AF3B7",
-        "layer": "READ_ONLY_PROCESS_LIVENESS"
-      },
-      "audioReview": {
-        "path": "Evidence/GamejamOrchestra/TLTP-V56-20261018/manager/v57-coordination/audio/V57-R4-AUDIO-REVIEW.json",
-        "sha256": "405AE98D9F291AF1F1DE8938DB6C7E06305DBD3D274BACEA5FE474CC2E5A6C7F",
-        "layer": "OFFLINE_BOUNDED_OUTPUT_NUMERIC_ANALYSIS_NOT_HUMAN_LISTENING"
-      },
-      "snapshots": [
-        {
-          "path": "Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/user-stop-readonly-snapshot/os-observer-summary.json",
-          "sha256": "9A1770EC3C296F21AECD13BFD8619CBAFC954A30DA6A28EC123EA84BFB3E13CF",
-          "note": "Read-only snapshot of appendable observer evidence; unfinished summary and attempted denied UI step remain explicit"
-        },
-        {
-          "path": "Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/user-stop-readonly-snapshot/ui-steps.json",
-          "sha256": "741FE41E6CD2554AEF0D81DA01BD00702ACF539D636772C44B2276502818FBEA",
-          "note": "Read-only snapshot of appendable observer evidence; unfinished summary and attempted denied UI step remain explicit"
-        },
-        {
-          "path": "Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/user-stop-readonly-snapshot/os-state-ledger.jsonl",
-          "sha256": "4E7F82000AA73FA79DC88AA19984A8E827AAD3C06EF271266D1FAF49471F222E",
-          "note": "Read-only snapshot of appendable observer evidence; unfinished summary and attempted denied UI step remain explicit"
-        }
-      ]
-    },
-    "rawStopReceipt": {
-      "path": "Evidence/GamejamOrchestra/TLTP-V56-20261018/manager/v57-coordination/os-review-r4.json",
-      "sha256": "771BAB3008CEBDDEFB7454E883D855C4259B49807E98B5DA59619B4ED61F7967"
-    },
-    "currentPlayerReceipt": {
-      "path": "Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/current-player-preserved.json",
-      "sha256": "6291B12EBA3EC43BBFC54EA026793E60A650FFBE279211B79D32A449733AF3B7"
-    },
-    "windowsCompleted": [
-      "notebook kitchen mark helper OFF persists then clear and helper restore",
-      "F1 physical keyboard help modal hold and resume",
-      "Tab unified 20 slot inventory",
-      "natural FPS exact stable camera 27.86 seconds before developer fixture",
-      "actual F2 freeze explicit cheated score-out fixture",
-      "audio ON OFF MUTE RESTORED bounded output analysis",
-      "F3 missed shelter cinematic Earthquake and reward-free ledger dismissal",
-      "return title and select Earthquake simulation"
-    ],
-    "windowsIncomplete": [
-      "four hazard simulation sweep",
-      "new normal global-profile player launch after test slot"
-    ],
-    "fourHazardSimulationSweep": {
-      "Earthquake": "NOT_RUN",
-      "Flood": "NOT_RUN",
-      "Fire": "NOT_RUN",
-      "Storm": "NOT_RUN"
-    },
-    "earthquakeSimulationSelectionOnly": true,
-    "rejectedAction": "simulation_quake_begin click at 08:43:43 UTC is ATTEMPT_ONLY because Computer Use returned physical Escape stop",
-    "deniedClickAccepted": false,
-    "scopeSummary": "Gerçek Windows girdisiyle yardımcı kapalıyken mutfak hedefi işaretleme/koruma/kaldırma, F1 duraklat/devam, Tab tek envanter, doğal FPS geçişi ve27,86sn sabit konum gözlemi yapıldı. Ses karşılaştırmasında daha sonra yalnız izole skor dışı koşuda F2 saat dondurma kullanıldı. F3 gerçek sığınağa ulaşılmadan ödülsüz dökümle çözüldü. Dört afetin menüden Windows turu ve yeni normal profil açılışı fiziksel Esc nedeniyle tamamlanmadı; reddedilen son tıklama yalnız deneme kaydıdır.",
-    "currentGameOpen": true,
-    "currentPlayerProfile": "ISOLATED_OS_OBSERVER",
-    "finalNormalPlayerPid": null,
-    "normalGlobalProfileLaunch": "NOT_RUN_USER_STOP",
-    "globalProfilesUnmodified": true,
-    "profileScope": "Real highscores file and default audio preference namespace only; isolated QA and Unity window settings excluded.",
-    "noFurtherUiAfterStop": true,
-    "noGuiInputLaunchOrCloseAfterStop": true,
-    "processesStoppedAfterStop": 0,
-    "processIsolatedPcm": false,
-    "audioAttribution": "PID-associated session meters and mixed endpoint PCM; not process-loopback PCM attribution",
-    "humanAcceptance": false,
-    "listening": false,
-    "fullCampaignAcceptance": false,
-    "cleanup": "NOT_RUN_AFTER_USER_STOP; own previous candidates and historical retained targets preserved",
-    "receipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\os-review-r4.json",
-    "receiptSha256": "2BED3B2EEB683B0896201E541A53F7E1155391058066BDDAC489FECC3828C0ED"
-  },
-  "humanAcceptance": false,
-  "listening": false,
-  "normalLaunch": {
-    "status": "NOT_RUN_USER_STOP",
-    "pid": null,
-    "running": false,
-    "reason": "User physical Escape stopped Computer Use; no new player was launched afterward",
-    "humanAcceptance": false,
-    "listening": false
-  },
-  "currentPlayer": {
-    "status": "ISOLATED_OS_OBSERVER_PRESERVED_AFTER_USER_STOP",
-    "pid": 57064,
-    "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.7-r4-20261018\\TooLateToPanic.exe",
-    "exeSha256": "D26B0F57817DB378557C445524C48D28EE559FB2BE53CA5DC63E37C1E4AD22F5",
-    "dllSha256": "BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394",
-    "normalGlobalProfile": false,
-    "running": true,
-    "receipt": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-UI-REDESIGN-V57-20261018\\manager\\current-player-preserved.json",
-    "receiptSha256": "6291B12EBA3EC43BBFC54EA026793E60A650FFBE279211B79D32A449733AF3B7",
-    "noGuiInputLaunchOrCloseAfterStop": true
-  },
-  "releaseAcceptance": {
-    "nativePassed": true,
-    "agentPixelsPassed": true,
-    "OSComplete": false,
-    "allRequestedTestsComplete": false,
-    "normalLaunchRun": false,
-    "humanAcceptance": false,
-    "listening": false
-  },
-  "retention": {
-    "preExistingPlayersProtected": true,
-    "independentFpsUntouched": true,
-    "historicalRejectedTargetsTouched": false,
-    "processesStopped": 0,
-    "newV57PlayerLeftOpen": true,
-    "newV57PlayerPid": 57064,
-    "currentProfile": "ISOLATED_OS_OBSERVER",
-    "noGuiInputLaunchOrCloseAfterStop": true,
-    "cleanupStatus": "NOT_RUN_USER_STOP",
-    "osObserverPid": 57064
-  },
-  "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.7-r4",
+  "knownLimits": [
+    "Yalnız yeni V5.9 izole API/render/ses testi son kullanıcı tarafından onaylandı; önceki açık kullanıcı oyuncusuna girdi/sonlandırma gönderilmedi.",
+    "Aynı DLL üzerindeki tüm sağlanan framebuffer görüntüleri root tarafından incelendi; insan okunurluk/konfor kabulü değildir.",
+    "90 sn fizikselgathering ve6–7 dalga rahatlığı insanla ölçülmedi; ekonomik ufuk gerçekmodel/fixture kanıtıdır.",
+    "İnsan dinleme/konfor ve tam kampanya kabulü yapılmadı.",
+    "Önceki build/ZIP temizlenmedi; eski native sayı bu DLL için kullanılmaz."
+  ],
+  "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r5",
   "publication": {
-    "sourceSnapshotUtc": "2026-10-18T09:51:37.3151706Z",
-    "sourceManifest": "Documentation/Publications/Snapshots/20261018T095013Z/source-sha256.json",
-    "sourceVsBuildReport": "Documentation/Publications/Snapshots/20261018T095013Z/source-vs-build.json",
-    "selectedSourceFiles": 4138,
-    "compiledSourceMismatches": [
-      "Assets/Game/Art/PanicDisasterArt.cs",
-      "Assets/Game/Art/PanicHomeArt.cs",
-      "Assets/Game/Editor/PanicResidenceBuild.cs",
-      "Assets/Game/Runtime/PanicAudioSmoke.cs",
-      "Assets/Game/Runtime/PanicBackgroundMusic.cs",
-      "Assets/Game/Runtime/PanicBagPreparation.cs",
-      "Assets/Game/Runtime/PanicBuildIdentityV56.cs",
-      "Assets/Game/Runtime/PanicCompoundChecksV54.cs",
-      "Assets/Game/Runtime/PanicCompoundDisastersV54.cs",
-      "Assets/Game/Runtime/PanicExpedition.cs",
-      "Assets/Game/Runtime/PanicFpsStressV414.cs",
-      "Assets/Game/Runtime/PanicFpsTensionV55.cs",
-      "Assets/Game/Runtime/PanicFreeplayOnboardingV414.cs",
-      "Assets/Game/Runtime/PanicGuidanceV54.cs",
-      "Assets/Game/Runtime/PanicHomeEffects.cs",
-      "Assets/Game/Runtime/PanicHomeHud.cs",
-      "Assets/Game/Runtime/PanicHomeHudMenusV57.cs",
-      "Assets/Game/Runtime/PanicHomeLife.cs",
-      "Assets/Game/Runtime/PanicHomePresentation.cs",
-      "Assets/Game/Runtime/PanicHomeWorld.cs",
-      "Assets/Game/Runtime/PanicJuryDemo.cs",
-      "Assets/Game/Runtime/PanicJuryHud.cs",
-      "Assets/Game/Runtime/PanicJuryPresentation.cs",
-      "Assets/Game/Runtime/PanicManualWorkHudV414.cs",
-      "Assets/Game/Runtime/PanicModel.cs",
-      "Assets/Game/Runtime/PanicNeighbourDetailsHybrid.cs",
-      "Assets/Game/Runtime/PanicNotebookAssistantV55.cs",
-      "Assets/Game/Runtime/PanicNotebookData.cs",
-      "Assets/Game/Runtime/PanicNotebookOverlay.cs",
-      "Assets/Game/Runtime/PanicOverhaul414Smoke.cs",
-      "Assets/Game/Runtime/PanicPresentationAudio.cs",
-      "Assets/Game/Runtime/PanicRevisionWorld.cs",
-      "Assets/Game/Runtime/PanicRevisionWorldV5.cs",
-      "Assets/Game/Runtime/PanicSimulationHud.cs",
-      "Assets/Game/Runtime/PanicUiDesignSmokeV57.cs",
-      "Assets/Game/Runtime/PanicUnifiedInventoryChecks.cs",
-      "Assets/Game/Runtime/PanicV55Smoke.cs",
-      "Assets/Game/Runtime/PanicV56Smoke.cs",
-      "Assets/Game/Runtime/PanicV5SystemsModelChecks.cs",
-      "Assets/Game/Runtime/PanicWaveLedgerModelChecksV56.cs",
-      "Assets/Game/Runtime/PanicWaveLedgerSmokeV56.cs",
-      "Assets/Game/Runtime/PanicWaveV52ModelChecks.cs",
-      "Assets/Game/Runtime/PanicWorldMarkerLayout.cs"
-    ],
-    "selectedBuildAssetMismatches": [
-      "Assets/Game/Art/PanicDisasterArt.cs",
-      "Assets/Game/Art/PanicHomeArt.cs",
-      "Assets/Game/Editor/PanicResidenceBuild.cs",
-      "Assets/Game/Resources/Audio/Foley/LICENSE-AND-PROVENANCE.md",
-      "Assets/Game/Resources/Audio/Foley/v56_cloth.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_cloth.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_electrical_short.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_electrical_short.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_cancel.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_cancel.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_close.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_close.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_flare.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_flare.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_start.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_start.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_turn.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_gas_turn.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_hammer_hit.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_hammer_hit.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_pipe_leak.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_pipe_leak.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_power_cancel.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_power_cancel.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_power_close.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_power_close.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_power_start.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_power_start.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_power_turn.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_power_turn.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_water_cancel.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_water_cancel.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_water_close.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_water_close.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_water_start.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_water_start.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_water_turn.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_water_turn.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_zodiac_motor.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_zodiac_motor.wav.meta",
-      "Assets/Game/Resources/Audio/Foley/v56_zodiac_water.wav",
-      "Assets/Game/Resources/Audio/Foley/v56_zodiac_water.wav.meta",
-      "Assets/Game/Resources/HomeArt/landscape.prefab",
-      "Assets/Game/Runtime/PanicAudioSmoke.cs",
-      "Assets/Game/Runtime/PanicBackgroundMusic.cs",
-      "Assets/Game/Runtime/PanicBagPreparation.cs",
-      "Assets/Game/Runtime/PanicBuildIdentityV56.cs",
-      "Assets/Game/Runtime/PanicCompoundChecksV54.cs",
-      "Assets/Game/Runtime/PanicCompoundDisastersV54.cs",
-      "Assets/Game/Runtime/PanicExpedition.cs",
-      "Assets/Game/Runtime/PanicFpsStressV414.cs",
-      "Assets/Game/Runtime/PanicFpsTensionV55.cs",
-      "Assets/Game/Runtime/PanicFreeplayOnboardingV414.cs",
-      "Assets/Game/Runtime/PanicGuidanceV54.cs",
-      "Assets/Game/Runtime/PanicHomeEffects.cs",
-      "Assets/Game/Runtime/PanicHomeHud.cs",
-      "Assets/Game/Runtime/PanicHomeHudMenusV57.cs",
-      "Assets/Game/Runtime/PanicHomeLife.cs",
-      "Assets/Game/Runtime/PanicHomePresentation.cs",
-      "Assets/Game/Runtime/PanicHomeWorld.cs",
-      "Assets/Game/Runtime/PanicJuryDemo.cs",
-      "Assets/Game/Runtime/PanicJuryHud.cs",
-      "Assets/Game/Runtime/PanicJuryPresentation.cs",
-      "Assets/Game/Runtime/PanicManualWorkHudV414.cs",
-      "Assets/Game/Runtime/PanicModel.cs",
-      "Assets/Game/Runtime/PanicNeighbourDetailsHybrid.cs",
-      "Assets/Game/Runtime/PanicNotebookAssistantV55.cs",
-      "Assets/Game/Runtime/PanicNotebookData.cs",
-      "Assets/Game/Runtime/PanicNotebookOverlay.cs",
-      "Assets/Game/Runtime/PanicOverhaul414Smoke.cs",
-      "Assets/Game/Runtime/PanicPresentationAudio.cs",
-      "Assets/Game/Runtime/PanicRevisionWorld.cs",
-      "Assets/Game/Runtime/PanicRevisionWorldV5.cs",
-      "Assets/Game/Runtime/PanicSimulationHud.cs",
-      "Assets/Game/Runtime/PanicUiDesignSmokeV57.cs",
-      "Assets/Game/Runtime/PanicUnifiedInventoryChecks.cs",
-      "Assets/Game/Runtime/PanicV55Smoke.cs",
-      "Assets/Game/Runtime/PanicV56Smoke.cs",
-      "Assets/Game/Runtime/PanicV5SystemsModelChecks.cs",
-      "Assets/Game/Runtime/PanicWaveLedgerModelChecksV56.cs",
-      "Assets/Game/Runtime/PanicWaveLedgerSmokeV56.cs",
-      "Assets/Game/Runtime/PanicWaveV52ModelChecks.cs",
-      "Assets/Game/Runtime/PanicWorldMarkerLayout.cs",
-      "Assets/Game/Scenes/TooLateToPanicResidence.unity"
-    ],
+    "sourceSnapshotUtc": "2026-10-18T10:00:29.5155668Z",
+    "sourceManifest": "Documentation/Publications/v0.5.9-r5/source-sha256.json",
+    "sourceVsBuildReport": "Documentation/Publications/v0.5.9-r5/source-vs-build.json",
+    "selectedSourceFiles": 4139,
+    "compiledSourceMismatches": [],
+    "selectedBuildAssetMismatches": [],
     "missingGuids": 0,
     "newBuildPerformed": false,
     "newNativeRunPerformed": false,
     "localEvidenceNotIncluded": true,
-    "existingReleaseUnchanged": true
+    "existingReleaseUnchanged": false
   }
 }
