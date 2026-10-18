@@ -1,12 +1,12 @@
 # Too Late to Panic! — yarışma ve teslim kontrolü
 
-18 Ekim 2026. Yerel güncel paket **Home V5.14-r3 /0.5.14**; GitHub güncellemesi hazırlanıyor. **Yarışma sistemine gönderim yapılmadı.** Güncel kurallar kullanıcının doğrudan ilettiği organizasyon duyurusudur; bu belge yeni form/hesap/yükleme kontrolü değildir.
+18 Ekim 2026. Yerel güncel paket **Home V5.14-r3 /0.5.14**; [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.14-r3) doğrulandı. **Yarışma sistemine gönderim yapılmadı.** Güncel kurallar kullanıcının doğrudan ilettiği organizasyon duyurusudur; bu belge yeni form/hesap/yükleme kontrolü değildir.
 
 | Konu | Güncel koşul / durum |
 |---|---|
 | Teslim aralığı | 18 Ekim 12.00–18.15 UTC+3, takım PIN'iyle; bu görev form göndermez |
 | Oynanabilir paket | Windows ZIP; [LATEST](../TooLateToPanic/LATEST-BUILD.json) ve [teslim](../TooLateToPanic/Documentation/HOME-V5.14-PANIC-ROOM-DELIVERY-2026-10-18.md) |
-| Public kaynak ve tam commit | [Yayın kaydı](../PUBLICATION.md); yeni paketle eşleşen tam kaynak commit'i yayın sonrası yazılır |
+| Public kaynak ve tam commit | [Yayın kaydı](../PUBLICATION.md); tam kaynak commit’i `c4e003f74205e0efb05a7fb3eb71fb2d7a97a523` |
 | Video | Ayrı yerel 60 sn video kaydı korunur; bu kaynak/ZIP yayını video yüklemesi veya yeni V5.14 video kabulü değildir |
 | Sahne | Video dahil toplam180 saniye; prova NOT_RUN |
 | AI kategorileri | Görsel/ses/kod/metin/diğer ayrı açıklanır; [beyan](TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md) |

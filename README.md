@@ -10,7 +10,7 @@ WASD/oklar hareket, Shift koşu, Space zıplama; E etkileşim, F erzak; Tab enva
 
 [Başlatıcı](Play-TooLateToPanic.cmd) · [Güncel kimlik](TooLateToPanic/LATEST-BUILD.json) · [Teslim kaydı](TooLateToPanic/Documentation/HOME-V5.14-PANIC-ROOM-DELIVERY-2026-10-18.md) · [Yayın durumu](PUBLICATION.md)
 
-Yeni Editor kontrolü NOT_RUN; 122 aynı DLL native API/render kontrolü, 15 incelenmiş kare. OS girdisi/insan oynanış, okunurluk, dinleme, konfor ve tam kampanya kabulü NOT_RUN. Önceki sürüm sonuçları yeni DLL kabulü değildir. Yeni paket GitHub'a henüz aktarılmadı; yayın durumu ayrıca kaydedilir.
+Yeni Editor kontrolü NOT_RUN; 122 aynı DLL native API/render kontrolü, 15 incelenmiş kare. OS girdisi/insan oynanış, okunurluk, dinleme, konfor ve tam kampanya kabulü NOT_RUN. Önceki sürüm sonuçları yeni DLL kabulü değildir. [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.14-r3) · [Windows ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.14-r3/TooLateToPanic-Home-V5.14-r3-20261018-portable.zip).
 
 [Kaynak düzeni](CONTRIBUTING.md) · [Güncelleme düzeni](Docs/RELEASE-WORKFLOW.md) · [AI/asset/lisans](TooLateToPanic/Documentation/ASSET-CREDITS.md) · [Yarışma beyanı](Docs/TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md)
 
