@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,7 +12,13 @@ namespace TooLateToPanic
         readonly Dictionary<Collider,Renderer[]> bagDollyObstacleRenderersV56=new Dictionary<Collider,Renderer[]>();
         float bagDollyStartClockV56,bagDollyClockDriftV56,bagDollyProgressV56,bagDollyProjectionBlendV56,bagDollyFpsStartClockV56=-1;
         bool bagDollyReducedV56,bagDollyShowBodyV56,bagDollyPathClearV56;
-        int bagDollyAdjustmentCountV56,bagDollyAppliedFramesV56;
+        int bagDollyAdjustmentCountV56,bagDollyAppliedFramesV56,bagDollySelectedRouteV56=-1;
+        Vector3 bagDollyPathStartV56;
+        float bagDollyReplanAtV56;
+        string bagDollyLastObstructionV56="";
+        public int BagDollySelectedRouteV56 { get { return bagDollySelectedRouteV56; } }
+        public string BagDollyLastObstructionV56 { get { return bagDollyLastObstructionV56; } }
+        public bool BagDollyEndpointReachedV56 { get { return bagDollyPathClearV56&&View&&Vector3.Distance(View.transform.position,bagShotTo)<.01f; } }
         public bool BagDollyActiveV56 { get { return BagHandoffActiveV51; } }
         public float BagDollyProgressV56 { get { return bagDollyProgressV56; } }
         public bool BagDollyBodyVisibleV56 { get { return hero&&hero.gameObject.activeInHierarchy; } }
@@ -40,36 +46,53 @@ namespace TooLateToPanic
             // Open the same existing isometric cutaway before testing the cinematic's visible surfaces.
             // Permanent roof/ceiling barriers stay enabled for the real controller throughout.
             ApplyFloorVisibility();
-            Vector3 towardsStart=Vector3.ProjectOnPlane(bagShotFrom-bagShotTo,Vector3.up).normalized;
-            if(towardsStart.sqrMagnitude<.01f)towardsStart=-bagDollyForwardV56;
-            Vector3 right=Vector3.Cross(Vector3.up,bagDollyForwardV56);
-            bagDollyPathClearV56=false;
-            for(int route=0;route<4;route++)
-            {
-                Vector3 shoulder=bagDollyReducedV56?Vector3.Lerp(bagShotFrom,bagShotTo,.82f):
-                    route==0?bagShotTo-bagDollyForwardV56*1.35f+right*.24f+Vector3.up*.13f:
-                    route==1?bagShotTo+towardsStart*1.15f+Vector3.up*.18f:
-                    route==2?bagShotTo+towardsStart*.7f+Vector3.up*1.25f:Vector3.Lerp(bagShotFrom,bagShotTo,.82f);
-                bagDollyControl1V56=bagDollyReducedV56||route==3?Vector3.Lerp(bagShotFrom,bagShotTo,.34f):
-                    Vector3.Lerp(bagShotFrom,shoulder,.46f)+right*.28f+Vector3.up*.30f;
-                bagDollyControl2V56=shoulder;
-                if(BagDollyRouteClearV56()){bagDollyPathClearV56=true;break;}
-                bagDollyAdjustmentCountV56++;
-            }
+            bagDollyLastObstructionV56="";bagDollySelectedRouteV56=-1;
+            bagDollyPathClearV56=PlanBagDollyRouteV56(bagShotFrom,0);
             float depth=Mathf.Max(1f,Vector3.Dot(PlayerPosition+Vector3.up*1.02f-bagShotFrom,View.transform.forward));
             bagShotFov=Mathf.Clamp(2*Mathf.Atan(bagIsoSize/depth)*Mathf.Rad2Deg,15,95);
             if(hero)hero.gameObject.SetActive(true);
+        }
+
+        bool PlanBagDollyRouteV56(Vector3 start,float atProgress)
+        {
+            bagDollyPathStartV56=start;bagDollyReplanAtV56=atProgress;
+            Vector3 towardsStart=Vector3.ProjectOnPlane(start-bagShotTo,Vector3.up).normalized;
+            if(towardsStart.sqrMagnitude<.01f)towardsStart=-bagDollyForwardV56;
+            Vector3 right=Vector3.Cross(Vector3.up,bagDollyForwardV56);
+            for(int candidate=0;candidate<6;candidate++)
+            {
+                // Reduced starts direct, then tries the exact previously certified normal
+                // shoulder geometry. It removes roll, not the ability to avoid a balcony/wall.
+                int route=bagDollyReducedV56?(candidate==0?3:candidate==1?0:candidate==2?1:candidate==3?2:candidate):candidate;
+                Vector3 shoulder=route==0?bagShotTo-bagDollyForwardV56*1.35f+right*.24f+Vector3.up*.13f:
+                    route==1?bagShotTo+towardsStart*1.15f+Vector3.up*.18f:
+                    route==2?bagShotTo+towardsStart*.7f+Vector3.up*1.25f:Vector3.Lerp(start,bagShotTo,.82f);
+                bagDollyControl1V56=route==3?Vector3.Lerp(start,bagShotTo,.34f):Vector3.Lerp(start,shoulder,.46f)+right*.28f+Vector3.up*.30f;
+                bagDollyControl2V56=shoulder;
+                if(route>=4)
+                {
+                    // Early descent outside the eaves, then a low approach under a balcony.
+                    // Both alternatives are still sampled against actual visible obstacles.
+                    float side=route==4?1:-1;
+                    bagDollyControl1V56=Vector3.Lerp(start,bagShotTo,.32f)+right*(side*.45f);
+                    bagDollyControl1V56.y=Mathf.Lerp(bagShotTo.y,start.y,.15f);
+                    bagDollyControl2V56=bagShotTo+towardsStart*2.6f+right*(side*.24f)+Vector3.up*.10f;
+                }
+                if(BagDollyRouteClearV56()){bagDollySelectedRouteV56=route;return true;}
+                bagDollyAdjustmentCountV56++;
+            }
+            bagDollySelectedRouteV56=-1;return false;
         }
 
         static float DollyEaseV56(float t){t=Mathf.Clamp01(t);return t*t*t*(t*(t*6-15)+10);}
         Vector3 BagDollyPointV56(float t)
         {
             float u=1-t;
-            return u*u*u*bagShotFrom+3*u*u*t*bagDollyControl1V56+3*u*t*t*bagDollyControl2V56+t*t*t*bagShotTo;
+            return u*u*u*bagDollyPathStartV56+3*u*u*t*bagDollyControl1V56+3*u*t*t*bagDollyControl2V56+t*t*t*bagShotTo;
         }
         bool BagDollyRouteClearV56()
         {
-            Vector3 previous=bagShotFrom;
+            Vector3 previous=bagDollyPathStartV56;
             for(int sample=1;sample<=28;sample++)
             {
                 Vector3 point=BagDollyPointV56(sample/28f);
@@ -107,7 +130,7 @@ namespace TooLateToPanic
                     // Full-height physical partitions may have a deliberately low cutaway mesh.
                     // Only their currently rendered part can obstruct a presentation camera.
                     if(!bounds.Contains(hit.point))continue;
-                    obstruction=hit;return true;
+                    bagDollyLastObstructionV56=c.name+" / "+r.name;obstruction=hit;return true;
                 }
             }
             return false;
@@ -118,12 +141,16 @@ namespace TooLateToPanic
             float t=Mathf.Clamp01(progress),eased=DollyEaseV56(t);
             bagDollyProgressV56=t;bagDollyClockDriftV56=Mathf.Abs(Model.TimeRemaining-bagDollyStartClockV56);
             bagDollyAppliedFramesV56++;
-            Vector3 position=BagDollyPointV56(eased);
+            Vector3 position=BagDollyPointV56(Mathf.InverseLerp(bagDollyReplanAtV56,1,eased));
             if(TryBagDollyVisibleHitV56(View.transform.position,position,out var hit))
             {
-                // Dynamic visible doors may move after planning; retain a small camera clearance.
-                position=View.transform.position+(position-View.transform.position).normalized*Mathf.Max(0,hit.distance-.02f);
-                bagDollyAdjustmentCountV56++;bagDollyPathClearV56=false;
+                // Replan from this clear rendered pose within the same original handoff.
+                // Never jump from a clamped pose through the detected visible obstruction.
+                bagDollyAdjustmentCountV56++;
+                if(eased<.9999f&&PlanBagDollyRouteV56(View.transform.position,eased))
+                {position=View.transform.position;bagDollyPathClearV56=true;}
+                else
+                {position=View.transform.position+(position-View.transform.position).normalized*Mathf.Max(0,hit.distance-.02f);bagDollyPathClearV56=false;}
             }
             Vector3 target=Vector3.Lerp(bagShotTo,bagShotTo+bagDollyForwardV56*4,DollyEaseV56(Mathf.InverseLerp(.46f,.92f,t)));
             Vector3 look=target-position;
@@ -143,7 +170,7 @@ namespace TooLateToPanic
             bagDollyShowBodyV56=t<.89f&&Vector3.Distance(position,bagShotTo)>1.05f;
             if(hero)hero.gameObject.SetActive(bagDollyShowBodyV56);
             SetBagDollyPartitionsV56(DollyEaseV56(Mathf.InverseLerp(.95f,.15f,Vector3.Distance(position,bagShotTo))));
-            if(t>=1){bagDollyFpsStartClockV56=fpsStressClockV414;View.ResetProjectionMatrix();View.transform.SetPositionAndRotation(bagShotTo,bagRotationTo);SetFirstPersonPartitions(true);bagDollyShowBodyV56=false;if(hero)hero.gameObject.SetActive(false);}
+            if(t>=1&&bagDollyPathClearV56&&Vector3.Distance(position,bagShotTo)<.01f){bagDollyFpsStartClockV56=fpsStressClockV414;View.ResetProjectionMatrix();View.transform.SetPositionAndRotation(position,bagRotationTo);SetFirstPersonPartitions(true);bagDollyShowBodyV56=false;if(hero)hero.gameObject.SetActive(false);}
         }
 
         void SetBagDollyPartitionsV56(float amount)

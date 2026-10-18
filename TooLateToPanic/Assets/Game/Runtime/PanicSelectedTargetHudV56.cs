@@ -155,7 +155,7 @@ namespace TooLateToPanic
                 if (!World || World.Model == null || World.Expedition == null || _paused || World.Model.IsPaused ||
                     _developerMenuOpen || DeveloperInputBlockedThisFrame || FreeplayOnboardingInputBlockedV414 ||
                     World.NotebookBlocksInput || World.CinematicActive || World.LossAnnounced || World.InputLocked ||
-                    World.BagCameraTransitionActive || World.WorkActive || World.InventoryOpen || World.IsMoving ||
+                    World.BagCameraTransitionActive || World.BagFirstPersonActive || World.WorkActive || World.InventoryOpen || World.IsMoving ||
                     _helpVisible || SimulationSelectorOpen || !World.CanInteract)
                     return false;
                 if (World.Model.Phase != PanicPhase.Preparing && World.Model.Phase != PanicPhase.Tutorial) return false;
