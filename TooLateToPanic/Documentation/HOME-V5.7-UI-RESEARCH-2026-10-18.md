@@ -1,0 +1,55 @@
+# V5.7 arayüz araştırması ve bağımsız kaynak incelemesi
+
+Kontrol tarihi: **18 Ekim 2026**. Kapsam: menü, duraklatma ve oyun HUD'sinin kaynak incelemesi; webde doğrulanan birincil rehberler. **Native render/OS girdi/insan kullanılabilirlik testi yapılmadı.** Canlı Assets, Unity, build, player ve kayıtlar değiştirilmedi. Bu belge kaynak kanıtıdır; mevcut sürümün veya V5.7'nin erişilebilirlik uygunluğu iddiası değildir.
+
+## Tasarımın yönü
+
+Mevcut oyuna ait logo, ev sahnesi ve defter dili yeterli kimliği sağlıyor. Yeniden tasarımın işi yeni bir gösterge paneli üretmek değil; **oyna → ne yapıyorum → neye basıyorum → sonucum ne oldu** sırasını kolaylaştırmak. Birincil eylemi büyük ve yalın tut; ikinci eylemlerde aynı düğme ölçüsü, tek ikon ailesi ve kısa Türkçe kullan. Uzun büyük harf cümleleri, rastgele rozetler, yinelenen saatler ve yalnız dekor olan kartları azalt.
+
+## Doğrulanan rehber → uygulanabilir karar
+
+| Birincil kaynak | Bu oyunda uygulanacak karar |
+|---|---|
+| [Xbox XAG 101: Text display](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/101) | PC için 1080p'de önerilen varsayılan yazı en az 18px; tuş simgesinin içindeki harf de okunmalı. Metin büyüdüğünde içerik kaybolmamalı. Küçük boyutta kısaltma/yeni satır kullanılmalı; otomatik küçültme son çözüm olmalı. Uzun açıklamalarda cümle düzeni ve sola hizalama tercih edilmeli. |
+| [Xbox XAG 102: Contrast](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/102) | Oyun açısından önemli standart metin ve şekiller için 4,5:1 pratik hedef. Durağan panel rengi için hesap, yarı saydam panel için en olumsuz sahneyle kontrol. İnaktif seçenek de okunur kalmalı. |
+| [Xbox XAG 103: Additional channels](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/103) | Seçim/hazır/eksik/uyarı yalnız renkle anlatılmamalı: çizgi/odak işareti + metin + anlaşılır sembol birlikte kullanılmalı. Ses kapalıyken tesisat olayı ve kalan süre anlaşılmalı. Renk körlüğü simülasyonu insan doğrulamasının yerine geçmez. |
+| [Xbox XAG 107: Input](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/107) | Menü, ayarlar ve sonuç sayfalama fare yanında tekil tuşlarla işletilmeli. Oklarla odak görsel sırayı izlemeli; Enter'ın işlemi açık olmalı. Bu arayüz çalışması remapping veya fare gerektiren dünya mini oyunları için tam uygunluk sağlamaz. |
+| [Nielsen Norman Group: Icon Usability](https://www.nngroup.com/articles/icon-usability/) | Evrensel ikon azdır. Menü ve yeni sembollerde görünür sözcük etiketi kullan; anlamı hover'a saklama. Küçük boyutta ayrıntısız, aynı kalınlıkta tek ikon ailesi seç. Defter, su, gıda, süre, bütçe, ses ve sığınak simgelerini anlamlarıyla eşleştir. |
+| [W3C: Contrast minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) | sRGB bağıl parlaklık hesabı ile renkleri ölç. 4,499'u 4,5 diye yuvarlayıp geçti deme. İnce yazı kenar yumuşatma nedeniyle hesapta iyi olup görünümde zayıf olabilir. Bu web rehberini Unity oyunu için bütünsel WCAG sertifikası diye sunma. |
+| [W3C: Animation from interactions](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) | Düğme/sekme/odak için gereksiz hareket ekleme. Mevcut azaltılmış FPS hareketi ayarını görünür ve anlaşılır tut; bu çalışma geçmiş FPS gerilim efektlerinin insan konforunu doğrulamaz. |
+| [Game Accessibility Guidelines: readable default font size](https://gameaccessibilityguidelines.com/use-an-easily-readable-default-font-size/) ve [colour alone](https://gameaccessibilityguidelines.com/ensure-no-essential-information-is-conveyed-by-a-fixed-colour-alone/) | Gerçek oynama mesafesinde küçük çözünürlükte okunurluğu kontrol et. Metin/sayı/sembolü rengin yedeği yap. Ana eylemin açıklaması ve tuşu aynı bakış alanında kalmalı. |
+
+## Canlı kaynakta gözlenen en önemli sorunlar
+
+İncelenen dosyalar `TooLateToPanic/Assets/Game/Runtime/` altındadır; hashleri `inspected-source-manifest.json` içindedir.
+
+| Öncelik ve kaynak | Bulgu | V5.7 için somut değişiklik |
+|---|---|---|
+| P1 — `PanicHomeHud.cs:427`, `:436`; `PanicCompactHudV5.cs:73` | 1600×900 mantıksal alan 960×540'ta 0,6 ölçekleniyor. 16/18/23 mantıksal px → yaklaşık 9,6/10,8/13,8 ekran px. F1 klavye ek 0,7 ile çiziliyor: 21px tuş yazısı yaklaşık 8,82px; fitted min13 yaklaşık 5,46px. Kaynak hesabıdır, fontun gerçek harf yüksekliği ölçümü değildir. | 960×540 için temel eylemleri görünür tutan daha kısa metin ve daha büyük stiller kullan. F1'i okunamayan tam klavye yerine eylem gruplarıyla destekle; mevcut fiziksel klavye isteniyorsa yardımcı diyagram olarak kalsın. |
+| P1 — `PanicHomeHud.cs:1030` | Duraklatta dev saat, çizilmiş saat, fırça lekesi, iki ayrı durdu bildirimi, solda ses ve sağda eşit ağırlıklı geliştirici/yeniden başlat/başlık/müzik/hareket eylemleri var. Görsel sıra ile 0..6 odak sırası uyuşmuyor. | Bir başlık ve kısa durum satırı; belirgin Devam et; aynı kolon/grid üzerinde ses, hareket, yeniden başlat, ana menü, geliştirici. Menü sırası ve ok gezinmesi birebir aynı olmalı. |
+| P1 — `PanicHomeHud.cs:1222`; `PanicWaveLedgerHudV56.cs:244` | Rust ve Ember renkleri bazı normal boyutlu bilgi/eylem metinlerinde eşik altında. Mevcut hesapta Rust/Panel 3,549:1, Ember/Panel 3,743:1. Night/Rust seçili düğme 4,182:1. | Kırmızı/turuncuyu kenar/ikon vurgusu olarak tut; küçük uyarı veya negatif para metnini açık metinle yaz. Seçili yıkıcı düğmede koyu yazı yerine daha yüksek kontrastlı özel çift kullan. |
+| P2 — `PanicHomeHud.cs:487` | Ana menüde büyük skor alanı, çizgiler ve farklı genişlikte butonlar oynama seçenekleriyle yarışıyor. İlk koşuda boş skor kartı büyük yer kaplıyor. | Logo + kısa mekân/amaç; Serbest oyna açık öncelik; senaryo/simülasyon/öğretici düzenli ikincil liste; boş skor alanını kısa ve sakin tut. Oyuncuya jüri/demo dili ekleme. |
+| P2 — `PanicCompactHudV5.cs:66` | F1 kapalıyken yalnız F1 ve +/− gösteriliyor. Açık klavyede tuşların eylem adları yok, aile renkleri anlamı tek başına taşıyor. | F1 yanında `Tuşlar` gibi sabit etiket. Aktif bağlama göre `E Etkileşim`, `F Al`, `Q Hedef`, `J Defter`, `Tab Çanta`, `Esc Duraklat` etiketlerini göster; iş/FPS/taşıma bağlamını kaynak kurallarından üret. |
+| P2 — `PanicFinalBagHud.cs:13` ve `:57`; `PanicAssistantHudV55.cs:55` | Çanta görevi, su/gıda ilerlemesi, merkez odak ve defter yardımcısı ayrı bölgelere yayılıyor; odak alt açıklaması min12'ye inebiliyor. Defter ipucu 16px temel stile dayanıyor. | Çanta HUD'sinde su ve gıdayı farklı sembol + `0/1` / `1/1` ile göster. E/F eylemini tek okunur odak satırında tut. Defter yardımcısını tek kısa sonraki adım + yer metniyle sınırla, diğer kartlarla çakışma fallback'ini koru. |
+| P2 — `PanicAudioSettingsHudV56.cs:58` | Fare ve ok desteği var; fakat slider Unity varsayılan skin'inden, oyunun diğer kontrollerinden ayrılıyor. Ses mute ve müzik açık/kapalı terimleri çift olumsuzluk yaratabiliyor. | Slider rayı, tutamacı, odak ve yüzdeyi aynı stil ailesine al. `Sesi kapat: Açık/Kapalı` yerine anlamı doğrudan durum olarak yaz; mevcut persistence/mixer API'sini koru. |
+| P2 — `PanicWaveLedgerHudV56.cs:232` | Döküm önemli bir açıklama ekranı; 18px detay ve 16px alt yönerge küçük çözünürlükte zayıf kalıyor. `yp` açıklama gerektiriyor. | Başlık/hasar satırları/bütçe hesabı ayrı hiyerarşide; detay yazısını yükselt, gerektiğinde sayfa sayısı artsın. `yp` kısaltmasını görünür açıklamayla koru veya `puan` gibi daha anlaşılır ifade kullan; sayısal anlamı değiştirme. |
+
+## Palet hesabı
+
+sRGB formülüyle mevcut renk tokenlarının opak RGB değerleri için hesaplanan oranlar: MainText/Night **15,730**, SoftText/Night **11,783**, Muted/Night **9,385**, Brass/Night **8,864**, Sea/Night **7,178**; Sea/Panel **6,091**. Temel açık metinler iyi marj taşıyor. Petrol/Night **2,832**, Rust/Night **4,182**, Ember/Night **4,411**; bu üç rengi küçük anlamlı yazıda kullanma. `Frame` panel iç dolgusunu Night ile önceden opak karıştırıyor; kesin panel oranı bu son karışımla hesaplanmalı. İnce yarı saydam çizgiler dekor için kullanılabilir; tek seçim/aktiflik göstergesi olmamalı. Sahne üzerindeki doğrudan `Fill` katmanları, anti-aliasing, GUI renk çarpımı ve gerçek harf yüksekliği bu hesapla doğrulanmış değildir. 18px/1080p kaynak önerisi ekran çözünürlüğüyle ilişkilidir; yukarıdaki küçük çözünürlük hesabı tek başına bir XAG ihlali iddiası değildir.
+
+## Root için dar kabul kontrol listesi
+
+1. **Model değişmezleri:** 120sn önlem +45sn çanta; 1su+1gıda; sel varsa üst panik odası, diğerinde bodrum; gerçek sığınak durumu; %75 kayıp; atomik iş maliyeti ve ücretsiz iptal; F2/F3 skor dışı mantığı değişmemeli. Görsel hazır işareti yalnız gerçek model verisine bağlanmalı.
+2. **Tuşlar:** WASD/ok, Shift, Space; E etkileşim, F al, Q hedef, Tab çanta, J defter, F1 rehber, Esc duraklat; bağlamsal iş/yerleşim tuşları ilgili kaynakla eşleşmeli. Aynı Enter/Esc açılış-kapanış karesinde alttaki eylemi tetiklememeli.
+3. **Menü/ayar:** fare ve oklarla her eyleme ulaş; görünür seçimi izle; Enter yalnız odaklanmış eylemi çalıştırsın. Ses ayarından Esc önce duraklatmaya dönsün; oyunu yanlışlıkla sürdürmesin. Slider ok adımları ve yüzde aynı gerçek ayarı göstermeli.
+4. **Döküm:** committed snapshot salt okunur kalmalı; ileri/geri/teker; son sayfada sınır; Enter/Esc yalnız dökümü kapatmalı. Listeyi açıp kapatmak ödül, RNG, dalga, hasar, bütçe veya kaydı yeniden çözmemeli.
+5. **Görsel native kareler:** 1600×900 ve960×540 zorunlu; 1280×720 ve ultrawide güvenli alan kontrolü yararlı. Her çözünürlükte menü boş skor/dolu skor, pause normal/FPS, ses slider odağı, F1 açık/kapalı, önlem HUD, eksik malzeme, dolu loot, su/gıda0→1, sel sığınağı, defter yardımcısı, tesisat uyarısı, iş/taşıma, tek/çok sayfalı döküm, gameover/success kareleri al. Metin kırpılması, tuş harfleri, sembol kenarları, odak, örtüşme, sahne görünürlüğü ve normal kararma/blackout sırası kontrol edilmeli.
+6. **Kanıt sınırı:** kaynak/hesap, derleme, native API/render, OS girdi ve insan okunurluğu/keyif ayrı raporlanmalı. Güncel DLL ve kaynak manifestine bağlanmayan eski PASS sayıları kullanılmamalı. Azaltılmış hareket ayarının görsel erişimi kontrolü insan konfor testi değildir.
+
+## Son uygulama ve kaynak kontrolü
+
+Önceki bölümlerdeki canlı kaynak bulguları yeniden tasarımdan önceki başlangıçtır. V5.7 menü ve pause/ses sayfasını yeniden çizer; ortak buton/çerçeve, büyük süre/bütçe/hasar, su/gıda ve hedef maliyetleri güncellenir. Bağımsız son F1 isteğiyle bütün kullanılan34 tuş her zaman görünür; bağlama göre gizleme yapılmaz. Defter oda metinleri tek satır ve fazladan glyph marjıyla çizilir. Küçük Türkçe etiketler görünür kalır; yeni ikonlar bunların yerini almaz.
+
+Son kaynak guard25/25 geçti. Örnek son oranlar: Rust/Panel6,6467; Night/Brass10,5989; MainText/Petrol7,5472; MenuDim/Paper4,7567. Bunlar kaynak renk hesabıdır. Aynı kaynakların gerçek native karelerindeki inceleme sonucu son [teslim](HOME-V5.7-UI-DELIVERY-2026-10-18.md) ile bağlanır; genel erişilebilirlik veya insan okunurluk kabulü verilmez.
+

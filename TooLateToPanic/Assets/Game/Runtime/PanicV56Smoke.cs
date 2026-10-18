@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -307,6 +307,7 @@ namespace TooLateToPanic
         {
             w.Model.TimeRemaining = 45f; Fixture("preparation-clock", "TimeRemaining=45; native production 2s camera handoff and clocks run thereafter"); PanicBagDollyChecksV56.Prepare(w); w.TickPreparationStages(); yield return PanicBagDollyChecksV56.Observe(w,hud,(id,pass,detail)=>Check(id,pass,detail));
             Check("bag.actual-handoff." + report.productionStartCalls, w.BagFinalStageActive && w.BagFirstPersonActive);
+            if (report.productionStartCalls == 2) yield return StableFpsViewV57();
             if (incompletePrompt)
             {
                 yield return Place(new Vector3(-4.5f, -3.16f, 1.4f)); Aim(PanicHomeWorld.BunkerPosition + Vector3.up * .35f); yield return Wait(.15f); w.SetFocus("bunker"); Call(w, "UpdateContext");
@@ -323,6 +324,35 @@ namespace TooLateToPanic
             Aim(w.ActiveShelterPositionV5 + Vector3.up * (upper ? 1.35f : .35f)); yield return Wait(.6f); w.SetFocus(upper ? "@panicroom" : "bunker");
             Check("shelter.real-controller-ray-path-gate." + report.productionStartCalls, w.TryEnterActiveShelterV5() && w.Model.ReachedShelterV5 && w.Model.Phase == PanicPhase.Disaster, "Actor placement/view fixture; real grounded floor/ray/path admission; no traversal acceptance");
             yield return null;
+        }
+        IEnumerator StableFpsViewV57()
+        {
+            bool prior = w.ReducedFpsMotionV54;
+            Fixture("fps-stable-view", "Same first natural FPS handoff; temporarily observe reduced-motion false and true for .8s each, then restore. No camera/actor/input/time writes or manual Tick. Latest stable-view behavior must be supplied by production owner; not certified by this source patch.");
+            try
+            {
+                foreach (bool reduced in new[] { false, true })
+                {
+                    w.SetReducedFpsMotionV54(reduced); yield return null; yield return new WaitForEndOfFrame();
+                    Vector3 actor = w.PlayerPosition; Quaternion input = w.FpsInputRotationV54; float preparation = w.Model.TimeRemaining;
+                    float maxPose = 0, maxFov = 0, maxEyeOffset = 0; int samples = 0; bool active = true, feedback = false; float end = Time.realtimeSinceStartup + .8f;
+                    while (Time.realtimeSinceStartup < end)
+                    {
+                        yield return new WaitForEndOfFrame(); samples++;
+                        active &= w.BagFirstPersonActive && !w.BagCameraTransitionActive && w.Model.Phase == PanicPhase.Preparing && !w.Model.IsPaused;
+                        maxPose = Mathf.Max(maxPose, Quaternion.Angle(w.View.transform.rotation, w.FpsInputRotationV54));
+                        maxFov = Mathf.Max(maxFov, Mathf.Abs(w.View.fieldOfView - 62f));
+                        maxEyeOffset = Mathf.Max(maxEyeOffset, Vector3.Distance(w.View.transform.position, w.PlayerPosition + Vector3.up * 1.62f));
+                        feedback |= w.FpsStressVisibleV414 && w.FpsFeedbackAudioPlayingV414 && w.FpsVeilTextureV414 && w.FpsVeilOpacityV414 > 0 && w.FpsVeilOpacityV414 < .95f;
+                    }
+                    string mode = reduced ? "reduced" : "normal";
+                    Check("fps.stable-view-no-sway-or-fov." + mode, active && samples >= 8 && maxPose < .05f && maxFov < .001f && maxEyeOffset < .001f,
+                        "Actual no-input frames=" + samples + "; max angular error from input=" + maxPose + "; FOV error from62=" + maxFov + "; eye offset=" + maxEyeOffset + ". No forced camera pose during observation.", "NATIVE_ACTUAL_FPS_CAMERA_FRAMES");
+                    Check("fps.stable-view-keeps-clock-actor-feedback." + mode, actor.Equals(w.PlayerPosition) && Quaternion.Angle(input, w.FpsInputRotationV54) < .05f && w.Model.TimeRemaining < preparation - .3f && feedback,
+                        "Real preparation clock advances with unchanged actor/input; retained nonverbal audio and bounded soft veil stay active. No human comfort/listening claim.", "NATIVE_ACTUAL_FPS_CAMERA_FRAMES");
+                }
+            }
+            finally { w.SetReducedFpsMotionV54(prior); }
         }
         void MemoIncident(DisasterType hazard, PanicSecondaryEventKindV5 kind, string label)
         {
@@ -394,11 +424,27 @@ namespace TooLateToPanic
             Check("aftermath.disaster-enter-repeat-stable", state == ResolutionFingerprint() && Read<int>(w, "ResidenceAftermathSetupCountV56") == 1 && aftermathRoot != 0 && rescueRoot != 0 && Read<int>(w, "ResidenceAftermathRootIdV56") == aftermathRoot && Read<int>(w, "ResidenceRescueRootIdV56") == rescueRoot);
             yield return AcknowledgeLedger("early-enter-aftermath-complete");
             yield return Capture("06-enter-skip-aftermath", "Early Disaster skip uses same aftermath/rescue setup; numerical resolution once.");
-            yield return Begin(DisasterType.Fire, (1 << (int)DisasterType.Fire) | (1 << (int)DisasterType.Flood)); yield return BagAndShelter(true, false);
+            yield return Begin(DisasterType.Fire, (1 << (int)DisasterType.Fire) | (1 << (int)DisasterType.Flood));
+            int pipeDispatchBefore = Read<int>(w, "SecondaryAudioDispatchCountV56");
+            MemoIncident(DisasterType.Flood, PanicSecondaryEventKindV5.PipeLeak, "Su vanası açık kaldı: tesisatta su hasarı oluştu");
+            yield return BagAndShelter(true, false);
             while (w.Model.Phase == PanicPhase.Disaster && Read<float>(w, "residenceCinematicAge") < 5.1f) yield return null;
             Check("story.upper-compound-caption", w.Model.ReachedShelterV5 && w.UsesUpperPanicRoomV5 && w.CinematicTitle.IndexOf("sel", StringComparison.OrdinalIgnoreCase) >= 0 && w.CinematicTitle.IndexOf("yangın", StringComparison.OrdinalIgnoreCase) >= 0, w.CinematicTitle);
             yield return Capture("07-upper-compound-caption", "Actual admitted upper room and naturally aged compound Flood+Fire subtitle.");
             w.SkipResidenceCinematic(); report.skipCalls++; yield return Wait(.1f);
+            var pipes = w.Model.SecondaryEventsV5.Where(e => e.Kind == PanicSecondaryEventKindV5.PipeLeak).ToArray();
+            Check("secondary.pipe-leak-actual-commit", pipes.Length == 1 && pipes[0].DamagePoints > 0 && w.Model.SecondaryDamageV5 > 0,
+                "Immutable2pt Flood/PipeLeak memo fixture committed only by real compound damage resolution; committed pipes=" + pipes.Length);
+            var pipeClip = PanicAudioBank.Get("v56_pipe_leak");
+            var pipeVoices = Read<AudioSource[]>(fx, "voices").Where(s => s && s.clip == pipeClip).ToArray();
+            int pipeDispatch = Read<int>(w, "SecondaryAudioDispatchCountV56");
+            Check("secondary.pipe-leak-semantic-once", pipeClip && pipeVoices.Length == 1 && Read<Dictionary<string, float>>(fx, "last").ContainsKey("v56_pipe_leak") &&
+                pipeDispatch == pipeDispatchBefore + w.Model.SecondaryEventsV5.Count,
+                "Actual Foley voice assigned exact v56_pipe_leak AudioClip once; total dispatch delta=" + (pipeDispatch - pipeDispatchBefore) + "; actual committed events=" + w.Model.SecondaryEventsV5.Count + ". Concurrent actual Fire event remains permitted.", "NATIVE_COMMITTED_EVENT_SOURCE_BINDING");
+            string pipeState = ResolutionFingerprint(), pipeRng = JsonUtility.ToJson(UnityEngine.Random.state);
+            for (int i = 0; i < 12; i++) Call(w, "TickHouseAudio");
+            Check("secondary.pipe-leak-repeat-no-rng-no-duplicate", ResolutionFingerprint() == pipeState && JsonUtility.ToJson(UnityEngine.Random.state) == pipeRng && Read<int>(w, "SecondaryAudioDispatchCountV56") == pipeDispatch,
+                "Twelve read-only audio router calls preserve actual model resolution/secondary roll count/global Unity RNG and dispatch count.");
             yield return AcknowledgeLedger("upper-compound-before-boat-pcm");
             yield return ZodiacFoley();
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -61,7 +61,11 @@ namespace TooLateToPanic
             object snapshot=Snapshot(hud);string action=w.Expedition.PrimaryActionV414(w.Selected);var expected=w.Expedition.WorkRequirementsV414(action,w.Selected.Id);int cost=w.Expedition.WorkBudgetCostV414(action,w.Selected.Id);
             bool quote=snapshot!=null&&Read<string>(snapshot,"Id")=="roof"&&Read<bool>(snapshot,"IsRoof")&&Read<string>(snapshot,"Action")==action&&Requirements(snapshot)==Requirements(expected)&&
                 Read<int>(snapshot,"BudgetCost")==cost&&Read<int>(snapshot,"BudgetOwned")==w.Model.Budget&&Read<int>(snapshot,"BudgetMissing")==Mathf.Max(0,cost-w.Model.Budget);
-            string text=Read<string>(hud,"SelectedTargetRenderedTextV56");bool rows=snapshot!=null&&!string.IsNullOrEmpty(text)&&text.Contains(Read<string>(snapshot,"Label"))&&text.Contains("Gerek ")&&text.Contains("Eksik ")&&expected.All(r=>text.Contains(PanicExpedition.DisplayName(r.Id)));
+            string text=Read<string>(hud,"SelectedTargetRenderedTextV56");
+            // V57 puts the roof type in the heading and draws the actual selected item label once.
+            bool title=snapshot!=null&&(text.Contains(Read<string>(snapshot,"Label"))||
+                Read<bool>(snapshot,"IsRoof")&&text.Split('\n').Contains(w.Selected.Label));
+            bool rows=snapshot!=null&&!string.IsNullOrEmpty(text)&&title&&text.Contains("Gerek ")&&text.Contains("Eksik ")&&expected.All(r=>text.Contains(PanicExpedition.DisplayName(r.Id)));
             Rect logical=Read<Rect>(hud,"SelectedTargetHudBoundsV56");
             check("visual.card."+id,quote&&rows&&Read<bool>(hud,"SelectedTargetHudVisibleV56")&&Read<int>(hud,"SelectedTargetHudDrawFramesV56")>oldDraws&&logical.x>=1100&&logical.y>=100&&Fits(Pixels(hud,logical)),
                 "Actual Repaint+roof title/requirement rows; exact canonical recipe="+Requirements(expected)+" budget="+cost+"; framebuffer card="+Pixels(hud,logical));
@@ -69,11 +73,13 @@ namespace TooLateToPanic
         static void HelpLayout(string id,PanicHomeWorld w,PanicHomeHud hud,int oldDraws,Action<string,bool,string> check)
         {
             Rect keyboard=Read<Rect>(hud,"KeyboardHelpBoundsV56"),panel=Read<Rect>(hud,"KeyboardHelpPanelBoundsV56");string text=Read<string>(hud,"KeyboardHelpRenderedTextV56")??string.Empty;int count=Read<int>(hud,"KeyboardHelpCalloutCountV56");
-            string[] labels={"W A S D","Hareket et","SHIFT","Koş","SPACE","Zıpla","Etkileş / dolaptan topla","TAB / B","J","Q","Hedef değiştir","ENTER","BACKSPACE","F1 / ESC","Rehberi kapat"};
-            bool rows=text.Split('\n').Skip(1).Count(line=>!string.IsNullOrWhiteSpace(line))==count;
-            check("visual.f1."+id,HelpGate(w,hud)&&Read<float>(hud,"KeyboardHelpAnimationProgressV56")==1f&&Read<int>(hud,"KeyboardHelpDrawFramesV56")>oldDraws&&count>=12&&rows&&labels.All(text.Contains)&&!text.Contains("G ·")&&!text.Contains("F ·")&&
+            var catalog=((IEnumerable)PanicWaveLedgerModelChecksV56.Read(hud,"KeyboardHelpCatalogV57")).Cast<object>().ToArray();
+            bool rows=catalog.Length>0&&catalog.All(entry=>text.Contains(Read<string>(entry,"Action"))&&text.Contains(Read<string>(entry,"Context")));
+            // Latest user request requires every used key in every phase. The older !text.Contains("F ·") phase oracle is deliberately removed.
+            bool geometry=PanicKeyboardHelpGeometryChecksV57.ValidateCurrentDraw(hud,check);
+            check("visual.f1."+id,HelpGate(w,hud)&&Read<float>(hud,"KeyboardHelpAnimationProgressV56")==1f&&Read<int>(hud,"KeyboardHelpDrawFramesV56")>oldDraws&&count==catalog.Length&&rows&&geometry&&
                 Mathf.Abs(keyboard.center.x-800)<.5f&&keyboard.width>=870&&keyboard.height>=410&&Fits(Pixels(hud,keyboard))&&Fits(Pixels(hud,panel)),
-                "Actual Repaint text + drawn callout rows="+count+"; centered enlarged keyboard="+Pixels(hud,keyboard)+" panel="+Pixels(hud,panel)+". Pixel inspection remains required.");
+                "Actual Repaint all-phase catalog explanations="+count+"; independent connection/cap/card/text geometry; keyboard="+Pixels(hud,keyboard)+" panel="+Pixels(hud,panel)+". Actual1600/960PNG pixel inspection remains required.");
         }
         static IEnumerator HelpCycle(string id,KeyCode closeKey,PanicHomeWorld w,PanicHomeHud hud,Detail detail,BoxCollider[] colliders,Action<string,bool,string> check,Func<string,string,IEnumerator> capture)
         {

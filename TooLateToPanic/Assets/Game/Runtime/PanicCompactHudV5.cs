@@ -34,63 +34,12 @@ namespace TooLateToPanic
 
         void DrawCompactStatusV5()
         {
-            EnsureCompactStylesV5();
-            var model = World.Model;
-            var wave = WaveCardBounds;
-            Frame(wave, Night, Line, 1); Region(wave);
-            DrawDisasterSymbol(new Rect(wave.x + 14, wave.y + 18, 26, 28), model.Disaster, Brass);
-            string stage = World.JuryActive ? "HAZIRLIK" : "DALGA " + model.Wave;
-            Label(new Rect(wave.x + 53, wave.y + 8, wave.width - 65, 22), stage + "  ·  " + PhaseName(model.Phase), _tiny);
-            FittedLabel(new Rect(wave.x + 53, wave.y + 27, wave.width - 65, 30), model.ActiveDisasterLabelV54, compactValueV5, MainText, 19);
-
-            Rect timer = TimerCardBounds;
-            bool preparing = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
-            float value = World.JuryActive && World.JurySnapshot != null ? World.JurySnapshot.StageRemainingSeconds : preparing ? PreparationTimerRemaining : model.PhaseTime;
-            string timerStage = (_paused || model.KeyboardHelpOpenV56 || model.WaveLedgerOpenV56) ? "DURDU" : model.FreezePreparationTime && preparing ? "DONDU" : CampaignPrecautionTimer ? "ÖNLEM" : preparing ? "HAZIRLIK" : PhaseName(model.Phase);
-            Color timeColor = preparing && value <= 15 ? Brass : MainText;
-            Frame(timer, Night, Line, 1); Region(timer);
-            Label(new Rect(timer.x + 14, timer.y + 8, timer.width - 28, 19), timerStage, _tiny);
-            Label(new Rect(timer.x + 14, timer.y + 27, timer.width - 28, 29), FormatTime(Mathf.Max(0, value)), ColorText(compactValueV5, timeColor));
-
-            Rect budget = ResourceCardBounds;
-            Frame(budget, Night, Line, 1); Region(budget);
-            Label(new Rect(budget.x + 14, budget.y + 8, budget.width - 28, 19), "BÜTÇE", _tiny);
-            Label(new Rect(budget.x + 14, budget.y + 27, budget.width - 28, 29), model.InfiniteBudget ? "SINIRSIZ" : "$ " + model.Budget.ToString("N0"), ColorText(compactValueV5, Brass));
+            DrawCompactStatusDesignV57();
         }
 
         void DrawCompactControlsV5()
         {
-            if (!CompactControlsAllowedV5) return;
-            EnsureCompactStylesV5();
-            Rect toggle = CompactControlsToggleBoundsV5;
-            Frame(toggle, Night, Line, 1); Region(toggle);
-            DrawCompactKeyV51(new Rect(toggle.x + 5, toggle.y + 4, 37, 24), "F1", 3);
-            FittedLabel(new Rect(toggle.x + 49, toggle.y + 2, toggle.width - 57, toggle.height - 4), "TUŞLAR", compactKeyV51, MainText, 14);
-            if (MousePressed(toggle)) { ToggleCompactControlsV5(); World.PlayUiSound(); }
-            if (!compactControlsExpandedV5) return;
-            const float guideScale = .7f;
-            Rect guide = new Rect(0, 0, 440, 210);
-            Rect guideBounds = new Rect(24, toggle.y - 12 - guide.height * guideScale, guide.width * guideScale, guide.height * guideScale);
-            // Register the actual logical-canvas footprint before entering a local
-            // drawing space. PointerOverUi always works in the outer logical canvas.
-            Region(guideBounds);
-            int firstGuideMark = _uiRects.Count;
-            Matrix4x4 incoming = GUI.matrix;
-            GUI.matrix = incoming * Matrix4x4.TRS(new Vector3(guideBounds.x, guideBounds.y, 0),
-                Quaternion.identity, new Vector3(guideScale, guideScale, 1));
-            try { DrawCompactKeyboardBodyV51(guide); }
-            finally
-            {
-                GUI.matrix = incoming;
-                // Label/FittedLabel register local child marks. Convert only this
-                // guide's new marks so no invisible full-size hit rectangles remain.
-                for (int i = firstGuideMark; i < _uiRects.Count; i++)
-                {
-                    Rect child = _uiRects[i];
-                    _uiRects[i] = new Rect(guideBounds.x + child.x * guideScale, guideBounds.y + child.y * guideScale,
-                        child.width * guideScale, child.height * guideScale);
-                }
-            }
+            DrawCompactControlsDesignV57();
         }
 
         void DrawCompactKeyboardBodyV51(Rect guide)
@@ -102,13 +51,15 @@ namespace TooLateToPanic
             DrawCompactKeyboardKeyV51(new Rect(60, 9, 28, 24), "F1");
             DrawCompactKeyboardKeyV51(new Rect(94, 9, 28, 24), "F2");
             DrawCompactKeyboardKeyV51(new Rect(128, 9, 28, 24), "F3");
+            DrawCompactKeyboardKeyV51(new Rect(330, 9, 42, 24), "PgUp");
+            DrawCompactKeyboardKeyV51(new Rect(380, 9, 42, 24), "PgDn");
             DrawCompactKeyboardRowV51(40, 10, new[] { "1", "2", "3", "4", "", "", "", "", "", "" });
             DrawCompactKeyboardKeyV51(new Rect(330, 40, 92, 26), "Back");
             DrawCompactKeyboardKeyV51(new Rect(10, 70, 42, 26), "Tab");
             DrawCompactKeyboardRowV51(70, 58, new[] { "Q", "W", "E", "R", "T", "", "", "", "", "" });
             DrawCompactKeyboardKeyV51(new Rect(382, 70, 40, 56), "Enter");
             DrawCompactKeyV51(new Rect(10, 100, 42, 26), "", 0);
-            DrawCompactKeyboardRowV51(100, 58, new[] { "A", "S", "D", "F", "", "", "J", "", "" });
+            DrawCompactKeyboardRowV51(100, 58, new[] { "A", "S", "D", "F", "", "H", "J", "", "" });
             DrawCompactKeyboardKeyV51(new Rect(10, 130, 66, 26), "Shift");
             DrawCompactKeyboardRowV51(130, 82, new[] { "Z", "X", "", "", "B", "N", "" });
             DrawCompactKeyV51(new Rect(314, 130, 40, 26), "", 0);
@@ -188,21 +139,7 @@ namespace TooLateToPanic
 
         void DrawCompactRequirementsV5()
         {
-            var expedition = World.Expedition;
-            Rect card = RequirementCardBounds;
-            Frame(card, Night, Line, 1); Region(card);
-            FittedLabel(new Rect(card.x + 12, card.y + 8, card.width - 24, 25), RequirementTitleV414(expedition), _body, Brass, 16);
-            float y = card.y + 38;
-            foreach (var requirement in expedition.CurrentRequirements)
-            {
-                if (requirement.Missing <= 0) continue;
-                string name = PanicExpedition.DisplayName(requirement.Id);
-                FittedLabel(new Rect(card.x + 12, y, card.width - 24, 25), name + "  " + requirement.Owned + "/" + requirement.Required + "  ·  eksik " + requirement.Missing, _small, SoftText, 14);
-                y += 29;
-                if (y >= card.yMax - 30) break;
-            }
-            if (expedition.RequirementBudgetMissing > 0)
-                FittedLabel(new Rect(card.x + 12, card.yMax - 30, card.width - 24, 24), "Bütçe eksik: $ " + expedition.RequirementBudgetMissing, _small, Brass, 14);
+            DrawCompactRequirementsDesignV57();
         }
 
         void DrawCompactJuryPanelV5()

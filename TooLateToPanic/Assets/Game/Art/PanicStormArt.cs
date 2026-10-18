@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering;
 namespace TooLateToPanic
 {
@@ -49,6 +49,7 @@ namespace TooLateToPanic
                 r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;s.Ribbons.Add(r);
             }
             CreateFunnelV414(root,s,Material(s,"V414 rotating storm column",Color.white,null),Material(s,"Storm lifted timber and leaves",Color.white,null));
+            CreateYarkinHybrid(root,s);
             foreach(var ps in s.Emitters)ps.Play(true);
             Animate(root,0,0);return root;
         }
@@ -88,6 +89,7 @@ namespace TooLateToPanic
                     r.SetPosition(i,new Vector3(-18.4f+Mathf.Cos(a)*radius,.8f+q*5.2f,10+Mathf.Sin(a)*radius));
                 }
             }
+            if(motion)AnimateYarkinHybrid(s,motion,strength);
         }
                 public static Vector3 SampleWind(GameObject root)
         {root=PanicDisasterArt.HazardRootV54(root,DisasterType.Storm);var state=root?root.GetComponent<PanicStormMotionV414>():null;return state?new Vector3(-1,0,.27f)*state.Gust:Vector3.zero;}
@@ -165,6 +167,140 @@ namespace TooLateToPanic
             s.Debris.vertices=s.DebrisVertices;
         }
 
+        // Yarkin's outer shell / spiral / foot-cloud vocabulary is adapted onto the retained
+        // V414 core. No branch path translation, 22m height, inner replacement or new clock.
+        const int HybridTiers=24,HybridSegments=24,HybridBandPoints=40;
+        static readonly Bounds HybridBounds=new Bounds(new Vector3(-19.2f,6,11),new Vector3(10,16,10));
+        static void CreateYarkinHybrid(GameObject root,PanicStormArtState s)
+        {
+            s.YarkinHybridRoot=new GameObject("Yarkin Hybrid outer tornado accents");
+            s.YarkinHybridRoot.transform.SetParent(root.transform,false);
+            s.YarkinHybridTexture=new Texture2D(64,32,TextureFormat.RGBA32,false){name="Yarkin Hybrid seamless turbulent shell",wrapMode=TextureWrapMode.Repeat};
+            var pixels=new Color[64*32];
+            for(int y=0;y<32;y++)for(int x=0;x<64;x++)
+            {
+                float u=x/64f*Mathf.PI*2,v=y/32f*Mathf.PI*2;
+                float noise=.50f+.22f*Mathf.Sin(u*3+v*2)+.16f*Mathf.Sin(u*7-v*3)+.10f*Mathf.Cos(u*11+v*5);
+                pixels[y*64+x]=new Color(1,1,1,Mathf.Clamp(noise,.14f,.96f));
+            }
+            s.YarkinHybridTexture.SetPixels(pixels);s.YarkinHybridTexture.Apply(false,false);
+            var shellMaterial=Material(s,"Yarkin Hybrid restrained outer condensation",Color.white,s.YarkinHybridTexture);
+            s.YarkinHybridShellVertices=new Vector3[(HybridTiers+1)*(HybridSegments+1)];
+            s.YarkinHybridShellColors=new Color[s.YarkinHybridShellVertices.Length];
+            var uv=new Vector2[s.YarkinHybridShellVertices.Length];var triangles=new int[HybridTiers*HybridSegments*6];int t=0;
+            for(int y=0;y<=HybridTiers;y++)for(int a=0;a<=HybridSegments;a++)
+            {
+                int v=y*(HybridSegments+1)+a;uv[v]=new Vector2(a/(float)HybridSegments,y/(float)HybridTiers*2f);
+                if(y<HybridTiers&&a<HybridSegments)
+                {triangles[t++]=v;triangles[t++]=v+HybridSegments+1;triangles[t++]=v+1;triangles[t++]=v+1;triangles[t++]=v+HybridSegments+1;triangles[t++]=v+HybridSegments+2;}
+            }
+            s.YarkinHybridShell=new Mesh{name="Yarkin Hybrid outer shell matching retained funnel"};
+            s.YarkinHybridShell.vertices=s.YarkinHybridShellVertices;s.YarkinHybridShell.colors=s.YarkinHybridShellColors;
+            s.YarkinHybridShell.uv=uv;s.YarkinHybridShell.triangles=triangles;s.YarkinHybridShell.bounds=HybridBounds;s.YarkinHybridShell.MarkDynamic();
+            HybridMeshNode(s.YarkinHybridRoot.transform,"Yarkin Hybrid translucent outer shell",s.YarkinHybridShell,shellMaterial);
+
+            // Broad, soft, sparse bands accent the filled core instead of replacing it with lines.
+            var bandMaterial=Material(s,"Yarkin Hybrid soft spiral condensation",Color.white,s.Soft);
+            s.YarkinHybridBandBuffers=new Vector3[3][];
+            for(int j=0;j<3;j++)
+            {
+                var node=new GameObject("Yarkin Hybrid soft spiral band "+j);node.transform.SetParent(s.YarkinHybridRoot.transform,false);
+                var band=node.AddComponent<LineRenderer>();band.useWorldSpace=false;band.positionCount=HybridBandPoints;band.sharedMaterial=bandMaterial;
+                band.widthCurve=new AnimationCurve(new Keyframe(0,.06f),new Keyframe(.18f,.26f),new Keyframe(.78f,.34f),new Keyframe(1,.06f));
+                band.shadowCastingMode=ShadowCastingMode.Off;band.receiveShadows=false;
+                s.YarkinHybridBands.Add(band);s.YarkinHybridBandBuffers[j]=new Vector3[HybridBandPoints];
+            }
+
+            var foot=new GameObject("Yarkin Hybrid compact foot cloud and debris skirt");foot.transform.SetParent(s.YarkinHybridRoot.transform,false);
+            foot.transform.localPosition=new Vector3(-19.2f,0,11);s.YarkinHybridFoot=foot.transform;
+            s.YarkinHybridPuff=HybridPuffMesh();s.YarkinHybridShard=HybridShardMesh();
+            s.YarkinHybridFootMaterial=Material(s,"Yarkin Hybrid translucent foot cloud",new Color(.40f,.37f,.31f,0),s.Soft);
+            s.YarkinHybridShardMaterial=Material(s,"Yarkin Hybrid foot timber shingle and leaf",new Color(1,1,1,0),null);
+            for(int i=0;i<12;i++)
+            {
+                float angle=i/12f*Mathf.PI*2,radius=1.85f+(i*.23f%1.05f);
+                var puff=HybridMeshNode(foot.transform,"Yarkin Hybrid dust puff "+i,s.YarkinHybridPuff,s.YarkinHybridFootMaterial);
+                puff.localPosition=new Vector3(Mathf.Cos(angle)*radius,.65f+.08f*Mathf.Sin(angle),Mathf.Sin(angle)*radius);
+                puff.localScale=new Vector3(.86f+i*.067f% .32f,.60f,.86f+i*.067f% .32f);
+                puff.localRotation=Quaternion.Euler(0,i*41f,0);
+            }
+            s.YarkinHybridShards=new Transform[18];
+            for(int i=0;i<s.YarkinHybridShards.Length;i++)
+            {
+                int type=i%3;float angle=i/18f*Mathf.PI*2,radius=1.75f+(i*.19f%1.25f);
+                var shard=HybridMeshNode(foot.transform,"Yarkin Hybrid flying "+(type==0?"plank":type==1?"shingle":"leaf")+" "+i,s.YarkinHybridShard,s.YarkinHybridShardMaterial);
+                shard.localPosition=new Vector3(Mathf.Cos(angle)*radius,.40f+(i*.17f%1.3f),Mathf.Sin(angle)*radius);
+                shard.localScale=type==0?new Vector3(.14f,.05f,.65f):type==1?new Vector3(.32f,.04f,.38f):new Vector3(.22f,.02f,.24f);
+                s.YarkinHybridShards[i]=shard;
+            }
+        }
+
+        static void AnimateYarkinHybrid(PanicStormArtState s,PanicStormMotionV414 motion,float strength)
+        {
+            if(!s.YarkinHybridRoot)return;
+            bool visible=strength>.001f;if(s.YarkinHybridRoot.activeSelf!=visible)s.YarkinHybridRoot.SetActive(visible);
+            if(!visible)return;
+            float time=motion.Clock*(1f+.35f*(motion.PresentationScaleV52-1f));
+            float visualStrength=strength*motion.PresentationScaleV52;
+            for(int y=0;y<=HybridTiers;y++)for(int a=0;a<=HybridSegments;a++)
+            {
+                float q=y/(float)HybridTiers,angle=a/(float)HybridSegments*Mathf.PI*2+time*(2.4f-q*.8f)+q*3.8f;
+                float radius=HybridRadius(q,angle,time);int v=y*(HybridSegments+1)+a;
+                s.YarkinHybridShellVertices[v]=HybridPoint(q,angle,radius,time);
+                float billow=.5f+.5f*Mathf.Sin(angle*3+q*15-time*1.8f);
+                float endFade=Mathf.SmoothStep(0,1,Mathf.InverseLerp(0,.09f,q))*Mathf.SmoothStep(0,1,Mathf.InverseLerp(1,.84f,q));
+                float alpha=Mathf.Min(.24f,(.10f+.055f*billow)*endFade*visualStrength);
+                s.YarkinHybridShellColors[v]=new Color(.39f+.08f*billow,.44f+.08f*billow,.46f+.08f*billow,alpha);
+            }
+            s.YarkinHybridShell.vertices=s.YarkinHybridShellVertices;s.YarkinHybridShell.colors=s.YarkinHybridShellColors;
+            for(int j=0;j<s.YarkinHybridBands.Count;j++)
+            {
+                var band=s.YarkinHybridBands[j];float alpha=Mathf.Min(.20f,(.055f+.035f*motion.Gust)*visualStrength);
+                band.startColor=new Color(.50f,.55f,.56f,alpha*.45f);band.endColor=new Color(.58f,.62f,.63f,alpha);
+                band.widthMultiplier=1f+.15f*(motion.PresentationScaleV52-1f);
+                var buffer=s.YarkinHybridBandBuffers[j];
+                for(int k=0;k<HybridBandPoints;k++)
+                {
+                    float q=Mathf.Lerp(.055f,.94f,k/(float)(HybridBandPoints-1));
+                    float angle=j*Mathf.PI*2/3+q*Mathf.PI*2*1.35f-time*(2.1f+(1-q)*.45f);
+                    buffer[k]=HybridPoint(q,angle,HybridRadius(q,angle,time)+.045f,time);
+                }
+                band.SetPositions(buffer);
+            }
+            s.YarkinHybridFoot.localRotation=Quaternion.Euler(0,time*178f,0);
+            s.YarkinHybridFootMaterial.color=new Color(.40f,.37f,.31f,Mathf.Min(.25f,(.11f+.04f*motion.Gust)*visualStrength));
+            s.YarkinHybridShardMaterial.color=new Color(1,1,1,Mathf.Clamp01(visualStrength));
+            for(int i=0;i<s.YarkinHybridShards.Length;i++)
+                s.YarkinHybridShards[i].localRotation=Quaternion.Euler(i*37f+time*83f,i*53f+time*127f,i*71f+time*61f);
+        }
+
+        static float HybridRadius(float q,float angle,float time)
+        {return (.72f+Mathf.Pow(q,1.6f)*2.95f)*(1+.07f*Mathf.Sin(angle*3+q*17-time*3))*1.065f+.10f;}
+        static Vector3 HybridPoint(float q,float angle,float radius,float time)
+        {return new Vector3(-19.2f+q*q*.45f*Mathf.Sin(time*.28f)+Mathf.Cos(angle)*radius,q*11.5f,11+Mathf.Sin(angle)*radius);}
+        static Transform HybridMeshNode(Transform parent,string name,Mesh mesh,Material material)
+        {
+            var node=new GameObject(name);node.transform.SetParent(parent,false);node.AddComponent<MeshFilter>().sharedMesh=mesh;
+            var renderer=node.AddComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
+            return node.transform;
+        }
+        static Mesh HybridPuffMesh()
+        {
+            // Branch-derived octahedral dust puffs with explicit UV/color channels for SoftWeather.
+            var mesh=new Mesh{name="Yarkin Hybrid compact octahedral dust puff"};
+            mesh.vertices=new[]{Vector3.up*.85f,Vector3.down*.85f,Vector3.left*.85f,Vector3.right*.85f,Vector3.forward*.85f,Vector3.back*.85f};
+            mesh.triangles=new[]{0,2,4,0,4,3,0,3,5,0,5,2,1,4,2,1,3,4,1,5,3,1,2,5};
+            mesh.uv=new[]{new Vector2(.5f,1),new Vector2(.5f,0),new Vector2(0,.5f),new Vector2(1,.5f),new Vector2(.5f,.5f),new Vector2(.5f,.5f)};
+            mesh.colors=new[]{Color.white,Color.white,Color.white,Color.white,Color.white,Color.white};mesh.RecalculateBounds();return mesh;
+        }
+        static Mesh HybridShardMesh()
+        {
+            var mesh=new Mesh{name="Yarkin Hybrid cosmetic foot debris shard"};
+            mesh.vertices=new[]{new Vector3(-.5f,0,-.5f),new Vector3(.5f,.05f,-.5f),new Vector3(.5f,-.05f,.5f),new Vector3(-.5f,.02f,.5f)};
+            mesh.uv=new[]{Vector2.zero,Vector2.right,Vector2.one,Vector2.up};mesh.triangles=new[]{0,1,2,0,2,3};
+            var color=new Color(.48f,.42f,.31f,.82f);mesh.colors=new[]{color,color,color,color};mesh.RecalculateBounds();return mesh;
+        }
+
         static ParticleSystem Emitter(GameObject root,string name,Material mat,Vector3 p,Vector3 size,int cap,float rate,float minLife,float maxLife,float minSize,float maxSize)
         {
             var go=new GameObject(name);go.transform.SetParent(root.transform,false);go.transform.localPosition=p;
@@ -193,6 +329,6 @@ namespace TooLateToPanic
         public Mesh Funnel,Debris,CloudBase,GroundDust;public Vector3[] Vertices,DebrisVertices,CloudVertices,DustVertices;public Color[] Colors,CloudColors,DustColors;
         public float Clock,LastAge,Gust;
         public float PresentationScaleV52=1f,EmissionRateV52;
-        void OnDestroy(){if(Funnel)Destroy(Funnel);if(Debris)Destroy(Debris);if(CloudBase)Destroy(CloudBase);if(GroundDust)Destroy(GroundDust);}
+        void OnDestroy(){if(Funnel)PanicStormArtState.Release(Funnel);if(Debris)PanicStormArtState.Release(Debris);if(CloudBase)PanicStormArtState.Release(CloudBase);if(GroundDust)PanicStormArtState.Release(GroundDust);Funnel=null;Debris=null;CloudBase=null;GroundDust=null;}
     }
 }

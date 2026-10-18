@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -107,6 +107,7 @@ namespace TooLateToPanic
             foreach(var neighbor in neighbors)
             {
                 if(!neighbor.visual)continue;
+                if(TryTickNeighbourDetailsHybrid(neighbor,dt))continue;
                 neighbor.visual.SetActive(running);
                 if(!running)continue;
                 Vector3 delta=neighbor.end-neighbor.start;float length=delta.magnitude;

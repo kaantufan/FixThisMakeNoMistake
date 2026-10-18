@@ -1,4 +1,4 @@
-> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.5-r2), [source/build comparison](Publications/Snapshots/20261018T073511Z/source-vs-build.json). Local-only historical evidence links remain local references.
+> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.5-r2), [source/build comparison](Publications/Snapshots/20261018T075512Z/source-vs-build.json). Local-only historical evidence links remain local references.
 
 # Home V5.5 teslimi
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,6 +16,7 @@ namespace TooLateToPanic
         readonly List<Rect> drawnRoomLabelsV56 = new List<Rect>(12);
         PanicNotebookPlanSnapshotV55 labelPlanV56;
         Rect labelMapV56;
+        GUIStyle roomSingleLineStyleV57;
         public Rect[] MapRoomLabelRectsV56 { get { return drawnRoomLabelsV56.ToArray(); } }
         public int MapRoomLabelDrawFrameV56 { get; private set; } = -1;
         public int MapRoomLabelUnplacedV56 { get; private set; }
@@ -23,6 +24,7 @@ namespace TooLateToPanic
         void DrawRoomLabelsV56(PanicNotebookSnapshot data)
         {
             if (planSnapshotV55 == null) return;
+            if (roomSingleLineStyleV57 == null) roomSingleLineStyleV57 = new GUIStyle(tinyStyle) { wordWrap = false, alignment = TextAnchor.MiddleLeft, padding = new RectOffset(), clipping = TextClipping.Clip };
             if (!ReferenceEquals(labelPlanV56, planSnapshotV55) || labelMapV56 != PlanRect)
                 LayoutRoomLabelsV56(data);
             bool repaint = Event.current.type == EventType.Repaint;
@@ -34,7 +36,7 @@ namespace TooLateToPanic
                 if (Vector2.Distance(room.Anchor, end) > 15f)
                     Line(room.Anchor, end, new Color(Green.r, Green.g, Green.b, .38f), 1);
                 Fill(rect, new Color(Paper.r, Paper.g, Paper.b, .91f));
-                Label(new Rect(rect.x + 4, rect.y, rect.width - 8, rect.height), room.Text, tinyStyle, Green);
+                Label(new Rect(rect.x + 6, rect.y + 2, rect.width - 12, rect.height - 4), room.Text, roomSingleLineStyleV57, Green);
                 if (repaint)
                 {
                     Rect local = rect; local.position += PlanRect.position;
@@ -61,8 +63,8 @@ namespace TooLateToPanic
                     .Replace(" iç kapısı", "").Replace(" kapısı", "");
                 if (!names.Add(text)) continue;
                 Vector2 anchor = MapDrawPointV55(shape.Pivot);
-                float width = Mathf.Clamp(tinyStyle.CalcSize(new GUIContent(text)).x + 8f, 40f, PlanRect.width - 16f);
-                float height = Mathf.Max(22f, tinyStyle.lineHeight + 3f);
+                float width = Mathf.Clamp(Mathf.Ceil(roomSingleLineStyleV57.CalcSize(new GUIContent(text)).x) + 20f, 40f, PlanRect.width - 16f);
+                float height = Mathf.Max(24f, Mathf.Ceil(roomSingleLineStyleV57.lineHeight) + 6f);
                 Rect best = new Rect(); float bestScore = float.PositiveInfinity;
                 // Bounded nearest-fit placement. The real scene projection is untouched.
                 for (int row = -7; row <= 7; row++) for (int col = -8; col <= 8; col++)

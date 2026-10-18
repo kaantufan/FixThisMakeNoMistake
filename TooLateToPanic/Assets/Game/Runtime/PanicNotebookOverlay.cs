@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -337,10 +337,10 @@ namespace TooLateToPanic
                 Label(new Rect(right, 35, width, 51), "DEFTERİ NASIL KULLANIRIM?", titleStyle, Ink);
                 Fill(new Rect(right, 98, width, 2), Green);
                 Label(new Rect(right, 122, width, 108), "Normal oyunda 120 saniye önlem al, ardından 45 saniyede çantanı hazırla. Defter açıkken süre durur.", smallStyle, Ink);
-                Label(new Rect(right, 256, width, 139), "J / Esc   Defteri kapat\n← / →   Sayfaları değiştir\nE   Yakındaki ana etkileşim\nF   Seçili malzemeyi al\nTab   Envanter / çanta", smallStyle, Ink);
+                Label(new Rect(right, 256, width, 139), "J / Esc   Defteri kapat\n← / →   Sayfaları değiştir\nE   Aç / topla\nF   Erzak al (FPS)\nTab   Envanter / çanta", smallStyle, Ink);
                 Label(new Rect(right, 418, width, 96), "İlk sayfada yardımcı adımlarını ve ev planını bulursun. İstersen yardımcıyı buradan kapatabilirsin.", smallStyle, Green);
             }
-            else Label(new Rect(28, 515, width, 156), "120 sn önlem + 45 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: etkileşim   ·   F: malzeme   ·   Tab: çanta\nİlk sayfadan yardımcıyı açıp kapatabilirsin.", smallStyle, Ink);
+            else Label(new Rect(28, 515, width, 156), "120 sn önlem + 45 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: aç / topla   ·   F: erzak (FPS)   ·   Tab: çanta\nİlk sayfadan yardımcıyı açıp kapatabilirsin.", smallStyle, Ink);
             DrawButton(IntroContinueRectV55, "REHBERE GEÇ  ·  ENTER", Green, Paper, true);
             Label(new Rect(right, Book.height - 44, width, 24), "Hazır olduğunda J ile evine dön.", tinyStyle, Green);
         }

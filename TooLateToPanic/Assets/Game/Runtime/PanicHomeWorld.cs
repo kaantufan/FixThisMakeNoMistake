@@ -85,7 +85,7 @@ namespace TooLateToPanic
             bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
             bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
             if (Array.IndexOf(args, "--overhaul414-smoke") >= 0) Application.runInBackground = true;
-            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0 || Array.IndexOf(args, "--v54-smoke") >= 0 || Array.IndexOf(args, "--v55-smoke") >= 0 || Array.IndexOf(args, "--v56-smoke") >= 0 || Array.IndexOf(args, "--wave-ledger-v56-smoke") >= 0) Application.runInBackground = true;
+            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0 || Array.IndexOf(args, "--v54-smoke") >= 0 || Array.IndexOf(args, "--v55-smoke") >= 0 || Array.IndexOf(args, "--v56-smoke") >= 0 || Array.IndexOf(args, "--wave-ledger-v56-smoke") >= 0 || Array.IndexOf(args, "--ui-v57-smoke") >= 0 || Array.IndexOf(args, "--yarkin-hybrid-smoke") >= 0) Application.runInBackground = true;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
             if (fullFlowSmoke)
@@ -152,6 +152,7 @@ namespace TooLateToPanic
             InitResidenceLife();
             InitDirectActions();
             InitExteriorLife();
+            InitNeighbourDetailsHybrid();
             InitRevisionWorld();
             InitExperienceFeedbackV414();
             InitOverhaulV414();
@@ -963,14 +964,7 @@ namespace TooLateToPanic
             {
                 var g = PanicConstructionArt.CreateReinforcement(item); g.transform.SetParent(holder.transform, false);
             }
-            if (item.Damage > 4 && item.Kind != ItemKind.Wall && item.Kind != ItemKind.Roof)
-            {
-                float width = Mathf.Min(1.2f, item.Size.x * .7f), height = Mathf.Min(1.6f, item.Size.y * .8f);
-                var crack = MakeLine("Fresh damage fracture", new[] { new Vector3(-width*.4f,height*.85f,-.01f),new Vector3(-width*.1f,height*.62f,-.02f),new Vector3(-width*.2f,height*.42f,-.01f),new Vector3(width*.18f,height*.25f,-.01f),new Vector3(width*.12f,.09f,-.01f) }, new Color(.09f,.075f,.065f), .018f);
-                crack.loop = false; crack.transform.SetParent(holder.transform, false); crack.transform.localPosition = new Vector3(0,.1f,-item.Size.z*.51f);
-                if (item.Kind == ItemKind.Window) crack.transform.localPosition = new Vector3(0,1.0f,-.18f);
-                if (item.Kind == ItemKind.Wall) { crack.transform.localPosition = new Vector3(0,.1f,-.14f); if (Mathf.Abs(item.Position.x)>7) holder.transform.localRotation=Quaternion.Euler(0,item.Position.x<0?270:90,0); }
-            }
+            TryBuildYarkinDamageMarkHybrid(item, holder);
             OnPresentationHardwareRebuilt(item, holder);
             visibilityRenderers.Remove(items[item.Id].GetInstanceID());
         }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,7 +10,7 @@ namespace TooLateToPanic
     // Only this process's own standalone window can be renamed.
     public sealed class PanicBuildIdentityV56 : MonoBehaviour
     {
-        public const string WindowTitleV56 = "Too Late to Panic! — Home V5.6";
+        public const string WindowTitleV56 = "Too Late to Panic! — Home V5.7";
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
         IntPtr window;
         uint processId;

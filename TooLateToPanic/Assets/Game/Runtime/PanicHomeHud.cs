@@ -13,19 +13,19 @@ namespace TooLateToPanic
         public Rect ResultFailureRectV56 { get; private set; }
 
         // Offline, authored palette from the approved HUD concept.
-        static readonly Color Shade = new Color(.07f, .06f, .055f, .65f);
-        static readonly Color Night = new Color(.102f, .094f, .090f, .97f);
-        static readonly Color Panel = new Color(.161f, .149f, .145f, .96f);
-        static readonly Color Raised = new Color(.205f, .189f, .177f, .98f);
-        static readonly Color MainText = new Color(.965f, .945f, .910f, 1f);
-        static readonly Color SoftText = new Color(.847f, .824f, .784f, 1f);
-        static readonly Color Muted = new Color(.765f, .737f, .690f, 1f);
-        static readonly Color Brass = new Color(.949f, .663f, .231f, 1f);
-        static readonly Color Sea = new Color(.373f, .702f, .667f, 1f);
-        static readonly Color Petrol = new Color(.145f, .416f, .424f, 1f);
-        static readonly Color Rust = new Color(.776f, .357f, .239f, 1f);
-        static readonly Color Ember = new Color(.894f, .278f, .176f, 1f);
-        static readonly Color Line = new Color(.847f, .824f, .784f, .19f);
+        static readonly Color Shade = new Color(.055f, .065f, .06f, .65f);
+        static readonly Color Night = new Color(.075f, .094f, .092f, .98f);
+        static readonly Color Panel = new Color(.12f, .14f, .13f, .98f);
+        static readonly Color Raised = new Color(.17f, .20f, .18f, .98f);
+        static readonly Color MainText = new Color(.96f, .95f, .91f, 1f);
+        static readonly Color SoftText = new Color(.82f, .85f, .81f, 1f);
+        static readonly Color Muted = new Color(.78f, .82f, .77f, 1f);
+        static readonly Color Brass = new Color(.95f, .75f, .36f, 1f);
+        static readonly Color Sea = new Color(.63f, .85f, .76f, 1f);
+        static readonly Color Petrol = new Color(.18f, .33f, .29f, 1f);
+        static readonly Color Rust = new Color(.96f, .72f, .60f, 1f);
+        static readonly Color Ember = new Color(.99f, .65f, .52f, 1f);
+        static readonly Color Line = new Color(.70f, .77f, .71f, .32f);
         static readonly string[][] WalkControls = { new[] { "WASD", "YÜRÜ" }, new[] { "SHIFT", "KOŞ" }, new[] { "SPACE", "ZIPLA" }, new[] { "E", "KULLAN" }, new[] { "TAB", "ÇANTA" } };
         static readonly string[][] LootControls = { new[] { "Z/X", "SEÇ" }, new[] { "F", "AL" }, new[] { "E", "KAPAT" }, new[] { "TAB", "ÇANTA" } };
         static readonly string[][] EmptyLootControls = { new[] { "E", "KAPAT" }, new[] { "TAB", "ÇANTA" },new[] { "Q", "HEDEF" } };
@@ -116,9 +116,9 @@ namespace TooLateToPanic
             (World.Model.Phase == PanicPhase.Preparing || World.Model.Phase == PanicPhase.Tutorial) &&
             PreparationTimerRemaining <= 60f; } }
         public Rect LogicalCanvasBounds { get { return new Rect(0, 0, CanvasWidth, CanvasHeight); } }
-        public Rect WaveCardBounds { get { return new Rect(24, 20, 332, 62); } }
-        public Rect TimerCardBounds { get { return new Rect(660, 20, 182, 62); } }
-        public Rect ResourceCardBounds { get { return new Rect(1372, 20, 204, 62); } }
+        public Rect WaveCardBounds { get { return new Rect(24, 20, 430, 76); } }
+        public Rect TimerCardBounds { get { return new Rect(660, 20, 208, 76); } }
+        public Rect ResourceCardBounds { get { return new Rect(1332, 20, 244, 76); } }
         public Rect RequirementCardBounds { get { int n = World && World.Expedition != null ?
             Mathf.Min(3, World.Expedition.CurrentRequirements.Count) : 0;
             return new Rect(1220, 106, 356, 46 + n * 29 +
@@ -425,6 +425,7 @@ namespace TooLateToPanic
             _dotTexture = null;
             if (_supplyPreviews != null) _supplyPreviews.Dispose();
             _supplyPreviews = null;
+            PanicUiSymbolsV57.Release();
         }
 
         void OnDisable()
@@ -496,75 +497,7 @@ namespace TooLateToPanic
 
         void DrawTitle()
         {
-            if (simulationSelectOpen) { DrawSimulationSelector(); return; }
-            Fill(LogicalCanvasBounds, new Color(.06f, .055f, .05f, .52f));
-            // The real house remains visible behind the title and scores.
-            Frame(new Rect(78, 78, 816, 744), new Color(.102f, .094f, .09f, .94f), Line, 1f);
-            Region(new Rect(78, 78, 816, 744));
-            DrawHazardStripe(new Rect(110, 111, 230, 6), Rust);
-            Label(new Rect(116, 132, 680, 28), PanicKktcStoryV53.MenuLocation, ColorText(_tiny, Brass));
-            // Brand logo from Documentation/HUD-Concept/logo; the text title stays as a fallback.
-            if (!_brandLogo) _brandLogo = Resources.Load<Texture2D>("HUD/TltpLogo");
-            if (_brandLogo)
-                GUI.DrawTexture(new Rect(160, 160, 580, 290), _brandLogo, ScaleMode.ScaleToFit, true);
-            else
-            {
-                Label(new Rect(110, 173, 730, 132), "TOO LATE", _logo);
-                Brush(new Rect(107, 310, 696, 116), Rust);
-                Label(new Rect(128, 294, 680, 136), "TO PANIC!", _logo);
-            }
-            FittedLabel(new Rect(118, 453, 668, 32), PanicKktcStoryV53.MenuPremise, _body, MainText, 18);
-            Label(new Rect(118, 492, 660, 26), PanicKktcStoryV53.FictionNotice, _small);
-
-            Button(new Rect(118, 540, 664, 60), PrimaryPlayLabelV414, _menuChoice == 0, Brass, () => ActivateTitleChoiceV414(0));
-            Button(new Rect(118, 612, 664, 60), TitleChoiceLabelV414(1), _menuChoice == 1, Sea, () => ActivateTitleChoiceV414(1));
-            Button(new Rect(118, 684, 320, 52), TitleChoiceLabelV414(2), _menuChoice == 2, Sea, () => ActivateTitleChoiceV414(2));
-            Button(new Rect(450, 684, 332, 52), TitleChoiceLabelV414(3), _menuChoice == 3, Sea, () => ActivateTitleChoiceV414(3));
-            Button(new Rect(118, 748, 320, 52), TitleChoiceLabelV414(4), _menuChoice == 4, Rust, () => ActivateTitleChoiceV414(4));
-            DrawKeycap(new Rect(464, 754, 150, 36), "OKLAR", "SEÇ", Line);
-            DrawKeycap(new Rect(626, 754, 156, 36), "ENTER", "AÇ", Line);
-
-            Rect scores = new Rect(1040, 222, 472, 532);
-            Frame(scores, Night, Line, 1f);
-            Region(scores);
-            Brush(new Rect(1063, 244, 258, 42), Petrol);
-            Label(new Rect(1082, 243, 384, 43), "YEREL SKORLAR", _heading);
-            Label(new Rect(1068, 305, 150, 25), "EN İYİ KOŞULAR", _tiny);
-            Label(new Rect(1360, 305, 122, 25), "PUAN", ColorText(_caps, Muted));
-            List<HighscoreEntry> entries = World.Model.Highscores;
-            if (entries == null || entries.Count == 0)
-            {
-                DrawBagIcon(new Rect(1227, 403, 54, 60), Muted);
-                Label(new Rect(1080, 488, 392, 32), "İLK KOŞUNU TAMAMLA", ColorText(_center, MainText));
-                Label(new Rect(1080, 531, 392, 28), "Skorların bu bilgisayarda saklanır.", ColorText(_caps, Muted));
-            }
-            else
-            {
-                int count = Mathf.Min(6, entries.Count);
-                for (int i = 0; i < count; i++)
-                {
-                    HighscoreEntry entry = entries[i];
-                    float y = 346 + i * 60;
-                    if (i == 0) Frame(new Rect(1062, y - 4, 428, 54), new Color(.145f, .416f, .424f, .20f), new Color(Sea.r, Sea.g, Sea.b, .35f), 1f);
-                    Label(new Rect(1074, y, 45, 32), (i + 1).ToString("00"), ColorText(_display, i == 0 ? Brass : Muted));
-                    Label(new Rect(1138, y, 144, 28), entry.waves + " DALGA", _body);
-                    Label(new Rect(1290, y - 1, 184, 32), entry.score.ToString("N0"), ColorText(_right, i == 0 ? Brass : MainText));
-                    Label(new Rect(1138, y + 28, 320, 18), entry.date ?? "", _tiny);
-                }
-            }
-            Event e = Event.current;
-            if (DeveloperMenuOpen || DeveloperInputBlockedThisFrame) return;
-            if (e.type != EventType.KeyDown) return;
-            if (IsNavigationKey(e.keyCode))
-            {
-                _menuChoice = NavigateTitleChoice(_menuChoice, e.keyCode);
-                e.Use();
-            }
-            else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
-            {
-                ActivateSelectedTitleChoiceV414();
-                e.Use();
-            }
+            DrawTitleDesignV57();
         }
 
         void DrawStatusStrip()
@@ -582,11 +515,7 @@ namespace TooLateToPanic
 
         void DrawBagIcon(Rect rect, Color color)
         {
-            Fill(new Rect(rect.x + 5, rect.y + 7, rect.width - 10, rect.height - 8), color);
-            Fill(new Rect(rect.x + 10, rect.y + 2, rect.width - 20, 3), color);
-            Fill(new Rect(rect.x + 10, rect.y + 2, 3, 8), color);
-            Fill(new Rect(rect.xMax - 13, rect.y + 2, 3, 8), color);
-            Fill(new Rect(rect.x + 9, rect.y + 12, rect.width - 18, 3), Night);
+            PanicUiSymbolsV57.Draw(rect, "bag", color);
         }
 
         void DrawContext()
@@ -919,23 +848,12 @@ namespace TooLateToPanic
 
         void DrawDisasterCue()
         {
-            float pulse = .45f + .25f * Mathf.Sin(Time.unscaledTime * 5f);
-            Fill(new Rect(0, 0, CanvasWidth, 5), new Color(Ember.r, Ember.g, Ember.b, pulse));
-            Fill(new Rect(0, 0, 5, CanvasHeight), new Color(Ember.r, Ember.g, Ember.b, pulse * .65f));
-            Fill(new Rect(CanvasWidth - 5, 0, 5, CanvasHeight), new Color(Ember.r, Ember.g, Ember.b, pulse * .65f));
-            Rect cue = new Rect(548, 156, 504, 72);
-            Frame(cue, new Color(.22f, .08f, .055f, .96f), new Color(Ember.r, Ember.g, Ember.b, .7f), 1f); Region(cue);
-            DrawWarning(new Rect(cue.x + 18, cue.y + 18, 34, 34), Ember);
-            Label(new Rect(cue.x + 72, cue.y + 6, cue.width - 88, 23), "AFET BAŞLADI", ColorText(_tiny, new Color(.96f, .63f, .53f)));
-            Label(new Rect(cue.x + 72, cue.y + 28, cue.width - 88, 37), World.Model.ActiveDisasterLabelV54, _heading);
+            DrawDisasterCueDesignV57();
         }
 
         void DrawToast(string message)
         {
-            if (string.IsNullOrEmpty(message)) return;
-            Rect toast = new Rect(460, World.LootVisible ? 548 : 736, 680, 42);
-            Frame(toast, Night, Line, 1f); Region(toast);
-            FittedLabel(new Rect(toast.x + 14, toast.y + 4, toast.width - 28, 34), message, _small, SoftText, 14);
+            DrawToastDesignV57(message);
         }
 
         void DrawLossReveal()
@@ -1037,26 +955,7 @@ namespace TooLateToPanic
 
         void DrawPause()
         {
-            if (AudioSettingsOpenV56) { DrawAudioSettingsV56(); return; }
-            Fill(LogicalCanvasBounds, new Color(.055f, .05f, .045f, .57f));
-            Rect panel = new Rect(96, 176, 1408, 612);
-            Frame(panel, Night, Line, 1f); Region(panel);
-            Label(new Rect(156, 224, 634, 30), "SÜRE VE OYUN DURDU", ColorText(_tiny, Brass));
-            Label(new Rect(152, 262, 700, 74), World.JuryActive ? "KISA BİR MOLA" : "DURAKLATILDI", _timer);
-            DrawWatch(new Rect(157, 379, 94, 112), Rust);
-            Brush(new Rect(148, 509, 624, 51), Rust);
-            Label(new Rect(277, 346, 520, 176), FormatTime(PreparationTimerRemaining), ColorText(_mega, Brass));
-            Frame(new Rect(161, 588, 236, 36), new Color(Petrol.r, Petrol.g, Petrol.b, .3f), Sea, 1f);
-            Label(new Rect(174, 590, 210, 30), "II   OYUN DURDU", ColorText(_caps, Sea));
-            Button(new Rect(161, 660, 600, 56), "SES AYARLARI", _pauseChoice == 6, Sea, OpenAudioSettingsV56);
-            Button(new Rect(912, 263, 508, 68), "DEVAM ET", _pauseChoice == 0, Brass, () => SetPaused(false));
-            Button(new Rect(924, 350, 496, 62), "GELİŞTİRİCİ · F2", _pauseChoice == 1, Sea, ToggleDeveloperMenu);
-            Button(new Rect(924, 430, 496, 62), "YENİDEN BAŞLA", _pauseChoice == 2, Brass, RestartRun);
-            Button(new Rect(924, 510, 496, 62), "BAŞLIĞA DÖN", _pauseChoice == 3, Rust, ReturnToMenu);
-            Button(new Rect(924, 590, 496, 50), PanicBackgroundMusic.Enabled ? "MÜZİK · AÇIK" : "MÜZİK · KAPALI", _pauseChoice == 4, Sea, () => PanicBackgroundMusic.Enabled = !PanicBackgroundMusic.Enabled);
-            Button(new Rect(1160, 658, 260, 46), World.ReducedFpsMotionV54 ? "FPS HAREKETİ · AZ" : "FPS HAREKETİ · TAM", _pauseChoice == 5, Sea, () => World.SetReducedFpsMotionV54(!World.ReducedFpsMotionV54));
-            DrawKeycap(new Rect(925, 662, 220, 42), "ESC", "DEVAM ET", Line);
-            HandlePauseNavigation();
+            DrawPauseDesignV57();
         }
 
         bool DeveloperBudgetAvailable()
@@ -1231,20 +1130,7 @@ namespace TooLateToPanic
 
         void Button(Rect rect, string text, bool selected, Color accent, Action action)
         {
-            bool hover = rect.Contains(LogicalPointer());
-            Frame(rect, selected ? accent : hover ? Raised : Panel, selected || hover ? accent : Line, 1f);
-            if (selected) Fill(new Rect(rect.x - 6, rect.y + 7, 4, rect.height - 14), Petrol);
-            Label(new Rect(rect.x + 22, rect.y + 2, rect.width - 50, rect.height - 4), text,
-                ColorText(_body, selected ? Night : MainText));
-            if (selected || hover)
-            {
-                float cx = rect.xMax - 25;
-                DrawLine(new Vector2(cx - 5, rect.center.y - 6), new Vector2(cx + 1, rect.center.y), selected ? Night : accent, 2f);
-                DrawLine(new Vector2(cx + 1, rect.center.y), new Vector2(cx - 5, rect.center.y + 6), selected ? Night : accent, 2f);
-            }
-            Mark(rect);
-            if (!_developerMenuOpen && DeveloperInputBlockedThisFrame && !(WaveLedgerButtonInputV56 || KeyboardHelpButtonInputV56)) return;
-            if (MousePressed(rect) && action != null) { World.PlayUiSound(); action(); }
+            DrawButtonDesignV57(rect, text, selected, accent, action);
         }
 
         void DrawKeycap(Rect rect, string key, string action, Color accent)
@@ -1381,14 +1267,14 @@ namespace TooLateToPanic
 
         static void Frame(Rect rect, Color fill, Color edge, float thickness)
         {
-            RoundFill(new Rect(rect.x, rect.y + 4, rect.width, rect.height), new Color(0f, 0f, 0f, .18f));
-            // Blend the translucent fill against the dark panel, rather than the full bright outline underneath.
-            Color opaqueFill = Color.Lerp(new Color(Night.r, Night.g, Night.b, 1f), new Color(fill.r, fill.g, fill.b, 1f), fill.a);
-            RoundFill(rect, edge);
-            Rect inner = new Rect(rect.x + thickness, rect.y + thickness, rect.width - thickness * 2, rect.height - thickness * 2);
-            RoundFill(inner, opaqueFill);
-            if (rect.width > 80 && rect.height > 32)
-                Fill(new Rect(rect.x + 9, rect.y + thickness + 1, rect.width - 18, 1), new Color(1f, .95f, .85f, .035f));
+            // A quiet, flat surface. No repeated bevel or gloss competes with game information.
+            Color opaque = Color.Lerp(new Color(Night.r, Night.g, Night.b, 1f), new Color(fill.r, fill.g, fill.b, 1f), fill.a);
+            Fill(new Rect(rect.x, rect.y + 2, rect.width, rect.height), new Color(0, 0, 0, .16f));
+            Fill(rect, opaque);
+            Fill(new Rect(rect.x, rect.y, rect.width, thickness), edge);
+            Fill(new Rect(rect.x, rect.yMax - thickness, rect.width, thickness), edge);
+            Fill(new Rect(rect.x, rect.y, thickness, rect.height), edge);
+            Fill(new Rect(rect.xMax - thickness, rect.y, thickness, rect.height), edge);
         }
 
 
@@ -1669,51 +1555,15 @@ namespace TooLateToPanic
         }
         static void DrawCheck(Rect rect, Color color)
         {
-            DrawLine(new Vector2(rect.x, rect.y + rect.height * .45f), new Vector2(rect.x + rect.width * .35f, rect.yMax), color, 3f);
-            DrawLine(new Vector2(rect.x + rect.width * .35f, rect.yMax), new Vector2(rect.xMax, rect.y), color, 3f);
+            PanicUiSymbolsV57.Draw(rect, "check", color);
         }
         static void DrawWarning(Rect rect, Color color)
         {
-            Vector2 top = new Vector2(rect.center.x, rect.y);
-            Vector2 left = new Vector2(rect.x, rect.yMax);
-            Vector2 right = new Vector2(rect.xMax, rect.yMax);
-            DrawLine(top, left, color, 2f); DrawLine(left, right, color, 2f); DrawLine(right, top, color, 2f);
-            Fill(new Rect(rect.center.x - 1, rect.y + rect.height * .36f, 2, rect.height * .27f), color);
-            Fill(new Rect(rect.center.x - 1, rect.y + rect.height * .75f, 2, 2), color);
+            PanicUiSymbolsV57.Draw(rect, "warning", color);
         }
         static void DrawDisasterSymbol(Rect rect, DisasterType type, Color color)
         {
-            if (type == DisasterType.Earthquake)
-            {
-                DrawLine(new Vector2(rect.x + 20, rect.y), new Vector2(rect.x + 11, rect.y + 13), color, 4f);
-                DrawLine(new Vector2(rect.x + 11, rect.y + 13), new Vector2(rect.x + 20, rect.y + 15), color, 4f);
-                DrawLine(new Vector2(rect.x + 20, rect.y + 15), new Vector2(rect.x + 8, rect.yMax), color, 4f);
-            }
-            else if (type == DisasterType.Flood)
-            {
-                for (int row = 0; row < 3; row++)
-                    for (int j = 0; j < 4; j++)
-                        DrawLine(new Vector2(rect.x + j * 7, rect.y + 5 + row * 9 + (j % 2) * 3),
-                            new Vector2(rect.x + (j + 1) * 7, rect.y + 5 + row * 9 + ((j + 1) % 2) * 3), color, 2.5f);
-            }
-            else if (type == DisasterType.Storm)
-            {
-                for(int row=0;row<3;row++)
-                {
-                    float y=rect.y+7+row*9;
-                    DrawLine(new Vector2(rect.x+2,y),new Vector2(rect.xMax-6,y),color,2.5f);
-                    DrawLine(new Vector2(rect.xMax-6,y),new Vector2(rect.xMax-1,y-4),color,2.5f);
-                    DrawLine(new Vector2(rect.xMax-1,y-4),new Vector2(rect.xMax-4,y-7),color,2.5f);
-                }
-            }
-            else
-            {
-                DrawLine(new Vector2(rect.center.x + 2, rect.y), new Vector2(rect.x + 4, rect.y + 20), color, 3f);
-                DrawLine(new Vector2(rect.x + 4, rect.y + 20), new Vector2(rect.center.x, rect.yMax), color, 3f);
-                DrawLine(new Vector2(rect.center.x, rect.yMax), new Vector2(rect.xMax - 3, rect.y + 20), color, 3f);
-                DrawLine(new Vector2(rect.xMax - 3, rect.y + 20), new Vector2(rect.center.x + 2, rect.y), color, 3f);
-                DrawLine(new Vector2(rect.center.x, rect.yMax - 2), new Vector2(rect.center.x, rect.y + 17), Brass, 3f);
-            }
+            PanicUiSymbolsV57.Draw(rect, DisasterSymbolKeyV57(type), color);
         }
         static void DrawCorners(Rect rect, Color color)
         {

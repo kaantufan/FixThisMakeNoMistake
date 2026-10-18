@@ -62,7 +62,7 @@ namespace TooLateToPanic
             for(int candidate=0;candidate<6;candidate++)
             {
                 // Reduced starts direct, then tries the exact previously certified normal
-                // shoulder geometry. It removes roll, not the ability to avoid a balcony/wall.
+                // shoulder geometry. Both settings retain the same stable horizon and obstacle gates.
                 int route=bagDollyReducedV56?(candidate==0?3:candidate==1?0:candidate==2?1:candidate==3?2:candidate):candidate;
                 Vector3 shoulder=route==0?bagShotTo-bagDollyForwardV56*1.35f+right*.24f+Vector3.up*.13f:
                     route==1?bagShotTo+towardsStart*1.15f+Vector3.up*.18f:
@@ -157,7 +157,7 @@ namespace TooLateToPanic
             Quaternion aim=look.sqrMagnitude>.00001f?Quaternion.LookRotation(look,Vector3.up):bagRotationTo;
             Quaternion rotation=Quaternion.Slerp(bagRotationFrom,aim,DollyEaseV56(Mathf.InverseLerp(0,.28f,t)));
             rotation=Quaternion.Slerp(rotation,bagRotationTo,DollyEaseV56(Mathf.InverseLerp(.60f,1,t)));
-            if(!bagDollyReducedV56)rotation*=Quaternion.Euler(0,0,Mathf.Sin(t*Mathf.PI)*.85f);
+            // The smooth handoff keeps a stable horizon in both panic-effect settings.
             View.orthographic=false;View.nearClipPlane=.05f;
             View.fieldOfView=Mathf.Lerp(bagShotFov,62,eased);
             View.transform.SetPositionAndRotation(position,rotation);
