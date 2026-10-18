@@ -172,3 +172,10 @@ Güncel **Home V5.5-r2 /0.5.5**. Defter ilk açılışında amacını ve kullan�
 FPS'te özgün gerilim fon müziği, sürekli sınırlı kamera sarsıntısı ve7.2s yumuşak kararma/ferahlama döngüsü vardır. Azaltılmış hareket seçeneği korunur. Deprem sinematiğinin sığınak filtresi ve askıdan yeni klip başlatması düzeltildi; gerçek rumble/yapısal sesler kullanılır. Oluşan vana/elektrik RNG olayı, neden ve ek hasarla belirgin TESİSAT UYARISI bandında görünür.120+45s,75%kayıp, RNG/çoklu afetler ve KKTC · Güzelyurt · Kalkanlı korunur.
 
 Güncel kaynak/build/native kimliği yalnız LATEST ve HOME-V5.5-DELIVERY-2026-10-18.md ile bağlıdır. Eski turkuaz dünya checkpoint işareti isteği bu son kullanıcı kaldırma isteğiyle güncellendi; yol analizi küçük defter yardımcısında yer metni sağlar.
+
+
+## Home V5.7 —18 Ekim 2026
+
+Home V5.7: ana menü, duraklatma ve ses sayfası yeniden tasarlandı. Özgün etiketli simgeler, açık süre/bütçe/hasar ve su-gıda durumları, klasik fiziksel klavye ve her tuş için ayrı açıklama içeren F1 rehberi, tek 20 yuvalı envanter ve sabit FPS kamera davranışı birlikte sunulur. Su ve gıda aynı envanterden dalga başına bir kez kullanılır; defter oda yazıları da düzeltilmiştir.
+
+120+45sn,75% kayıp, gerçek maliyet/iptal/controller, sonlu stok/RNG, skor ve fiziksel sığınak kapısı korunur. Yeni kaynak, dört aynı-DLL native suite (birleşik envanter kontrolleri UI suite içinde), kısmi Windows kaydı (complete=false; dört afet simülasyonu ve yeni normal açılış NOT_RUN) ve ZIP kimliği yalnız LATEST ve HOME-V5.7-UI-DELIVERY-2026-10-18.md ile bağlıdır. Önceki teslim edilmiş V5.5 ile teslim edilmemiş V5.6 source/native baseline ayrıdır; eski DLL kontrolleri yeni DLL kanıtı değildir. Human playtest/readability/listening/campaign acceptance remains separate. Açık eski oyuncular ve bağımsız FPS kaynakları korunur; yeni ücret/kredi yetkisi yoktur.

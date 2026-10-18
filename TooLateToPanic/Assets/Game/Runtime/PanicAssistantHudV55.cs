@@ -22,13 +22,13 @@ namespace TooLateToPanic
         {
             get
             {
-                if (!World || World.Model == null || !World.AssistantEnabledV55 || !World.GuidanceVisibleV54 ||
+                if (!World || World.Model == null || (!World.AssistantEnabledV55 && !World.HasNotebookTargetV57) || !World.GuidanceVisibleV54 ||
                     _paused || _developerMenuOpen || _helpVisible || DeveloperInputBlockedThisFrame ||
                     FreeplayOnboardingInputBlockedV414 || World.NotebookBlocksInput || World.CinematicActive || World.LossAnnounced ||
                     World.WorkActive || World.InventoryOpen || World.IsMoving || World.BagCameraTransitionActive || SimulationSelectorOpen)
                     return false;
                 var assistant = World.AssistantV55;
-                return assistant != null && assistant.Available;
+                return World.HasNotebookTargetV57 || assistant != null && assistant.Available;
             }
         }
         public string AssistantRenderedTaskV55 { get; private set; }
@@ -45,12 +45,14 @@ namespace TooLateToPanic
             var assistant = World.AssistantV55;
             EnsureAssistantStylesV55();
 
-            string task = CleanAssistantTextV55(string.IsNullOrWhiteSpace(assistant.Task) ? assistant.Title : assistant.Task);
-            string hint = CleanAssistantTextV55(assistant.Hint);
-            string progress = assistant.StepCount > 0 ? Mathf.Clamp(assistant.CurrentStep, 1, assistant.StepCount) + "/" + assistant.StepCount : "";
+            bool manualTarget = World.HasNotebookTargetV57;
+            string header = manualTarget ? "İŞARETLİ HEDEF" : "DEFTER";
+            string task = CleanAssistantTextV55(manualTarget ? World.NotebookTargetLabelV57 : string.IsNullOrWhiteSpace(assistant.Task) ? assistant.Title : assistant.Task);
+            string hint = CleanAssistantTextV55(manualTarget ? World.NotebookTargetHintV57 : assistant.Hint);
+            string progress = !manualTarget && assistant.StepCount > 0 ? Mathf.Clamp(assistant.CurrentStep, 1, assistant.StepCount) + "/" + assistant.StepCount : "";
             AssistantRenderedTaskV55 = task;
             AssistantRenderedHintV55 = hint;
-            AssistantRenderedTextV55 = "DEFTER" + (progress.Length > 0 ? " · " + progress : "") + "\n" + task + (hint.Length > 0 ? "\n" + hint : "");
+            AssistantRenderedTextV55 = header + (progress.Length > 0 ? " · " + progress : "") + "\n" + task + (hint.Length > 0 ? "\n" + hint : "");
 
             Rect card;
             {
@@ -84,14 +86,14 @@ namespace TooLateToPanic
             if (compact)
             {
                 AssistantRenderedTaskV55 = AssistantRenderedHintV55 = "";
-                AssistantRenderedTextV55 = "DEFTER" + (progress.Length > 0 ? " · " + progress : "");
+                AssistantRenderedTextV55 = manualTarget ? "HEDEF · J" : "DEFTER" + (progress.Length > 0 ? " · " + progress : "");
             }
             Frame(card, Night, Line, 1f);
             Region(card);
             Fill(new Rect(card.x + 1f, card.y + 10f, 2f, card.height - 20f), new Color(Sea.r, Sea.g, Sea.b, .42f));
             DrawAssistantBookV55(new Rect(card.x + 14f, card.y + (compact ? 10f : 7f), 15f, 14f));
-            Label(new Rect(card.x + 37f, card.y + (compact ? 8f : 5f), compact ? card.width - 45f : 110f, 20f),
-                "DEFTER" + (compact && progress.Length > 0 ? " · " + progress : ""), ColorText(_tiny, SoftText));
+            Label(new Rect(card.x + 37f, card.y + (compact ? 8f : 5f), compact ? card.width - 45f : manualTarget ? card.width - 52f : 110f, 20f),
+                (compact && manualTarget ? "HEDEF · J" : header) + (compact && progress.Length > 0 ? " · " + progress : ""), ColorText(_tiny, SoftText));
             if (!compact)
             {
                 if (progress.Length > 0)

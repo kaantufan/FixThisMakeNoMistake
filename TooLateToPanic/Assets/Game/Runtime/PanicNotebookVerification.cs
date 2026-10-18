@@ -56,7 +56,8 @@ namespace TooLateToPanic
             if (data != null) for (int i = 0; i < PanicNotebookData.MaterialIds.Length; i++)
                 materials &= data.Materials[i] == world.Expedition.Count(PanicNotebookData.MaterialIds[i]);
             record(materials, "Notebook materials use the canonical live Count API");
-            record(data != null && data.Inventory.Length == world.Expedition.Inventory.Count && data.Bag.Length == world.Expedition.Bag.Count, "Notebook capacities come from real storage");
+            record(data != null && MatchesCanonicalInventory(data, world.Expedition) && data.Bag != null && data.Bag.Length == 0 && data.BagCapacity == 0 && data.BagUsed == 0, "Notebook exposes exactly one canonical inventory view; compatibility bag view is empty");
+            record(ReferenceEquals(world.Expedition.Inventory, world.Expedition.Bag), "Compatibility bag API aliases the canonical inventory");
             record(GameplayFingerprint(world) == before && world.Model.CheatedRun == priorCheated, "Notebook navigation changes no gameplay stock/budget/score/cheat state");
             notebook.SetReducedMotion(true); notebook.RequestClose();
             record(!notebook.IsVisible && notebook.BlocksInput, "Instant close retains the request-frame input gate");
@@ -65,12 +66,26 @@ namespace TooLateToPanic
             notebook.SetReducedMotion(false);
         }
 
+        static bool MatchesCanonicalInventory(PanicNotebookSnapshot data, PanicExpedition expedition)
+        {
+            if (data.Inventory == null || expedition.Inventory == null || data.Inventory.Length != expedition.Inventory.Count ||
+                data.InventoryCapacity != expedition.Inventory.Count) return false;
+            int used = 0;
+            for (int i = 0; i < expedition.Inventory.Count; i++)
+            {
+                var slot = expedition.Inventory[i]; string id = slot == null ? string.Empty : slot.Id;
+                int count = slot == null ? 0 : Mathf.Max(0, slot.Count);
+                if (data.Inventory[i].Id != id || data.Inventory[i].Count != count) return false;
+                if (count > 0 && !string.IsNullOrEmpty(id)) used++;
+            }
+            return data.InventoryUsed == used;
+        }
+
         public static string GameplayFingerprint(PanicHomeWorld world)
         {
             var m = world.Model; var e = world.Expedition; var b = new StringBuilder();
             b.Append(m.Wave).Append('|').Append(m.Budget).Append('|').Append(m.Score).Append('|').Append(m.PackedWater).Append('|').Append(m.PackedFood).Append('|').Append(m.PackedSupportMask).Append('|').Append(m.CheatedRun);
             foreach (var slot in e.Inventory) b.Append("|I:").Append(slot == null ? "" : slot.Id).Append(':').Append(slot == null ? 0 : slot.Count);
-            foreach (var slot in e.Bag) b.Append("|B:").Append(slot == null ? "" : slot.Id).Append(':').Append(slot == null ? 0 : slot.Count);
             foreach (var item in m.Items) if (item != null) b.Append("|T:").Append(item.Id).Append(':').Append(item.Anchored).Append(':').Append(item.Tier).Append(':').Append(item.Damage);
             foreach (var source in e.Sources) if (source != null)
             {

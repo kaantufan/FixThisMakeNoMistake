@@ -49,6 +49,7 @@ namespace TooLateToPanic
         public float Damage;
         public bool BagReady, CheatedRun;
         public Vector3 ActorPosition;
+        // Bag is an empty compatibility view; Inventory is the only storage snapshot.
         public PanicNotebookSlot[] Inventory, Bag;
         public PanicNotebookPin[] Pins;
         public PanicNotebookCheck[][] Pages;
@@ -92,10 +93,10 @@ namespace TooLateToPanic
                 if (item.Kind == ItemKind.Window || item.Kind == ItemKind.Door) { windows++; if (item.Tier > 0) windowsDone++; }
                 if (item.Kind == ItemKind.Roof) { roofs++; if (item.Tier > 0) roofsDone++; }
             }
-            var water = new PanicNotebookCheck("Çantaya su koy", "Bu dalganın su ihtiyacı", model.PackedWater, model.RequiredDays);
-            var food = new PanicNotebookCheck("Çantaya gıda koy", "Bu dalganın gıda ihtiyacı", model.PackedFood, model.RequiredDays);
-            var firstAid = new PanicNotebookCheck("İlk yardım setini çantaya koy", "Çantadaki destek ekipmanı", (model.PackedSupportMask & 1) != 0 ? 1 : 0, 1);
-            var flashlight = new PanicNotebookCheck("Pilli el fenerini hazırla", "Çantadaki destek ekipmanı", (model.PackedSupportMask & 2) != 0 ? 1 : 0, 1);
+            var water = new PanicNotebookCheck("Suyu topla", "Envanterdeki su bu dalga için hazır", model.PackedWater, model.RequiredDays);
+            var food = new PanicNotebookCheck("Gıdayı topla", "Envanterdeki gıda bu dalga için hazır", model.PackedFood, model.RequiredDays);
+            var firstAid = new PanicNotebookCheck("İlk yardım setini al", "Envanterdeki destek ekipmanı", (model.PackedSupportMask & 1) != 0 ? 1 : 0, 1);
+            var flashlight = new PanicNotebookCheck("Pilli el fenerini hazırla", "Envanterdeki destek ekipmanı", (model.PackedSupportMask & 2) != 0 ? 1 : 0, 1);
             var anchor = new PanicNotebookCheck("Uygun mobilyaları sabitle", "Dünyada tamamlanan ankrajlar", anchors, anchorTotal);
             var wall = new PanicNotebookCheck("Duvarları güçlendir", "En az bir kademe güçlendirme", wallsDone, walls);
             var window = new PanicNotebookCheck("Kapı ve pencereleri güçlendir", "En az bir kademe güçlendirme", windowsDone, windows);
@@ -114,7 +115,7 @@ namespace TooLateToPanic
             pages[(int)PanicNotebookPage.Storm] = new[] {
                 new PanicNotebookCheck("Bahçe ağaç sıralarını kur", "Üç gerçek bahçe bölgesi", trees, 3),
                 new PanicNotebookCheck("Çatıyı güçlendir", "En az bir kademe güçlendirme", roofsDone, roofs), window, anchor,
-                new PanicNotebookCheck("Pilli radyoyu çantaya koy", "Çantadaki destek ekipmanı", (model.PackedSupportMask & 4) != 0 ? 1 : 0, 1),
+                new PanicNotebookCheck("Pilli radyoyu hazırla", "Envanterdeki destek ekipmanı", (model.PackedSupportMask & 4) != 0 ? 1 : 0, 1),
                 new PanicNotebookCheck("Su ve gıdayı tamamla", "Bu dalga için yeterli erzak", model.BagReady ? 1 : 0, 1) };
             pages[(int)PanicNotebookPage.Inventory] = new[] { water, food, firstAid, flashlight };
             var pins = new List<PanicNotebookPin>();
@@ -128,15 +129,15 @@ namespace TooLateToPanic
             for (int i = 0; i < sourceRequirements.Count; i++) requirements[i] = sourceRequirements[i];
             bool timedJury = jury != null && jury.Active;
             string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlemleri tamamla. Son 45 saniyede çanta hazırlığı başlayacak." : model.BagReady ? model.HasActiveDisasterV54(DisasterType.Flood) ? "Su ve gıda hazır. Üst kat panik odasına git." : "Su ve gıda hazır. Bodrumdaki sığınağa git." :
-                "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Temel ihtiyaçlar doğrudan çantana eklenir.";
+                "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Aldığın erzak envanterinde hazırdır.";
             return new PanicNotebookSnapshot {
                 StoryLocation = PanicKktcStoryV53.LocationBadge, StoryTitle = PanicKktcStoryV53.DiaryTitle, StoryNote = PanicKktcStoryV53.DiaryPersonalNote,
                 Phase = PhaseName(model.Phase), Disaster = model.ActiveDisasterLabelV54, Wave = model.Wave,
                 Budget = model.InfiniteBudget ? "SINIRSIZ" : model.Budget.ToString("N0"), Damage = Mathf.Clamp(model.TotalDamage, 0, 100),
                 Clock = Clock(timedJury ? jury.StageRemainingSeconds : model.TimeRemaining), Note = note,
-                Floor = Mathf.Clamp(floor, -1, 1), Inventory = Slots(expedition.Inventory), Bag = Slots(expedition.Bag),
-                InventoryUsed = Used(expedition.Inventory), BagUsed = Used(expedition.Bag),
-                InventoryCapacity = expedition.Inventory == null ? 0 : expedition.Inventory.Count, BagCapacity = expedition.Bag == null ? 0 : expedition.Bag.Count,
+                Floor = Mathf.Clamp(floor, -1, 1), Inventory = Slots(expedition.Inventory), Bag = new PanicNotebookSlot[0],
+                InventoryUsed = Used(expedition.Inventory), BagUsed = 0,
+                InventoryCapacity = expedition.Inventory == null ? 0 : expedition.Inventory.Count, BagCapacity = 0,
                 BagReady = model.BagReady, CheatedRun = model.CheatedRun, Pins = pins.ToArray(), Pages = pages, Materials = materials,
                 RequiredDays = model.RequiredDays, PackedWater = model.PackedWater, PackedFood = model.PackedFood,
                 SelectedLabel = expedition.WorkTargetLabelV414(selectedAction, selected == null ? null : selected.Id), SelectedAction = selectedAction,

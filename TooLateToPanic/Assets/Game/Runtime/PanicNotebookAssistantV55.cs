@@ -98,8 +98,8 @@ namespace TooLateToPanic
                 anchored ? "Yeni ankraj malzemesi gerekmiyor" : materials ? "Ankraj malzemeleri hazır" : target + " için gereken malzemeler",
                 anchorDeferred ? target + " · " + budgetReason + "; tesisat ücretsiz" : target,
                 "Gaz, su vanası ve ana elektrik şalteri",
-                "Son 45 saniyede; aldığın su çantana girer",
-                "Son 45 saniyede; aldığın gıda çantana girer",
+                "Son 45 saniyede; aldığın su envanterine eklenir",
+                "Son 45 saniyede; aldığın gıda envanterine eklenir",
                 Model.HasActiveDisasterV54(DisasterType.Flood) ? "Sel var: üst kat panik odası" : "Bodrum sığınağı"
             };
             // An unaffordable suggestion must not hide the still actionable free utilities.

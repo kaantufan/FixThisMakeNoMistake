@@ -36,7 +36,7 @@ namespace TooLateToPanic
         public PanicMaterialCost(string id, int required) { Id = id; Required = Mathf.Max(0, required); }
     }
 
-    /// <summary>A recipe snapshot against numeric construction stock or loose bag supplies.</summary>
+    /// <summary>A recipe snapshot against numeric construction stock or carried supplies.</summary>
     public readonly struct PanicMaterialRequirement
     {
         public readonly string Id;
@@ -56,14 +56,15 @@ namespace TooLateToPanic
     }
 
     /// <summary>
-    /// Run-scoped scavenging, packing, crafting and preparation work state. World owns
+    /// Run-scoped scavenging, carried inventory, crafting and preparation work state. World owns
     /// proximity, interaction targets, colliders, movement and action presentation.
     /// </summary>
     public sealed partial class PanicExpedition
     {
-        private const int InventoryCapacity = 12;
-        private const int BagCapacity = 8;
+        private const int InventoryCapacity = 20;
         private const int StackLimit = 5;
+        private int projectedWaterCount;
+        private int projectedFoodCount;
 
         private readonly Dictionary<string, List<SupplySlot>> sourceBlueprints =
             new Dictionary<string, List<SupplySlot>>(StringComparer.Ordinal);
@@ -73,7 +74,8 @@ namespace TooLateToPanic
 
         public PanicModel Model;
         public List<SupplySlot> Inventory;
-        public List<SupplySlot> Bag;
+        /// <summary>Compatibility view of the one carried inventory; never a second store.</summary>
+        public List<SupplySlot> Bag { get { return Inventory; } }
         public List<LootSource> Sources;
         public PanicWorkSession Work;
         public int JuryWaterGatheredCount { get; private set; }
@@ -110,7 +112,8 @@ namespace TooLateToPanic
         public PanicExpedition(PanicModel model)
         {
             Model = model;
-            Reset();
+            if (Model != null && Model.IsSimulation) ResetForSimulation();
+            else Reset();
         }
 
         /// <summary>Starts a fresh run's expedition stock. Model run reset remains World-owned.</summary>
@@ -120,7 +123,7 @@ namespace TooLateToPanic
             lastGatherRewards.Clear(); GatherSequence = 0;
             JuryWaterGatheredCount = 0;
             Inventory = MakeEmptySlots(InventoryCapacity);
-            Bag = MakeEmptySlots(BagCapacity);
+            projectedWaterCount = projectedFoodCount = 0;
             Sources = CreateSources();
             sourceBlueprints.Clear();
             committedWork.Clear();
@@ -130,6 +133,7 @@ namespace TooLateToPanic
                 sourceBlueprints[Sources[i].Id] = CloneSlots(Sources[i].Contents);
             Work = new PanicWorkSession();
             ResetWaveLootV5();
+            PublishInventoryModel();
             Message = "Dolaplardan yapı malzemesi, odalardan erzak topla.";
         }
 
@@ -143,11 +147,9 @@ namespace TooLateToPanic
             AddOne("sandbag", 2);
             AddOne("plank", 1);
             AddOne("extinguisher", 1);
-            Model.WaterStock = Model.FoodStock = Model.PackedWater = 0;
-            Model.PackedFood = 1;
             SetBagCount("food", 1);
             PrepareShortFlowSupplies();
-            Message = "Başlangıç: 1 gıda çantada. Hazır yapı malzemeleri havuzda; dolaplarda fazlası var. Suyu son 45 saniyede al.";
+            Message = "Başlangıç: 1 gıda envanterde hazır. Yapı malzemeleri havuzda; dolaplarda fazlası var. Suyu son 45 saniyede al.";
             NotifyModel();
             return true;
         }
@@ -155,23 +157,44 @@ namespace TooLateToPanic
         internal void SyncJuryBagAfterDisaster()
         {
             if (Model == null || !Model.IsJuryDemo) return;
-            SetBagCount("water", Model.PackedWater);
-            SetBagCount("food", Model.PackedFood);
+            SyncConsumedBagSupplies();
         }
 
         internal void SyncConsumedBagSupplies()
         {
-            if (Model == null) return;
-            SetBagCount("water", Model.PackedWater);
-            SetBagCount("food", Model.PackedFood);
+            SynchronizeInventoryModel();
+        }
+
+        /// <summary>Reconciles only consumption since the last projection, then publishes
+        /// the canonical carried stock. Repeated phase/skip/new-wave hooks consume nothing twice.</summary>
+        public void SynchronizeInventoryModel()
+        {
+            if (Model == null || Inventory == null) return;
+            ConsumeFromSlots(Inventory, "water", Mathf.Max(0, projectedWaterCount - Mathf.Max(0, Model.PackedWater)));
+            ConsumeFromSlots(Inventory, "food", Mathf.Max(0, projectedFoodCount - Mathf.Max(0, Model.PackedFood)));
+            PublishInventoryModel();
+        }
+
+        private void PublishInventoryModel()
+        {
+            if (Model == null || Inventory == null) return;
+            Model.WaterStock = Model.FoodStock = 0;
+            projectedWaterCount = Model.PackedWater = CountSlots(Inventory, "water");
+            projectedFoodCount = Model.PackedFood = CountSlots(Inventory, "food");
+            int owned = SupportMask(Inventory);
+            chargedDeviceMask &= owned;
+            Model.SupportOwnedMask = owned;
+            Model.PackedSupportMask = owned & (~PoweredDeviceMask | chargedDeviceMask);
         }
 
         public void ResetForSimulation()
         {
+            int water = Model == null ? 0 : Model.PackedWater;
+            int food = Model == null ? 0 : Model.PackedFood;
             Reset();
             AddOne("bracket",1);AddOne("screws",2);AddOne("plank",2);AddOne("sandbag",2);AddOne("extinguisher",1);
-            SetBagCount("water",Model.PackedWater);SetBagCount("food",Model.PackedFood);
-            Message="Başlangıç çantası hazır. Sonlu iş malzemeleri havuzda; evde daha fazlasını arayabilirsin.";
+            SetBagCount("water",water);SetBagCount("food",food);
+            Message="Başlangıç erzakları envanterde hazır. Sonlu iş malzemeleri havuzda; evde daha fazlasını arayabilirsin.";
             NotifyModel();
         }
 
@@ -238,22 +261,28 @@ namespace TooLateToPanic
             return Fail("Yapı malzemeleri kapak açılınca havuza eklenir. Erzakları odalardan al.");
         }
 
-        /// <summary>Packs one selected unit, using PanicModel's existing water, food and support state.</summary>
+        /// <summary>Compatibility action. Carried supplies already count; a first powered
+        /// device can be activated once with one real battery.</summary>
         public bool PackSlot(int index)
         {
+            if (!CanPrepare()) return Fail("Envanteri hazırlıkta düzenleyebilirsin.");
+            SynchronizeInventoryModel();
             if (Inventory == null || index < 0 || index >= Inventory.Count || !HasStock(Inventory[index]))
                 return Fail("Bu envanter yuvası boş.");
-            int destination = FindStorageSlot(Bag, Inventory[index].Id, 1);
-            if (destination < 0) return Fail("Afet çantasında boş yuva yok.");
-            return TransferSlots(false, index, true, destination, 1);
+            if (!IsSupply(Inventory[index].Id)) return Fail("Bu eşya erzak envanterine ait değil.");
+            bool ready = ActivateSelectedDevice(Inventory[index].Id);
+            ClearRequirements();
+            Message = ready ? "Eşya envanterde hazır." : "Cihaz envanterde; etkinleştirmek için pil gerekli.";
+            NotifyModel();
+            return true;
         }
 
         public bool CraftFirstAid()
         {
-            return Fail("Hazır ilk yardım setini evde bul ve çantaya koy.");
+            return Fail("Hazır ilk yardım setini evde bul ve al.");
         }
 
-        /// <summary>Counts numeric construction stock or loose supplies; packed supplies live in Bag.</summary>
+        /// <summary>Counts numeric construction stock or the one carried supply inventory.</summary>
         public int Count(string itemId)
         {
             if (IsConstructionMaterial(itemId)) return MaterialCount(itemId);
@@ -538,7 +567,7 @@ namespace TooLateToPanic
             return id == "water" || id == "food" || id == "battery";
         }
 
-        private static int StackLimitFor(string id)
+        public static int StackLimitFor(string id)
         {
             return id == "flashlight" || id == "radio" || id == "blanket" || id == "firstaid" ||
                 id == "hose" || id == "extinguisher" ? 1 : StackLimit;
@@ -634,10 +663,12 @@ namespace TooLateToPanic
 
         private void SetBagCount(string id, int count)
         {
-            for (int i = 0; i < Bag.Count; i++)
-                if (Bag[i] != null && Bag[i].Id == id) { Bag[i].Id = string.Empty; Bag[i].Count = 0; }
-            if (count > 0 && !TryAddPartial(Bag, id, count))
-                throw new InvalidOperationException("Bag/model capacity invariant violated.");
+            // Setup-only compatibility helper. Preserve existing stacks and unrelated items.
+            count = Mathf.Max(0, count);
+            int current = CountSlots(Inventory, id);
+            if (current > count) ConsumeFromSlots(Inventory, id, current - count);
+            else if (count > current && !TryAddPartial(Inventory, id, count - current))
+                throw new InvalidOperationException("Inventory/model capacity invariant violated.");
         }
 
         private bool CanStoreAfterConsumption(string id, int count, IReadOnlyList<PanicMaterialCost> costs)
@@ -726,6 +757,7 @@ namespace TooLateToPanic
 
         private void NotifyModel()
         {
+            SynchronizeInventoryModel();
             if (!string.IsNullOrEmpty(requirementAction) && RequirementBudgetMissing == 0 && MissingRequirements.Count == 0)
                 ClearRequirements();
             if (Model != null) Model.Notify(Message);

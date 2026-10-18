@@ -122,7 +122,7 @@ namespace TooLateToPanic
                 {
                     bool openBag = pendingInventory; string focus = pendingFocus; ClearPending();
                     transitionFrame = Time.frameCount;
-                    if (openBag) world.ToggleInventory(); else if (!string.IsNullOrEmpty(focus)) world.SetFocus(focus);
+                    if (openBag) world.ToggleInventory(); else if (!string.IsNullOrEmpty(focus)) world.TryMarkNotebookTargetV57(focus);
                 }
                 return;
             }
@@ -158,7 +158,7 @@ namespace TooLateToPanic
             ClearPending(); transitionFrame = Time.frameCount;
             if (!animationState.TargetOpen) introOpenV55 = false;
             if (!introSeenV55) { introSeenV55 = true; introOpenV55 = true; }
-            if (!animationState.Visible) { floor = world.ActiveFloor; selectedSource = null; }
+            if (!animationState.Visible) { floor = world.ActiveFloor; selectedSource = world.HasNotebookTargetV57 ? world.NotebookTargetIdV57 : null; }
             animationState.SetOpen(true); RefreshSnapshot(); return true;
         }
         public void RequestClose()
@@ -256,6 +256,8 @@ namespace TooLateToPanic
                 }
                 if (InventoryRect.Contains(local) && !string.IsNullOrEmpty(selectedSource))
                 {
+                    if (world.HasNotebookTargetV57 && world.NotebookTargetIdV57 == selectedSource)
+                    { world.ClearNotebookTargetV57(); return; }
                     pendingFocus = selectedSource; pendingInventory = false; pendingPhase = world.Model.Phase; pendingWave = world.Model.Wave; RequestClose();
                 }
             }
@@ -295,7 +297,7 @@ namespace TooLateToPanic
                 Label(new Rect(Book.x, Book.y - 62, Book.width - 228, 38), "HAZIRLIK DEFTERİ", headingStyle, Paper);
                 DrawButton(CloseRect, "KAPAT  ·  J / ESC", Ink, Paper, true);
                 Label(compact ? new Rect(Book.x, 17, Book.width, 24) : new Rect(Book.x + 320, Book.y - 49, Book.width - 548, 25), snapshot.StoryLocation, tinyStyle, Paper);
-                if (compact && snapshot != null) Label(new Rect(Book.x, 48, Book.width, 52), snapshot.Disaster + "  ·  " + snapshot.Clock + "     BÜTÇE  " + snapshot.Budget + "\nHASAR  %" + snapshot.Damage.ToString("0") + "     ÇANTA  " + snapshot.BagUsed + "/" + snapshot.BagCapacity, smallStyle, Paper);
+                if (compact && snapshot != null) Label(new Rect(Book.x, 48, Book.width, 52), snapshot.Disaster + "  ·  " + snapshot.Clock + "     BÜTÇE  " + snapshot.Budget + "\nHASAR  %" + snapshot.Damage.ToString("0") + "     ENVANTER  " + snapshot.InventoryUsed + "/" + snapshot.InventoryCapacity, smallStyle, Paper);
                 Matrix4x4 oldBookMatrix = GUI.matrix;
                 GUI.matrix = canvasMatrix * Matrix4x4.TRS(new Vector3(Book.x, Book.y + 16 * (1 - ease), 0), Quaternion.identity, Vector3.one);
                 // V5 warm paper, cloth cover, punched holes and actual curved wire binding.
@@ -315,7 +317,7 @@ namespace TooLateToPanic
                 GUI.matrix = oldBookMatrix;
                 bool enabledBeforeTabs = GUI.enabled; GUI.enabled = !introOpenV55; DrawTabs(); GUI.enabled = enabledBeforeTabs;
                 DrawButton(MotionRect, animationState.ReducedMotion ? "HAREKET: AZ" : "HAREKET: TAM", PaperBack, Ink, true);
-                Label(new Rect(Book.x + 256, Book.yMax + 25, Book.width - 255, 31), introOpenV55 ? "ENTER  DEVAM    ·    J / ESC  OYUNA DÖN" : compact ? "← / →  SAYFA   ·   TAB  ÇANTA" : "← / →  SAYFA    ·    TAB  ÇANTAYI DÜZENLE    ·    DEFTER AÇIKKEN SÜRE DURUR", tinyStyle, Paper);
+                Label(new Rect(Book.x + 256, Book.yMax + 25, Book.width - 255, 31), introOpenV55 ? "ENTER  DEVAM    ·    J / ESC  OYUNA DÖN" : compact ? "← / →  SAYFA   ·   TAB  ENVANTER" : "← / →  SAYFA    ·    TAB  ENVANTERİ DÜZENLE    ·    DEFTER AÇIKKEN SÜRE DURUR", tinyStyle, Paper);
                 Label(new Rect(Book.x, Book.yMax + 63, Book.width, compact ? 42 : 34), snapshot.StoryNote, tinyStyle, Paper);
             }
             finally { GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.contentColor = oldContent; GUI.depth = oldDepth; }
@@ -337,10 +339,10 @@ namespace TooLateToPanic
                 Label(new Rect(right, 35, width, 51), "DEFTERİ NASIL KULLANIRIM?", titleStyle, Ink);
                 Fill(new Rect(right, 98, width, 2), Green);
                 Label(new Rect(right, 122, width, 108), "Normal oyunda 120 saniye önlem al, ardından 45 saniyede çantanı hazırla. Defter açıkken süre durur.", smallStyle, Ink);
-                Label(new Rect(right, 256, width, 139), "J / Esc   Defteri kapat\n← / →   Sayfaları değiştir\nE   Aç / topla\nF   Erzak al (FPS)\nTab   Envanter / çanta", smallStyle, Ink);
+                Label(new Rect(right, 256, width, 139), "J / Esc   Defteri kapat\n← / →   Sayfaları değiştir\nE   Aç / topla\nF   Erzak al (FPS)\nTab   Envanter", smallStyle, Ink);
                 Label(new Rect(right, 418, width, 96), "İlk sayfada yardımcı adımlarını ve ev planını bulursun. İstersen yardımcıyı buradan kapatabilirsin.", smallStyle, Green);
             }
-            else Label(new Rect(28, 515, width, 156), "120 sn önlem + 45 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: aç / topla   ·   F: erzak (FPS)   ·   Tab: çanta\nİlk sayfadan yardımcıyı açıp kapatabilirsin.", smallStyle, Ink);
+            else Label(new Rect(28, 515, width, 156), "120 sn önlem + 45 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: aç / topla   ·   F: erzak (FPS)   ·   Tab: envanter\nİlk sayfadan yardımcıyı açıp kapatabilirsin.", smallStyle, Ink);
             DrawButton(IntroContinueRectV55, "REHBERE GEÇ  ·  ENTER", Green, Paper, true);
             Label(new Rect(right, Book.height - 44, width, 24), "Hazır olduğunda J ile evine dön.", tinyStyle, Green);
         }
@@ -459,7 +461,8 @@ namespace TooLateToPanic
                 Label(new Rect(row.xMax - 91, row.y + 5, 82, 25), state, tinyStyle, pin.Empty ? Green : Ink);
             }
             Label(new Rect(28, compact?PlanRect.yMax+90:Book.height - 116, PageWidth - 56, 22), "Kırmızı: sen  ·  Gri: duvar  ·  " + empty + "/"+data.Pins.Length+" boş" + (data.Pins.Length > VisibleSourceRows ? "  ·  Liste: tekerlek" : ""), tinyStyle, Green);
-            DrawButton(InventoryRect, string.IsNullOrEmpty(selectedSource) ? "PLAN ÜZERİNDEN BİR HEDEF SEÇ" : "SEÇİLİ HEDEFİ İŞARETLE", string.IsNullOrEmpty(selectedSource) ? PaperBack : Green, string.IsNullOrEmpty(selectedSource) ? Ink : Paper, true);
+            bool marked = world && world.HasNotebookTargetV57 && world.NotebookTargetIdV57 == selectedSource;
+            DrawButton(InventoryRect, string.IsNullOrEmpty(selectedSource) ? "PLAN ÜZERİNDEN BİR HEDEF SEÇ" : marked ? "İŞARETLENDİ · KALDIR" : "SEÇİLİ HEDEFİ İŞARETLE", string.IsNullOrEmpty(selectedSource) ? PaperBack : Green, string.IsNullOrEmpty(selectedSource) ? Ink : Paper, true);
         }
         Vector2 MapPoint(Vector3 position)
         {
@@ -523,16 +526,14 @@ namespace TooLateToPanic
         {
             float slot = Mathf.Min(compact ? 83 : 66, (PageWidth - 56 - 5 * 7) / 6);
             Label(new Rect(28, 111, PageWidth - 56, 27), "ENVANTER   " + data.InventoryUsed + "/" + data.InventoryCapacity, smallStyle, Ink);
-            DrawSlots(data.Inventory, 28, 147, slot, 6, false);
-            float bagY = 147 + 2 * (slot + 8) + 15;
-            Label(new Rect(28, bagY, PageWidth - 56, 28), "AFET ÇANTASI   " + data.BagUsed + "/" + data.BagCapacity, smallStyle, Ink);
-            DrawSlots(data.Bag, 28, bagY + 38, slot, 4, true);
-            float bottom = bagY + 38 + 2 * (slot + 8) + 12;
+            DrawSlots(data.Inventory, 28, 147, slot, 6);
+            int rows = Mathf.CeilToInt(data.Inventory.Length / 6f);
+            float bottom = 147 + rows * (slot + 8) + 16;
             Label(new Rect(28, bottom, PageWidth - 56, 35), "SU  " + data.PackedWater + "/" + data.RequiredDays + "     GIDA  " + data.PackedFood + "/" + data.RequiredDays + (data.BagReady ? "    HAZIR" : "    EKSİK"), smallStyle, data.BagReady ? Green : Alarm);
             if (compact) DrawMaterialRows(data, new Rect(28, bottom + 36, PageWidth - 56, 112));
-            DrawButton(InventoryRect, "ÇANTAYI DÜZENLE  ·  TAB", Green, Paper, true);
+            DrawButton(InventoryRect, "ENVANTERİ DÜZENLE  ·  TAB", Green, Paper, true);
         }
-        void DrawSlots(PanicNotebookSlot[] slots, float x, float y, float size, int columns, bool bag)
+        void DrawSlots(PanicNotebookSlot[] slots, float x, float y, float size, int columns)
         {
             for (int i = 0; i < slots.Length; i++)
             {
@@ -547,7 +548,6 @@ namespace TooLateToPanic
                     Label(new Rect(rect.x + 3, rect.yMax - 27, size - 6, 24), ShortName(item.Id), tinyStyle, Ink);
                     Label(new Rect(rect.xMax - 29, rect.y + 1, 26, 24), item.Count.ToString(), centerStyle, Ink);
                 }
-                else if (bag) Line(new Vector2(rect.x + 10, rect.yMax - 11), new Vector2(rect.xMax - 10, rect.yMax - 11), Rule, 2);
             }
         }
         static string ShortName(string id)
@@ -564,7 +564,7 @@ namespace TooLateToPanic
             Fill(new Rect(x + 14, 201, width - 28, 5), Rule); Fill(new Rect(x + 14, 201, (width - 28) * data.Damage / 100, 5), Alarm);
             float half = (width - 12) / 2;
             Stat(new Rect(x, 228, half, 99), "BÜTÇE", data.Budget, Ink);
-            Stat(new Rect(x + half + 12, 228, half, 99), "ÇANTA YUVALARI", data.BagUsed + " / " + data.BagCapacity, Ink);
+            Stat(new Rect(x + half + 12, 228, half, 99), "ENVANTER YUVALARI", data.InventoryUsed + " / " + data.InventoryCapacity, Ink);
             Label(new Rect(x, 340, width, 27), "MALZEME KAYDI", smallStyle, Green);
             DrawMaterialRows(data, new Rect(x, 374, width, 111));
             Rect note = new Rect(x, 493, width, 109); Fill(new Rect(note.x + 3, note.y + 4, note.width, note.height), new Color(.15f, .18f, .14f, .1f)); Fill(note, new Color(.96f, .92f, .66f));

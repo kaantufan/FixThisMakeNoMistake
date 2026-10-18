@@ -807,18 +807,33 @@ namespace TooLateToPanic
             if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.Backspace)) { ToggleInventory(); return; }
             if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) InventoryMove(1);
             if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) InventoryMove(-1);
-            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) InventoryMove(4);
-            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) InventoryMove(-4);
-            if (Input.GetKeyDown(KeyCode.Return)) InventoryUse();
+            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) InventoryMove(5);
+            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) InventoryMove(-5);
             // Prepared first-aid kits are world pickups; there is no first-aid crafting shortcut.
         }
-        public void InventoryMove(int delta) { InventoryIndex = (InventoryIndex + delta + 12) % 12; effects.Play("ui",.18f); }
-        public void InventorySelect(int index) { InventoryIndex = Mathf.Clamp(index, 0, 11); effects.Play("ui",.18f); }
-        public void InventoryUse() { string id=Expedition.Inventory[InventoryIndex].Id; if (Expedition.PackSlot(InventoryIndex)) effects.Play(id == "radio" || id == "flashlight" ? "battery" : "pickup_cloth", .3f); else effects.Play("reject",.25f); }
+        public void InventoryMove(int delta)
+        {
+            int capacity = Expedition == null || Expedition.Inventory == null ? 0 : Expedition.Inventory.Count;
+            if (capacity == 0) return;
+            InventoryIndex = ((InventoryIndex + delta) % capacity + capacity) % capacity;
+            effects.Play("ui", .18f);
+        }
+        public void InventorySelect(int index)
+        {
+            if (Expedition == null || Expedition.Inventory == null || Expedition.Inventory.Count == 0) return;
+            InventoryIndex = Mathf.Clamp(index, 0, Expedition.Inventory.Count - 1);
+            effects.Play("ui", .18f);
+        }
+        public void InventoryUse()
+        {
+            // Compatibility entry point: the item is already carried in the single inventory.
+            if (Expedition != null) Expedition.PackSlot(InventoryIndex);
+        }
         public void CraftFirstAid() { if (Expedition.CraftFirstAid()) effects.Play("craft", .4f); else effects.Play("reject",.25f); }
 
         public void StartGame(bool tutorial)
         {
+            ClearNotebookTargetV57();
             if (hud) hud.ResetKeyboardHelpPresentationV56();
             ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation();
             CancelWork(); CancelMove();
@@ -831,7 +846,7 @@ namespace TooLateToPanic
         }
         public void FinishTutorial() { CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); QueueRadio(DisasterVoiceId()); }
         public void FinishInspection() { if (JuryActive) AdvanceJuryDemo(); else if (Model.IsSimulation) ReturnToMenu(); else Model.FinishInspection(); }
-        public void ReturnToMenu() { if(hud)hud.ResetKeyboardHelpPresentationV56(); if(hud)hud.CloseSimulationSelector(); ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation(); CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
+        public void ReturnToMenu() { ClearNotebookTargetV57(); if(hud)hud.ResetKeyboardHelpPresentationV56(); if(hud)hud.CloseSimulationSelector(); ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation(); CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
         void ClearGarden() { foreach (var s in gardenSites) { s.done = false; s.marker.SetActive(true); if (s.built) Destroy(s.built); s.built = null; } }
         public void Warp(Vector3 p) { controller.enabled = false; player.position = p; controller.enabled = true; gravitySpeed = -2; desiredVelocity = Vector3.zero; }
         public void SmokeMove(Vector2 direction, float dt) { MovePlayer(dt, direction); }

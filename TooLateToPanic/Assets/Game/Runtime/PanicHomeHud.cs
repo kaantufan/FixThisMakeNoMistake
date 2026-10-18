@@ -571,7 +571,7 @@ namespace TooLateToPanic
                 case "drain": return "DRENAJ · EKSİKLER";
                 case "fence": return "SEL ÇİTİ · EKSİKLER";
                 case "hose": return "HORTUM · EKSİKLER";
-                case "packbattery": return "ÇANTAYA KOYMAK İÇİN PİL GEREK";
+                case "packbattery": return "EKİPMANI ÇALIŞTIRMAK İÇİN PİL GEREK";
                 default: return "EKSİKLER";
             }
         }
@@ -642,60 +642,48 @@ namespace TooLateToPanic
             Frame(panel, Night, Line, 1f); Region(panel);
             Brush(new Rect(114, 195, 228, 42), Rust);
             Label(new Rect(132, 191, 560, 46), "ENVANTER", _heading);
-            Brush(new Rect(810, 195, 283, 42), Petrol);
-            Label(new Rect(828, 191, 480, 46), "AFET ÇANTASI", _heading);
-            Fill(new Rect(786, 254, 1, 480), Line);
+            Label(new Rect(824, 191, 660, 46), "HAZIRLIK DURUMU", _heading);
+            Fill(new Rect(798, 254, 1, 480), Line);
             List<SupplySlot> inventory = World.Expedition == null ? null : World.Expedition.Inventory;
-            List<SupplySlot> bag = World.Expedition == null ? null : World.Expedition.Bag;
-            Label(new Rect(126, 246, 594, 23), "EVDE TOPLADIKLARIN   /   " + UsedSlots(inventory) + " · 12 YUVA", _tiny);
-            Label(new Rect(824, 246, 622, 23), (World.JuryActive || World.Model.IsSimulation ? "HAZIRLIK ÇANTASI" : "SIĞINAK İÇİN") + "   /   " + UsedSlots(bag) + " · 8 YUVA", _tiny);
-            for (int i = 0; i < 12; i++)
+            int capacity = inventory == null ? 0 : inventory.Count;
+            UnifiedInventoryLabelsFitV58 = true; UnifiedInventoryLabelProbesV58 = 0;
+            Label(new Rect(126, 246, 654, 23), "TOPLADIĞIN EŞYALAR   /   " + UsedSlots(inventory) + " · " + capacity + " YUVA", _tiny);
+            Label(new Rect(824, 246, 660, 23), "HER DALGA İÇİN 1 SU + 1 GIDA", _tiny);
+            for (int i = 0; i < capacity; i++)
             {
-                int col = i % 4, row = i / 4;
-                Rect cell = new Rect(126 + col * 156, 286 + row * 113, 144, 101);
-                SupplySlot slot = inventory != null && i < inventory.Count ? inventory[i] : null;
+                Rect cell = InventorySlotBounds(false, i);
+                SupplySlot slot = inventory[i];
                 bool selected = i == World.InventoryIndex;
                 Frame(cell, selected ? new Color(.145f, .416f, .424f, .36f) : Panel, selected ? Sea : Line, selected ? 2f : 1f);
                 DrawSlot(cell, slot, selected);
                 if (selected) Fill(new Rect(cell.x + 18, cell.yMax - 3, cell.width - 36, 2), Sea);
                 Mark(cell);
-                int index = i;
-                HandleInventorySlot(cell, false, index);
+                HandleInventorySlot(cell, false, i);
             }
-            for (int i = 0; i < 8; i++)
-            {
-                Rect cell = new Rect(824 + (i % 4) * 168, 286 + (i / 4) * 113, 156, 101);
-                SupplySlot slot = bag != null && i < bag.Count ? bag[i] : null;
-                Frame(cell, Panel, Line, 1f);
-                DrawSlot(cell, slot, _bagSelection == i); Mark(cell);
-                HandleInventorySlot(cell, true, i);
-            }
+            Rect explanation = new Rect(824, 286, 660, 211);
+            Frame(explanation, Panel, Line, 1f); Mark(explanation);
+            Label(new Rect(842, 302, 624, 34), "TOPLADIĞIN ERZAK YANINDA", ColorText(_body, Sea));
+            Label(new Rect(842, 350, 624, 102), "Su ve gıda topladığında hazır sayılır.\nHer dalgada birer tane kullanılır.\nFener ve radyo için birer pil gerekir.", _wrap);
             PanicModel model = World.Model;
             DrawInventoryMeter(new Rect(824, 523, 207, 76), "water", "SU", model.PackedWater, model.RequiredDays);
             DrawInventoryMeter(new Rect(1044, 523, 207, 76), "food", "GIDA", model.PackedFood, model.RequiredDays);
             DrawInventoryMeter(new Rect(1264, 523, 220, 76), "firstaid", "DESTEK", model.SupportCount, 4);
             DrawDot(new Rect(827, 620, 9, 9), model.BagReady ? Sea : Brass);
-            string readyHint = World.JuryActive ? "ÇANTA HAZIR · Kapat ve sıradaki önleme geç" : model.IsSimulation ? "ÇANTA HAZIR · Önlemini seç, afeti başlat" : "ÇANTA HAZIR · Sığınağa geçebilirsin";
+            string readyHint = World.JuryActive ? "ERZAK HAZIR · Kapat ve sıradaki önleme geç" : model.IsSimulation ? "ERZAK HAZIR · Önlemini seç, afeti başlat" : "ERZAK HAZIR · Sığınağa geçebilirsin";
             Label(new Rect(846, 607, 630, 30), model.BagReady ? readyHint :
                 "Temel ihtiyaç: 1 su + 1 gıda", ColorText(_body, model.BagReady ? Sea : Brass));
             SupplySlot selectedSlot = inventory != null && World.InventoryIndex >= 0 && World.InventoryIndex < inventory.Count ? inventory[World.InventoryIndex] : null;
-            Label(new Rect(126, 643, 600, 22), "SEÇİLİ MALZEME", _tiny);
-            Label(new Rect(126, 672, 600, 32), SlotName(selectedSlot), ColorText(_display, MainText));
+            Label(new Rect(126, 661, 650, 22), "SEÇİLİ EŞYA", _tiny);
+            FittedLabel(new Rect(126, 684, 650, 28), SlotName(selectedSlot), _body, MainText, 14);
             if (!RequirementsCardVisible)
             {
-                Rect info = new Rect(824,647,660,100);
-                Frame(info,Panel,Line,1f);
-                Label(new Rect(842,659,624,26), "EKİPMANLAR İSTEĞE BAĞLI", ColorText(_tiny,Brass));
-                Label(new Rect(842,693,624,42), "Yığınları sürükleyerek birleştir. Farklı eşyaları\nyer değiştir; çantadan envantere geri al.",_wrap);
+                Rect info = new Rect(824, 647, 660, 100);
+                Frame(info, Panel, Line, 1f);
+                Label(new Rect(842, 659, 624, 26), "TEK ENVANTER", ColorText(_tiny, Brass));
+                Label(new Rect(842, 693, 624, 42), "Yığınları sürükleyerek birleştir.\nFarklı eşyaların yerini değiştir.", _wrap);
             }
-            Rect packButton = new Rect(126, 762, 212, 44);
-            Rect unpackButton = new Rect(350, 762, 172, 44);
-            Rect backButton = new Rect(534, 762, 216, 44);
-            DrawKeycap(packButton, "ENTER", "ÇANTAYA KOY", Sea);
-            DrawKeycap(unpackButton, "FARE", "GERİ AL", Brass);
+            Rect backButton = new Rect(126, 762, 264, 44);
             DrawKeycap(backButton, "BACKSPACE", "GERİ", Line);
-            if (MousePressed(packButton)) World.InventoryUse();
-            if (MousePressed(unpackButton) && _bagSelection >= 0) World.Expedition.UnpackSlot(_bagSelection);
             if (MousePressed(backButton)) World.ToggleInventory();
             Label(new Rect(824, 767, 650, 32), "FARE  Sürükle / bırak    ·    TAB / ESC  Kapat", _tiny);
             DrawInventoryMaterialPool();
@@ -712,7 +700,15 @@ namespace TooLateToPanic
             DrawIcon(new Rect(cell.x + 35, cell.y + 5, cell.width - 70, cell.height - 31), slot.Id);
             Frame(new Rect(cell.xMax - 36, cell.y + 7, 28, 24), Night, Line, 1f);
             Label(new Rect(cell.xMax - 36, cell.y + 6, 28, 24), slot.Count.ToString(), ColorText(_caps, selected ? Sea : Brass));
-            Label(new Rect(cell.x + 5, cell.yMax - 27, cell.width - 10, 21), SlotName(slot), ColorText(_caps, selected ? Sea : SoftText));
+            Rect nameBounds = new Rect(cell.x + 5, cell.yMax - 27, cell.width - 10, 21);
+            string name = SlotName(slot);
+            FittedLabel(nameBounds, name, _caps, selected ? Sea : SoftText, 10);
+            if (World.InventoryOpen)
+            {
+                UnifiedInventoryLabelProbesV58++;
+                UnifiedInventoryLabelsFitV58 &= _fittedStyle.CalcSize(new GUIContent(name)).x <= nameBounds.width + .1f &&
+                    _fittedStyle.CalcHeight(new GUIContent(name), nameBounds.width) <= nameBounds.height + .1f;
+            }
         }
 
         void DrawWork()
@@ -1575,12 +1571,10 @@ namespace TooLateToPanic
         }
         static void Brush(Rect rect, Color color)
         {
-            // Offset broken edges evoke the concept's painted title swashes, without a texture dependency.
-            Fill(new Rect(rect.x + 7, rect.y + 2, rect.width - 15, rect.height - 4), color);
-            Fill(new Rect(rect.x, rect.y + 7, rect.width - 6, rect.height - 13), color);
-            Fill(new Rect(rect.x + 18, rect.y, rect.width - 43, 3), new Color(color.r, color.g, color.b, color.a * .7f));
-            Fill(new Rect(rect.x + 27, rect.yMax - 2, rect.width - 38, 4), color);
-            Fill(new Rect(rect.xMax - 8, rect.y + 4, 10, rect.height * .46f), color);
+            // Heading surfaces stay dark while the shared accent is also used as readable text.
+            // Keep the existing rectangle and its input/layout ownership; use one quiet accent rule.
+            Fill(rect, Color.Lerp(Night, color, .08f));
+            Fill(new Rect(rect.x, rect.y, 3f, rect.height), color);
         }
         static void DrawHazardStripe(Rect rect, Color color)
         {

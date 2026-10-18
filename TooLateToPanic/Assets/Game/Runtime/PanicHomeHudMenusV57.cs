@@ -123,7 +123,7 @@ namespace TooLateToPanic
                 if (i == 0) Fill(new Rect(949, y - 2, 546, 44), new Color(.77f, .60f, .29f, .17f));
                 Label(new Rect(958, y, 43, 36), (i + 1).ToString("00"), ColorText(menuNumberV57, MenuDimV57));
                 Rect waveRect = new Rect(1013, y, 96, 36), dateRect = new Rect(1117, y + 1, 101, 34);
-                Rect scoreRect = new Rect(1228, y - 1, 258, 38);
+                Rect scoreRect = new Rect(1228, y - 5, 258, 46);
                 string waveText = entry.waves + " DALGA", dateText = entry.date ?? "", scoreText = entry.score.ToString("N0");
                 FittedLabel(waveRect, waveText, menuScoreWaveV57, MenuInkV57, 20);
                 Vector2 waveSize = _fittedStyle.CalcSize(new GUIContent(waveText));

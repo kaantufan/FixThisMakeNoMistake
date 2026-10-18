@@ -107,7 +107,7 @@ namespace TooLateToPanic
         readonly List<PanicJuryDisasterOutcome> outcomes = new List<PanicJuryDisasterOutcome>(3);
         readonly Dictionary<string, PanicJuryGoalState> goals = new Dictionary<string, PanicJuryGoalState>();
         readonly string[] goalIds = { "move", "anchor", "water_gathered", "water_packed", "quake_cover", "quake_observed", "flood_drain", "flood_refuge", "fire_ready", "fire_exit" };
-        readonly string[] goalLabels = { "İlk adımlar", "Bir eşyayı sabitle", "Suyu al", "Suyu çantaya koy", "Çök–kapan–tutun alanı", "Önlemin sonucunu gör", "Drenajı tamamla", "Üst kattaki güvenli noktaya çık", "Yangın söndürücüyü hazırla", "Dışarıdaki toplanma alanına çık" };
+        readonly string[] goalLabels = { "İlk adımlar", "Bir eşyayı sabitle", "Suyu al", "Su ihtiyacını tamamla", "Çök–kapan–tutun alanı", "Önlemin sonucunu gör", "Drenajı tamamla", "Üst kattaki güvenli noktaya çık", "Yangın söndürücüyü hazırla", "Dışarıdaki toplanma alanına çık" };
         Vector3 startPosition, lastActorPosition;
         float elapsed, stageAge, stageDuration;
         bool running, dirty = true, quakeCaptured, floodCaptured, fireCaptured, quakePresented;
@@ -397,7 +397,7 @@ namespace TooLateToPanic
                     if (!BagFinalStageActive) return !ActualAnchoredHero() ?
                         "Buzdolabı ya da kitaplığı seç · 1 ile vidaları tak. Çanta son 45 saniyede hazırlanır." :
                         "Önlemin hazır. Çanta aşaması son 45 saniyede başlayacak; evde gezinebilirsin.";
-                    if (!Done("water_packed")) return "Son 45 saniye · mutfak tezgâhındaki suya yaklaş · E veya F ile al; gereken su çantana yerleşir.";
+                    if (!Done("water_packed")) return "Son 45 saniye · mutfak tezgâhındaki suya yaklaş · E veya F ile al; aldığın su envanterinde hazırdır.";
                     return "İşaretli alana yaklaş · E ile çök–kapan–tutun. Sarsıntıda koşma.";
                 }
                 if (Stage == PanicJuryStage.Earthquake) return Done("quake_cover") ? "Sarsıntı sürüyor. Seçtiğin eşyanın bağlantısına bak." : "Hazırlık süresi bitti. Eksikler sonuçta gösterilecek; tamamlanmış sayılmadı.";

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -98,9 +98,13 @@ namespace TooLateToPanic
         {
             var m=w.Model;m.UtilitySafety.Reset();
             foreach(var item in m.Items){item.Tier=2;item.Anchored=item.Kind==ItemKind.Furniture;item.FloodProtected=item.FireProtected=true;report.worldProtectionFixtures++;}
-            // Explicit finite stock fixture, followed by actual production packing APIs.
-            m.WaterStock=m.FoodStock=1;report.worldStockFixtures+=2;Check("world.real-pack-stock",m.PackWater()&&m.PackFood()&&m.BagReady);
-            m.SupportOwnedMask=1;report.worldStockFixtures++;Check("world.real-pack-support",m.PackSupport(0)&&m.SupportCount==1);
+            // Preserve historical check IDs; the transaction now uses actual finite world stock
+            // and canonical inventory projections. No legacy model-only stock/owned-bit fixtures.
+            var waterSupply=w.Expedition.WorldSupplies.First(s=>s.ItemId=="water"&&!s.Taken);
+            var foodSupply=w.Expedition.WorldSupplies.First(s=>s.ItemId=="food"&&!s.Taken);
+            var firstaidSupply=w.Expedition.WorldSupplies.First(s=>s.ItemId=="firstaid"&&!s.Taken);
+            report.worldStockFixtures+=2;Check("world.real-pack-stock",w.Expedition.TryCollectWorldSupply(waterSupply.Id)&&w.Expedition.TryCollectWorldSupply(foodSupply.Id)&&m.BagReady&&m.PackedWater==w.Expedition.Count("water")&&m.PackedFood==w.Expedition.Count("food"),"Actual finite Expedition collection; direct model API coverage, not physical pickup-route acceptance.");
+            report.worldStockFixtures++;Check("world.real-pack-support",w.Expedition.TryCollectWorldSupply(firstaidSupply.Id)&&m.SupportCount==1&&w.Expedition.Count("firstaid")>0,"Actual finite firstaid collection; no owned-bit or manual packing fixture.");
             var target=m.Items.First(i=>i.Installed&&i.Kind==ItemKind.Furniture&&i.ArtId=="bookshelf");
             var memo=Read<Dictionary<string,PanicSecondaryEventV5>>(m,"secondaryRollsV5");memo[m.Wave+":"+(int)DisasterType.Earthquake]=new PanicSecondaryEventV5(PanicSecondaryEventKindV5.GasFlare,target.Id,7.5f,"Gaz vanası açık kaldı: küçük bir alevlenme oldu");report.worldMemoFixtures++;
             int before=m.Budget;report.productionModelShelterCalls++;Check("world.production-model-shelter",m.TryEnterShelterV5(m.RequiredShelterV5),"Explicit typed model gate fixture; no physical approach/ray/path acceptance.");yield return Wait(.12f);

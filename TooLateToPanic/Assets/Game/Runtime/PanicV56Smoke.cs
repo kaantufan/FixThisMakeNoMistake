@@ -435,6 +435,16 @@ namespace TooLateToPanic
             var pipes = w.Model.SecondaryEventsV5.Where(e => e.Kind == PanicSecondaryEventKindV5.PipeLeak).ToArray();
             Check("secondary.pipe-leak-actual-commit", pipes.Length == 1 && pipes[0].DamagePoints > 0 && w.Model.SecondaryDamageV5 > 0,
                 "Immutable2pt Flood/PipeLeak memo fixture committed only by real compound damage resolution; committed pipes=" + pipes.Length);
+            yield return AcknowledgeLedger("upper-compound-before-boat-pcm");
+            // The real result ledger suspends production audio. Observe its ordinary release
+            // before sampling the committed cue; do not force pause flags, call Play or Tick.
+            float pipeWaitStarted = Time.realtimeSinceStartup, pipeWaitUntil = pipeWaitStarted + 2f;
+            while (Time.realtimeSinceStartup < pipeWaitUntil &&
+                (w.InputLocked || w.Model.IsPaused || w.Model.WaveLedgerOpenV56 || w.Model.KeyboardHelpOpenV56 || w.NotebookBlocksInput ||
+                 Read<int>(w, "SecondaryAudioDispatchCountV56") < pipeDispatchBefore + w.Model.SecondaryEventsV5.Count)) yield return null;
+            yield return new WaitForEndOfFrame();
+            Check("secondary.pipe-leak-production-audio-unblocked", !w.InputLocked && !w.Model.IsPaused && !w.Model.WaveLedgerOpenV56 && !w.Model.KeyboardHelpOpenV56 && !w.NotebookBlocksInput,
+                "Production ledger acknowledged before cue sample; ordinary World frames waited=" + (Time.realtimeSinceStartup - pipeWaitStarted) + "s (bounded2s). No audio Play/Tick or private modal/pause flag writes.", "NATIVE_PRODUCTION_MODAL_RELEASE");
             var pipeClip = PanicAudioBank.Get("v56_pipe_leak");
             var pipeVoices = Read<AudioSource[]>(fx, "voices").Where(s => s && s.clip == pipeClip).ToArray();
             int pipeDispatch = Read<int>(w, "SecondaryAudioDispatchCountV56");
@@ -445,7 +455,6 @@ namespace TooLateToPanic
             for (int i = 0; i < 12; i++) Call(w, "TickHouseAudio");
             Check("secondary.pipe-leak-repeat-no-rng-no-duplicate", ResolutionFingerprint() == pipeState && JsonUtility.ToJson(UnityEngine.Random.state) == pipeRng && Read<int>(w, "SecondaryAudioDispatchCountV56") == pipeDispatch,
                 "Twelve read-only audio router calls preserve actual model resolution/secondary roll count/global Unity RNG and dispatch count.");
-            yield return AcknowledgeLedger("upper-compound-before-boat-pcm");
             yield return ZodiacFoley();
         }
         MonoBehaviour[] NamedComponents(string name)

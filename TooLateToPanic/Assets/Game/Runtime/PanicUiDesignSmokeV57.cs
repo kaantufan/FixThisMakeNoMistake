@@ -334,9 +334,20 @@ namespace TooLateToPanic
                 w.Expedition.ClearRequirements();yield return null;
                 Check("requirements.semantic-clear."+width,!hud.RequirementsCardVisible&&!w.Expedition.HasMissingRequirements&&w.Expedition.CurrentRequirements.Count==0,"Production ClearRequirements clears presentation only; costs and gameplay stock unchanged.");
                 yield return Gui(EventType.Repaint,readonlyProbe:true);
-                var slots=new List<Rect>();for(int i=0;i<12;i++)slots.Add(hud.InventorySlotBounds(false,i));for(int i=0;i<8;i++)slots.Add(hud.InventorySlotBounds(true,i));
+                var slots=new List<Rect>();for(int i=0;i<w.Expedition.Inventory.Count;i++)slots.Add(hud.InventorySlotBounds(false,i));
+                bool unique=slots.Count==20&&ReferenceEquals(w.Expedition.Inventory,w.Expedition.Bag);
+                for(int i=0;i<slots.Count;i++)
+                {
+                    unique &= slots[i].width>0&&slots[i].height>0&&SameRect(slots[i],hud.InventorySlotBounds(true,i));
+                    for(int j=i+1;j<slots.Count;j++)unique &= !slots[i].Overlaps(slots[j]);
+                }
+                Check("inventory.one-canonical-20-grid."+width,unique,"Actual production slot bounds:20 unique nonoverlapping cells; legacy flags map to this one grid.","NATIVE_PRODUCTION_UI_GEOMETRY");
+                w.InventorySelect(19);Check("inventory.keyboard-reaches-slot20."+width,w.InventoryIndex==19);w.InventoryMove(1);
+                Check("inventory.keyboard-wraps20."+width,w.InventoryIndex==0);w.InventoryMove(-5);
+                Check("inventory.keyboard-five-column-row."+width,w.InventoryIndex==15);w.InventorySelect(0);
                 Regions("inventory-slots."+width,slots.ToArray());
-                yield return Capture("inventory-normal-"+width,"Real normal World.ToggleInventory view:12 inventory slots,8 bag slots, shared frame/key buttons and ordinary optional-equipment panel.");
+                yield return Capture("inventory-normal-"+width,"Real World.ToggleInventory view:one20-slot inventory grid, live preparation counts, no separate bag grid or pack/unpack controls.");
+                yield return PopulatedUnifiedInventoryDisplay(width);
                 float clock=w.Model.TimeRemaining;yield return Wait(.16f);
                 Check("inventory.live-clock-preserved."+width,w.InventoryOpen&&w.Model.TimeRemaining<clock-.05f,"Retains existing inventory live-clock semantics.");
                 hud.SetPaused(true);yield return null;w.ToggleInventory();yield return null;
@@ -351,6 +362,34 @@ namespace TooLateToPanic
                 Declare("actor-placement-restore","Restore actual controller to "+actorBefore.ToString("F3")+" and previous focus after isolated UI fixture; no physical traversal claim.");
             }
             yield return null;
+        }
+        IEnumerator PopulatedUnifiedInventoryDisplay(int width)
+        {
+            var e=w.Expedition;var m=w.Model;
+            var before=e.Inventory.Select(s=>s==null?null:new SupplySlot(s.Id,s.Count)).ToArray();
+            string fingerprint=PanicNotebookVerification.GameplayFingerprint(w);
+            int water=m.PackedWater,food=m.PackedFood,owned=m.SupportOwnedMask,packed=m.PackedSupportMask;
+            int waterStock=m.WaterStock,foodStock=m.FoodStock,selection=w.InventoryIndex;
+            int projectedWater=Read<int>(e,"projectedWaterCount"),projectedFood=Read<int>(e,"projectedFoodCount"),charged=Read<int>(e,"chargedDeviceMask");
+            Declare("unified20-populated-display","Immediately restored display fixture: fill all20 canonical slots with real supply IDs at legal stack limits, publish derived counts; no collection, world-stock change, budget, battery activation, shelter or score mutation. Restore slots, projection/charge state and counters after actual PNG.");
+            try
+            {
+                string[] ids={"firstaid","flashlight","radio","blanket","water","food","battery"};
+                for(int i=0;i<e.Inventory.Count;i++)e.Inventory[i]=new SupplySlot(ids[i%ids.Length],PanicExpedition.StackLimitFor(ids[i%ids.Length]));
+                e.SynchronizeInventoryModel();
+                yield return Gui(EventType.Repaint,readonlyProbe:true);
+                Check("inventory.populated20-actual-font-fit."+width,hud.UnifiedInventoryLabelsFitV58&&hud.UnifiedInventoryLabelProbesV58==20,"Actual production DrawSlot FittedLabel GUIStyle metrics for20 populated cells: width and line height fit; real _caps font, minimum logical10 (retained source16). Human readability not asserted.","NATIVE_ACTUAL_REPAINT_GUISTYLE_METRICS");
+                Check("inventory.populated20-derived-counts."+width,m.PackedWater==e.Count("water")&&m.PackedFood==e.Count("food")&&ReferenceEquals(e.Inventory,e.Bag));
+                yield return Capture("inventory-populated20-"+width,"Declared immediately-restored20 populated legal-slot display fixture. Actual production grid, Turkish names, icons and counts; not natural pickup, route or human legibility acceptance.");
+            }
+            finally
+            {
+                for(int i=0;i<before.Length;i++)e.Inventory[i]=before[i];
+                Set(e,"projectedWaterCount",projectedWater);Set(e,"projectedFoodCount",projectedFood);Set(e,"chargedDeviceMask",charged);
+                m.PackedWater=water;m.PackedFood=food;m.SupportOwnedMask=owned;m.PackedSupportMask=packed;m.WaterStock=waterStock;m.FoodStock=foodStock;
+                w.InventorySelect(selection);
+            }
+            Check("inventory.populated20-fingerprint-restored."+width,fingerprint==PanicNotebookVerification.GameplayFingerprint(w),"Exact gameplay/stock/charge projection counters restored after the display fixture; preparation clock retains ordinary live-clock behavior.");
         }
         IEnumerator BagCounterDisplay(int width,int water,int food,string name)
         {
@@ -374,12 +413,13 @@ namespace TooLateToPanic
             m.UtilitySafety.Reset();
             Declare("ledger.protection-items","Temporary actual-world fixture: every installed/current item Tier=2, Anchored iff Furniture, FloodProtected=true and FireProtected=true; isolated run is reset by production ReturnToMenu.");
             foreach(var item in m.Items){item.Tier=2;item.Anchored=item.Kind==ItemKind.Furniture;item.FloodProtected=true;item.FireProtected=true;}
-            Declare("ledger.finite-water-food","Set actual WaterStock=1 and FoodStock=1, then pack each through production PackWater and PackFood; display/reward fixture only.");
-            m.WaterStock=1;m.FoodStock=1;
-            Check("ledger.real-pack-stock."+width,m.PackWater()&&m.PackFood()&&m.BagReady,"Finite actual stock packed through production APIs; no campaign supply acceptance.","NATIVE_PRODUCTION_MODEL_API");
-            Declare("ledger.finite-support","Set SupportOwnedMask=1 then pack support index0 through production PackSupport(0); no purchase, budget mutation, or campaign supply acceptance.");
-            m.SupportOwnedMask=1;
-            Check("ledger.real-pack-support."+width,m.PackSupport(0)&&m.SupportCount==1,"Declared owned-bit fixture followed by actual production packing API.","NATIVE_PRODUCTION_MODEL_API");
+            Declare("ledger.finite-inventory-collection","Collect existing finite water, food and firstaid world stacks through Expedition.TryCollectWorldSupply. No stock/owned-bit/PackWater/PackFood fixture. Direct model API coverage only; no physical pickup-route claim.");
+            var waterSupply=w.Expedition.WorldSupplies.First(s=>s.ItemId=="water"&&!s.Taken);
+            var foodSupply=w.Expedition.WorldSupplies.First(s=>s.ItemId=="food"&&!s.Taken);
+            var firstaidSupply=w.Expedition.WorldSupplies.First(s=>s.ItemId=="firstaid"&&!s.Taken);
+            Check("ledger.real-inventory-stock."+width,w.Expedition.TryCollectWorldSupply(waterSupply.Id)&&w.Expedition.TryCollectWorldSupply(foodSupply.Id)&&m.BagReady&&m.PackedWater==w.Expedition.Count("water")&&m.PackedFood==w.Expedition.Count("food"),"Finite existing stock, one canonical inventory and derived readiness.","NATIVE_PRODUCTION_EXPEDITION_API");
+            Check("ledger.real-inventory-support."+width,w.Expedition.TryCollectWorldSupply(firstaidSupply.Id)&&m.SupportCount==1&&w.Expedition.Count("firstaid")>0,"Real finite firstaid collection activates one category without manual packing.","NATIVE_PRODUCTION_EXPEDITION_API");
+            int carriedWaterBefore=m.PackedWater,carriedFoodBefore=m.PackedFood;
             var target=m.Items.First(i=>i.Installed&&i.Kind==ItemKind.Furniture&&i.ArtId=="bookshelf");
             Declare("ledger.memoized-gas-flare","Memoize one 7.5-point GasFlare against the real installed bookshelf for the current first-wave earthquake key; no secondary RNG evaluation is injected.");
             var memo=Read<Dictionary<string,PanicSecondaryEventV5>>(m,"secondaryRollsV5");
@@ -399,6 +439,9 @@ namespace TooLateToPanic
             var ledger=m.LastWaveLedgerV56;
             Check("ledger.actual-negative-bonus-credit."+width,ledger!=null&&!ledger.IsSimulation&&ledger.HasResolvedDamage&&ledger.DamageDeduction>0&&ledger.SupportBonus>0&&ledger.ActualCredited>0&&ledger.BudgetBeforeReward==budgetBefore&&ledger.BudgetAfterReward==m.Budget,"Actual ledger has negative damage deduction, positive support bonus and credited budget rows.","NATIVE_PRODUCTION_MODEL_API");
             Check("ledger.actual-item-and-utility-rows."+width,ledger!=null&&ledger.Rows.Any(r=>r.Id==target.Id)&&ledger.Rows.Any(r=>r.Id.StartsWith("utility:",StringComparison.Ordinal)),"Actual committed damage includes a real item and separate memoized gas contribution.","NATIVE_PRODUCTION_MODEL_API");
+            Check("inventory.world-resolution-consumes-once."+width,m.PackedWater==carriedWaterBefore-1&&m.PackedFood==carriedFoodBefore-1&&w.Expedition.Count("water")==m.PackedWater&&w.Expedition.Count("food")==m.PackedFood,"Real World cinematic resolution hook debits one unit from the same canonical inventory.","NATIVE_PRODUCTION_WORLD_RESOLUTION");
+            w.Expedition.SyncConsumedBagSupplies();w.Expedition.SyncConsumedBagSupplies();
+            Check("inventory.world-resolution-repeat-idempotent."+width,w.Expedition.Count("water")==carriedWaterBefore-1&&w.Expedition.Count("food")==carriedFoodBefore-1,"Repeated production sync does not consume a second unit.","NATIVE_PRODUCTION_EXPEDITION_API");
             float modalClock=m.PhaseTime;int modalBudget=m.Budget;long modalScore=m.Score,waveScore=m.LastWaveScore;int modalRolls=m.SecondaryRollCountV5;
             string modalRng=JsonUtility.ToJson(UnityEngine.Random.state),modalScoreFile=Hash(PanicModel.ScorePathOverride);
             yield return Gui(EventType.Repaint,readonlyProbe:true);
@@ -472,6 +515,18 @@ namespace TooLateToPanic
             if(!registered||!Isolated()||File.Exists(PanicModel.ScorePathOverride))throw new InvalidOperationException("Refusing UI fixture outside a fresh registered GUID profile.");
             if(Application.isBatchMode||SystemInfo.graphicsDeviceType==GraphicsDeviceType.Null){report.invalidRenderSurface=true;throw new InvalidOperationException("INVALID_RENDER_SURFACE: graphical player required.");}
             while(!SplashScreen.isFinished)yield return null;
+            string inventoryScorePath=PanicModel.ScorePathOverride;
+            var inventoryRandomState=UnityEngine.Random.state;
+            string inventoryCheckDirectory=Path.Combine(Path.GetDirectoryName(inventoryScorePath),"unified-model-"+Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(inventoryCheckDirectory);
+            Declare("unified-independent-model-fixtures","Run focused production model/expedition checks in independent models, explicit supply-count/full-slot/wave/dev-state fixtures and a nested isolated score profile. This does not move or seed the active World. Restore static score path and Unity RNG afterward.");
+            try
+            {
+                PanicModel.ScorePathOverride=Path.Combine(inventoryCheckDirectory,"scores.json");
+                PanicUnifiedInventoryChecks.Run((id,ok,detail)=>Check(id,ok,detail,"NATIVE_DECLARED_INDEPENDENT_MODEL_FIXTURES"));
+            }
+            finally {PanicModel.ScorePathOverride=inventoryScorePath;UnityEngine.Random.state=inventoryRandomState;}
+            Check("inventory.independent-model-profile-restored",PanicModel.ScorePathOverride==inventoryScorePath&&Isolated());
             Check("hud.version",Read<string>(hud,"UiDesignVersionV57")=="5.7");
             Check("hud.status-contract",SameRect(hud.WaveCardBounds,new Rect(24,20,430,76))&&SameRect(hud.TimerCardBounds,new Rect(660,20,208,76))&&SameRect(hud.ResourceCardBounds,new Rect(1332,20,244,76)));
             var symbols=typeof(PanicModel).Assembly.GetType("TooLateToPanic.PanicUiSymbolsV57",true);var has=symbols.GetMethod("Has",Static);
@@ -482,6 +537,7 @@ namespace TooLateToPanic
             oldMaster=PanicAudioSettingsV56.MasterVolume;oldMusic=PanicAudioSettingsV56.MusicVolume;oldSfx=PanicAudioSettingsV56.SfxVolume;oldMuted=PanicAudioSettingsV56.Muted;oldMusicEnabled=PanicAudioSettingsV56.MusicEnabled;oldMotion=w.ReducedFpsMotionV54;preferencesHeld=true;
             pointer=gameObject.AddComponent<PanicInteractionAudit>();pointer.enabled=false;Declare("gui-adapter","Disabled existing PanicInteractionAudit supplies logical pointer to explicitly injected production OnGUI callbacks; does not own an independent audit run.");
             foreach(int width in new[]{1600,960}){yield return Resolution(width,width==1600?900:540);hud.SetPaused(false);w.ReturnToMenu();yield return null;yield return Title(width);yield return Gameplay(width);}
+            yield return PanicNotebookTargetChecksV57.Run(w, hud, (id, pass, detail) => Check(id, pass, detail), Capture, Resolution);
             Check("runtime.no-errors",report.errors.Count==0,string.Join("\n",report.errors));
         }
         void Restore()

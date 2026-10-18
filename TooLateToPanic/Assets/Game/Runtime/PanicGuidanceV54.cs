@@ -79,11 +79,13 @@ namespace TooLateToPanic
 
         bool GuidanceCanShowV54()
         {
+            // Validate the cosmetic pin every tick, even while title/other phases hide it.
+            bool manualTarget = HasNotebookTargetV57;
             return Model != null && Expedition != null && player && View &&
-                (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial) &&
+                (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial || manualTarget && Model.Phase == PanicPhase.Inspection) &&
                 !Model.IsPaused && !NotebookBlocksInput && !InputLocked && !CinematicActive && !LossAnnounced &&
                 !BagCameraTransitionActive && !InventoryOpen && !WorkActive && !IsMoving && JuryAllowsMovement &&
-                AssistantEnabledV55 && !(hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
+                (AssistantEnabledV55 || manualTarget) && !(hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
         }
 
         // Hook once at the end of the normal Update, after hinges/visibility and actual model progress.
@@ -130,6 +132,7 @@ namespace TooLateToPanic
                 .Append('|').Append(Model.HasActiveDisasterV54(DisasterType.Earthquake))
                 .Append('|').Append(Model.HasActiveDisasterV54(DisasterType.Storm));
             foreach (var id in PanicExpedition.MaterialIds) b.Append('|').Append(Expedition.Count(id));
+            foreach (var slot in Expedition.Inventory) b.Append("|I:").Append(slot == null ? string.Empty : slot.Id).Append(':').Append(slot == null ? 0 : slot.Count);
             foreach (var i in Model.Items) if (i.Kind == ItemKind.Furniture) b.Append('|').Append(i.Id).Append(':').Append(i.Anchored).Append(':').Append(i.Position);
             foreach (var s in Expedition.Sources) b.Append('|').Append(s.Id).Append(':').Append(s.AutoLooted);
             foreach (var s in Expedition.WorldSupplies) b.Append('|').Append(s.Id).Append(':').Append(s.Count);
@@ -144,6 +147,15 @@ namespace TooLateToPanic
             GuidanceObjectiveIdV54 = GuidanceObjectiveActionV54 = string.Empty;
             GuidanceObjectiveLabelV54 = "Önlemlerini gözden geçir";
             guidanceGoalsV54.Clear(); guidancePlanGroupsV54.Clear(); guidanceNoRouteV54 = "Açık yolu kontrol et";
+            // A notebook mark is navigation only; it cannot select or operate a remote object.
+            if (HasNotebookTargetV57)
+            {
+                Vector3 point = NotebookTargetPositionV57;
+                guidanceGoalsV54.Add(new GuidanceGoalV54 { Id = NotebookTargetIdV57, Position = point,
+                    Floor = Mathf.RoundToInt(point.y / 3.2f), Label = NotebookTargetLabelV57, Action = "notebook-target" });
+                guidanceNoRouteV54 = "İşaretli hedefe açık yolu kontrol et";
+                GuidanceQueueGoalsV54(guidanceGoalsV54); return;
+            }
             // Short flow owns its real objective sequence, including its existing safe areas.
             if (JuryActive && JurySnapshot != null && JurySnapshot.HasWorldTarget)
             {
@@ -164,7 +176,7 @@ namespace TooLateToPanic
                                 Label = needed == "water" ? "1 su al · E / F" : "1 gıda al · E / F", Action = "collect" });
                     guidanceNoRouteV54 = GuidanceSupplyCanPackV54(needed) ?
                             (needed == "water" ? "Ulaşılabilir su stoğu yok · çevreni kontrol et" : "Ulaşılabilir gıda stoğu yok · çevreni kontrol et") :
-                            "Çantada yer aç · Tab";
+                            "Envanterde yer aç · Tab";
                     GuidanceQueueGoalsV54(guidanceGoalsV54);
                     if (guidancePlanGroupsV54.Count == 0) GuidanceObjectiveLabelV54 = guidanceNoRouteV54;
                     return;
@@ -185,9 +197,10 @@ namespace TooLateToPanic
 
         bool GuidanceSupplyCanPackV54(string id)
         {
-            // Collection auto-packs actual bag slots. Loose inventory alone does not satisfy BagReady.
-            if (Expedition.Bag == null) return false;
-            foreach (var s in Expedition.Bag) if (s == null || s.Count <= 0 || string.IsNullOrEmpty(s.Id) || s.Id == id && s.Count < 3) return true;
+            // Every collected supply is ready in the one canonical inventory.
+            if (Expedition.Inventory == null || string.IsNullOrEmpty(id)) return false;
+            int limit = PanicExpedition.StackLimitFor(id);
+            foreach (var s in Expedition.Inventory) if (s == null || s.Count <= 0 || string.IsNullOrEmpty(s.Id) || s.Id == id && s.Count < limit) return true;
             return false;
         }
 

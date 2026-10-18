@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -127,6 +127,7 @@ namespace TooLateToPanic
 
         void DrawCompactKeyV51(Rect rect, string key, int family)
         {
+            CollectKeyboardHelpCapV57(rect,key,family);
             Frame(rect, FreeplayKeyFillV414(family), FreeplayKeyEdgeV414(family), 1f);
             FittedLabel(new Rect(rect.x + 3, rect.y + 1, rect.width - 6, rect.height - 2), key, compactKeyV51, family == 0 ? Muted : MainText, 13);
         }

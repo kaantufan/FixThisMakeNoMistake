@@ -1,12 +1,13 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
     public sealed partial class PanicHomeHud
     {
-        int _dragSlot = -1, _bagSelection = -1;
-        bool _dragFromBag;
+        int _dragSlot = -1;
         string _dragId;
+        public bool UnifiedInventoryLabelsFitV58 { get; private set; }
+        public int UnifiedInventoryLabelProbesV58 { get; private set; }
         int _dragCount;
         public int TitleChoice { get { return _menuChoice; } }
         public int PauseChoice { get { return _pauseChoice; } }
@@ -67,33 +68,33 @@ namespace TooLateToPanic
                 }
             }
         }
-        public Rect InventorySlotBounds(bool bag,int index)
+        public Rect InventorySlotBounds(bool bag, int index)
         {
-            if (index<0||index>=(bag?8:12)) return new Rect();
-            return bag ? new Rect(824+(index%4)*168,286+(index/4)*113,156,101) :
-                new Rect(126+(index%4)*156,286+(index/4)*113,144,101);
+            int capacity = World && World.Expedition != null ? World.Expedition.Inventory.Count : 20;
+            if (index < 0 || index >= capacity) return new Rect();
+            // Both legacy selectors address this one visible grid.
+            return new Rect(126 + (index % 5) * 132, 286 + (index / 5) * 94, 124, 86);
         }
-        void HandleInventorySlot(Rect cell,bool bag,int index)
+        void HandleInventorySlot(Rect cell, bool bag, int index)
         {
-            Event e=Event.current;
-            if (World.DiscreteInputFrame==Time.frameCount || World.CancelFrame==Time.frameCount || World.Model.IsPaused) return;
+            Event e = Event.current;
+            if (World.DiscreteInputFrame == Time.frameCount || World.CancelFrame == Time.frameCount || World.Model.IsPaused) return;
             if (!cell.Contains(PanicInteractionAudit.GuiPointer(e.mousePosition))) return;
-            var slots=bag?World.Expedition.Bag:World.Expedition.Inventory;
-            if (e.type==EventType.MouseDown && e.button==0)
+            var slots = World.Expedition.Inventory;
+            if (e.type == EventType.MouseDown && e.button == 0)
             {
-                if (bag) _bagSelection=index;else { World.InventorySelect(index);_bagSelection=-1; }
+                World.InventorySelect(index);
                 if (HasStock(slots[index]))
-                { _dragFromBag=bag;_dragSlot=index;_dragId=slots[index].Id;_dragCount=slots[index].Count; }
+                { _dragSlot = index; _dragId = slots[index].Id; _dragCount = slots[index].Count; }
                 else CancelInventoryDrag();
                 e.Use();
             }
-            else if(e.type==EventType.MouseUp && e.button==0 && _dragSlot>=0)
+            else if (e.type == EventType.MouseUp && e.button == 0 && _dragSlot >= 0)
             {
-                var source=_dragFromBag?World.Expedition.Bag:World.Expedition.Inventory;
-                // An asynchronous key action must not drag a different stack from the same slot.
-                if(source[_dragSlot].Id==_dragId && source[_dragSlot].Count==_dragCount)
-                    World.Expedition.TransferSlots(_dragFromBag,_dragSlot,bag,index);
-                CancelInventoryDrag();e.Use();
+                // An asynchronous consumption must not drag a different stack.
+                if (_dragSlot < slots.Count && slots[_dragSlot] != null && slots[_dragSlot].Id == _dragId && slots[_dragSlot].Count == _dragCount)
+                    World.Expedition.TransferSlots(false, _dragSlot, false, index);
+                CancelInventoryDrag(); e.Use();
             }
         }
         void DrawInventoryDrag()
@@ -124,12 +125,11 @@ namespace TooLateToPanic
         }
         void DrawInventoryMaterialPool()
         {
-            if (World.BagFinalStageActive) return;
-            Rect box=new Rect(114,704,650,46);Frame(box,Night,Line,1f);Mark(box);
+            Rect box=new Rect(114,714,650,36);Frame(box,Night,Line,1f);Mark(box);
             string[] labels=new string[PanicExpedition.MaterialIds.Length];
             for(int i=0;i<labels.Length;i++)
             { string id=PanicExpedition.MaterialIds[i];labels[i]=SlotName(new SupplySlot(id,1))+": "+World.Expedition.Count(id); }
-            FittedLabel(new Rect(122,710,634,32),string.Join(" · ",labels),_tiny,Brass,10);
+            FittedLabel(new Rect(122,716,634,30),string.Join(" · ",labels),_tiny,Brass,10);
         }
     }
 }
