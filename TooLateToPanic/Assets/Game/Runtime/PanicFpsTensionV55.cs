@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -20,7 +20,7 @@ namespace TooLateToPanic
             {
                 return isActiveAndEnabled && FpsTensionOwnsMusicV55 && Model != null && Model.Phase == PanicPhase.Preparing &&
                     !ExperienceFeedbackBlockedV414 && !BagCameraTransitionActive && !BagHandoffActiveV51 &&
-                    PanicBackgroundMusic.Enabled && PanicBackgroundMusic.Volume > 0f &&
+                    PanicBackgroundMusic.Enabled && PanicBackgroundMusic.Volume > 0f && PanicAudioSettingsV56.EffectiveMusicGain > 0f &&
                     (Application.isFocused || Application.runInBackground);
             }
         }
@@ -43,7 +43,7 @@ namespace TooLateToPanic
             float gain = Mathf.Clamp(PanicBackgroundMusic.Volume, 0f, .12f) * Mathf.Lerp(.90f, 1.15f, FpsStressIntensityV414);
             if (PresentationSpeechActive) gain *= .55f;
             float deadlineFade = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(Model.TimeRemaining / .30f));
-            fpsTensionSourceV55.volume = Mathf.Min(.12f, gain) * Mathf.SmoothStep(0f, 1f, fpsTensionFadeV55) * deadlineFade;
+            fpsTensionSourceV55.volume = Mathf.Min(.12f, gain) * PanicAudioSettingsV56.EffectiveMusicGain * Mathf.SmoothStep(0f, 1f, fpsTensionFadeV55) * deadlineFade;
         }
 
         // Prewarm at normal feedback initialization, before FPS entry, so synthesis

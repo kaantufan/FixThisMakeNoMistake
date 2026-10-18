@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -102,7 +102,7 @@ namespace TooLateToPanic
                 var clip = PanicAudioBank.Get("dialogue_blip");
                 fullSubtitle = cue.Text; revealed = 0; typingClock = 0; Subtitle = string.Empty;
                 subtitleRemaining = Mathf.Max(3f, cue.Text.Length / 32f + 1.8f);
-                if (clip && !Muted) { speech.clip = clip; speech.volume = .20f; }
+                if (clip && !Muted) { speech.clip = clip; speech.volume = .20f * PanicAudioSettingsV56.EffectiveSfxGain; }
                 return true;
             }
 
@@ -113,7 +113,7 @@ namespace TooLateToPanic
             // A single bounded SFX channel avoids one-shot accumulation under rapid pickup input.
             sfx.Stop();
             sfx.clip = sound;
-            sfx.volume = Mathf.Clamp01(SfxVolume) * (SpeechActive ? .62f : 1f);
+            sfx.volume = Mathf.Clamp01(SfxVolume) * PanicAudioSettingsV56.EffectiveSfxGain * (SpeechActive ? .62f : 1f);
             sfx.Play();
             return true;
         }
@@ -145,8 +145,8 @@ namespace TooLateToPanic
             if (subtitleRemaining <= 0f) { Subtitle = string.Empty; currentPriority = 0; }
             bool speaking = speech && speech.isPlaying;
             duck = Mathf.MoveTowards(duck, speaking ? .55f : 1f, dt * (speaking ? 8f : 4f));
-            sfx.volume = Mathf.Clamp01(SfxVolume) * (speaking ? .62f : 1f);
-            if (speech) speech.volume = .20f;
+            sfx.volume = Mathf.Clamp01(SfxVolume) * PanicAudioSettingsV56.EffectiveSfxGain * (speaking ? .62f : 1f);
+            if (speech) speech.volume = .20f * PanicAudioSettingsV56.EffectiveSfxGain;
             if (speech && revealed >= fullSubtitle.Length && !speech.isPlaying) speech.clip = null;
         }
 

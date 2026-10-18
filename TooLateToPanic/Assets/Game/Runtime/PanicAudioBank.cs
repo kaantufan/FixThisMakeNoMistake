@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace TooLateToPanic
 {
-    // Imported ElevenLabs Foley. No synthetic fallback may impersonate a missing asset.
+    // Imported Foley plus explicitly authored local V56 WAV assets. Missing assets stay explicit; no synthetic fallback.
     public static class PanicAudioBank
     {
         static readonly Dictionary<string, AudioClip[]> cache = new Dictionary<string, AudioClip[]>();
@@ -50,6 +50,9 @@ namespace TooLateToPanic
                 case "flood": return "sandbag";
                 case "hose": return "hose";
                 case "fire": return "door_toolbox";
+                case "gasoff": return "v56_gas_turn";
+                case "wateroff": return "v56_water_turn";
+                case "poweroff": return "v56_power_turn";
                 default: return "wood_build";
             }
         }

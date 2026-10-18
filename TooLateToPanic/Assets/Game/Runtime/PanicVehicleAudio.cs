@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -9,6 +9,7 @@ namespace TooLateToPanic
         AudioSource engine,siren;
         AudioLowPassFilter filter;
         Vector3 previous;
+        float engineGainV56, sirenGainV56;
         bool emergency;
         public void Bind(PanicHomeWorld owner,string sirenId=null)
         {
@@ -27,22 +28,23 @@ namespace TooLateToPanic
             if(!world||world.Model==null)return;
             float speed=Time.deltaTime>.00001f?Vector3.Distance(previous,transform.position)/Time.deltaTime:0;
             previous=transform.position;
-            bool paused=world.Model.IsPaused||world.NotebookBlocksInput||world.InputLocked||(!Application.isFocused&&!Application.runInBackground);
+            bool paused=world.Model.IsPaused||world.Model.WaveLedgerOpenV56||world.Model.KeyboardHelpOpenV56||world.NotebookBlocksInput||world.InputLocked||(!Application.isFocused&&!Application.runInBackground);
             Vector3 delta=transform.position-world.PlayerPosition;
             float distance=delta.magnitude;
             float gain=PanicHomeEffects.DistanceGain(distance,3,34)*Mathf.Lerp(1,.04f,world.AudioShelterAmount);
             float pan=world.View?Mathf.Clamp(Vector3.Dot(delta.normalized,world.View.transform.right)*.65f,-.65f,.65f):0;
             filter.cutoffFrequency=Mathf.Lerp(Mathf.Lerp(14000,2200,Mathf.Clamp01(distance/34)),500,world.AudioShelterAmount);
-            Mix(engine,paused?0:gain*(speed>.15f?.065f:emergency?.025f:0),pan);
-            Mix(siren,paused?0:gain*(speed>.15f?.055f:.018f),pan);
+            Mix(engine,paused?0:gain*(speed>.15f?.065f:emergency?.025f:0),pan,ref engineGainV56);
+            Mix(siren,paused?0:gain*(speed>.15f?.055f:.018f),pan,ref sirenGainV56);
             if(engine)engine.pitch=Mathf.Lerp(.86f,1.08f,Mathf.Clamp01(speed/6));
         }
-        void Mix(AudioSource source,float target,float pan)
+        void Mix(AudioSource source,float target,float pan,ref float rawGain)
         {
             if(!source)return;source.panStereo=pan;
             // Pauses are immediate; ordinary approach/departure fades smoothly.
-            if(target<=0){source.volume=0;source.Pause();return;}
-            source.volume=Mathf.MoveTowards(source.volume,target,Time.unscaledDeltaTime*.15f);
+            if(target<=0){rawGain=0;source.volume=0;source.Pause();return;}
+            rawGain=Mathf.MoveTowards(rawGain,target,Time.unscaledDeltaTime*.15f);
+            source.volume=rawGain*PanicAudioSettingsV56.EffectiveSfxGain;
             if(source.clip&&!source.isPlaying){source.UnPause();if(!source.isPlaying)source.Play();}
         }
         void OnDisable(){if(engine){engine.volume=0;engine.Stop();}if(siren){siren.volume=0;siren.Stop();}}

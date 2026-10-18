@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,7 +33,7 @@ namespace TooLateToPanic
             public List<string> captures = new List<string>(), errors = new List<string>();
         }
         readonly Summary summary = new Summary();
-        readonly KeyCode[] observedKeys = {KeyCode.W,KeyCode.A,KeyCode.S,KeyCode.D,KeyCode.UpArrow,KeyCode.DownArrow,KeyCode.LeftArrow,KeyCode.RightArrow,KeyCode.LeftShift,KeyCode.Space,KeyCode.E,KeyCode.F,KeyCode.Q,KeyCode.T,KeyCode.Z,KeyCode.X,KeyCode.Alpha1,KeyCode.Alpha2,KeyCode.Alpha3,KeyCode.Alpha4,KeyCode.Tab,KeyCode.B,KeyCode.Return,KeyCode.KeypadEnter,KeyCode.Backspace,KeyCode.Escape,KeyCode.N,KeyCode.H,KeyCode.F2};
+        readonly KeyCode[] observedKeys = {KeyCode.W,KeyCode.A,KeyCode.S,KeyCode.D,KeyCode.UpArrow,KeyCode.DownArrow,KeyCode.LeftArrow,KeyCode.RightArrow,KeyCode.LeftShift,KeyCode.Space,KeyCode.E,KeyCode.F,KeyCode.Q,KeyCode.T,KeyCode.Z,KeyCode.X,KeyCode.Alpha1,KeyCode.Alpha2,KeyCode.Alpha3,KeyCode.Alpha4,KeyCode.Tab,KeyCode.B,KeyCode.Return,KeyCode.KeypadEnter,KeyCode.Backspace,KeyCode.Escape,KeyCode.N,KeyCode.H,KeyCode.F1,KeyCode.F2,KeyCode.F3};
         PanicHomeWorld world; PanicHomeHud hud; CharacterController body; StreamWriter ledger;
         string output, realScore, summaryPath, previousState; float began, nextSample, nextFlush, lastShot = -10;
         int captureId;

@@ -1,4 +1,4 @@
-namespace TooLateToPanic
+﻿namespace TooLateToPanic
 {
     public sealed partial class PanicModel
     {
@@ -13,7 +13,7 @@ namespace TooLateToPanic
         {
             get
             {
-                return !IsSimulation && !IsJuryDemo && !IsTutorial &&
+                return !IsSimulation && !IsJuryDemo && !IsTutorial && !KeyboardHelpOpenV56 && !WaveLedgerOpenV56 && !WaveLedgerAwaitingReviewV56 &&
                     (Phase == PanicPhase.Preparing || Phase == PanicPhase.Disaster ||
                      Phase == PanicPhase.Aftermath || Phase == PanicPhase.Inspection);
             }

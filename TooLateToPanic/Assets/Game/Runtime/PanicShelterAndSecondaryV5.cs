@@ -130,9 +130,12 @@ namespace TooLateToPanic
             var targets = Items.FindAll(item => item != null && item.Installed && item.Kind == ItemKind.Furniture && BaseRisk(item, Disaster) > 0f);
             if (targets.Count == 0) return null;
             PanicItem target = targets[(int)(NextUInt(ref state) % (uint)targets.Count)];
-            float points = 1.2f + RandomUnitV5(ref state) * 1.6f;
-            string label = kind == PanicSecondaryEventKindV5.GasFlare ? "Gaz vanası açık kaldı: küçük bir alevlenme oldu" :
-                kind == PanicSecondaryEventKindV5.PipeLeak ? "Su vanası açık kaldı: tesisatta sızıntı oluştu" :
+            float damageRoll = RandomUnitV5(ref state);
+            float points = kind == PanicSecondaryEventKindV5.GasFlare ? 6f + damageRoll * 4f :
+                kind == PanicSecondaryEventKindV5.PipeLeak ? 4f + damageRoll * 3f :
+                1.2f + damageRoll * 1.6f;
+            string label = kind == PanicSecondaryEventKindV5.GasFlare ? "Gaz vanası açık kaldı: alevlenme hasarı oluştu" :
+                kind == PanicSecondaryEventKindV5.PipeLeak ? "Su vanası açık kaldı: tesisatta su hasarı oluştu" :
                 "Elektrik açık kaldı: küçük bir kısa devre oluştu";
             return new PanicSecondaryEventV5(kind, target.Id, points, label);
         }

@@ -19,6 +19,13 @@ namespace TooLateToPanic
         bool hearthEnabled=true,computerEnabled=true,garageOpen,minuteVoice;
         string lastNotice,queuedVoice,radioClipId;
         int radioSequence;
+        int residenceAftermathWaveV56 = -1;
+        public int ResidenceAftermathSetupCountV56 { get; private set; }
+        public int ResidenceAftermathWaveV56 { get { return residenceAftermathWaveV56; } }
+        public bool ResidenceAftermathActiveV56 { get { return aftermath; } }
+        public bool ResidenceRescueActiveV56 { get { return helicopter; } }
+        public int ResidenceAftermathRootIdV56 { get { return aftermath ? aftermath.GetInstanceID() : 0; } }
+        public int ResidenceRescueRootIdV56 { get { return helicopter ? helicopter.GetInstanceID() : 0; } }
         public LootSource OpenSource { get { var s=NearestSource; return s!=null&&s.Open&&CanInteract&&!InventoryOpen&&!WorkActive&&!IsMoving ? s:null; } }
         public int LootIndex {get;private set;}
         public string SelectedLootId {get {var s=OpenSource;return s!=null&&LootIndex>=0&&LootIndex<s.Contents.Count?s.Contents[LootIndex].Id:"";}}
@@ -267,11 +274,24 @@ namespace TooLateToPanic
         {
             BeginResidenceCinematic(phase,from);
             OnPresentationPhase(phase,from);
-            if(phase==PanicPhase.Aftermath){if(aftermath)Destroy(aftermath);aftermath=CreateCompoundAftermathV54();StartRescue();QueueRadio("aftermath");}
+            if(phase==PanicPhase.Aftermath)EnsureResidenceAftermathV56();
             if(phase==PanicPhase.Preparing){minuteVoice=false;QueueRadio(DisasterVoiceId());if(aftermath)Destroy(aftermath);aftermath=null;}
+        }
+        void EnsureResidenceAftermathV56()
+        {
+            // Natural playback and Enter skipping share the same once-per-wave scene effects.
+            // Damage, supplies and rewards remain owned by the guarded model transitions.
+            if (Model == null || Model.Phase != PanicPhase.Aftermath || residenceAftermathWaveV56 == Model.Wave) return;
+            residenceAftermathWaveV56 = Model.Wave;
+            if (aftermath) Destroy(aftermath);
+            aftermath = CreateCompoundAftermathV54();
+            StartRescue();
+            QueueRadio("aftermath");
+            ResidenceAftermathSetupCountV56++;
         }
         void ResetResidenceLife()
         {
+            residenceAftermathWaveV56 = -1; ResidenceAftermathSetupCountV56 = 0;
             if (hud) hud.CancelFreeplayOnboardingV414();
             InventoryIndex=0;AnchorMode="wall";focusId=null;
             ResetDirectActions();

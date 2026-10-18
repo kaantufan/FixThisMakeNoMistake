@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 
@@ -9,7 +9,7 @@ namespace TooLateToPanic
     public static class PanicTestLaunchRules
     {
         public static readonly string[] Drivers = {
-            "--v5-smoke", "--v51-smoke", "--v52-smoke", "--v53-smoke", "--v54-smoke", "--v55-smoke",
+            "--v5-smoke", "--v51-smoke", "--v52-smoke", "--v53-smoke", "--v54-smoke", "--v55-smoke", "--v56-smoke", "--wave-ledger-v56-smoke",
             "--quake414-smoke", "--wave50-smoke", "--overhaul414-smoke", "--home-smoke", "--residence-smoke", "--refinement-smoke", "--bathroom-smoke",
             "--doors-stairs-smoke", "--interaction-smoke", "--door-jam-smoke", "--developer-smoke",
             "--hud-concept-smoke", "--jury-smoke", "--fullflow-smoke", "--direct-actions-smoke",

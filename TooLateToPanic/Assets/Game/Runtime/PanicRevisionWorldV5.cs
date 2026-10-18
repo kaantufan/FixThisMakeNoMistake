@@ -12,6 +12,19 @@ namespace TooLateToPanic
         public bool UsesUpperPanicRoomV5 { get { return Model != null && Model.HasActiveDisasterV54(DisasterType.Flood); } }
         public Vector3 ActiveShelterPositionV5 { get { return UsesUpperPanicRoomV5 ? PanicRoomPositionV5 : BunkerPosition; } }
         public string ActiveShelterLabelV5 { get { return UsesUpperPanicRoomV5 ? "Üst kat panik odası" : "Bodrum sığınağı"; } }
+        public string ActiveShelterEntryHintV56
+        {
+            get
+            {
+                if (Model == null) return string.Empty;
+                if (!BagFinalStageActive) return "Çanta hazırlığı son45 saniyede açılır";
+                int water = Mathf.Max(0, PanicModel.RequiredSupplyPerWave - Model.PackedWater);
+                int food = Mathf.Max(0, PanicModel.RequiredSupplyPerWave - Model.PackedFood);
+                string missing = water > 0 ? water + " su" : string.Empty;
+                if (food > 0) missing += (missing.Length > 0 ? " + " : string.Empty) + food + " gıda";
+                return missing.Length > 0 ? "E · Afeti başlat · Eksik: " + missing : "E · Hazırlığı bitir, afeti başlat";
+            }
+        }
         public int MainsLightCountV5 { get { return mainsLightsV5.Count; } }
         public int MainsEmitterCountV5 { get { return mainsEmittersV5.Count; } }
         public bool MainsPoweredV5 { get { return Model != null && !Model.UtilitySafety.PowerOff; } }
@@ -245,8 +258,8 @@ namespace TooLateToPanic
             if(focusId!="@panicroom"&&focusId!="bunker"&&focusId!="@bunker")return false;
             bool correct=UsesUpperPanicRoomV5?focusId=="@panicroom":focusId!="@panicroom";
             FocusLabel=focusId=="@panicroom"?"Üst kat panik odası":"Bodrum sığınağı";
-            ShortAction=correct?"Güvenli alanda bekle":"Diğer güvenli alana git";
-            ContextHint=correct?(BagFinalStageActive?"E · "+ShortAction:"Çanta hazırlığı son45 saniyede açılır"):
+            ShortAction=correct?(BagFinalStageActive?"Afeti başlat":"Çanta aşamasını bekle"):"Diğer güvenli alana git";
+            ContextHint=correct?ActiveShelterEntryHintV56:
                 UsesUpperPanicRoomV5?"Sel: üst kat panik odasını kullan":"Bu afette bodrum sığınağını kullan";
             return true;
         }

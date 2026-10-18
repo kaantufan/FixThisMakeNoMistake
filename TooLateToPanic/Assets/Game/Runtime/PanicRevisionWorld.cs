@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -21,7 +21,7 @@ namespace TooLateToPanic
         {
             View.cullingMask &= ~(1 << 28);
             revisionNotebook = gameObject.AddComponent<PanicNotebookOverlay>();
-            revisionNotebook.Bind(this, () => (hud && hud.NotebookModalBlocked) || BagCameraTransitionActive);
+            revisionNotebook.Bind(this, () => Model.WaveLedgerOpenV56 || (hud && hud.NotebookModalBlocked) || BagCameraTransitionActive);
             InitBagPreparation();
             var marker = new GameObject("Basement shelter emergency beacon");
             marker.transform.position = BunkerPosition + new Vector3(0, 1.75f, .55f);
@@ -98,7 +98,7 @@ namespace TooLateToPanic
                     worldSupplyObjects[supply.Id] = root;
                 }
                 root.transform.position = supply.Position;
-                bool visible = BagFinalStageActive && (!inside || BagCameraOwnsView || supply.Floor == ActiveFloor);
+                bool visible = BagFinalStageActive && (!inside || BagCameraOwnsView && !BagDollyUsesIsometricCutawayV56 || supply.Floor == ActiveFloor);
                 root.SetActive(visible);
             }
         }
@@ -205,10 +205,7 @@ namespace TooLateToPanic
         {
             float target = ActiveFloor == -1 && inside && !ResidenceCinematicExteriorView ? 1f : 0f;
             basementBlend = Mathf.Lerp(basementBlend, target, 1f - Mathf.Exp(-dt * 3.5f));
-            RenderSettings.ambientSkyColor = Color.Lerp(new Color(.39f, .44f, .52f), new Color(.035f, .045f, .065f), basementBlend);
-            RenderSettings.ambientEquatorColor = Color.Lerp(new Color(.26f, .29f, .34f), new Color(.025f, .029f, .04f), basementBlend);
-            RenderSettings.ambientGroundColor = Color.Lerp(new Color(.12f, .135f, .16f), new Color(.018f, .02f, .028f), basementBlend);
-            if (revisionSun) revisionSun.intensity = Mathf.Lerp(.75f, .035f, basementBlend);
+            ApplyAmbientReadabilityV56();
             if (View) View.clearFlags = ResidenceCinematicExteriorView ? CameraClearFlags.Skybox :
                 basementBlend > .2f ? CameraClearFlags.SolidColor : CameraClearFlags.Skybox;
             if (View) View.backgroundColor = Color.Lerp(new Color(.09f, .13f, .17f), new Color(.009f, .012f, .02f), basementBlend);

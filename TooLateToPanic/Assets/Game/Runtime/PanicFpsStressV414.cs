@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -19,7 +19,7 @@ namespace TooLateToPanic
         public bool StressAudioActiveV414 { get { return FpsFeedbackAudioPlayingV414; } }
         public float PoseSwayAmplitudeV414 { get { return FpsStressVisibleV414&&!ReducedFpsMotionV54 ? Mathf.Lerp(1.5f,2.15f,fpsStressV414) : 0; } }
         public float FpsStressIntensityV414 { get { return fpsStressV414; } }
-        public float FpsVeilOpacityV414 { get { return FpsStressVisibleV414 ? EvaluateFpsVeilOpacityV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54) : 0; } }
+        public float FpsVeilOpacityV414 { get { return FpsStressVisibleV414 ? EvaluateFpsVeilOpacityV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54) * BagDollyFpsSettleV56 : 0; } }
         public float FpsMovementMultiplierV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(1,.94f,fpsStressV414) : 1; } }
         public float FpsLookMultiplierV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(1,.94f,fpsStressV414) : 1; } }
         public float FpsStressClockV414 { get { return fpsStressClockV414; } }
@@ -121,8 +121,8 @@ namespace TooLateToPanic
                 Vector3 sway=FpsStressVisibleV414?EvaluateFpsSwayDegreesV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54):Vector3.zero;
                 // Every same-frame look/ray request uses the new input immediately.
                 // The stress clock advances only in TickExperienceFeedbackV414.
-                fpsPoseV414=FpsInputRotationV54*Quaternion.Euler(sway);fpsPoseReadyV414=true;
-                View.fieldOfView=FpsStressVisibleV414?EvaluateFpsFovV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54):62;
+                fpsPoseV414=FpsInputRotationV54*Quaternion.Euler(sway*BagDollyFpsSettleV56);fpsPoseReadyV414=true;
+                View.fieldOfView=FpsStressVisibleV414?Mathf.Lerp(62,EvaluateFpsFovV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54),BagDollyFpsSettleV56):62;
             }
             View.transform.SetPositionAndRotation(PlayerPosition+Vector3.up*1.62f,fpsPoseV414);
         }
@@ -163,8 +163,8 @@ namespace TooLateToPanic
         public void Tick(float urgency)
         {
             if(!heart||!breath)return;urgency=Mathf.Clamp01(urgency);
-            heart.volume=Mathf.Lerp(.10f,.23f,urgency);heart.pitch=Mathf.Lerp(1f,1.42f,urgency);
-            breath.volume=Mathf.Lerp(.035f,.075f,urgency);breath.pitch=Mathf.Lerp(.96f,1.30f,urgency);
+            heart.volume=Mathf.Lerp(.10f,.23f,urgency)*PanicAudioSettingsV56.EffectiveSfxGain;heart.pitch=Mathf.Lerp(1f,1.42f,urgency);
+            breath.volume=Mathf.Lerp(.035f,.075f,urgency)*PanicAudioSettingsV56.EffectiveSfxGain;breath.pitch=Mathf.Lerp(.96f,1.30f,urgency);
             if(!heart.isPlaying)heart.Play();if(!breath.isPlaying)breath.Play();
         }
         public void Stop(){if(heart)heart.Stop();if(breath)breath.Stop();}

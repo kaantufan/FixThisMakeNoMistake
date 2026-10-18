@@ -17,6 +17,7 @@ namespace TooLateToPanic
         public const string DiaryPersonalNote = "Ailem güvenli alanda. Komşularla yine aynı sofrada buluşmak için evimi hazırlıyorum.";
         public const string CommunityResponse = "Kalkanlı'da komşuluk sürüyor. Yeniden aynı sofrada buluşmak için hazırlanıyoruz.";
         public const string RunEndedCaption = "Ailen güvenli alanda. Bu ev için öğrendiklerini bir sonraki denemeye taşı.";
+        public const string ModeShelterBridgeV56 = "Kısa akış noktaları örnektir; serbest oyunda selde üst kat panik odasına, diğer afetlerde bodruma geç.";
 
         // The existing opening owns its 16-second duration and camera/skip flow.
         // These boundaries only choose copy for the existing four 4-second shots.

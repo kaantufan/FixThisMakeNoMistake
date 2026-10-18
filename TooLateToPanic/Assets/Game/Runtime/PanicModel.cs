@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -73,7 +73,7 @@ namespace TooLateToPanic
     /// </summary>
     public sealed partial class PanicModel
     {
-        private const int StartingBudget = 1000;
+        private const int StartingBudget = 2500;
         private const int WaterCost = 50;
         private const int FoodCost = 50;
         private const int AnchorCost = 50;
@@ -234,7 +234,7 @@ namespace TooLateToPanic
 
         public void Tick(float delta)
         {
-            if (IsPaused) return;
+            if (IsPaused || WaveLedgerOpenV56 || KeyboardHelpOpenV56) return;
             // The bounded demo has its own unscaled clock; campaign phase transitions
             // and score awards must never run alongside that controller.
             if (IsJuryDemo || (IsSimulation && SimulationComplete && Phase == PanicPhase.Inspection)) return;
@@ -245,6 +245,7 @@ namespace TooLateToPanic
             int transitions = 0;
             while (remainingDelta > 0f && transitions < 8)
             {
+                if (Phase == PanicPhase.Inspection && WaveLedgerAwaitingReviewV56) return;
                 if (Phase == PanicPhase.Tutorial)
                     return;
 
@@ -307,7 +308,7 @@ namespace TooLateToPanic
             ResetRunState(false);
             BeginWaveOne();
             Phase = PanicPhase.Preparing;
-            Message = "Öğretici tamamlandı. Gerçek koşu 1. dalga ve 1.000 bütçeyle başladı.";
+            Message = "Öğretici tamamlandı. Gerçek koşu 1. dalga ve 2.500 bütçeyle başladı.";
             MarkRunCheatedIfOptionsEnabled();
         }
 
@@ -468,6 +469,7 @@ namespace TooLateToPanic
 
         public void FinishInspection()
         {
+            if (WaveLedgerOpenV56 || WaveLedgerAwaitingReviewV56 || KeyboardHelpOpenV56) return;
             if (IsSimulation)
             {
                 if (Phase == PanicPhase.Inspection) { SimulationComplete = true; PhaseTime = 0f; }
@@ -484,6 +486,7 @@ namespace TooLateToPanic
             PhaseTime = 0f;
             if (IsTutorial)
             {
+                ResetWaveLedgerV56();
                 Phase = PanicPhase.Tutorial;
                 TimeRemaining = 180f;
                 PhaseTime = 180f;
@@ -608,6 +611,8 @@ namespace TooLateToPanic
 
         private void ResetRunState(bool tutorial)
         {
+            ResetKeyboardHelpV56();
+            ResetWaveLedgerV56();
             UtilitySafety.Reset();
             ResetSystemsV5();
             IsJuryDemo = false;
@@ -663,6 +668,7 @@ namespace TooLateToPanic
 
         private void BeginWave()
         {
+            ResetWaveLedgerV56();
             ResetDeveloperWaveSkipProtectionV51();
             BeginWaveSystemsV5();
             DeveloperNoLossUsedThisWave = DeveloperNoLoss;
@@ -713,6 +719,7 @@ namespace TooLateToPanic
                     Message = pendingSuccess
                         ? "Öğretici afeti tamamlandı. Sonucu incele, sonra gerçek koşuya geç."
                         : "Öğretici sonucu: " + FailureReason + " Hasarı inceleyip hazırlığı tekrar deneyebilirsin.";
+                    CaptureWaveLedgerV56("Öğretici sonucu", "Öğretici denemesinde bütçe ödülü verilmez.", Budget);
                 }
                 else if (DeveloperNoLoss || DeveloperWaveSkipProtectionV51 || (DeveloperNoLossUsedThisWave && pendingSuccess))
                 {
@@ -1018,7 +1025,12 @@ namespace TooLateToPanic
             float damageMultiplier = 1f - 0.5f * (TotalDamage / 100f);
             float supportMultiplier = 1f + 0.05f * SupportCount;
             LastReward = Math.Max(0, Mathf.RoundToInt(baseReward * damageMultiplier * supportMultiplier));
+            int budgetBefore = Budget;
             Budget = SaturatingAdd(Budget, LastReward);
+            int basis = Mathf.RoundToInt(baseReward);
+            int afterDamage = Mathf.RoundToInt(baseReward * damageMultiplier);
+            CaptureWaveLedgerV56("Dalga tamamlandı", "Hasar kesintisi dalga ödülünden düşer. Destek ekipmanı kalan ödülü artırır.",
+                budgetBefore, basis, basis - afterDamage, LastReward - afterDamage);
         }
 
         private void CompleteSimulationInspection()
@@ -1029,6 +1041,7 @@ namespace TooLateToPanic
             LastReward = 0;
             LastWaveScore = 0;
             Message = "Sonuç hazır. Hasar " + FormatPercent(TotalDamage) + ". Önlemlerini inceleyebilirsin.";
+            CaptureWaveLedgerV56("Simülasyon sonucu", "Simülasyonda bütçe ve skor ödülü verilmez.", Budget);
         }
 
         private void LatchDeveloperNoLoss(string reason)
@@ -1051,6 +1064,7 @@ namespace TooLateToPanic
                 !string.IsNullOrEmpty(DeveloperNoLossReason) ? DeveloperNoLossReason : "Bu dalgada kaybetmeme modu kullanıldı.";
             Message = "Geliştirici koruması: " + explanation + " Gerçek hasar " + FormatPercent(TotalDamage) +
                 ". İnceleme açık; bu geçiş başarı, skor veya bütçe ödülü sayılmaz.";
+            CaptureWaveLedgerV56("Ödülsüz inceleme", "Geliştirici dalga koruması kullanıldı; bütçe ödülü verilmez.", Budget);
         }
 
         private void FailRun(string reason)
@@ -1081,6 +1095,7 @@ namespace TooLateToPanic
             Message = IsSimulation ? "Hazırlık tamamlanamadı. " + FailureReason + " Önlemlerini değiştirip yeniden deneyebilirsin." : "Koşu sona erdi. " + FailureReason + " Tamamlanan dalga: " + CompletedWaves + "; toplam puan: " + Score + ".";
             if (!IsTutorial)
                 RecordRunOnce();
+            CaptureWaveLedgerV56("Koşu sona erdi", "Başarısız dalgada bütçe ödülü verilmez. Kayıp nedeni sonuç ekranında.", Budget);
         }
 
         private void RecordRunOnce()
@@ -1202,7 +1217,7 @@ namespace TooLateToPanic
 
         private bool CanPrepare()
         {
-            return !IsPaused && (Phase == PanicPhase.Preparing || Phase == PanicPhase.Tutorial);
+            return !IsPaused && !WaveLedgerOpenV56 && !KeyboardHelpOpenV56 && (Phase == PanicPhase.Preparing || Phase == PanicPhase.Tutorial);
         }
 
         private bool CanAfford(int cost)

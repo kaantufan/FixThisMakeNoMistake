@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -85,7 +85,7 @@ namespace TooLateToPanic
             bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
             bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
             if (Array.IndexOf(args, "--overhaul414-smoke") >= 0) Application.runInBackground = true;
-            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0 || Array.IndexOf(args, "--v54-smoke") >= 0 || Array.IndexOf(args, "--v55-smoke") >= 0) Application.runInBackground = true;
+            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0 || Array.IndexOf(args, "--v54-smoke") >= 0 || Array.IndexOf(args, "--v55-smoke") >= 0 || Array.IndexOf(args, "--v56-smoke") >= 0 || Array.IndexOf(args, "--wave-ledger-v56-smoke") >= 0) Application.runInBackground = true;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
             if (fullFlowSmoke)
@@ -157,6 +157,7 @@ namespace TooLateToPanic
             InitOverhaulV414();
             InitRevisionV5();
             InitFloorFinishRepairV54();
+            InitVisualReadabilityV56();
             InitGuidanceV54();
             previousPhase = Model.Phase; previousWave = Model.Wave;
             if (smoke) gameObject.AddComponent<PanicHomeSmoke>();
@@ -348,7 +349,7 @@ namespace TooLateToPanic
             if(hud){hud.ProcessDeveloperHotkeys();hud.ProcessFrameHotkeys();}
             ProcessNotebookInput();
             UpdateBagCursor();
-            if (Model.IsPaused || NotebookBlocksInput)
+            if (Model.IsPaused || Model.WaveLedgerOpenV56 || Model.KeyboardHelpOpenV56 || NotebookBlocksInput)
             {
                 SuspendExperienceFeedbackV414();
                 desiredVelocity = smoothVelocity = Vector3.zero;
@@ -392,7 +393,7 @@ namespace TooLateToPanic
                 }
             }
             if (!playable || WorkActive || InventoryOpen) SetMoveAnimation(0, dt);
-            if (hero) hero.gameObject.SetActive(!BagCameraOwnsView && (playable || Model.Phase == PanicPhase.Title || LossAnnounced || CinematicShowsActor));
+            if (hero) hero.gameObject.SetActive((!BagCameraOwnsView || BagTransitionShowsBodyV56) && (playable || Model.Phase == PanicPhase.Title || LossAnnounced || CinematicShowsActor));
             ActiveFloor = Mathf.Clamp(Mathf.FloorToInt((player.position.y + .65f) / 3.2f), -1, 1);
             inside = InResidence(player.position);
             UpdateRevisionWorld(dt);
@@ -413,7 +414,7 @@ namespace TooLateToPanic
 
         void LateUpdate()
         {
-            if (!hero || !animator || Model.IsPaused || NotebookBlocksInput) return;
+            if (!hero || !animator || Model.IsPaused || Model.WaveLedgerOpenV56 || Model.KeyboardHelpOpenV56 || NotebookBlocksInput) return;
             if (ApplyCinematicCharacterPoseV414()) return;
             // Retained V4.13 locomotion is evaluated solely by Animator after MovePlayer's original parameters.
             // Ordinary walking/idle/gather/carry has no procedural sample, Restore, Speed or bone write here.
@@ -533,6 +534,8 @@ namespace TooLateToPanic
         {
             bounds = new Bounds(); bool any = false;
             if (string.IsNullOrEmpty(id)) return false;
+            if (id == "roof" && PositionOf(id, out var roofPointV56))
+            { bounds = new Bounds(roofPointV56 + Vector3.up * .8f, new Vector3(.3f, 1.6f, .3f)); return true; }
             if (wallInteractionColliders.TryGetValue(id, out var segments))
             {
                 foreach (var segment in segments) if (segment && segment.enabled && segment.gameObject.activeInHierarchy)
@@ -723,6 +726,7 @@ namespace TooLateToPanic
             workAction = action; workTarget = target; workAge = 0;
             ResetManualWorkPointerV414();
             if (!Expedition.BeginValidatedWorkV414(action, target, Model.IsJuryDemo)) { CancelWork(); return; }
+            BeginWorkAudioV56();
             InventoryOpen = false;
             if (PositionOf(target, out var taskPosition)) { var toward = Flat(taskPosition-player.position); if (toward.sqrMagnitude>.01f) { facingYaw=Mathf.Atan2(toward.x,toward.z)*Mathf.Rad2Deg; hero.rotation=Quaternion.Euler(0,facingYaw,0); } }
             animator.SetBool("Working", true); animator.SetBool("Kneeling", action == "drain" || action == "anchorfloor");
@@ -746,8 +750,8 @@ namespace TooLateToPanic
         public void StepWork(float dt,float direction,bool held,bool pressed,bool pulse)
         {
             if(!WorkActive)return;workAge+=dt;
-            TickWorkAudio();
             Expedition.Work.Tick(dt,direction,held,pressed,pulse);
+            TickWorkAudio();
             if (handTool && Expedition.Work.UsesHammer && workAction != "drain") handTool.transform.localRotation=Quaternion.Euler(-55f*Expedition.Work.ToolMotion,180,0);
             if(workRig)PanicWorkArt.UpdateWorkRig(workRig,Expedition.Work.Progress,Expedition.Work.CompletedSteps,workAge,Expedition.Work.Cursor,Expedition.Work.IsApplying,Expedition.Work.ToolMotion);
             AnimateDirectConstruction(Expedition.Work.Progress);
@@ -756,6 +760,7 @@ namespace TooLateToPanic
         public void CompleteWork()
         {
             if (!WorkActive || !Expedition.Work.Complete) return;
+            TickWorkAudio();
             // Recheck before the authoritative stock/budget commit, even if the actor
             // was clear when installation began. Never create a solid trunk in it.
             if (workAction == "plant" && !TreeRowClearOfActor(workTarget))
@@ -763,6 +768,7 @@ namespace TooLateToPanic
             bool done = Expedition.TryCompleteWork(workAction, workTarget);
             if (done)
             {
+                CompleteWorkAudioV56();
                 var site = gardenSites.Find(s => s.id == workTarget);
                 if (site != null)
                 {
@@ -779,6 +785,7 @@ namespace TooLateToPanic
         public void CancelWork()
         {
             if (Expedition == null) return;
+            EndWorkAudioV56();
             ResetManualWorkPointerV414();
             if (WorkActive) CancelFrame=Time.frameCount;
             // One explicit actual-work exit, never an ordinary walk-frame pose restore.
@@ -811,6 +818,7 @@ namespace TooLateToPanic
 
         public void StartGame(bool tutorial)
         {
+            if (hud) hud.ResetKeyboardHelpPresentationV56();
             ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation();
             CancelWork(); CancelMove();
             if (Model.Phase != PanicPhase.Title && Model.Phase != PanicPhase.GameOver) Model.ReturnToTitle();
@@ -822,7 +830,7 @@ namespace TooLateToPanic
         }
         public void FinishTutorial() { CancelWork(); Model.FinishTutorial(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); QueueRadio(DisasterVoiceId()); }
         public void FinishInspection() { if (JuryActive) AdvanceJuryDemo(); else if (Model.IsSimulation) ReturnToMenu(); else Model.FinishInspection(); }
-        public void ReturnToMenu() { if(hud)hud.CloseSimulationSelector(); ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation(); CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
+        public void ReturnToMenu() { if(hud)hud.ResetKeyboardHelpPresentationV56(); if(hud)hud.CloseSimulationSelector(); ConfigurePresentationAudio(false); ReleaseJuryController(); ResetJuryPresentation(); CancelWork(); CancelMove(); Model.ReturnToTitle(); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); InventoryOpen = false; focusId = null; SyncVisuals(true); }
         void ClearGarden() { foreach (var s in gardenSites) { s.done = false; s.marker.SetActive(true); if (s.built) Destroy(s.built); s.built = null; } }
         public void Warp(Vector3 p) { controller.enabled = false; player.position = p; controller.enabled = true; gravitySpeed = -2; desiredVelocity = Vector3.zero; }
         public void SmokeMove(Vector2 direction, float dt) { MovePlayer(dt, direction); }
@@ -872,7 +880,7 @@ namespace TooLateToPanic
         void ApplyFloorVisibility()
         {
             int viewFloor=CinematicViewFloorV5;Vector3 viewFocus=CinematicViewFocusV5;
-            bool cutawayInside = (IntroStoryActiveV414 && residenceCinematicAge >= 4f) || inside && !ResidenceCinematicExteriorView && !BagCameraOwnsView;
+            bool cutawayInside = (IntroStoryActiveV414 && residenceCinematicAge >= 4f) || inside && !ResidenceCinematicExteriorView && (!BagCameraOwnsView || BagDollyUsesIsometricCutawayV56);
             for (int i = 0; i < floorVisuals.Count; i++)
             {
                 int floor=i-1; bool shown = !cutawayInside || floor == viewFloor;
@@ -899,6 +907,7 @@ namespace TooLateToPanic
                 SetResidenceRenderersVisible(go, shown);
             }
             if (hearthLight) hearthLight.enabled = hearthEnabled && (!cutawayInside || ActiveFloor == 0);
+            RefreshVisualReadabilityV56();
         }
 
         void SetResidenceRenderersVisible(GameObject root, bool visible)
@@ -986,7 +995,7 @@ namespace TooLateToPanic
         }
         void OnGUI()
         {
-            if(NotebookBlocksInput)return;
+            if(NotebookBlocksInput || (Model != null && (Model.WaveLedgerOpenV56 || Model.KeyboardHelpOpenV56)))return;
             DrawGatherRewardsV414();
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}
             if (BagCameraOwnsView || !View || Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.GameOver || Model.Phase == PanicPhase.Success || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;

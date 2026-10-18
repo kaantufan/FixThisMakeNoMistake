@@ -468,8 +468,12 @@ namespace TooLateToPanic
             int done = 0, missed = 0, skipped = 0;
             foreach (var state in goals.Values)
                 if (state == PanicJuryGoalState.Complete) done++; else if (state == PanicJuryGoalState.Missed) missed++; else if (state == PanicJuryGoalState.Skipped) skipped++;
-            return "Tamamlanan adımlar: " + done + "/" + goalIds.Length + " · Eksik: " + missed + " · Atlanan: " + skipped +
-                ". Daha iyi bir hazırlık için yeniden deneyebilirsin." + (Model.CheatedRun ? " Geliştirici seçeneği kullanıldı." : string.Empty);
+            string summary = "Tamamlanan adımlar: " + done + "/" + goalIds.Length + " · Eksik: " + missed + " · Atlanan: " + skipped + ".";
+            string developer = Model.CheatedRun ? " Geliştirici seçeneği kullanıldı." : string.Empty;
+            // Reuse the result card's existing two lines; its retry prompt is already below the goals.
+            if (Stage == PanicJuryStage.Result || Stage == PanicJuryStage.Complete)
+                return summary + developer + "\n" + PanicKktcStoryV53.ModeShelterBridgeV56;
+            return summary + " Daha iyi bir hazırlık için yeniden deneyebilirsin." + developer;
         }
 
         string ClosestAnchorCandidate()

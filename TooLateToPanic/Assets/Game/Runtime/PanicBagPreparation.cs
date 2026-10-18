@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -76,8 +76,7 @@ namespace TooLateToPanic
             bagViewAge = 0; bagViewMode = BagViewMode.Entering;
             BeginBagHandoffDiagnosticsV51();
             desiredVelocity = smoothVelocity = Vector3.zero;
-            SetFirstPersonPartitions(true); ClearPickupFocus();
-            if (hero) hero.gameObject.SetActive(false);
+            SetFirstPersonPartitions(false); BeginBagDollyV56(); ClearPickupFocus();
             CancelFrame = DiscreteInputFrame = Time.frameCount;
             return true;
         }
@@ -97,6 +96,7 @@ namespace TooLateToPanic
         void ResetBagPreparation()
         {
             SuspendExperienceFeedbackV414();
+            ResetBagDollyV56();
             fpsStressV414 = fpsStressClockV414 = 0; fpsPoseReadyV414 = false;
             bool owned = BagCameraOwnsView;
             bagViewMode = BagViewMode.Isometric; bagViewAge = 0; bagHandAge = 10;
@@ -143,15 +143,13 @@ namespace TooLateToPanic
                 if (bagViewMode == BagViewMode.Entering)
                 {
                     RecordBagHandoffStepV51(previousAge, bagViewAge);
-                    // Preserve the actual previous view until fully black. The entire
-                    // camera trip then happens behind the opaque interval, at the actor.
-                    if (bagViewAge < BagHandoffFadeOutV51) { UpdateBagCursor(); return; }
-                    float travel = Mathf.InverseLerp(BagHandoffFadeOutV51, BagHandoffBlackEndV51, bagViewAge);
-                    smooth = travel * travel * (3f - 2f * travel);
-                    View.orthographic = false; View.nearClipPlane = .05f;
+                    ApplyBagDollyPoseV56(t);
                 }
-                View.transform.SetPositionAndRotation(Vector3.Lerp(bagShotFrom, bagShotTo, smooth), Quaternion.Slerp(bagRotationFrom, bagRotationTo, smooth));
-                View.fieldOfView = bagViewMode == BagViewMode.Entering ? Mathf.Lerp(bagShotFov, 62, smooth) : Mathf.Lerp(62, bagShotFov, smooth);
+                else
+                {
+                    View.transform.SetPositionAndRotation(Vector3.Lerp(bagShotFrom, bagShotTo, smooth), Quaternion.Slerp(bagRotationFrom, bagRotationTo, smooth));
+                    View.fieldOfView = Mathf.Lerp(62, bagShotFov, smooth);
+                }
                 if (t >= 1)
                 {
                     if (bagViewMode == BagViewMode.Entering) { bagViewMode = BagViewMode.FirstPerson; View.fieldOfView = 62; RefreshBagRayFocus(); }

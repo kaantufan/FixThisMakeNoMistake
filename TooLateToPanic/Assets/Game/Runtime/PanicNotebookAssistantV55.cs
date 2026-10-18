@@ -73,6 +73,8 @@ namespace TooLateToPanic
         }
         bool AssistantUtilitiesReadyV55()
         { return Model.UtilitySafety.IsComplete("gasoff") && Model.UtilitySafety.IsComplete("wateroff") && Model.UtilitySafety.IsComplete("poweroff"); }
+        bool AssistantAnchorAffordableV56(PanicItem item)
+        { return item == null || item.Anchored || Model.InfiniteBudget || Model.Budget >= PanicExpedition.WorkCost(PanicItemActionRules.PrimaryAction(item), item); }
 
         PanicAssistantSnapshotV55 CaptureAssistantV55()
         {
@@ -88,22 +90,27 @@ namespace TooLateToPanic
             bool materials = anchored || AssistantMaterialsReadyV55(item);
             bool utility = AssistantUtilitiesReadyV55();
             bool bag = BagFinalStageActive;
+            bool anchorDeferred = !anchored && !AssistantAnchorAffordableV56(item);
+            string budgetReason = anchorDeferred ? "Ankraj bütçesi " + Model.Budget + "/" + PanicExpedition.WorkCost(PanicItemActionRules.PrimaryAction(item), item) : string.Empty;
             bool[] done = { materials, anchored, utility, Model.PackedWater >= 1, Model.PackedFood >= 1, Model.ReachedShelterV5 };
             string target = item == null ? "Uygun mobilyalar zaten sabit" : item.Label;
             string[] details = {
                 anchored ? "Yeni ankraj malzemesi gerekmiyor" : materials ? "Ankraj malzemeleri hazır" : target + " için gereken malzemeler",
-                target,
+                anchorDeferred ? target + " · " + budgetReason + "; tesisat ücretsiz" : target,
                 "Gaz, su vanası ve ana elektrik şalteri",
                 "Son 45 saniyede; aldığın su çantana girer",
                 "Son 45 saniyede; aldığın gıda çantana girer",
                 Model.HasActiveDisasterV54(DisasterType.Flood) ? "Sel var: üst kat panik odası" : "Bodrum sığınağı"
             };
-            int current = bag ? !done[3] ? 3 : !done[4] ? 4 : 5 : !done[0] ? 0 : !done[1] ? 1 : 2;
+            // An unaffordable suggestion must not hide the still actionable free utilities.
+            // Keep materials/anchor completion truthful; this only changes recommendation order.
+            int current = bag ? !done[3] ? 3 : !done[4] ? 4 : 5 : anchorDeferred ? 2 : !done[0] ? 0 : !done[1] ? 1 : 2;
             result.CurrentStep = current + 1;
             for (int i = 0; i < 6; i++)
             {
                 var step = result.Steps[i];
                 step.Complete = done[i]; step.Available = preparing && (bag ? i >= 3 : i < 3);
+                if (!bag && i == 1 && anchorDeferred) step.Available = false;
                 step.Active = step.Available && i == current && !step.Complete;
                 step.Detail = bag && i < 3 && !done[i] ? "Önlem süresi bitti; çantana odaklan" : details[i];
             }
@@ -117,6 +124,8 @@ namespace TooLateToPanic
                 string checkpoint = GuidanceCheckpointLabelV54.Split('·')[0].Trim();
                 result.Hint = floor + " · " + (checkpoint.StartsWith("Kapıyı") || checkpoint.StartsWith("Merdiven") ? checkpoint : spot);
             }
+            if (!bag && anchorDeferred)
+                result.Hint = budgetReason + " · " + (utility ? "Diğer önlemleri incele" : "Tesisat ücretsiz · " + result.Hint);
             if (JuryActive && JurySnapshot != null)
             {
                 result.Task = JurySnapshot.Hint; result.Hint = "Defterdeki hazırlık notunu takip et";
@@ -146,10 +155,10 @@ namespace TooLateToPanic
                 }
                 guidanceNoRouteV54 = "Gereken malzemeyi bulamadın; defterden başka önlemleri incele";
             }
-            else if (snapshot.CurrentStep == 2 && item != null && !item.Anchored)
+            else if (snapshot.CurrentStep == 2 && item != null && !item.Anchored && AssistantAnchorAffordableV56(item))
             {
                 string action = PanicItemActionRules.PrimaryAction(item);
-                if (Model.CanBeginJuryWork(action, item.Id) && (Model.InfiniteBudget || Model.Budget >= PanicExpedition.WorkCost(action, item)))
+                if (Model.CanBeginJuryWork(action, item.Id))
                     guidanceGoalsV54.Add(new GuidanceGoalV54 { Id = item.Id, Position = item.Position,
                         Floor = Mathf.RoundToInt(item.Position.y / 3.2f), Label = item.Label + " · Q seç / 1 sabitle", Action = action });
                 guidanceNoRouteV54 = "Bütçeni ve mobilyanın çevresini kontrol et";

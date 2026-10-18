@@ -3,8 +3,8 @@ using UnityEngine;
 namespace TooLateToPanic
 {
     /// <summary>
-    /// Residence camera sequences. This partial only changes presentation: it never
-    /// advances or resolves the model and never changes the result of a run.
+    /// Residence camera sequences. Natural playback only changes presentation.
+    /// Explicit skip uses ordinary guarded model transitions, never an invented outcome.
     /// </summary>
     public sealed partial class PanicHomeWorld
     {
@@ -60,12 +60,14 @@ namespace TooLateToPanic
             try
             {
                 // Resolve once via the ordinary guarded model path, then stop on real inspection/loss.
+                if (Model.Phase == PanicPhase.Aftermath) EnsureResidenceAftermathV56();
                 for (int guard = 0; guard < 5; guard++)
                 {
                     PanicPhase phase = Model.Phase;
                     if (phase != PanicPhase.Disaster && phase != PanicPhase.Aftermath && phase != PanicPhase.Success && phase != PanicPhase.GameOver) break;
                     if (phase == PanicPhase.GameOver && Model.PhaseTime <= 0f) break;
                     Model.Tick(Mathf.Max(.001f, Model.PhaseTime));
+                    if (Model.Phase == PanicPhase.Aftermath) EnsureResidenceAftermathV56();
                 }
                 Expedition.SyncConsumedBagSupplies();
                 ResetResidenceCinematic();

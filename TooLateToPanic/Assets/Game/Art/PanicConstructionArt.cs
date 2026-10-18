@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -217,24 +217,45 @@ namespace TooLateToPanic
         void Roof(PanicItem item,Material[] m)
         {
             high=Child(transform,"Roof_reinforcement",Vector3.zero);
-            var ties=new Geo();var ridge=new Geo();var plates=new Geo();
-            float halfZ=Safe(item.Size.z,6,20,12)*13.15f/24f,peak=2.25f;
-            var xs=Tier>1?new[]{-6f,0f,6f}:new[]{-6f,6f};
-            foreach(float x in xs)for(int sign=-1;sign<=1;sign+=2)
+            var palette=new[]{Material("Oiled warm roof timber",new Color(.43f,.285f,.17f),.15f),m[1],m[2],m[3],m[4]};
+            var edge=new Geo();var regular=new Geo();var eaves=new Geo();var ridge=new Geo();var fix=new Geo();
+            float halfZ=Safe(item.Size.z,6,20,12)*13.15f/24f-.12f,peak=2.14f;
+            // All pairs meet the same ridge and eave lines. No random rafters or crossing straps.
+            for(int side=-1;side<=1;side+=2)
             {
-                Vector3 a=new Vector3(x,.09f,sign*halfZ),b=new Vector3(x,peak+.09f,0);
-                ties.Beam(a,b,.07f,.030f,1);
-                for(int n=0;n<5;n++)
+                float x=side*7.86f;
+                Vector3 a=new Vector3(x,-.04f,-halfZ),b=new Vector3(x,peak,0),c=new Vector3(x,-.04f,halfZ);
+                edge.Beam(a,b,.145f,.18f,0);edge.Beam(b,c,.145f,.18f,0);
+                edge.Beam(a,c,.14f,.17f,0);
+                edge.Beam(new Vector3(x,-.04f,0),b,.12f,.14f,0);
+                foreach(var p in new[]{a,b,c})
                 {
-                    Vector3 p=Vector3.Lerp(a,b,n/4f);
-                    plates.Box(p+new Vector3(0,.025f,0),new Vector3(.20f,.025f,.18f),2);
-                    plates.Cylinder(p+Vector3.up*.045f,.025f,.018f,1,Quaternion.identity,6);
+                    fix.Box(p+new Vector3(side*.084f,0,0),new Vector3(.025f,.24f,.25f),1);
+                    for(int bolt=-1;bolt<=1;bolt+=2)
+                        fix.Cylinder(p+new Vector3(side*.103f,.066f*bolt,0),.020f,.025f,2,Quaternion.Euler(0,0,90),6);
                 }
+                eaves.Box(new Vector3(0,-.075f,side*halfZ),new Vector3(16.05f,.19f,.17f),0);
             }
-            ridge.Box(new Vector3(0,peak+.105f,0),new Vector3(16.4f,.035f,.18f),1);
-            AddPart(high,"Roof_slope_straps",ties,m,new Vector3(0,.20f,0));
-            AddPart(high,"Ridge_cap_channel",ridge,m,new Vector3(.15f,.18f,0));
-            AddPart(high,"Roof_anchor_plates",plates,m,new Vector3(-.13f,.12f,0));
+            var xs=Tier>1?new[]{-3.93f,0f,3.93f}:new[]{-3.93f,3.93f};
+            foreach(float x in xs)for(int sign=-1;sign<=1;sign+=2)
+                regular.Beam(new Vector3(x,-.04f,sign*halfZ),new Vector3(x,peak,0),.12f,.15f,0);
+            ridge.Box(new Vector3(0,peak+.02f,0),new Vector3(16.1f,.16f,.16f),0);
+            // Edge-only framing stays legible in selected cutaway; interior rafters remain hidden there.
+            AddPart(high,"Roof_edge_trusses",edge,palette,new Vector3(0,.12f,0));
+            AddPart(high,"Roof_eave_beams",eaves,palette,new Vector3(0,.10f,0));
+            AddPart(high,"Roof_regular_rafters",regular,palette,new Vector3(0,.14f,0));
+            AddPart(high,"Roof_ridge_beam",ridge,palette,new Vector3(0,.12f,0));
+            AddPart(high,"Roof_edge_connection_plates",fix,palette,new Vector3(0,.08f,0));
+        }
+
+        /// <summary>Visual-only adapter; leaves AnimateBuild's part activation and physical model alone.</summary>
+        public static void SetRoofFrameSelectionV56(GameObject root,bool selected,bool inside)
+        {
+            if(!root)return;var s=root.GetComponent<PanicConstructionArt>();
+            if(!s||s.kind!=ItemKind.Roof||!s.high)return;
+            s.high.gameObject.SetActive(!inside||selected);
+            foreach(var r in s.high.GetComponentsInChildren<Renderer>(true))
+                if(r)r.enabled=!inside||selected&&r.name!="Roof_regular_rafters";
         }
 
         /// <summary>Original mature tree rows. Variants0/1 along Z,2 along X. No colliders.</summary>
@@ -348,7 +369,7 @@ namespace TooLateToPanic
         public static void SetCutawayVisibility(GameObject root,bool inside,Vector3 worldCameraSide)
         {
             if(!root)return;var s=root.GetComponent<PanicConstructionArt>();if(!s||s.row||s.station)return;
-            if(s.kind==ItemKind.Roof){if(s.high)s.high.gameObject.SetActive(!inside);return;}
+            if(s.kind==ItemKind.Roof){SetRoofFrameSelectionV56(root,false,inside);return;}
             if(s.kind!=ItemKind.Wall||!s.high)return;
             bool occludes=s.itemId.Contains("wall_south")||s.itemId.Contains("wall_east")||s.itemId.Contains("wall_west")&&worldCameraSide.x<-.1f||s.itemId.Contains("wall_north")&&worldCameraSide.z>.1f;
             s.high.gameObject.SetActive(!inside||!occludes);

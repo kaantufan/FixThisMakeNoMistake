@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -8,13 +8,13 @@ namespace TooLateToPanic
         bool compactControlsExpandedV5;
         int compactControlsInputFrameV5 = -1;
         GUIStyle compactBodyV5, compactValueV5, compactKeyV51;
-        public bool CompactControlsExpandedV5 { get { return compactControlsExpandedV5; } }
+        public bool CompactControlsExpandedV5 { get { return KeyboardHelpVisibleV56; } }
         public Rect CompactControlsToggleBoundsV5 { get { return new Rect(24, 844, 154, 32); } }
-        bool CompactControlsAllowedV5 { get { return World && World.Model != null && !FreeplayOnboardingOpenV414 && !_developerMenuOpen && !_paused && !World.NotebookBlocksInput; } }
+        bool CompactControlsAllowedV5 { get { return World && World.Model != null && !FreeplayOnboardingOpenV414 && !_developerMenuOpen && !_paused && !World.NotebookBlocksInput && !KeyboardHelpBlockingV56 && KeyboardHelpCanOpenV56; } }
 
         public void ToggleCompactControlsV5()
         {
-            compactControlsExpandedV5 = !compactControlsExpandedV5;
+            if (KeyboardHelpVisibleV56) CloseKeyboardHelpV56(); else OpenKeyboardHelpV56();
             compactControlsInputFrameV5 = Time.frameCount;
         }
 
@@ -46,7 +46,7 @@ namespace TooLateToPanic
             Rect timer = TimerCardBounds;
             bool preparing = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
             float value = World.JuryActive && World.JurySnapshot != null ? World.JurySnapshot.StageRemainingSeconds : preparing ? PreparationTimerRemaining : model.PhaseTime;
-            string timerStage = _paused ? "DURDU" : model.FreezePreparationTime && preparing ? "DONDU" : CampaignPrecautionTimer ? "ÖNLEM" : preparing ? "HAZIRLIK" : PhaseName(model.Phase);
+            string timerStage = (_paused || model.KeyboardHelpOpenV56 || model.WaveLedgerOpenV56) ? "DURDU" : model.FreezePreparationTime && preparing ? "DONDU" : CampaignPrecautionTimer ? "ÖNLEM" : preparing ? "HAZIRLIK" : PhaseName(model.Phase);
             Color timeColor = preparing && value <= 15 ? Brass : MainText;
             Frame(timer, Night, Line, 1); Region(timer);
             Label(new Rect(timer.x + 14, timer.y + 8, timer.width - 28, 19), timerStage, _tiny);
@@ -65,7 +65,7 @@ namespace TooLateToPanic
             Rect toggle = CompactControlsToggleBoundsV5;
             Frame(toggle, Night, Line, 1); Region(toggle);
             DrawCompactKeyV51(new Rect(toggle.x + 5, toggle.y + 4, 37, 24), "F1", 3);
-            FittedLabel(new Rect(toggle.x + 49, toggle.y + 2, toggle.width - 57, toggle.height - 4), (compactControlsExpandedV5 ? "−" : "+"), compactKeyV51, MainText, 14);
+            FittedLabel(new Rect(toggle.x + 49, toggle.y + 2, toggle.width - 57, toggle.height - 4), "TUŞLAR", compactKeyV51, MainText, 14);
             if (MousePressed(toggle)) { ToggleCompactControlsV5(); World.PlayUiSound(); }
             if (!compactControlsExpandedV5) return;
             const float guideScale = .7f;
@@ -135,6 +135,7 @@ namespace TooLateToPanic
 
         int CompactKeyboardFamilyV51(string key)
         {
+            if (KeyboardHelpVisibleV56) return KeyboardHelpKeyFamilyV56(key);
             if (string.IsNullOrEmpty(key)) return 0;
             if (key == "F1") return 3;
             if (key == "F2") return string.IsNullOrEmpty(DeveloperUnavailableReason()) ? 3 : 0;

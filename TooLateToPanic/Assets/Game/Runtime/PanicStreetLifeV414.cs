@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -47,6 +47,7 @@ namespace TooLateToPanic
                 var stand=new Car{Root=PanicStreetLifeArtV414.CivilianCar(i+2),Offset=i};stand.Root.transform.SetParent(streetRoot.transform,false);stand.Root.transform.position=ParkedPosition(i);stand.Root.transform.rotation=Quaternion.Euler(0,90,0);stand.Root.SetActive(false);parked.Add(stand);
                 var npc=PanicExteriorArt.CreatePedestrianVisual(i+8);if(!npc)continue;
                 npc.transform.SetParent(streetRoot.transform,false);npc.name="V414 ambient sidewalk resident "+i;npc.SetActive(false);
+                npc.AddComponent<PanicNpcFoleyV56>().Bind(world);
                 civilians.Add(new Walker{Root=npc,Animator=npc.GetComponentInChildren<Animator>(),A=new Vector3(i==0?-14:4,.085f,-23.22f),B=new Vector3(i==0?-4:14,.085f,-23.22f),Offset=i*4.7f});
             }
             initialized=true;ResetRun();
@@ -129,7 +130,7 @@ namespace TooLateToPanic
             {
                 var kind=(PanicStreetLifeArtV414.Service)i;var vehicle=PanicStreetLifeArtV414.EmergencyVehicle(kind);vehicle.transform.SetParent(responseRoot.transform,false);
                 var car=new Car{Root=vehicle,ModelFront=PanicStreetLifeArtV414.EmergencyModelFront};var crew=PanicStreetLifeArtV414.Responder(kind,i);Walker walker=null;
-                if(crew){crew.transform.SetParent(responseRoot.transform,false);crew.SetActive(false);float x=-11+i*7.5f;walker=new Walker{Root=crew,Animator=crew.GetComponentInChildren<Animator>(),A=new Vector3(x-1.6f,.085f,-23.75f),B=new Vector3(x+2.0f,.085f,-24.7f),Offset=i*.8f};}
+                if(crew){crew.transform.SetParent(responseRoot.transform,false);crew.AddComponent<PanicNpcFoleyV56>().Bind(world);crew.SetActive(false);float x=-11+i*7.5f;walker=new Walker{Root=crew,Animator=crew.GetComponentInChildren<Animator>(),A=new Vector3(x-1.6f,.085f,-23.75f),B=new Vector3(x+2.0f,.085f,-24.7f),Offset=i*.8f};}
                 response.Add(new Response{Car=car,Crew=walker,Delay=i*1.6f,Destination=-11+i*7.5f,Rig=vehicle.GetComponent<PanicV5VehicleRig>()});
                 vehicle.AddComponent<PanicVehicleAudio>().Bind(world,new[]{"siren_police","siren_ambulance","siren_fire","siren_rescue"}[i]);
                 vehicle.transform.SetPositionAndRotation(new Vector3(38+i*8,.035f,-21.3f),PanicStreetLifeArtV414.VehicleHeading(Vector3.left,car.ModelFront));car.Previous=vehicle.transform.position;
@@ -167,6 +168,7 @@ namespace TooLateToPanic
         {
             zodiac=PanicV5ResponseArt.CreateZodiac();zodiac.transform.SetParent(responseRoot.transform,false);zodiacRig=zodiac.GetComponent<PanicV5VehicleRig>();
             zodiac.transform.position=new Vector3((PanicExteriorArt.CreekLeft+PanicExteriorArt.CreekRight)*.5f,-.08f,1);
+            zodiac.AddComponent<PanicZodiacAudioV56>().Bind(world);
             zodiacCrew=PanicV5ResponseArt.CreateResponder(PanicStreetLifeArtV414.Service.Rescue,18);
             if(zodiacCrew){zodiacCrew.transform.SetParent(zodiac.transform,false);zodiacCrew.transform.localPosition=new Vector3(-.30f,.205f,-.55f);zodiacCrew.transform.localRotation=Quaternion.identity;zodiacAnimator=zodiacCrew.GetComponentInChildren<Animator>();}
         }

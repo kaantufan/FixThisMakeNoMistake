@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace TooLateToPanic
@@ -6,11 +6,11 @@ namespace TooLateToPanic
     /// <summary>Nonverbal score. Never changes gameplay clocks, input or save state.</summary>
     public sealed class PanicBackgroundMusic : MonoBehaviour
     {
-        public static bool Enabled { get; set; } = true;
+        public static bool Enabled { get { return PanicAudioSettingsV56.MusicEnabled; } set { PanicAudioSettingsV56.MusicEnabled = value; } }
         public static float Volume { get; set; } = .075f;
         public static PanicBackgroundMusic Instance { get; private set; }
         public string CurrentTrack { get; private set; }
-        public bool IsAudible { get { return !paused && Enabled && (a && a.isPlaying || b && b.isPlaying); } }
+        public bool IsAudible { get { return !paused && Enabled && PanicAudioSettingsV56.EffectiveMusicGain > 0f && (a && a.isPlaying || b && b.isPlaying); } }
         public static readonly string[] TrackIds = { "preparation", "disaster", "fps_tension" };
         readonly Dictionary<string,AudioClip> clips = new Dictionary<string,AudioClip>();
         AudioSource a,b,current,outgoing;
@@ -61,7 +61,7 @@ namespace TooLateToPanic
                 CurrentTrack=null; outgoing=null; paused=false;
                 return;
             }
-            bool stop=world.InputLocked||world.Model.IsPaused||world.NotebookBlocksInput||!Enabled||(!Application.isFocused&&!Application.runInBackground);
+            bool stop=world.InputLocked||world.Model.IsPaused||world.Model.WaveLedgerOpenV56||world.Model.KeyboardHelpOpenV56||world.NotebookBlocksInput||!Enabled||PanicAudioSettingsV56.EffectiveMusicGain<=0f||(!Application.isFocused&&!Application.runInBackground);
             if(stop!=paused)
             {
                 paused=stop;
@@ -73,7 +73,7 @@ namespace TooLateToPanic
             else if(current.clip&&fadeAge>=FadeSeconds&&(!current.isPlaying||current.time>=current.clip.length-FadeSeconds))Transition(id);
             fadeAge=Mathf.Min(FadeSeconds,fadeAge+Time.unscaledDeltaTime);
             float mix=Mathf.SmoothStep(0,1,fadeAge/FadeSeconds);
-            float gain=Mathf.Clamp01(Volume)*(world.PresentationSpeechActive?.55f:1f);
+            float gain=Mathf.Clamp01(Volume)*PanicAudioSettingsV56.EffectiveMusicGain*(world.PresentationSpeechActive?.55f:1f);
             if(CurrentTrack=="fps_tension")gain*=Mathf.Lerp(.85f,1.15f,world.FpsStressIntensityV414);
             gain*=Mathf.Lerp(1,.35f,world.AudioShelterAmount);
             if(world.Model.Phase==PanicPhase.Disaster)gain*=.65f;

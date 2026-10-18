@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -34,6 +34,9 @@ namespace TooLateToPanic
         { return PanicDisasterArt.SampleEmissionRateV52(PanicDisasterArt.HazardRootV54(weather,type)); }
         public float HazardPresentationScaleV54(DisasterType type)
         { return PanicDisasterArt.SamplePresentationScaleV52(PanicDisasterArt.HazardRootV54(weather,type)); }
+        public AudioSource HazardSourceV56(DisasterType type) { int i=(int)type;return i>=0&&i<4?hazardAmbiencesV54[i]:null; }
+        public float HazardCutoffV56(DisasterType type) { int i=(int)type;return i>=0&&i<4&&hazardFiltersV54[i]?hazardFiltersV54[i].cutoffFrequency:22000f; }
+        public float HazardBaseGainV56(DisasterType type) { var s=HazardSourceV56(type);float gain=PanicAudioSettingsV56.EffectiveSfxGain;return s&&gain>0?s.volume/gain:0; }
         public float HazardAmbienceVolumeV54(DisasterType type)
         { int i=(int)type;return i>=0&&i<4&&hazardAmbiencesV54[i]?hazardAmbiencesV54[i].volume:0f; }
         float age;
@@ -41,6 +44,8 @@ namespace TooLateToPanic
         bool warned;
         AudioSource[] voices;
         AudioLowPassFilter[] voiceFilters;
+        readonly float[] voiceBaseGainsV56 = new float[8];
+        float quakeStructureBaseGainV56;
         AudioSource outdoors, hearth, rotor;
         AudioLowPassFilter hazardFilter,rotorFilter;
         float shelterMix,rotorGain;
@@ -98,7 +103,7 @@ namespace TooLateToPanic
         {
             if(volume<=0) { source.volume=0;source.Stop();return; }
             if(!source.clip)source.clip=PanicAudioBank.Get(id);
-            source.volume=volume;
+            source.volume=volume*PanicAudioSettingsV56.EffectiveSfxGain;
             if(source.clip&&!source.isPlaying&&!suspended)source.Play();
         }
         public void SetEnvironment(bool active,bool inside,bool fire,bool helicopter)
@@ -118,16 +123,19 @@ namespace TooLateToPanic
         {
             if(suspended && name!="ui" && name!="reject")return;
             string id=name=="step"?"step_wood":name=="select"||name=="click"?"ui":name=="bunker"?"bunker_hatch":name=="build"?"wood_build":name=="buy"?"pickup_cloth":name=="anchor_release"?"door_toolbox":name;
-            if(last.TryGetValue(id,out float time)&&Time.unscaledTime-time<.065f)return;
+            bool committedEvent=id=="v56_hammer_hit"||id=="v56_gas_flare"||id=="v56_pipe_leak"||id=="v56_electrical_short";
+            if(!committedEvent&&last.TryGetValue(id,out float time)&&Time.unscaledTime-time<.065f)return;
             var clip=PanicAudioBank.Get(id);
             if(!clip&&id=="objective_tick")clip=Resources.Load<AudioClip>("Audio/Jury/objective_tick");
             if(!clip) { Debug.LogWarning("AUDIO_MISSING "+id);return; }
             last[id]=Time.unscaledTime;
-            int channel=nextVoice++%voices.Length;var source=voices[channel];bool exteriorImpact=id.StartsWith("impact_")||id=="warning";
-            voiceFilters[channel].cutoffFrequency=exteriorImpact?Mathf.Lerp(16000,800,shelterMix):22000;
-            if(exteriorImpact)volume*=Mathf.Lerp(1,.18f,shelterMix);
+            int channel=nextVoice++%voices.Length;var source=voices[channel];bool exteriorImpact=id.StartsWith("impact_")||id=="warning"||id=="v56_gas_flare"||id=="v56_pipe_leak"||id=="v56_electrical_short";
+            float cueShelter=World&&World.AudioExteriorCameraV56?0:shelterMix;
+            voiceFilters[channel].cutoffFrequency=exteriorImpact?Mathf.Lerp(16000,800,cueShelter):22000;
+            if(exteriorImpact)volume*=Mathf.Lerp(1,.18f,cueShelter);
             source.Stop();source.clip=clip;source.pitch=id.StartsWith("step_")?Random.Range(.94f,1.06f):1;
-            source.volume=Mathf.Clamp01(volume)*.7f;source.Play();PlayedCount++;LastPlayed=id;
+            voiceBaseGainsV56[channel]=Mathf.Clamp01(volume)*.7f;
+            source.volume=voiceBaseGainsV56[channel]*PanicAudioSettingsV56.EffectiveSfxGain;source.Play();PlayedCount++;LastPlayed=id;
         }
         public void OnPhase(PanicPhase phase)
         {
@@ -197,9 +205,11 @@ namespace TooLateToPanic
             // Preserve single-hazard loudness. Up to four simultaneous loops share bounded
             // equal-power gain, rather than each playing at full gain on top of the others.
             float gain=count>0?1f/Mathf.Sqrt(count):0f;
-            float volume=disasterAmbienceVolume*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*Mathf.Lerp(1,.18f,shelterMix)*gain;
-            float cutoff=Mathf.Lerp(16000,World&&World.AudioHatchOpen?1600:650,shelterMix);
-            bool cinematicQuake=QuakeCinematicWindowV55;
+            bool exterior=World&&World.AudioExteriorCameraV56;
+            float cameraShelter=exterior?0:shelterMix;
+            float volume=disasterAmbienceVolume*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*Mathf.Lerp(1,.18f,cameraShelter)*gain;
+            float cutoff=Mathf.Lerp(16000,World&&World.AudioHatchOpen?1600:650,cameraShelter);
+            bool cinematicQuake=QuakeCinematicWindowV55&&exterior;
             for(int i=0;i<4;i++)
             {
                 // The cinematic camera leaves the bunker. Keeping the player's shelter mix
@@ -208,7 +218,7 @@ namespace TooLateToPanic
                 // ordinary shelter/environment mixing and concurrent equal-power gain remain.
                 bool quake=cinematicQuake&&i==(int)DisasterType.Earthquake;
                 float channelVolume=quake?.55f*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*gain:volume;
-                if(hazardAmbiencesV54[i])hazardAmbiencesV54[i].volume=hazardAudioActiveV54[i]?Mathf.Clamp01(channelVolume):0f;
+                if(hazardAmbiencesV54[i])hazardAmbiencesV54[i].volume=hazardAudioActiveV54[i]?Mathf.Clamp01(channelVolume)*PanicAudioSettingsV56.EffectiveSfxGain:0f;
                 if(hazardFiltersV54[i])hazardFiltersV54[i].cutoffFrequency=quake?16000:cutoff;
             }
         }
@@ -239,7 +249,9 @@ namespace TooLateToPanic
             float gain=1f/Mathf.Sqrt(Mathf.Max(1,ActiveHazardAudioCountV54));
             quakeStructureV55.Stop();quakeStructureV55.clip=clip;
             quakeStructureV55.pitch=index%3==1?.88f:.78f;
-            quakeStructureV55.volume=Mathf.Clamp01(.18f*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*gain);
+            float cameraShelter=World&&World.AudioExteriorCameraV56?0:shelterMix;
+            quakeStructureBaseGainV56=Mathf.Clamp01(.18f*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*gain)*Mathf.Lerp(1,.18f,cameraShelter);
+            quakeStructureV55.volume=quakeStructureBaseGainV56*PanicAudioSettingsV56.EffectiveSfxGain;
             quakeStructureV55.Play();
         }
         static string HazardSoundId(DisasterType type)
@@ -261,6 +273,9 @@ namespace TooLateToPanic
         void OnDestroy() { StopJuryHazard(); }
         void Update()
         {
+            float settingsGain=PanicAudioSettingsV56.EffectiveSfxGain;
+            if(voices!=null)for(int i=0;i<voices.Length;i++)if(voices[i])voices[i].volume=voiceBaseGainsV56[i]*settingsGain;
+            if(quakeStructureV55)quakeStructureV55.volume=quakeStructureBaseGainV56*settingsGain;
             if (!World || World.Model == null) return;
             if (suspended || World.Model.IsPaused || World.NotebookBlocksInput) return;
             age += Time.deltaTime;

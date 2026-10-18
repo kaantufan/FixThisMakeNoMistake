@@ -8,7 +8,7 @@ namespace TooLateToPanic
     /// World/HUD must include BlocksInput in their clock/input gates; this component never owns InputLocked.
     /// </summary>
     [DefaultExecutionOrder(-800)]
-    public sealed class PanicNotebookOverlay : MonoBehaviour
+    public sealed partial class PanicNotebookOverlay : MonoBehaviour
     {
         static readonly Color Ink = new Color32(58, 69, 68, 255);
         static readonly Color Green = new Color32(79, 115, 101, 255);
@@ -432,6 +432,7 @@ namespace TooLateToPanic
                 foreach(PanicNotebookPlanKindV55 kind in new[]{PanicNotebookPlanKindV55.Floor,PanicNotebookPlanKindV55.Stair,PanicNotebookPlanKindV55.Furniture,PanicNotebookPlanKindV55.Wall,PanicNotebookPlanKindV55.Window,PanicNotebookPlanKindV55.Door})
                     foreach(var shape in planSnapshotV55.Shapes)if(shape.Kind==kind)DrawPlanShapeV55(shape);
             }
+            DrawRoomLabelsV56(data);
             Label(new Rect(8, 6, map.width - 16, 26), "K", tinyStyle, Green);
             for (int i = 0; i < data.Pins.Length; i++)
             {
@@ -488,11 +489,7 @@ namespace TooLateToPanic
                 float sweep=Mathf.DeltaAngle(start,finish),radius=Vector2.Distance(pivot,closed);var previous=closed;
                 if(Mathf.Abs(sweep)>2)for(int i=1;i<=10;i++)
                 { float angle=(start+sweep*i/10)*Mathf.Deg2Rad;var next=pivot+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*radius;Line(previous,next,new Color(.46f,.31f,.2f,.45f),1);previous=next; }
-                string room=shape.Label.Replace("Ebeveyn odası","Ebeveyn").Replace("Çocuk odası","Çocuk").Replace(" iç kapısı","").Replace(" kapısı","");
-                Label(new Rect(pivot.x+4,pivot.y-17,110,21),room,tinyStyle,Green);
             }
-            if(shape.Kind==PanicNotebookPlanKindV55.Floor&&!string.IsNullOrEmpty(shape.Label))
-                Label(new Rect(MapDrawPointV55(shape.Pivot).x-43,MapDrawPointV55(shape.Pivot).y-9,86,20),shape.Label.ToUpperInvariant(),tinyStyle,Green);
         }
         Vector2 MapDrawPointV55(Vector3 position) { return MapPoint(position)-PlanRect.position; }
         void FillPlanQuadV55(Vector2 a,Vector2 b,Vector2 c,Vector2 d,Color color)

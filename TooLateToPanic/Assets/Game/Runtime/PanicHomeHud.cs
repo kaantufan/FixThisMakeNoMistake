@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +9,8 @@ namespace TooLateToPanic
     {
         const float CanvasWidth = 1600f;
         const float CanvasHeight = 900f;
+        public string ResultFailureTextV56 { get; private set; } = string.Empty;
+        public Rect ResultFailureRectV56 { get; private set; }
 
         // Offline, authored palette from the approved HUD concept.
         static readonly Color Shade = new Color(.07f, .06f, .055f, .65f);
@@ -41,7 +43,9 @@ namespace TooLateToPanic
             {
                 return World && World.Model != null && World.Expedition != null && !_paused &&
                     !World.CinematicActive && !(World.LossAnnounced && World.LossRevealTime > 0f) &&
-                    !World.WorkActive && World.Expedition.HasMissingRequirements;
+                    !World.WorkActive && World.CanInteract &&
+                    World.Expedition.RequirementTargetId == World.SelectedTargetIdV56 &&
+                    !SelectedTargetHudVisibleV56 && World.Expedition.HasMissingRequirements;
             }
         }
 
@@ -136,14 +140,16 @@ namespace TooLateToPanic
         float _developerNoticeUntil;
 
         public bool DeveloperMenuOpen { get { return _developerMenuOpen; } }
-        public bool DeveloperInputBlockedThisFrame { get { return _developerTransitionFrame == Time.frameCount || compactControlsInputFrameV5 == Time.frameCount; } }
+        public bool DeveloperInputBlockedThisFrame { get { return _developerTransitionFrame == Time.frameCount || compactControlsInputFrameV5 == Time.frameCount || WaveLedgerInputBlockedV56 || KeyboardHelpBlockingV56; } }
 
         /// <summary>World calls this before ticking/input. HUD calls the same idempotent path.</summary>
         public void ProcessDeveloperHotkeys()
         {
             if (!World || World.Model == null || _developerHotkeyFrame == Time.frameCount) return;
             _developerHotkeyFrame = Time.frameCount;
+            if (ProcessKeyboardHelpInputV56()) return;
             SynchronizeHudPhase();
+            if (ProcessWaveLedgerInputV56()) return;
             ProcessCompactControlsInputV5();
             if (ProcessFreeplayOnboardingHotkeysV414()) return;
             if (Input.GetKeyDown(KeyCode.F3)) { RequestDeveloperWaveSkipV51(); return; }
@@ -161,6 +167,7 @@ namespace TooLateToPanic
 
         public void SetDeveloperMenuOpen(bool value)
         {
+            if (value && KeyboardHelpBlockingV56) return;
             if (value == _developerMenuOpen) return;
             if (value && FreeplayOnboardingInputBlockedV414) return;
             if (value)
@@ -232,6 +239,8 @@ namespace TooLateToPanic
             if (!World || World.Model == null) return;
             _hudProcessedFrame = Time.frameCount;
             ProcessDeveloperHotkeys();
+            if (KeyboardHelpBlockingV56) return;
+            if (WaveLedgerInputBlockedV56) return;
             if (FreeplayOnboardingInputBlockedV414) return;
             World.ProcessNotebookInput();
             if (World.NotebookBlocksInput) return;
@@ -258,7 +267,11 @@ namespace TooLateToPanic
             }
             if (_paused)
             {
-                if (Input.GetKeyDown(KeyCode.Escape)) SetPaused(false);
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    if (AudioSettingsOpenV56) CloseAudioSettingsV56();
+                    else SetPaused(false);
+                }
                 return;
             }
 
@@ -271,7 +284,9 @@ namespace TooLateToPanic
 
         public void SetPaused(bool value)
         {
+            if (value && KeyboardHelpBlockingV56) return;
             if (!World) return;
+            if (!value) CloseAudioSettingsV56();
             if (value && !_paused)
             {
                 _pauseChoice = 0;
@@ -290,6 +305,7 @@ namespace TooLateToPanic
         void OnGUI()
         {
             if (!World || World.Model == null || World.NotebookBlocksInput) return;
+            SynchronizeWaveLedgerV56();
             PrepareCanvas();
             EnsureStyles();
             _uiRects.Clear();
@@ -304,7 +320,16 @@ namespace TooLateToPanic
             GUI.color = Color.white;
             GUI.contentColor = Color.white;
 
-            if (FreeplayOnboardingOpenV414)
+            if (KeyboardHelpVisibleV56)
+            {
+                DrawStatusStrip(); DrawKeyboardHelpV56();
+            }
+            else if (WaveLedgerVisibleV56)
+            {
+                DrawStatusStrip();
+                DrawWaveLedgerV56();
+            }
+            else if (FreeplayOnboardingOpenV414)
             {
                 DrawFreeplayOnboardingV414();
             }
@@ -369,17 +394,21 @@ namespace TooLateToPanic
                 if (World.NotificationVisible) DrawToast(World.ShortNotice);
             }
 
-            DrawAssistantHudV55();
-            DrawSecondaryAlertV55();
-            DrawCompactControlsV5();
-            if (!FreeplayOnboardingOpenV414 && !World.IntroStoryActiveV414) DrawPresentationSubtitle();
-            if (World.Model.CheatedRun) DrawCheatedRunIndicator();
-            if (!FreeplayOnboardingOpenV414 && !_developerMenuOpen && !string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)
+            if (!WaveLedgerInputBlockedV56 && !KeyboardHelpBlockingV56)
             {
-                Rect notice = new Rect(480, 132, 840, 30);
-                Frame(notice, Night, Brass, 1f);
-                Mark(notice);
-                Label(new Rect(notice.x + 14, notice.y + 3, notice.width - 28, 24), _developerNotice, _small);
+                DrawSelectedTargetHudV56();
+                DrawAssistantHudV55();
+                DrawSecondaryAlertV55();
+                DrawCompactControlsV5();
+                if (!FreeplayOnboardingOpenV414 && !World.IntroStoryActiveV414) DrawPresentationSubtitle();
+                if (World.Model.CheatedRun) DrawCheatedRunIndicator();
+                if (!FreeplayOnboardingOpenV414 && !_developerMenuOpen && !string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)
+                {
+                    Rect notice = new Rect(480, 132, 840, 30);
+                    Frame(notice, Night, Brass, 1f);
+                    Mark(notice);
+                    Label(new Rect(notice.x + 14, notice.y + 3, notice.width - 28, 24), _developerNotice, _small);
+                }
             }
 
             // Single final blackout owner; the full opaque interval also covers HUD cards.
@@ -391,6 +420,7 @@ namespace TooLateToPanic
 
         void OnDestroy()
         {
+            ResetKeyboardHelpPresentationV56();
             if (_dotTexture) Destroy(_dotTexture);
             _dotTexture = null;
             if (_supplyPreviews != null) _supplyPreviews.Dispose();
@@ -399,7 +429,9 @@ namespace TooLateToPanic
 
         void OnDisable()
         {
+            ResetKeyboardHelpPresentationV56();
             if (_developerMenuOpen) SetDeveloperMenuOpen(false);
+            if (WaveLedgerVisibleV56) CloseWaveLedgerV56();
         }
 
         void PrepareCanvas()
@@ -941,6 +973,7 @@ namespace TooLateToPanic
         void DrawInspection()
         {
             BuildInspectionList();
+            DrawWaveLedgerReopenV56();
             Rect panel = new Rect(24, 606, 392, 118);
             Frame(panel, Night, Line, 1f); Region(panel);
             int total = Mathf.Max(1, _inspectionItems.Count);
@@ -1004,6 +1037,7 @@ namespace TooLateToPanic
 
         void DrawPause()
         {
+            if (AudioSettingsOpenV56) { DrawAudioSettingsV56(); return; }
             Fill(LogicalCanvasBounds, new Color(.055f, .05f, .045f, .57f));
             Rect panel = new Rect(96, 176, 1408, 612);
             Frame(panel, Night, Line, 1f); Region(panel);
@@ -1014,7 +1048,7 @@ namespace TooLateToPanic
             Label(new Rect(277, 346, 520, 176), FormatTime(PreparationTimerRemaining), ColorText(_mega, Brass));
             Frame(new Rect(161, 588, 236, 36), new Color(Petrol.r, Petrol.g, Petrol.b, .3f), Sea, 1f);
             Label(new Rect(174, 590, 210, 30), "II   OYUN DURDU", ColorText(_caps, Sea));
-            Label(new Rect(161, 660, 600, 56), "Hazır olduğunda devam et.\nSüre, afet ve hazırlık burada bekliyor.", _wrap);
+            Button(new Rect(161, 660, 600, 56), "SES AYARLARI", _pauseChoice == 6, Sea, OpenAudioSettingsV56);
             Button(new Rect(912, 263, 508, 68), "DEVAM ET", _pauseChoice == 0, Brass, () => SetPaused(false));
             Button(new Rect(924, 350, 496, 62), "GELİŞTİRİCİ · F2", _pauseChoice == 1, Sea, ToggleDeveloperMenu);
             Button(new Rect(924, 430, 496, 62), "YENİDEN BAŞLA", _pauseChoice == 2, Brass, RestartRun);
@@ -1144,7 +1178,10 @@ namespace TooLateToPanic
             Label(new Rect(1000, 442, 260, 24), "EVDEKİ HASAR", _tiny);
             Label(new Rect(1000, 474, 260, 57), World.Model.TotalDamage.ToString("0.#") + "%", ColorText(_title, accent));
             string detail = World.Model.CheatedRun ? "Hileli koşu · Bu skor kaydedilmez." : won ? "Afete hazırlık evini korudu." : World.Model.FailureReason;
-            Label(new Rect(318, 558, 942, 46), Clip(detail, 130), _wrap);
+            ResultFailureTextV56 = detail;
+            ResultFailureRectV56 = new Rect(318, 552, 942, 78);
+            Label(ResultFailureRectV56, detail, _wrap);
+            DrawWaveLedgerReopenV56();
             if (World.Model.IsSimulation && World.Model.SimulationComplete)
             {
                 Button(new Rect(318, 650, 300, 58), "HASARI İNCELE", true, Brass, () => { _inspectionStep = 0; World.InspectSimulationDamage(); });
@@ -1206,7 +1243,7 @@ namespace TooLateToPanic
                 DrawLine(new Vector2(cx + 1, rect.center.y), new Vector2(cx - 5, rect.center.y + 6), selected ? Night : accent, 2f);
             }
             Mark(rect);
-            if (!_developerMenuOpen && DeveloperInputBlockedThisFrame) return;
+            if (!_developerMenuOpen && DeveloperInputBlockedThisFrame && !(WaveLedgerButtonInputV56 || KeyboardHelpButtonInputV56)) return;
             if (MousePressed(rect) && action != null) { World.PlayUiSound(); action(); }
         }
 
@@ -1293,6 +1330,7 @@ namespace TooLateToPanic
 
         bool MousePressed(Rect rect)
         {
+            if (KeyboardHelpBlockingV56 && !KeyboardHelpButtonInputV56) return false;
             if (World && (World.DiscreteInputFrame == Time.frameCount || World.CancelFrame == Time.frameCount)) return false;
             Event e = Event.current;
             // IMGUI already transforms event coordinates through GUI.matrix. Use the
@@ -1367,6 +1405,8 @@ namespace TooLateToPanic
             Matrix4x4 priorMatrix = GUI.matrix;
             Color priorColor = GUI.color;
             GUI.matrix = Matrix4x4.TRS(new Vector3(_offset.x, _offset.y, 0), Quaternion.identity, new Vector3(_scale, _scale, 1));
+            int priorDepth = GUI.depth;
+            GUI.depth = 10;
             GUI.color = Color.white;
             Vector2 logical = (new Vector2(projected.x, Screen.height - projected.y) - _offset) / _scale;
             string text = label ?? "";
@@ -1390,6 +1430,7 @@ namespace TooLateToPanic
             DrawDot(new Rect(rect.center.x - 3, rect.yMax + 7, 6, 6), Brass);
             GUI.matrix = priorMatrix;
             GUI.color = priorColor;
+            GUI.depth = priorDepth;
         }
 
         void DrawTimerCard()
@@ -1419,7 +1460,7 @@ namespace TooLateToPanic
             DrawWatch(new Rect(630, 32, 45, 53), TimerAlarmActive ? Ember : Rust);
             string digits = timed ? FormatTime(value) : "--:--";
             Label(new Rect(687, 13, 187, 80), digits, ColorText(_timer, TimerAlarmActive ? Ember : MainText));
-            string phase = _paused ? "DURDU" : preparation && model.FreezePreparationTime ? "DONDU" : precautions ? "GÜÇLENDİRME" : preparation ? "HAZIRLIK" : PhaseName(model.Phase);
+            string phase = WaveLedgerVisibleV56 || KeyboardHelpVisibleV56 || _paused ? "DURDU" : preparation && model.FreezePreparationTime ? "DONDU" : precautions ? "GÜÇLENDİRME" : preparation ? "HAZIRLIK" : PhaseName(model.Phase);
             FittedLabel(new Rect(876, 35, 100, 25), phase, _tiny, accent, 12);
             Label(new Rect(876, 60, 100, 22), preparation ? TimerAlarmActive ? "SON 60 SN" : "KALAN SÜRE" : "DURUM", _tiny);
             Rect track = new Rect(635, 99, 330, 6);
@@ -1521,6 +1562,7 @@ namespace TooLateToPanic
 
         bool WorldMarkerClear(Rect marker)
         {
+            if (!WorldMarkerAvoidsAlertV56(marker)) return false;
             for (int i = 0; i < _topLevelRegions.Count; i++)
             {
                 Rect region = _topLevelRegions[i];

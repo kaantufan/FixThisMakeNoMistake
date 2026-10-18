@@ -13,6 +13,17 @@ namespace TooLateToPanic
         public int AnchorTargetFontSize { get; private set; }
         public IReadOnlyList<Rect> CurrentMarkerBounds => _worldMarkerReservationFrame==Time.frameCount?_worldMarkerReservations:new List<Rect>();
         public IReadOnlyList<string> CurrentMarkerLabels => _worldMarkerReservationFrame==Time.frameCount?_worldMarkerLabels:new List<string>();
+        public Rect[] DamageLabelRectsV56
+        {
+            get
+            {
+                if (_worldMarkerReservationFrame != Time.frameCount) return System.Array.Empty<Rect>();
+                var result = new List<Rect>(3);
+                for (int i = 0; i < _worldMarkerLabels.Count; i++)
+                    if (_worldMarkerLabels[i].Contains(" · +")) result.Add(_worldMarkerReservations[i]);
+                return result.ToArray();
+            }
+        }
         public string CurrentAnchorTargetLabel()
         {
             string id=World.Expedition.Work.TargetId;var target=World.Model.Items.Find(item=>item.Id==id);

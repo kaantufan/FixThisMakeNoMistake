@@ -211,7 +211,7 @@ namespace TooLateToPanic
             Label(new Rect(80, 57, 1050, 48), "Serbest oyna · Kontroller", _freeplayGuideTitleV414);
             Frame(new Rect(1172, 58, 352, 44), FreeplayKeyFillV414(1), FreeplayKeyEdgeV414(1), 1);
             Label(new Rect(1184, 63, 328, 34), "Duraklatıldı · " + FormatTime(World.Model.TimeRemaining), _freeplayGuideKeyWideV414);
-            Label(new Rect(82, 111, 1436, 31), "Önce evi hazırla, sonra çantanı al ve sığınağa yetiş.", _freeplayGuideBodyV414);
+            Label(new Rect(82, 111, 1436, 31), "Önce evi hazırla, sonra çantanı hazırla ve sığınağa yetiş.", _freeplayGuideBodyV414);
 
             Frame(new Rect(76, 154, 982, 610), new Color32(17, 27, 34, 255), new Color32(82, 102, 112, 255), 1);
             Frame(new Rect(1080, 154, 444, 610), new Color32(17, 27, 34, 255), new Color32(82, 102, 112, 255), 1);
@@ -264,8 +264,8 @@ namespace TooLateToPanic
                 "Selde üst kat panik odasına çık.\nDiğer afetlerde bodruma in; E ile gir.");
             Label(new Rect(1100, 714, 408, 34), "Rehber açıkken süre durur.", _freeplayGuideMutedV414);
 
-            Button(new Rect(76, 782, 1448, 58), "Anladım, başla · Enter", true, new Color32(255, 211, 138, 255), () => ConfirmFreeplayOnboardingV414());
-            Label(new Rect(84, 846, 1420, 26), "Enter veya Esc: açıklamayı kapat ve oyunu başlat.", _freeplayGuideMutedV414);
+            Button(new Rect(76, 782, 1448, 58), "Anladım, başla · Enter / Esc", true, new Color32(255, 211, 138, 255), () => ConfirmFreeplayOnboardingV414());
+            Label(new Rect(84, 846, 1420, 26), PanicKktcStoryV53.ModeShelterBridgeV56, _freeplayGuideMutedV414);
             Event e = Event.current;
             if (e.type == EventType.KeyDown || e.type == EventType.KeyUp)
             {
