@@ -113,6 +113,7 @@ namespace TooLateToPanic
             RepairChecks();
             yield return Resolution(1600, 900);
             yield return BeginNormal();
+            yield return GuidanceToggleChecks();
             yield return FirstWaveLayout();
             yield return InteractionChecks();
             yield return FpsSupply();
@@ -131,8 +132,59 @@ namespace TooLateToPanic
                 !w.CinematicActive && w.PlayerControllerEnabled && w.Model.Budget == 1500 && !w.Model.CheatedRun && !w.Model.ReachedShelterV5,
                 "Real normal StartGame, onboarding confirmation and intro skip; current90+40 timing/1500 budget.");
         }
+        string GuidanceModelStateV513()
+        {
+            return w.Model.TimeRemaining.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "|" +
+                w.Model.Budget + "|" + w.Model.Wave + "|" + w.Model.Phase + "|" + w.Model.ReachedShelterV5 + "|" +
+                string.Join(";", w.Model.CriticalTasksV513.Select(t => t.Id + ":" + t.Complete + ":" + t.Resolved)) + "|" +
+                w.FirstWaveOnboardingRequiredV510 + ":" + w.FirstWaveOnboardingV510.Step;
+        }
+        void SetGuidanceCheckedV513(bool expanded, string id)
+        {
+            string before = GuidanceModelStateV513();
+            hud.SetGuidanceExpandedV513(expanded);
+            Check("guidance.model-unchanged." + id, before == GuidanceModelStateV513() && hud.GuidanceExpandedV513 == expanded,
+                "Synchronous real toggle API preserves exact preparation clock, budget, wave/phase, shelter and mandatory/critical objective state.");
+        }
+        IEnumerator GuidanceToggleChecks()
+        {
+            report.fixtures.Add("R7 guidance toggle uses the same public setter as the production button callback. No OS click claim. Model-state equality is measured synchronously around each setter; natural frame time remains live during Repaint screenshots.");
+            yield return new WaitForEndOfFrame();
+            Check("guidance.default-collapsed", !hud.GuidanceExpandedV513 && hud.GuidanceToggleVisibleV513 &&
+                hud.CriticalCardEligibleV513 && hud.FirstWaveCardEligibleV510 && !hud.FirstWaveCardVisibleV510 &&
+                string.IsNullOrEmpty(hud.CriticalRenderedTextV513),
+                "Default hides both left panels while mandatory model objectives remain required/eligible and one toggle stays visible.");
+            Rect toggle = hud.GuidanceToggleBoundsV513;
+            Check("guidance.toggle-bounds.1600", toggle.width > 0 && toggle.height > 0 && Contains(hud.LogicalCanvasBounds, toggle),
+                "Actual toggle Repaint bounds=" + toggle);
+            yield return Capture("guidance-collapsed-1600", "R7 actual default collapsed guidance; both left panels hidden, single toggle retained; model objective rules unchanged.");
+            SetGuidanceCheckedV513(true, "expand"); yield return new WaitForEndOfFrame();
+            Check("guidance.expand-both", hud.GuidanceToggleVisibleV513 && hud.FirstWaveCardVisibleV510 &&
+                !string.IsNullOrEmpty(hud.CriticalRenderedTextV513) && hud.CriticalCardBoundsV513.width > 0,
+                "One setter expands both actual rendered left panels; existing expanded1600/960 captures follow.");
+            SetGuidanceCheckedV513(false, "collapse"); yield return new WaitForEndOfFrame();
+            Check("guidance.collapse-both", !hud.FirstWaveCardVisibleV510 && string.IsNullOrEmpty(hud.CriticalRenderedTextV513) &&
+                hud.GuidanceToggleVisibleV513 && w.FirstWaveOnboardingRequiredV510,
+                "Collapse changes presentation only; mandatory first-wave objective remains active.");
+            yield return Resolution(960, 540); yield return new WaitForEndOfFrame();
+            toggle = hud.GuidanceToggleBoundsV513;
+            Check("guidance.toggle-bounds.960", !hud.GuidanceExpandedV513 && hud.GuidanceToggleVisibleV513 && toggle.width > 0 &&
+                Contains(hud.LogicalCanvasBounds, toggle), "Actual960x540 Repaint with collapsed panels and logical toggle bounds=" + toggle);
+            yield return Capture("guidance-collapsed-960", "R7 actual960x540 collapsed guidance and one retained toggle; expanded960 screenshot remains in original layout smoke.");
+            SetGuidanceCheckedV513(true, "expand-before-modal"); yield return new WaitForEndOfFrame();
+            hud.SetPaused(true); yield return new WaitForEndOfFrame();
+            Check("guidance.hidden-in-pause", !hud.GuidanceToggleVisibleV513 && !hud.FirstWaveCardVisibleV510 &&
+                !hud.CriticalCardEligibleV513 && w.FirstWaveOnboardingRequiredV510,
+                "Real pause modal hides toggle and cards while the model objective remains mandatory.");
+            hud.SetPaused(false); yield return new WaitForEndOfFrame();
+            Check("guidance.expanded-restored-after-modal", hud.GuidanceExpandedV513 && hud.GuidanceToggleVisibleV513 &&
+                hud.FirstWaveCardVisibleV510 && !string.IsNullOrEmpty(hud.CriticalRenderedTextV513),
+                "Closing modal restores the chosen expanded presentation without resetting objective state.");
+            yield return Resolution(1600, 900);
+        }
         IEnumerator FirstWaveLayout()
         {
+            hud.SetGuidanceExpandedV513(true);
             w.SetAssistantEnabledV55(false);
             foreach (int width in new[] { 1600, 960 })
             {
@@ -143,6 +195,22 @@ namespace TooLateToPanic
                     Contains(hud.LogicalCanvasBounds, critical) && Contains(hud.LogicalCanvasBounds, mandatory) &&
                     hud.FirstWaveContentHeightV510 <= mandatory.height,
                     "Actual Repaint logical bounds critical=" + critical + ";firstwave=" + mandatory + ";optional helper OFF; human readability separate.");
+                Check("layout.compact-panel-widths." + width, critical.width > 0 && critical.width <= 310.01f && mandatory.width > 0 && mandatory.width <= 310.01f,
+                    "Actual Repaint critical/first-wave widths=" + critical.width + "/" + mandatory.width + "; both compact panels remain within310 logical pixels.");
+                string criticalText = hud.CriticalRenderedTextV513 ?? string.Empty;
+                Check("text.critical-labels-only." + width, criticalText.Length > 0 &&
+                    criticalText.IndexOf("koşu biter", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    criticalText.IndexOf("Ceza:", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    criticalText.IndexOf("Kritik ek hasar", StringComparison.OrdinalIgnoreCase) < 0,
+                    "Actual rendered critical text contains task labels and completion markers, without old consequence/footer copy. Text=" + criticalText);
+                string firstText = hud.FirstWaveRenderedTextV510 ?? string.Empty;
+                Check("text.firstwave-initial-compact." + width, w.FirstWaveOnboardingV510.Step == PanicFirstWaveStepV510.Materials &&
+                    firstText.Length > 0 && firstText.Length <= 220 &&
+                    firstText.IndexOf("İLK DALGA · DEPREM", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    firstText.IndexOf("Tesisat 0/3", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    firstText.IndexOf("Su 0/1", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    firstText.IndexOf("Gıda 0/1", StringComparison.OrdinalIgnoreCase) < 0,
+                    "Actual initial materials guidance is at most220 characters with no old duplicated status paragraph; length=" + firstText.Length + ";text=" + firstText);
                 var tasks = w.Model.CriticalTasksV513;
                 Check("tasks.firstwave-authoritative." + width, tasks.Count == 4 && tasks.Any(t => t.Id == "anchor" && !t.Complete) &&
                     tasks.Any(t => t.Id == "water" && !t.Complete) && tasks.Any(t => t.Id == "food" && !t.Complete) &&
@@ -313,6 +381,7 @@ namespace TooLateToPanic
                 hud.WaveAnnouncementTextV513 == w.Model.ActiveDisasterLabelV54, "Actual persistent header bounds=" + header);
             SampleAnimation("header"); yield return Capture("nextwave-actual-header", "Actual same-wave label has settled into the original header; count and chosen mask unchanged.");
             yield return Wait(.1f); yield return new WaitForEndOfFrame();
+            hud.SetGuidanceExpandedV513(true); yield return new WaitForEndOfFrame();
             Check("tasks.compound-visible", hud.CriticalCardEligibleV513 && !string.IsNullOrEmpty(hud.CriticalRenderedTextV513) &&
                 w.Model.CriticalTasksV513.Count == 5 && w.Model.CriticalTasksV513.Any(t => t.Id == "poweroff" && !t.Complete) &&
                 w.Model.CriticalTasksV513.Any(t => t.Id == "roof" && !t.Complete), "Actual Flood+Storm core tasks: electricity, combined upper/roof, water, food, physical upper shelter.");
@@ -425,7 +494,7 @@ namespace TooLateToPanic
             try { hud.SetPaused(false); w.ReturnToMenu(); } catch (Exception error) { report.errors.Add("Cleanup:" + error); }
             report.realScoreAfter = Hash(realScore); Check("profile.real-score-unchanged", report.realScoreBefore == report.realScoreAfter);
             report.seconds = Time.realtimeSinceStartup - began;
-            report.passed = report.complete && string.IsNullOrEmpty(report.error) && report.errors.Count == 0 && report.captures.Count >= 12 && report.checks.All(c => c.pass);
+            report.passed = report.complete && string.IsNullOrEmpty(report.error) && report.errors.Count == 0 && report.captures.Count >= 14 && report.checks.All(c => c.pass);
             Application.logMessageReceived -= Log;
             File.WriteAllText(Path.Combine(w.EvidencePath, "critical-v513-smoke.json"), JsonUtility.ToJson(report, true));
             Debug.Log("CRITICAL_V513_RESULT " + (report.passed ? "PASS" : "FAIL") + " checks=" + report.checks.Count + " captures=" + report.captures.Count);

@@ -228,6 +228,7 @@ namespace TooLateToPanic
             _inspectionStep = 0;
             _inspectionFocusId = null;
             _helpVisible = phase == PanicPhase.Tutorial && World.Model.IsTutorial;
+            if (phase == PanicPhase.Title) SetGuidanceExpandedV513(false);
             _lastPhase = phase;
         }
 
@@ -396,6 +397,7 @@ namespace TooLateToPanic
 
             if (!WaveLedgerInputBlockedV56 && !KeyboardHelpBlockingV56)
             {
+                DrawGuidanceToggleV513();
                 DrawCriticalTasksV513();
                 DrawFirstWaveOnboardingV510();
                 DrawSelectedTargetHudV56();
@@ -416,8 +418,10 @@ namespace TooLateToPanic
 
             // Single final blackout owner; the full opaque interval also covers HUD cards.
             InteractionAvoidRectV513 = CriticalCardBoundsV513;
+            if (GuidanceToggleVisibleV513)
+                InteractionAvoidRectV513 = Rect.MinMaxRect(24f, 116f, 324f, Mathf.Max(GuidanceToggleBoundsV513.yMax, CriticalCardBoundsV513.yMax));
             if (FirstWaveCardVisibleV510)
-                InteractionAvoidRectV513 = Rect.MinMaxRect(24f, 116f, 454f, Mathf.Max(CriticalCardBoundsV513.yMax, FirstWaveCardBoundsV510.yMax));
+                InteractionAvoidRectV513 = Rect.MinMaxRect(24f, 116f, 324f, Mathf.Max(CriticalCardBoundsV513.yMax, FirstWaveCardBoundsV510.yMax));
             DrawPresentationV513();
             World.DrawBagBlackoutV51();
             GUI.matrix = oldMatrix;

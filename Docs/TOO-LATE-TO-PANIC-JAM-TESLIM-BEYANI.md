@@ -1,6 +1,6 @@
 # Too Late to Panic! - CIVIL GAME JAM teslim beyanı
 
-18 Ekim 2026. **Güncel yerel aday: Home V5.13-r6 /0.5.13; [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r6) doğrulandı.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
+18 Ekim 2026. **Güncel yerel aday: Home V5.13-r7 /0.5.13; GitHub güncellemesi hazırlanıyor.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
 
 Güncel teslim dayanağı, kullanıcının **18 Ekim 2026'da doğrudan ilettiği resmî organizasyon duyurusu** ve [etkinlik sitesi](https://game.ktimo.com.tr/)'dir. Duyuruya göre teslim **18 Ekim 12.00-18.15 UTC+3**, takım PIN'iyle yapılır. Video **en fazla 1 dakika**, oyun görüntüsü veya fragman olabilir; **MP4/AVI** olarak oynanabilir **ZIP'ten ayrı yüklenir**. Toplam sahne süresi **video dahil 3 dakika**; sunum performansı puanlanmaz, jüri oyunu izler ve oynar. Public Git kaynak reposu gerekir; web bağlantısı yalnız web build içindir. AI'nin görsel/ses/kod/metin/diğer kategorileri ayrı Kullanıldı/Kullanılmadı seçimi ve ayrıntıyla bildirilir; hazır kaynaklar ayrıca beyan edilir. Yüklemelerden sonra doğrulama ve makbuz kontrol edilir.
 
@@ -21,27 +21,27 @@ Oyuncu önce evi yukarıdan okuyup hangi riske para ve zaman ayıracağını se�
 ## Platform, kurulum ve ilk adım
 
 - Platform: Windows x86-64; çevrimdışı tek oyuncu. Kaynak proje Unity **6000.0.73f1**, Built-In renderer kullanır. Windows 10/11 hedeflenir; minimum donanım ve farklı bilgisayarlarda uyumluluk ölçümü yapılmamıştır.
-- Yerel paket: `TooLateToPanic/Builds/TooLateToPanic-Home-V5.13-r6-20261018-portable.zip`. ZIP'in tamamını bir klasöre çıkarın. `TooLateToPanic.exe` dosyasını yanındaki `TooLateToPanic_Data`, `MonoBleedingEdge` ve diğer dosyalarla birlikte tutarak çalıştırın. Ayrı Unity kurulumu gerekmez.
+- Yerel paket: `TooLateToPanic/Builds/TooLateToPanic-Home-V5.13-r7-20261018-portable.zip`. ZIP'in tamamını bir klasöre çıkarın. `TooLateToPanic.exe` dosyasını yanındaki `TooLateToPanic_Data`, `MonoBleedingEdge` ve diğer dosyalarla birlikte tutarak çalıştırın. Ayrı Unity kurulumu gerekmez.
 - İlk adım: ana menüden **Oyna** normal kampanyayı, **Kısa Oyun** kısa akışı, **Afeti Dene** simülasyonu açar; **Nasıl Oynanır** ve **F1** kontrolleri açıklar. **J** gerçek stok ve önlem durumunu gösteren defteri açar.
 - Normal dalga: **90 sn önlem + 40 sn erzak/FPS =130 sn**, başlangıç bütçesi **1500**. Her dalgada en az **1 su +1 gıda** gerekir. Sel varsa üst panik odasına, diğer afetlerde bodrum sığınağına gerçek geçiş gerekir. **%75 ve üzeri hasar** kayıptır. İlk dalga Deprem, ikinci dalga Sel+Fırtına, daha sonraki dalgalar RNG'dir.
 - Temel kontroller: WASD/oklar hareket, Shift koşu, Space zıplama; E ana etkileşim/aç-kapat, F seçili malzeme/erzak toplama; fare nesne seçimi ve FPS bakış; Tab envanter, J defter, F1 rehber, Esc duraklat/geri. El işlerinde ekranda gösterilen gerçek fare/SPACE/ok girdilerini kullanın; Esc ücretsiz iptal eder. F2 geliştirici seçeneklerinin kullanımı koşuyu skor dışı bırakır.
 
 ## Teslim sürümü ve yayın sınırı
 
-[LATEST](../TooLateToPanic/LATEST-BUILD.json) ve [V5.13-r6 teslim kaydı](../TooLateToPanic/Documentation/HOME-V5.13-CRITICAL-DELIVERY-2026-10-18.md) güncel yerel kimliktir.
+[LATEST](../TooLateToPanic/LATEST-BUILD.json) ve [V5.13-r7 teslim kaydı](../TooLateToPanic/Documentation/HOME-V5.13-CRITICAL-DELIVERY-2026-10-18.md) güncel yerel kimliktir.
 
 | Alan | Güncel değer / açık durum |
 |---|---|
-| EXE | `TooLateToPanic/Builds/Home-V5.13-r6-20261018/TooLateToPanic.exe` |
-| DLL SHA256 | `C81E6105417E5D140ABE2E4D1FC60CD082AEB897E6F81E91CF004362B502136D` |
-| ZIP SHA256 / bayt | `E0537B8C867A5698EDC1DAC6AB1FAF17058905D020FACB733096552CCC752B3A` / 215411180 |
-| Public kaynak / oynanabilir paket | [v0.5.13-r6](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r6) · [ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.13-r6/TooLateToPanic-Home-V5.13-r6-20261018-portable.zip); tam kaynak commit’i `e0255b561ba89c5944a60b8a2e71281a0ae11d17`. [Yayın kaydı](../PUBLICATION.md) |
-| Önceki yayın | v0.5.10-r2 ve eski release/tag/asset'ler korunur |
-| Teknik sonuç | 810 Editor / 405 native API/render / 12 incelenmiş görüntü; ayrıca 291 aynı DLL sunum kontrolü/12 kare, 10 tam ekran gözlemi/1 kare; OS/insan kabulü NOT_RUN |
+| EXE | `TooLateToPanic/Builds/Home-V5.13-r7-20261018/TooLateToPanic.exe` |
+| DLL SHA256 | `813B2C2A5F3CF5035B25067755D0C39225FCE3B8ECE60A23261C530A910F8535` |
+| ZIP SHA256 / bayt | `FC148A55BE2F89ECDD643A38B8709C35E49EDFC32A0B4E9BA6A5AE8D6C110D23` / 215414127 |
+| Public kaynak / oynanabilir paket | Yeni yayın hazırlanıyor; [yayın kaydı](../PUBLICATION.md) kaynak commit'i ve paket kimliğini ayırır |
+| Önceki yayın | v0.5.13-r6 ve eski release/tag/asset'ler korunur |
+| Teknik sonuç | 810 Editor / 425 native API/render / 14 incelenmiş görüntü; ayrıca 291 aynı DLL sunum kontrolü/12 kare, 10 tam ekran gözlemi/1 kare; OS/insan kabulü NOT_RUN |
 | Video /180s prova | Ayrı video önceki R7 paketiyle bağlıdır; bu DLL için video/prova kabulü NOT_RUN |
 | Yarışma ZIP yüklemesi / makbuz | YAPILMADI |
 
-Bu sürümün normal otomatik tam ekran başlangıcı ve küçük yuvarlatılmış nesne tuş balonu Codex ile geliştirildi; son kullanıcı isteğiyle sağ alttaki yinelenen eylem düğmesi kaldırılırken bu balon korundu. Kritik görev/ek hasar, grup RNG/kademe kaybı, gerçek eylem tuşu ve yeni dalga duyurusu kodu; korunan panik odası prosedürel görsel detayları, kamera yönlendirmesi, mobilya sabitleme erişimi, yaşam döngüsü/uyarı kodu, Türkçe etiketleri ve kontrolleri Codex ile geliştirildi. Mevcut Yarkın radyo ve oda ekipmanı kendi provenansıyla kullanıldı; yeni dış model/shader/ses veya sağlayıcı kredisi kullanılmadı. Önceki AI kategorileri ve hazır kaynak lisans/provenansı aşağıdaki tablolarda korunur.
+Bu sürümde kritik görevler ve ilk dalga yönlendirmesinin iki rehber kartı için başlangıçta kompakt kapalı, ortak aç/kapa düğmesi Codex ile geliştirildi. Üst kart açıklama/footer temizliği, pasif F2 Dev Mod / F3 Skip Wave etiketleri ve 310 px sağ hedef menüsü de aynı UI çalışmasıdır; gerçek input/model/maliyet değişmez. Önceki otomatik tam ekran, küçük nesne tuş balonu ve yinelenen sağ alt düğmenin kaldırılması korunur. Kritik görev/ek hasar, grup RNG/kademe kaybı, gerçek eylem tuşu ve yeni dalga duyurusu kodu; korunan panik odası prosedürel görsel detayları, kamera yönlendirmesi, mobilya sabitleme erişimi, yaşam döngüsü/uyarı kodu, Türkçe etiketleri ve kontrolleri Codex ile geliştirildi. Mevcut Yarkın radyo ve oda ekipmanı kendi provenansıyla kullanıldı; yeni dış model/shader/ses veya sağlayıcı kredisi kullanılmadı. Önceki AI kategorileri ve hazır kaynak lisans/provenansı aşağıdaki tablolarda korunur.
 
 ## Hazır kaynak ve üretim beyanı
 

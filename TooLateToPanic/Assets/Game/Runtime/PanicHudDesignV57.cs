@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using UnityEngine;
 
@@ -52,6 +52,8 @@ namespace TooLateToPanic
             string heading = (World.JuryActive ? "HAZIRLIK" : "DALGA " + model.Wave) + " · " + PhaseName(model.Phase);
             Label(new Rect(wave.x + 61, wave.y + 7, wave.width - 77, 24), heading, uiCaptionV57);
             FittedLabel(new Rect(wave.x + 61, wave.y + 32, wave.width - 77, 34), model.ActiveDisasterLabelV54, uiValueV57, MainText, 23);
+            DrawKeycap(new Rect(466f, 20f, 182f, 34f), "F2", "DEV MOD", Brass);
+            DrawKeycap(new Rect(466f, 62f, 182f, 34f), "F3", "SKIP WAVE", Brass);
 
             bool preparing = model.Phase == PanicPhase.Preparing || model.Phase == PanicPhase.Tutorial;
             bool timed = preparing || model.Phase == PanicPhase.Disaster || World.JuryActive;
@@ -191,49 +193,43 @@ namespace TooLateToPanic
             EnsureDesignStylesV57();
             var snapshot = SelectedTargetSnapshotV56;
             if (snapshot == null) return;
-            const float x = 1150, width = 426, inner = 390;
+            const float x = 1266, width = 310, inner = 286;
             const string roofPrefix = "ÇATI · ";
             string targetName = snapshot.IsRoof && snapshot.Label.StartsWith(roofPrefix, StringComparison.OrdinalIgnoreCase) ?
                 snapshot.Label.Substring(roofPrefix.Length).Trim() : snapshot.Label;
             if (selectedTargetTitleStyleV56 == null)
             {
-                selectedTargetTitleStyleV56 = new GUIStyle(uiActionV57) { wordWrap = true, alignment = TextAnchor.UpperLeft };
-                selectedTargetBodyStyleV56 = new GUIStyle(uiMessageV57) { fontSize = 21, wordWrap = true, alignment = TextAnchor.UpperLeft };
+                selectedTargetTitleStyleV56 = new GUIStyle(uiActionV57) { fontSize = 18, wordWrap = true, alignment = TextAnchor.UpperLeft };
+                selectedTargetBodyStyleV56 = new GUIStyle(uiMessageV57) { fontSize = 16, wordWrap = true, alignment = TextAnchor.UpperLeft };
             }
-            float titleHeight = Mathf.Max(34, selectedTargetTitleStyleV56.CalcHeight(new GUIContent(targetName), inner));
-            float hintHeight = string.IsNullOrWhiteSpace(snapshot.Hint) ? 0 : Mathf.Max(27, selectedTargetBodyStyleV56.CalcHeight(new GUIContent(snapshot.Hint), inner));
-            float detailHeight = string.IsNullOrWhiteSpace(snapshot.Detail) ? 0 : Mathf.Max(27, selectedTargetBodyStyleV56.CalcHeight(new GUIContent(snapshot.Detail), inner));
+            float titleHeight = Mathf.Max(23, selectedTargetTitleStyleV56.CalcHeight(new GUIContent(targetName), inner));
+            float detailHeight = string.IsNullOrWhiteSpace(snapshot.Detail) ? 0 : selectedTargetBodyStyleV56.CalcHeight(new GUIContent(snapshot.Detail), inner);
             bool work = !string.IsNullOrEmpty(snapshot.Action), table = work || snapshot.Requirements.Count > 0;
-            string footer = work ? World.Model.FreeMaterials || World.Model.InfiniteBudget ?
-                "Geliştirici seçenekleri maliyetlere uygulanır." : "İş bitince bir kez harcanır. İptal ücretsiz." : "";
+            string action = work ? snapshot.ActionLabel : "";
+            float actionHeight = string.IsNullOrWhiteSpace(action) ? 0 : selectedTargetBodyStyleV56.CalcHeight(new GUIContent(action), inner);
+            string footer = "";
             float footerHeight = footer.Length > 0 ? selectedTargetBodyStyleV56.CalcHeight(new GUIContent(footer), inner) : 0;
-            float height = 16 + 30 + titleHeight + (hintHeight > 0 ? hintHeight + 8 : 0) +
-                (detailHeight > 0 ? detailHeight + 8 : 0) + (table ? 42 + (snapshot.Requirements.Count + (work ? 1 : 0)) * 36 : 0) +
-                (footerHeight > 0 ? footerHeight + 12 : 0) + 16;
+            float height = 20 + titleHeight + (actionHeight > 0 ? actionHeight + 3 : 0) +
+                (detailHeight > 0 ? detailHeight + 4 : 0) + (table ? 9 + (snapshot.Requirements.Count + (work ? 1 : 0)) * 26 : 0) +
+                (footerHeight > 0 ? footerHeight + 6 : 0);
             selectedTargetBoundsV56 = new Rect(x, 112, width, height);
             DesignPanelV57(selectedTargetBoundsV56, Brass);
-            PanicUiSymbolsV57.Draw(new Rect(x + 17, 127, 24, 24), snapshot.IsRoof ? "home" : snapshot.IsSupply ? "bag" : "tools", Brass);
-            Label(new Rect(x + 51, 124, inner - 34, 27), snapshot.IsRoof ? "SEÇİLİ HEDEF · ÇATI" : "SEÇİLİ HEDEF", uiCaptionV57);
-            float y = 158;
-            Label(new Rect(x + 18, y, inner, titleHeight), targetName, selectedTargetTitleStyleV56); y += titleHeight;
-            if (hintHeight > 0) { Label(new Rect(x + 18, y, inner, hintHeight), snapshot.Hint, ColorText(selectedTargetBodyStyleV56, Brass)); y += hintHeight + 8; }
-            if (detailHeight > 0) { Label(new Rect(x + 18, y, inner, detailHeight), snapshot.Detail, selectedTargetBodyStyleV56); y += detailHeight + 8; }
-            var rendered = new StringBuilder("SEÇİLİ HEDEF\n").Append(targetName).Append('\n').Append(snapshot.Hint).Append('\n').Append(snapshot.Detail).Append('\n');
+            float y = 122;
+            Label(new Rect(x + 12, y, inner, titleHeight), targetName, selectedTargetTitleStyleV56); y += titleHeight;
+            if (actionHeight > 0) { Label(new Rect(x + 12, y, inner, actionHeight), action, ColorText(selectedTargetBodyStyleV56, Brass)); y += actionHeight + 3; }
+            if (detailHeight > 0) { Label(new Rect(x + 12, y, inner, detailHeight), snapshot.Detail, selectedTargetBodyStyleV56); y += detailHeight + 4; }
+            var rendered = new StringBuilder(targetName).Append('\n').Append(action).Append('\n').Append(snapshot.Detail).Append('\n');
             if (table)
             {
-                Fill(new Rect(x + 18, y + 2, inner, 1), Line); y += 12;
-                Label(new Rect(x + 18, y, 177, 26), snapshot.IsSupply ? "ÇANTADAKİ İHTİYAÇ" : "GEREKENLER", uiCaptionV57);
-                Label(new Rect(x + 202, y, 57, 26), "VAR", uiCaptionV57);
-                Label(new Rect(x + 260, y, 57, 26), "GEREK", uiCaptionV57);
-                Label(new Rect(x + 324, y, 66, 26), "EKSİK", ColorText(uiCaptionV57, Brass)); y += 30;
+                Fill(new Rect(x + 12, y + 2, inner, 1), Line); y += 9;
                 foreach (var requirement in snapshot.Requirements)
                 {
                     DrawSelectedCostDesignV57(y, requirement.Id, PanicExpedition.DisplayName(requirement.Id), requirement.Owned.ToString(), requirement.Required.ToString(), requirement.Missing, rendered);
-                    y += 36;
+                    y += 26;
                 }
-                if (work) { DrawSelectedCostDesignV57(y, "budget", "Bütçe · $", World.Model.InfiniteBudget ? "∞" : snapshot.BudgetOwned.ToString("N0"), snapshot.BudgetCost.ToString("N0"), snapshot.BudgetMissing, rendered); y += 36; }
+                if (work) { DrawSelectedCostDesignV57(y, "budget", "Bütçe · $", World.Model.InfiniteBudget ? "∞" : snapshot.BudgetOwned.ToString("N0"), snapshot.BudgetCost.ToString("N0"), snapshot.BudgetMissing, rendered); y += 26; }
             }
-            if (footerHeight > 0) Label(new Rect(x + 18, y + 8, inner, footerHeight), footer, selectedTargetBodyStyleV56);
+            if (footerHeight > 0) Label(new Rect(x + 12, y + 6, inner, footerHeight), footer, selectedTargetBodyStyleV56);
             SelectedTargetRenderedTextV56 = rendered.Append(footer).ToString();
             if (Event.current.type == EventType.Repaint && selectedTargetRepaintFrameV56 != Time.frameCount)
             { selectedTargetRepaintFrameV56 = Time.frameCount; SelectedTargetHudDrawFramesV56++; }
@@ -241,21 +237,13 @@ namespace TooLateToPanic
 
         void DrawSelectedCostDesignV57(float y, string key, string name, string owned, string required, int missing, StringBuilder rendered)
         {
-            const float x = 1150;
-            if (PanicUiSymbolsV57.Has(key)) PanicUiSymbolsV57.Draw(new Rect(x + 18, y + 5, 23, 23), key, SoftText);
-            else DrawIcon(new Rect(x + 18, y + 5, 23, 23), key);
-            if (key == "budget" && uiCaptionV57.CalcSize(new GUIContent(owned)).x > 57)
-                FittedLabel(new Rect(x + 48, y + 1, 211, 31), "Bütçe $ " + owned, uiCaptionV57, MainText, 19);
-            else
-            {
-                FittedLabel(new Rect(x + 48, y + 1, 145, 31), name, uiCaptionV57, MainText, 19);
-                FittedLabel(new Rect(x + 202, y + 1, 57, 31), owned, uiCaptionV57, MainText, 19);
-            }
-            FittedLabel(new Rect(x + 260, y + 1, 57, 31), required, uiCaptionV57, MainText, 19);
-            FittedLabel(new Rect(x + 324, y + 1, 66, 31), missing.ToString(), uiCaptionV57, missing > 0 ? Brass : Sea, 19);
-            rendered.Append(name).Append(" · Var ").Append(owned).Append(" / Gerek ").Append(required).Append(" / Eksik ").Append(missing).Append('\n');
+            const float x = 1266;
+            if (PanicUiSymbolsV57.Has(key)) PanicUiSymbolsV57.Draw(new Rect(x + 12, y + 1, 17, 17), key, SoftText);
+            else DrawIcon(new Rect(x + 12, y + 1, 17, 17), key);
+            string row = name + "  " + owned + "/" + required + (missing > 0 ? " · Eksik " + missing : "");
+            FittedLabel(new Rect(x + 35, y, 263, 22), row, selectedTargetBodyStyleV56, missing > 0 ? Brass : Sea, 14);
+            rendered.Append(row).Append('\n');
         }
-
         void DrawButtonDesignV57(Rect rect, string text, bool selected, Color accent, Action action)
         {
             EnsureDesignStylesV57();

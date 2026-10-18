@@ -10,7 +10,7 @@ namespace TooLateToPanic
         public Rect FirstWaveCardBoundsV510 { get; private set; }
         public string FirstWaveRenderedTextV510 { get; private set; } = "";
         public float FirstWaveContentHeightV510 { get; private set; }
-        public bool FirstWaveCardVisibleV510 { get { return firstWaveDrawFrameV510 == Time.frameCount; } }
+        public bool FirstWaveCardVisibleV510 { get { return GuidanceExpandedV513 && firstWaveDrawFrameV510 == Time.frameCount; } }
         public bool FirstWaveCardEligibleV510
         {
             get { return World && World.isActiveAndEnabled && World.FirstWaveOnboardingRequiredV510 && !_paused && !_developerMenuOpen &&
@@ -23,19 +23,19 @@ namespace TooLateToPanic
         void EnsureFirstWaveStylesV510()
         {
             if (firstWaveTitleV510 != null) return;
-            firstWaveTitleV510 = new GUIStyle(_body) { fontSize = 22, fontStyle = FontStyle.Bold, wordWrap = true, alignment = TextAnchor.UpperLeft };
+            firstWaveTitleV510 = new GUIStyle(_body) { fontSize = 19, fontStyle = FontStyle.Bold, wordWrap = true, alignment = TextAnchor.UpperLeft };
             firstWaveTitleV510.normal.textColor = Brass;
-            firstWaveBodyV510 = new GUIStyle(_body) { fontSize = 22, wordWrap = true, alignment = TextAnchor.UpperLeft };
+            firstWaveBodyV510 = new GUIStyle(_body) { fontSize = 17, wordWrap = true, alignment = TextAnchor.UpperLeft };
             firstWaveBodyV510.normal.textColor = MainText;
             firstWaveActionV510 = new GUIStyle(firstWaveBodyV510) { fontStyle = FontStyle.Bold };
             firstWaveActionV510.normal.textColor = Sea;
-            firstWaveSmallV510 = new GUIStyle(firstWaveBodyV510) { fontSize = 19 };
+            firstWaveSmallV510 = new GUIStyle(firstWaveBodyV510) { fontSize = 16 };
             firstWaveSmallV510.normal.textColor = SoftText;
         }
 
         public void DrawFirstWaveOnboardingV510()
         {
-            if (!FirstWaveCardEligibleV510) return;
+            if (!GuidanceExpandedV513 || !FirstWaveCardEligibleV510) return;
             EnsureFirstWaveStylesV510();
             var card = World.FirstWaveOnboardingV510;
             // Work has its real large close-up and existing key hints. Keep the mandatory step visible
@@ -44,7 +44,7 @@ namespace TooLateToPanic
             {
                 var work = World.Expedition.Work;
                 float workY = CriticalRecommendedNextYV513 - 4f;
-                Rect strip = new Rect(24f, workY, 390f, 40f);
+                Rect strip = new Rect(24f, workY, 300f, 40f);
                 FirstWaveCardBoundsV510 = strip;
                 bool anchor = work.Action == "anchorwall" || work.Action == "anchorfloor";
                 bool floorUpgrade = work.Action == "upgrade" && World.Expedition.ActiveFloorWallUpgradeV414 != null;
@@ -54,39 +54,52 @@ namespace TooLateToPanic
                     "2 · SABİTLEME · " + work.CompletedSteps + "/" + work.TotalSteps + " VİDA" : "ÖNLEM · " + work.Label;
                 FirstWaveContentHeightV510 = 28f;
                 Frame(strip, Night, Brass, 1f); Region(strip);
-                FittedLabel(new Rect(36f, workY + 6f, 366f, 28f), FirstWaveRenderedTextV510, firstWaveTitleV510, Brass, 18);
+                FittedLabel(new Rect(36f, workY + 6f, 276f, 28f), FirstWaveRenderedTextV510, firstWaveTitleV510, Brass, 16);
                 firstWaveDrawFrameV510 = Time.frameCount; return;
             }
-            const float x = 24f, width = 390f, inner = 358f;
+            const float x = 24f, width = 300f, inner = 272f;
             float y = CriticalRecommendedNextYV513;
-            string body = card.Body;
-            string place = card.Location;
-            string status = "İLK DALGA · DEPREM\n" +
-                "Malzeme " + (card.GatherComplete ? "✓" : "·") + "  Sabitleme " + (card.AnchorComplete ? "✓" : "·") +
-                "  Tesisat " + World.Model.UtilitySafety.CompletedCount + "/3\n" +
-                "Su " + (card.WaterComplete ? "1/1" : "0/1") + "  Gıda " + (card.FoodComplete ? "1/1" : "0/1") +
-                "  Sığınak " + (card.ShelterComplete ? "✓" : "·");
-            float titleH = firstWaveTitleV510.CalcHeight(new GUIContent(card.Title), inner);
+            string title, body, action;
+            CompactFirstWaveCopyV510(card, out title, out body, out action);
+            string place = (card.Location ?? "").Split('\n')[0];
+            float titleH = firstWaveTitleV510.CalcHeight(new GUIContent(title), inner);
             float bodyH = firstWaveBodyV510.CalcHeight(new GUIContent(body), inner);
-            float placeH = place.Length > 0 ? firstWaveSmallV510.CalcHeight(new GUIContent(place), inner) + 7f : 0f;
-            float reasonH = card.Reason.Length > 0 ? firstWaveSmallV510.CalcHeight(new GUIContent(card.Reason), inner) + 7f : 0f;
-            float actionH = firstWaveActionV510.CalcHeight(new GUIContent(card.Action), inner);
-            float statusH = firstWaveSmallV510.CalcHeight(new GUIContent(status), inner);
-            float height = 34f + titleH + bodyH + placeH + reasonH + actionH + statusH + 26f;
+            float placeH = place.Length > 0 ? firstWaveSmallV510.CalcHeight(new GUIContent(place), inner) + 6f : 0f;
+            float actionH = firstWaveActionV510.CalcHeight(new GUIContent(action), inner);
+            float height = 36f + titleH + bodyH + placeH + actionH;
             Rect box = new Rect(x, y, width, height);
             FirstWaveCardBoundsV510 = box; FirstWaveContentHeightV510 = height - 24f;
-            Frame(box, Night, Brass, 2f); Region(box);
-            Fill(new Rect(x + 1f, y + 12f, 3f, height - 24f), Brass);
+            Frame(box, Night, Brass, 1f); Region(box);
             float line = y + 12f;
-            Label(new Rect(x + 16f, line, inner, titleH), card.Title, firstWaveTitleV510); line += titleH + 10f;
-            Label(new Rect(x + 16f, line, inner, bodyH), body, firstWaveBodyV510); line += bodyH + 8f;
-            if (placeH > 0f) { Label(new Rect(x + 16f, line, inner, placeH - 7f), place, firstWaveSmallV510); line += placeH; }
-            if (reasonH > 0f) { Label(new Rect(x + 16f, line, inner, reasonH - 7f), card.Reason, firstWaveSmallV510); line += reasonH; }
-            Label(new Rect(x + 16f, line, inner, actionH), card.Action, firstWaveActionV510); line += actionH + 9f;
-            Fill(new Rect(x + 16f, line, inner, 1f), Line); line += 8f;
-            Label(new Rect(x + 16f, line, inner, statusH), status, firstWaveSmallV510);
-            FirstWaveRenderedTextV510 = card.Title + "\n" + body + "\n" + place + "\n" + card.Reason + "\n" + card.Action + "\n" + status;
+            Label(new Rect(x + 14f, line, inner, titleH), title, firstWaveTitleV510); line += titleH + 6f;
+            Label(new Rect(x + 14f, line, inner, bodyH), body, firstWaveBodyV510); line += bodyH + 6f;
+            if (placeH > 0f) { Label(new Rect(x + 14f, line, inner, placeH - 6f), place, firstWaveSmallV510); line += placeH; }
+            Label(new Rect(x + 14f, line, inner, actionH), action, firstWaveActionV510);
+            FirstWaveRenderedTextV510 = title + "\n" + body + "\n" + place + "\n" + action;
             firstWaveDrawFrameV510 = Time.frameCount;
+        }
+        void CompactFirstWaveCopyV510(PanicFirstWaveSnapshotV510 card, out string title, out string body, out string action)
+        {
+            title = card.Title; action = card.Action;
+            switch (card.Step)
+            {
+                case PanicFirstWaveStepV510.Materials:
+                    title = "1 · MALZEME TOPLA"; body = "Parlayan dolaba yaklaş ve aç."; action = "E · Malzeme al"; break;
+                case PanicFirstWaveStepV510.Anchor:
+                    title = "2 · MOBİLYAYI SABİTLE"; body = "İki vidayı fareyle sırayla sık."; action = "1 · Sabitle"; break;
+                case PanicFirstWaveStepV510.Utilities:
+                    title = "3 · TESİSATI KAPAT"; body = "Vanaya veya şaltere yaklaş."; action = "E · Kapat"; break;
+                case PanicFirstWaveStepV510.Water:
+                    title = "4 · SU AL"; body = "İşareti suya getir ve al."; action = "E / F · 1 su al"; break;
+                case PanicFirstWaveStepV510.Food:
+                    title = "5 · GIDA AL"; body = "İşareti gıdaya getir ve al."; action = "E / F · 1 gıda al"; break;
+                case PanicFirstWaveStepV510.Shelter:
+                    title = "6 · SIĞINAĞA GİR"; body = World.Model.HasActiveDisasterV54(DisasterType.Flood) ? "Üst kattaki panik odasına git." : "Bodrumdaki sığınağa git."; action = "E · İçeri gir"; break;
+                case PanicFirstWaveStepV510.Sheltered:
+                    title = "SIĞINAKTASIN"; body = "Afetin geçmesini bekle."; action = "Giriş tamamlandı"; break;
+                default:
+                    title = "ÖNLEMLERİ GÖZDEN GEÇİR"; body = "Kalan zamanda evi güçlendir."; action = "J · Defteri aç"; break;
+            }
         }
     }
 }
