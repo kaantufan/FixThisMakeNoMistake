@@ -293,6 +293,22 @@ namespace TooLateToPanic
             MeshEmitter(ceiling, EmitterMesh(s, new[] { new Vector3(-5, 2.72f, 3.7f), new Vector3(5, 2.7f, 3.5f), new Vector3(-5, 5.9f, -3), new Vector3(4, 5.9f, 3) }, 1.6f));
             var cm = ceiling.main; cm.startSpeed = 0; cm.gravityModifier = .12f;
             SetGradient(ceiling, new Color(.67f, .63f, .53f, .15f), new Color(.58f, .54f, .47f, .45f), new Color(.48f, .44f, .4f, 0));
+
+            // --- Milestone 1 [P0.1] Exterior Visuals ---
+            var quakeVisuals = new GameObject("QuakeVisuals");
+            quakeVisuals.transform.SetParent(s.transform, false);
+            s.QuakeVisualsObject = quakeVisuals;
+
+            CreateRoofEavesDust(s, soft, quakeVisuals.transform);
+            CreateFacadeDust(s, soft, quakeVisuals.transform);
+            CreateExteriorTerracottaDebris(s, 48, quakeVisuals.transform);
+
+            var teardown = quakeVisuals.AddComponent<PanicQuakeVisualsTeardown>();
+            teardown.State = s;
+            teardown.EavesMesh = s.RoofEavesDustMesh;
+            teardown.FacadeMesh = s.FacadeDustMesh;
+            teardown.DebrisMesh = s.ExteriorDebrisMesh;
+            teardown.DebrisMaterial = s.ExteriorDebrisMaterial;
         }
 
         static void AnimateQuake(PanicDisasterArtState s)
@@ -301,10 +317,243 @@ namespace TooLateToPanic
             // A few localized impacts, once per event. Rubble then stays where it landed.
             while (s.DustBurst < 6 && s.Clock >= QuakeStarts[s.DustBurst])
             {
-                if(s.Dust)s.Dust.Emit(Mathf.RoundToInt((34+s.DustBurst*3)*s.PresentationScaleV52));
+                if (s.Dust) s.Dust.Emit(Mathf.RoundToInt((34 + s.DustBurst * 3) * s.PresentationScaleV52));
+                if (s.RoofEavesDust) s.RoofEavesDust.Emit(Mathf.RoundToInt(32 * s.PresentationScaleV52));
+                if (s.FacadeDust) s.FacadeDust.Emit(Mathf.RoundToInt(24 * s.PresentationScaleV52));
                 s.DustBurst++;
             }
             AnimateDebris(s, s.Clock, 0, 0);
+            AnimateExteriorTerracottaDebris(s, s.Clock);
+        }
+
+        static void CreateRoofEavesDust(PanicDisasterArtState s, Material soft, Transform parent)
+        {
+            // 10 roof-eaves plume points along x = ±8.8m, z = ±6.2m, y = 6.2m..7.8m
+            var eavesSites = new Vector3[]
+            {
+                new Vector3(-8.80f, 6.25f, -6.20f),
+                new Vector3(-4.40f, 6.40f, -6.25f),
+                new Vector3( 0.00f, 6.42f, -6.25f),
+                new Vector3( 4.40f, 6.40f, -6.25f),
+                new Vector3( 8.80f, 6.25f, -6.20f),
+                new Vector3( 8.80f, 7.05f, -3.10f),
+                new Vector3( 8.80f, 7.80f,  0.00f),
+                new Vector3( 8.80f, 7.05f,  3.10f),
+                new Vector3(-8.80f, 7.80f,  0.00f),
+                new Vector3( 0.00f, 6.40f,  6.25f)
+            };
+
+            var ps = Particles(s, "Exterior roof-eaves dust plumes", soft, 360, 48, 2.2f, 4.5f, 0.45f, 1.15f);
+            if (parent) ps.transform.SetParent(parent, false);
+            var mesh = EmitterMesh(s, eavesSites, 0.45f);
+            s.RoofEavesDustMesh = mesh;
+            MeshEmitter(ps, mesh);
+            var main = ps.main;
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.25f, 0.65f);
+            main.gravityModifier = -0.012f;
+
+            var vel = ps.velocityOverLifetime;
+            vel.enabled = true;
+            vel.x = new ParticleSystem.MinMaxCurve(-0.35f, 0.35f);
+            vel.y = new ParticleSystem.MinMaxCurve(0.12f, 0.38f);
+            vel.z = new ParticleSystem.MinMaxCurve(-0.45f, 0.25f);
+
+            AddNoise(ps, 0.32f, 0.55f);
+            Grow(ps, 0.5f, 2.6f);
+
+            SetGradient(ps,
+                new Color(0.72f, 0.68f, 0.59f, 0.00f),
+                new Color(0.68f, 0.64f, 0.56f, 0.42f),
+                new Color(0.55f, 0.52f, 0.46f, 0.00f));
+
+            var r = ps.GetComponent<ParticleSystemRenderer>();
+            r.maxParticleSize = 0.35f;
+
+            s.RoofEavesDust = ps;
+        }
+
+        static void CreateFacadeDust(PanicDisasterArtState s, Material soft, Transform parent)
+        {
+            var verts = new List<Vector3>();
+            var tr = new List<int>();
+            var uv = new List<Vector2>();
+
+            System.Action<Vector3, float, float, bool> addVerticalPatch = (center, width, height, isAlongZ) =>
+            {
+                int vStart = verts.Count;
+                float hw = width * 0.5f, hh = height * 0.5f;
+                if (!isAlongZ)
+                {
+                    verts.Add(center + new Vector3(-hw, -hh, 0));
+                    verts.Add(center + new Vector3(-hw,  hh, 0));
+                    verts.Add(center + new Vector3( hw,  hh, 0));
+                    verts.Add(center + new Vector3( hw, -hh, 0));
+                }
+                else
+                {
+                    verts.Add(center + new Vector3(0, -hh, -hw));
+                    verts.Add(center + new Vector3(0,  hh, -hw));
+                    verts.Add(center + new Vector3(0,  hh,  hw));
+                    verts.Add(center + new Vector3(0, -hh,  hw));
+                }
+                uv.Add(new Vector2(0, 0)); uv.Add(new Vector2(0, 1));
+                uv.Add(new Vector2(1, 1)); uv.Add(new Vector2(1, 0));
+                tr.Add(vStart); tr.Add(vStart + 1); tr.Add(vStart + 2);
+                tr.Add(vStart); tr.Add(vStart + 2); tr.Add(vStart + 3);
+            };
+
+            addVerticalPatch(new Vector3(-5.20f, 3.50f, -6.10f), 3.2f, 2.8f, false);
+            addVerticalPatch(new Vector3( 0.00f, 3.60f, -6.10f), 3.4f, 2.8f, false);
+            addVerticalPatch(new Vector3( 5.20f, 3.50f, -6.10f), 3.2f, 2.8f, false);
+            addVerticalPatch(new Vector3( 8.25f, 3.50f, -2.80f), 3.0f, 2.8f, true);
+            addVerticalPatch(new Vector3( 8.25f, 3.50f,  2.80f), 3.0f, 2.8f, true);
+            addVerticalPatch(new Vector3(-8.25f, 3.50f,  0.00f), 3.8f, 2.8f, true);
+
+            var patchMesh = new Mesh { name = "Facade vertical dust emitter patches" };
+            patchMesh.SetVertices(verts);
+            patchMesh.SetTriangles(tr, 0);
+            patchMesh.SetUVs(0, uv);
+            patchMesh.RecalculateNormals();
+            patchMesh.RecalculateBounds();
+            s.Owned.Add(patchMesh);
+            s.FacadeDustMesh = patchMesh;
+
+            var ps = Particles(s, "Exterior facade dust sheets", soft, 320, 42, 1.8f, 3.8f, 0.65f, 1.45f);
+            if (parent) ps.transform.SetParent(parent, false);
+            MeshEmitter(ps, patchMesh);
+            var main = ps.main;
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.15f, 0.45f);
+            main.gravityModifier = 0.085f;
+
+            var vel = ps.velocityOverLifetime;
+            vel.enabled = true;
+            vel.x = new ParticleSystem.MinMaxCurve(-0.25f, 0.25f);
+            vel.y = new ParticleSystem.MinMaxCurve(-0.65f, -0.22f);
+            vel.z = new ParticleSystem.MinMaxCurve(-0.45f, -0.10f);
+
+            AddNoise(ps, 0.26f, 0.75f);
+            Grow(ps, 0.6f, 2.2f);
+
+            SetGradient(ps,
+                new Color(0.74f, 0.70f, 0.63f, 0.00f),
+                new Color(0.70f, 0.66f, 0.58f, 0.32f),
+                new Color(0.62f, 0.58f, 0.52f, 0.00f));
+
+            var r = ps.GetComponent<ParticleSystemRenderer>();
+            r.maxParticleSize = 0.35f;
+
+            s.FacadeDust = ps;
+        }
+
+        static void CreateExteriorTerracottaDebris(PanicDisasterArtState s, int count, Transform parent)
+        {
+            s.ExteriorDebris = new PanicDisasterArtState.DebrisPiece[count];
+            s.ExteriorDebrisVertices = new Vector3[count * 12];
+            s.ExteriorDebrisNormals = new Vector3[count * 12];
+            var triangles = new int[count * 12];
+            for (int i = 0; i < triangles.Length; i++) triangles[i] = i;
+
+            for (int i = 0; i < count; i++)
+            {
+                var d = new PanicDisasterArtState.DebrisPiece();
+                float xSpan = -8.0f + Hash(i * 7 + 1) * 16.0f;
+                float yEave = 6.40f + Hash(i * 13 + 2) * 0.35f;
+                float zEave = -6.25f - Hash(i * 3 + 4) * 0.20f;
+
+                d.Origin = new Vector3(xSpan, yEave, zEave);
+                d.Floor = 0.0f;
+
+                float w = 0.14f + Hash(i * 17 + 5) * 0.18f;
+                float h = 0.03f + Hash(i * 23 + 3) * 0.035f;
+                float l = 0.12f + Hash(i * 19 + 7) * 0.16f;
+                d.Scale = new Vector3(w, h, l);
+
+                float vx = (Hash(i * 31 + 4) - 0.5f) * 1.50f;
+                float vy = 0.25f + Hash(i * 37) * 0.65f;
+                float vz = -0.40f - Hash(i * 29 + 1) * 0.75f;
+                d.Velocity = new Vector3(vx, vy, vz);
+
+                d.Delay = 0.5f + Hash(i * 41 + 9) * 5.2f;
+                d.Rotation = new Vector3(Hash(i * 43) * 180f, Hash(i * 47) * 360f, Hash(i * 53) * 180f);
+
+                s.ExteriorDebris[i] = d;
+            }
+
+            var terracottaColor = new Color(0.659f, 0.294f, 0.192f);
+            var mat = Opaque(s, "Baked Terracotta roof tiles (#A84B31)", terracottaColor, 0.18f);
+            s.ExteriorDebrisMaterial = mat;
+
+            s.ExteriorDebrisMesh = MeshObject(s, "Batched falling exterior terracotta tile debris", mat, s.ExteriorDebrisVertices, triangles, null);
+            if (parent && s.LastObject) s.LastObject.transform.SetParent(parent, false);
+            s.ExteriorDebrisObject = s.LastObject;
+            s.ExteriorDebrisMesh.normals = s.ExteriorDebrisNormals;
+            s.ExteriorDebrisMesh.MarkDynamic();
+            s.ExteriorDebrisMesh.bounds = new Bounds(new Vector3(0, 3.2f, -7.5f), new Vector3(20f, 10f, 8f));
+        }
+
+        static void AnimateExteriorTerracottaDebris(PanicDisasterArtState s, float clock)
+        {
+            if (s.ExteriorDebris == null || s.ExteriorDebris.Length == 0 || !s.ExteriorDebrisMesh || !s.ExteriorDebrisObject) return;
+
+            for (int i = 0; i < s.ExteriorDebris.Length; i++)
+            {
+                var d = s.ExteriorDebris[i];
+                Vector3 p;
+                Quaternion q;
+
+                float t = Mathf.Max(0, clock - d.Delay);
+                float floor = d.Floor + d.Scale.y * 0.33f + 0.02f;
+
+                float fall = (d.Velocity.y + Mathf.Sqrt(d.Velocity.y * d.Velocity.y + 15.6f * (d.Origin.y - floor))) / 7.8f;
+                float travel = Mathf.Min(t, fall + 0.25f);
+
+                p = d.Origin + new Vector3(d.Velocity.x * travel, 0, d.Velocity.z * travel);
+                p.z = Mathf.Clamp(p.z, -8.45f, -6.55f);
+
+                if (t < fall)
+                {
+                    p.y = d.Origin.y + d.Velocity.y * t - 3.9f * t * t;
+                }
+                else
+                {
+                    float bounceProgress = (t - fall) / 0.25f;
+                    float bounceHeight = (bounceProgress < 1.0f ? Mathf.Sin(bounceProgress * Mathf.PI) * 0.11f : 0f);
+                    p.y = floor + bounceHeight;
+                }
+
+                if (clock < d.Delay) p.y = -2.0f;
+
+                float spinRate = travel * (120f + Hash(i * 59) * 80f);
+                q = Quaternion.Euler(d.Rotation + new Vector3(spinRate * 1.2f, spinRate * 0.9f, spinRate * 1.4f));
+
+                Vector3 a = new Vector3(-0.50f, -0.35f, -0.42f);
+                Vector3 b = new Vector3( 0.50f, -0.28f, -0.40f);
+                Vector3 c = new Vector3( 0.35f, -0.28f,  0.50f);
+                Vector3 top = new Vector3(-0.12f, 0.65f, 0.03f);
+
+                int v = i * 12;
+                WriteFaceExterior(s, v,     p, q, d.Scale, a, top, b);
+                WriteFaceExterior(s, v + 3, p, q, d.Scale, b, top, c);
+                WriteFaceExterior(s, v + 6, p, q, d.Scale, c, top, a);
+                WriteFaceExterior(s, v + 9, p, q, d.Scale, a, b,   c);
+            }
+
+            s.ExteriorDebrisMesh.vertices = s.ExteriorDebrisVertices;
+            s.ExteriorDebrisMesh.normals = s.ExteriorDebrisNormals;
+        }
+
+        static void WriteFaceExterior(PanicDisasterArtState s, int v, Vector3 p, Quaternion q, Vector3 scale, Vector3 a, Vector3 b, Vector3 c)
+        {
+            a = q * Vector3.Scale(a, scale);
+            b = q * Vector3.Scale(b, scale);
+            c = q * Vector3.Scale(c, scale);
+            Vector3 normal = Vector3.Cross(b - a, c - a).normalized;
+            s.ExteriorDebrisVertices[v] = p + a;
+            s.ExteriorDebrisVertices[v + 1] = p + b;
+            s.ExteriorDebrisVertices[v + 2] = p + c;
+            s.ExteriorDebrisNormals[v] = normal;
+            s.ExteriorDebrisNormals[v + 1] = normal;
+            s.ExteriorDebrisNormals[v + 2] = normal;
         }
 
         static void CreateFire(PanicDisasterArtState s, Texture2D softTexture)
@@ -785,6 +1034,7 @@ namespace TooLateToPanic
 
     // Per-instance state also owns every runtime-created material, texture and mesh.
     // No Update: only the host's Animate API drives mesh/light/emission changes.
+    [ExecuteAlways]
     public sealed class PanicDisasterArtState : MonoBehaviour
     {
         public struct Emitter { public ParticleSystem System; public float Rate, SizeMin, SizeMax; }
@@ -793,9 +1043,9 @@ namespace TooLateToPanic
         public readonly List<Object> Owned = new List<Object>(20);
         public readonly List<Emitter> Emitters = new List<Emitter>(10);
         public float Clock, LastAge, Strength, Peak;
-        public float PresentationScaleV52=1f,PeakPresentationStrengthV52,EmissionRateV52,WaterLevelV52,WaterPeakHeightV52,FlamePeakHeightV52;
-        public Mesh WaterMesh, FoamMesh, DebrisMesh, Cracks,FlameMesh;
-        public Vector3[] FlameSites,FlameVertices;public Color[] FlameColors;
+        public float PresentationScaleV52 = 1f, PeakPresentationStrengthV52, EmissionRateV52, WaterLevelV52, WaterPeakHeightV52, FlamePeakHeightV52;
+        public Mesh WaterMesh, FoamMesh, DebrisMesh, Cracks, FlameMesh;
+        public Vector3[] FlameSites, FlameVertices; public Color[] FlameColors;
         public Material WaterMaterial;
         public Vector3[] WaterVertices, WaterNormals, FoamVertices, DebrisVertices, DebrisNormals;
         public Color[] FoamColors;
@@ -804,10 +1054,80 @@ namespace TooLateToPanic
         public Light[] FireLights;
         public GameObject CrackObject, LastObject;
         public int DustBurst;
+
+        // --- Milestone 1 [P0.1] Exterior Earthquake Visuals ---
+        public GameObject QuakeVisualsObject;
+        public ParticleSystem RoofEavesDust;
+        public ParticleSystem FacadeDust;
+        public Mesh RoofEavesDustMesh;
+        public Mesh FacadeDustMesh;
+        public Mesh ExteriorDebrisMesh;
+        public Material ExteriorDebrisMaterial;
+        public GameObject ExteriorDebrisObject;
+        public Vector3[] ExteriorDebrisVertices;
+        public Vector3[] ExteriorDebrisNormals;
+        public DebrisPiece[] ExteriorDebris;
+
+        public static void Release(Object value)
+        {
+            if (!value) return;
+            if (Application.isPlaying) Destroy(value);
+            else DestroyImmediate(value);
+        }
+
         void OnDestroy()
         {
-            for (int i = 0; i < Owned.Count; i++) if (Owned[i]) Destroy(Owned[i]);
+            for (int i = 0; i < Owned.Count; i++)
+            {
+                if (Owned[i]) Release(Owned[i]);
+            }
             Owned.Clear();
+        }
+    }
+
+    [ExecuteAlways]
+    public sealed class PanicQuakeVisualsTeardown : MonoBehaviour
+    {
+        public PanicDisasterArtState State;
+        public Mesh EavesMesh;
+        public Mesh FacadeMesh;
+        public Mesh DebrisMesh;
+        public Material DebrisMaterial;
+
+        void OnDestroy()
+        {
+            if (State != null && State.Owned != null)
+            {
+                if (EavesMesh) State.Owned.Remove(EavesMesh);
+                if (FacadeMesh) State.Owned.Remove(FacadeMesh);
+                if (DebrisMesh) State.Owned.Remove(DebrisMesh);
+                if (DebrisMaterial) State.Owned.Remove(DebrisMaterial);
+            }
+
+            PanicDisasterArtState.Release(EavesMesh);
+            PanicDisasterArtState.Release(FacadeMesh);
+            PanicDisasterArtState.Release(DebrisMesh);
+            PanicDisasterArtState.Release(DebrisMaterial);
+
+            if (State != null)
+            {
+                if (State.RoofEavesDustMesh == EavesMesh) State.RoofEavesDustMesh = null;
+                if (State.FacadeDustMesh == FacadeMesh) State.FacadeDustMesh = null;
+                if (State.ExteriorDebrisMesh == DebrisMesh) State.ExteriorDebrisMesh = null;
+                if (State.ExteriorDebrisMaterial == DebrisMaterial) State.ExteriorDebrisMaterial = null;
+                State.ExteriorDebrisObject = null;
+                State.RoofEavesDust = null;
+                State.FacadeDust = null;
+                if (State.QuakeVisualsObject == gameObject) State.QuakeVisualsObject = null;
+
+                if (State.Emitters != null)
+                {
+                    for (int i = State.Emitters.Count - 1; i >= 0; i--)
+                    {
+                        if (!State.Emitters[i].System) State.Emitters.RemoveAt(i);
+                    }
+                }
+            }
         }
     }
 }

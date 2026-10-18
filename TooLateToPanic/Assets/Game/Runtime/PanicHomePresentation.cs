@@ -44,7 +44,7 @@ namespace TooLateToPanic
         Vector3 selectedPickupOrigin;
         float selectedPickupAge, quakePresentationAge;
         int heroCaptureFrame;
-        bool heroCapturePending;
+        bool heroCapturePending, quakeStructuralShakeActive;
         string presentationHeroA = "bookshelf", presentationHeroB = "fridge";
         PanicPresentationAudio presentationAudio;
 
@@ -138,6 +138,8 @@ namespace TooLateToPanic
             return player.position + Vector3.up * 1.15f - player.forward * .15f;
         }
 
+        void UpdatePresentation(float dt) => TickPresentation(dt);
+
         void TickPresentation(float dt)
         {
             bool suspended = InputLocked || (hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
@@ -175,7 +177,7 @@ namespace TooLateToPanic
                 reveal.Target.localScale = reveal.Scale * scale;
                 if (t >= 1f) { reveal.Target.localScale = reveal.Scale; hardwareReveals.RemoveAt(i); }
             }
-            if (Model.Phase == PanicPhase.Disaster && Model.HasActiveDisasterV54(DisasterType.Earthquake))
+            if (Model != null && Model.Phase == PanicPhase.Disaster && (Model.Disaster == DisasterType.Earthquake || Model.HasActiveDisasterV54(DisasterType.Earthquake)))
             {
                 quakePresentationAge += dt;
                 // SyncVisuals runs after HomeLife in World.Update. Capture on the next frame
@@ -189,6 +191,8 @@ namespace TooLateToPanic
                 float onset = Mathf.SmoothStep(0f, 1f, quakePresentationAge / .9f);
                 float progress = JuryActive ? Mathf.Clamp01(quakePresentationAge / 8f) : CinematicProgress;
                 float finish = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(.78f, 1f, progress));
+                float envelope = onset * finish;
+                ApplyStructuralQuakeShake(quakePresentationAge, envelope);
                 foreach (var reaction in presentationHeroes)
                 {
                     if (!reaction.Root) continue;
@@ -206,6 +210,96 @@ namespace TooLateToPanic
                     }
                 }
             }
+            else if (quakeStructuralShakeActive)
+            {
+                ResetStructuralQuakeShake();
+            }
+        }
+
+        static Vector3 GetFloorRestingLocalPosition(GameObject go, int index)
+        {
+            if (!go) return Vector3.zero;
+            if (go.name.StartsWith("House floor", System.StringComparison.Ordinal))
+                return new Vector3(0f, (index - 1) * 3.2f, 0f);
+            return Vector3.zero;
+        }
+
+        void ApplyStructuralQuakeShake(float age, float envelope)
+        {
+            if (floorVisuals == null || floorVisuals.Count < 3) return;
+
+            quakeStructuralShakeActive = true;
+
+            // Seismic wave synthesis functions:
+            float w1_0 = Mathf.Sin(age * 15.2f) * .70f + Mathf.Sin(age * 21.7f) * .30f;
+            float w2_0 = Mathf.Cos(age * 13.1f) * .65f + Mathf.Sin(age * 27.4f) * .35f;
+            float p_0 = Mathf.Sin(age * 31.4f) * Mathf.Abs(Mathf.Sin(age * 7.5f));
+
+            // Floor 0 (Basement, delay 0.0s)
+            if (floorVisuals[0])
+            {
+                Vector3 rest0 = GetFloorRestingLocalPosition(floorVisuals[0], 0);
+                Vector3 offset0 = new Vector3(w1_0 * .05f, p_0 * .025f, w2_0 * .045f) * envelope;
+                floorVisuals[0].transform.localPosition = rest0 + offset0;
+                floorVisuals[0].transform.localRotation = Quaternion.Euler(w2_0 * .35f * envelope, w1_0 * .20f * envelope, -w1_0 * .40f * envelope);
+            }
+
+            // Floor 1 (Ground Floor, phase lag 0.05s)
+            float t1 = age - .05f;
+            float w1_1 = Mathf.Sin(t1 * 15.2f) * .70f + Mathf.Sin(t1 * 21.7f) * .30f;
+            float w2_1 = Mathf.Cos(t1 * 13.1f) * .65f + Mathf.Sin(t1 * 27.4f) * .35f;
+            float p_1 = Mathf.Sin(t1 * 31.4f) * Mathf.Abs(Mathf.Sin(t1 * 7.5f));
+            if (floorVisuals[1])
+            {
+                Vector3 rest1 = GetFloorRestingLocalPosition(floorVisuals[1], 1);
+                Vector3 offset1 = new Vector3(w1_1 * .08f, p_1 * .030f, w2_1 * .070f) * envelope;
+                floorVisuals[1].transform.localPosition = rest1 + offset1;
+                floorVisuals[1].transform.localRotation = Quaternion.Euler(w2_1 * .55f * envelope, w1_1 * .30f * envelope, -w1_1 * .60f * envelope);
+            }
+
+            // Floor 2 (Upper Floor, phase lag 0.18s)
+            float t2 = age - .18f;
+            float w1_2 = Mathf.Sin(t2 * 15.2f) * .70f + Mathf.Sin(t2 * 21.7f) * .30f;
+            float w2_2 = Mathf.Cos(t2 * 13.1f) * .65f + Mathf.Sin(t2 * 27.4f) * .35f;
+            float p_2 = Mathf.Sin(t2 * 31.4f) * Mathf.Abs(Mathf.Sin(t2 * 7.5f));
+            if (floorVisuals[2])
+            {
+                Vector3 rest2 = GetFloorRestingLocalPosition(floorVisuals[2], 2);
+                Vector3 offset2 = new Vector3(w1_2 * .14f, p_2 * .038f, w2_2 * .120f) * envelope;
+                floorVisuals[2].transform.localPosition = rest2 + offset2;
+                floorVisuals[2].transform.localRotation = Quaternion.Euler(w2_2 * 1.05f * envelope, w1_2 * .55f * envelope, -w1_2 * 1.15f * envelope);
+            }
+
+            // Roof (Exterior Roof, phase lag 0.32s)
+            if (roof)
+            {
+                float t3 = age - .32f;
+                float w1_3 = Mathf.Sin(t3 * 15.2f) * .70f + Mathf.Sin(t3 * 21.7f) * .30f;
+                float w2_3 = Mathf.Cos(t3 * 13.1f) * .65f + Mathf.Sin(t3 * 27.4f) * .35f;
+                float p_3 = Mathf.Sin(t3 * 31.4f) * Mathf.Abs(Mathf.Sin(t3 * 7.5f));
+                Vector3 offset3 = new Vector3(w1_3 * .19f, p_3 * .045f, w2_3 * .160f) * envelope;
+                roof.transform.localPosition = offset3;
+                roof.transform.localRotation = Quaternion.Euler(w2_3 * 1.40f * envelope, w1_3 * .75f * envelope, -w1_3 * 1.50f * envelope);
+            }
+        }
+
+        void ResetStructuralQuakeShake()
+        {
+            if (floorVisuals != null)
+            {
+                for (int i = 0; i < floorVisuals.Count; i++)
+                {
+                    if (!floorVisuals[i]) continue;
+                    floorVisuals[i].transform.localPosition = GetFloorRestingLocalPosition(floorVisuals[i], i);
+                    floorVisuals[i].transform.localRotation = Quaternion.identity;
+                }
+            }
+            if (roof)
+            {
+                roof.transform.localPosition = Vector3.zero;
+                roof.transform.localRotation = Quaternion.identity;
+            }
+            quakeStructuralShakeActive = false;
         }
 
         // ROOT HOOK: call once at the end of RebuildHardware(item, go), after actual geometry exists.
@@ -223,9 +317,10 @@ namespace TooLateToPanic
         void OnPresentationPhase(PanicPhase phase, PanicPhase from)
         {
             RestoreHeroReactions();
+            ResetStructuralQuakeShake();
             if (presentationAudio) presentationAudio.CancelSpeech();
             if (phase == PanicPhase.Title) { ResetPresentation(); return; }
-            if (phase == PanicPhase.Disaster && Model.HasActiveDisasterV54(DisasterType.Earthquake))
+            if (phase == PanicPhase.Disaster && Model != null && (Model.Disaster == DisasterType.Earthquake || Model.HasActiveDisasterV54(DisasterType.Earthquake)))
             {
                 quakePresentationAge = 0f;
                 heroCaptureFrame = Time.frameCount;
@@ -241,6 +336,7 @@ namespace TooLateToPanic
         void CaptureHeroReaction(string id)
         {
             if (string.IsNullOrEmpty(id) || !items.TryGetValue(id, out var go) || !go) return;
+            if (Model == null || Model.Items == null) return;
             var item = Model.Items.Find(value => value.Id == id);
             if (item == null || !item.Installed) return;
             var reaction = new HeroReaction { Root = go.transform, Anchored = item.Anchored, ResolvedDamage = item.Damage };
@@ -267,6 +363,7 @@ namespace TooLateToPanic
                 foreach (var pose in reaction.Poses)
                     if (pose.Target) { pose.Target.localPosition = pose.Position; pose.Target.localRotation = pose.Rotation; }
             presentationHeroes.Clear();
+            ResetStructuralQuakeShake();
         }
 
         void ClearPickupFlights()
@@ -280,10 +377,14 @@ namespace TooLateToPanic
             ClearPickupFocus();
             ClearPickupFlights();
             RestoreHeroReactions();
+            ResetStructuralQuakeShake();
             foreach (var reveal in hardwareReveals) if (reveal.Target) reveal.Target.localScale = reveal.Scale;
             hardwareReveals.Clear();
             presentationAnchored.Clear();
-            if (Model != null) foreach (var item in Model.Items) presentationAnchored[item.Id] = item.Anchored;
+            if (Model != null && Model.Items != null)
+            {
+                foreach (var item in Model.Items) presentationAnchored[item.Id] = item.Anchored;
+            }
             if (presentationAudio) presentationAudio.ResetRun();
             ClearInteractionOutline();
         }

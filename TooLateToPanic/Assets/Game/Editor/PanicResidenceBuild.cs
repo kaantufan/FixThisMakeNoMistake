@@ -31,6 +31,71 @@ namespace TooLateToPanic
             "laundrybasket", "pendantlamp", "bunkerhatch", "bookshelf", "table", "tvstand", "toolbox", "cabinet", "kitchencabinet", "locker", "bagstation", "medicinecabinet", "supplycrate"
         };
 
+        [MenuItem("Too Late to Panic/Bake All Assets")]
+        public static void BakeAll()
+        {
+            BakeAll(Application.isBatchMode);
+        }
+
+        public static void BakeAll(bool exitInBatchMode)
+        {
+            try
+            {
+                Debug.Log("HOME_BAKE_ALL Starting full asset bake...");
+                BakeAssets();
+                Debug.Log("HOME_BAKE_ALL Succeeded");
+                if (exitInBatchMode && Application.isBatchMode)
+                {
+                    EditorApplication.Exit(0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                if (exitInBatchMode && Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                else throw;
+            }
+        }
+
+        public static void BakeAssets()
+        {
+            Folder(Generated); Folder(HomeArt); Folder(ResidenceArt);
+            Folder("Assets/Game/Resources/Player"); Folder("Assets/Game/Scenes");
+
+            BakeShaders();
+            BakePlayer();
+
+            foreach (var id in new[] { "window", "door", "fridge", "cabinet", "tree", "drain", "fence", "hose", "toolbox", "medicinecabinet", "kitchencabinet", "locker", "supplycrate", "stairs", "workbench", "generator" })
+                Bake(HomeArt, id, PanicHomeArt.Create(id));
+
+            Bake(HomeArt, "landscape", PanicHomeArt.BuildLandscape());
+            Bake(HomeArt, "floor0", PanicHomeArt.BuildFloor(0, true));
+            Bake(HomeArt, "floor1", PanicHomeArt.BuildFloor(1, true));
+            Bake(HomeArt, "roof", PanicHomeArt.BuildRoof());
+
+            foreach (var id in ResidenceIds) Bake(ResidenceArt, id, PanicResidenceArt.Create(id));
+            Bake(ResidenceArt, "basement", PanicResidenceArt.BuildBasement());
+            Bake(ResidenceArt, "balcony", PanicResidenceArt.BuildBalcony());
+            Bake(ResidenceArt, "bathroom", PanicResidenceArt.BuildBathroom());
+            Bake(ResidenceArt, "garage", PanicResidenceArt.BuildGarage());
+            Bake(ResidenceArt, "bunker_interior", PanicResidenceArt.BuildBunkerInterior());
+
+            AssetDatabase.SaveAssets();
+        }
+
+        static void BakeShaders()
+        {
+            foreach (var shaderName in new[] { "Standard", "Sprites/Default", "Particles/Standard Unlit", "Skybox/Procedural", "Unlit/Color", "Panic/SoftWeather" })
+            {
+                var shader = Shader.Find(shaderName); if (shader == null) continue;
+                var mat = new Material(shader);
+                AssetDatabase.CreateAsset(mat, Generated + "/shader-" + serial++ + ".mat");
+            }
+        }
+
         [MenuItem("Too Late to Panic/Build Home V5")]
         public static void Build()
         {
@@ -62,29 +127,7 @@ namespace TooLateToPanic
                 }
                 else
                 {
-                // Preserve the shaders used by runtime-authored work, weather, icons and cutaways.
-                foreach (var shaderName in new[] { "Standard", "Sprites/Default", "Particles/Standard Unlit", "Skybox/Procedural", "Unlit/Color", "Panic/SoftWeather" })
-                {
-                    var shader = Shader.Find(shaderName); if (shader == null) continue;
-                    var mat = new Material(shader);
-                    AssetDatabase.CreateAsset(mat, Generated + "/shader-" + serial++ + ".mat");
-                }
-
-                BakePlayer();
-                foreach (var id in new[] { "window", "door", "fridge", "cabinet", "tree", "drain", "fence", "hose", "toolbox", "medicinecabinet", "kitchencabinet", "locker", "supplycrate", "stairs", "workbench", "generator" })
-                    Bake(HomeArt, id, PanicHomeArt.Create(id));
-
-                // Explicit V3 overloads keep the basement stair hole and upper balcony doorway.
-                Bake(HomeArt, "landscape", PanicHomeArt.BuildLandscape());
-                Bake(HomeArt, "floor0", PanicHomeArt.BuildFloor(0, true));
-                Bake(HomeArt, "floor1", PanicHomeArt.BuildFloor(1, true));
-                Bake(HomeArt, "roof", PanicHomeArt.BuildRoof());
-                foreach (var id in ResidenceIds) Bake(ResidenceArt, id, PanicResidenceArt.Create(id));
-                Bake(ResidenceArt, "basement", PanicResidenceArt.BuildBasement());
-                Bake(ResidenceArt, "balcony", PanicResidenceArt.BuildBalcony());
-                Bake(ResidenceArt, "bathroom", PanicResidenceArt.BuildBathroom());
-                Bake(ResidenceArt, "garage", PanicResidenceArt.BuildGarage());
-                Bake(ResidenceArt, "bunker_interior", PanicResidenceArt.BuildBunkerInterior());
+                    BakeAll(exitInBatchMode: false);
                 }
 
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

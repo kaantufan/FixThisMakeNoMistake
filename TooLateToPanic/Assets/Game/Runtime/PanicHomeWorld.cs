@@ -9,7 +9,8 @@ namespace TooLateToPanic
 
     public sealed partial class PanicHomeWorld : MonoBehaviour
     {
-        public PanicModel Model { get; private set; }
+        PanicModel _model;
+        public PanicModel Model { get { return _model ?? (_model = new PanicModel()); } private set { _model = value; } }
         public PanicExpedition Expedition { get; private set; }
         public PanicItem Selected { get { return Model.Items.Find(i => i.Id == focusId); } }
         public LootSource NearestSource { get { return Expedition.Sources.Find(s => s.Id == focusId); } }
@@ -957,10 +958,18 @@ namespace TooLateToPanic
             if (item.Damage > 4 && item.Kind != ItemKind.Wall && item.Kind != ItemKind.Roof)
             {
                 float width = Mathf.Min(1.2f, item.Size.x * .7f), height = Mathf.Min(1.6f, item.Size.y * .8f);
-                var crack = MakeLine("Fresh damage fracture", new[] { new Vector3(-width*.4f,height*.85f,-.01f),new Vector3(-width*.1f,height*.62f,-.02f),new Vector3(-width*.2f,height*.42f,-.01f),new Vector3(width*.18f,height*.25f,-.01f),new Vector3(width*.12f,.09f,-.01f) }, new Color(.09f,.075f,.065f), .018f);
-                crack.loop = false; crack.transform.SetParent(holder.transform, false); crack.transform.localPosition = new Vector3(0,.1f,-item.Size.z*.51f);
-                if (item.Kind == ItemKind.Window) crack.transform.localPosition = new Vector3(0,1.0f,-.18f);
-                if (item.Kind == ItemKind.Wall) { crack.transform.localPosition = new Vector3(0,.1f,-.14f); if (Mathf.Abs(item.Position.x)>7) holder.transform.localRotation=Quaternion.Euler(0,item.Position.x<0?270:90,0); }
+                int variantIndex = Mathf.Abs(item.Id.GetHashCode()) % 4;
+                var mark = PanicDamageDecalArt.CreateDamageMark(Model != null ? Model.Disaster : DisasterType.Earthquake, variantIndex, new Vector3(width, height, item.Size.z), holder.transform);
+                if (mark != null)
+                {
+                    mark.transform.localPosition = new Vector3(0, .1f, -item.Size.z * .51f);
+                    if (item.Kind == ItemKind.Window) mark.transform.localPosition = new Vector3(0, 1.0f, -.18f);
+                    if (item.Kind == ItemKind.Wall)
+                    {
+                        mark.transform.localPosition = new Vector3(0, .1f, -.14f);
+                        if (Mathf.Abs(item.Position.x) > 7) holder.transform.localRotation = Quaternion.Euler(0, item.Position.x < 0 ? 270 : 90, 0);
+                    }
+                }
             }
             OnPresentationHardwareRebuilt(item, holder);
             visibilityRenderers.Remove(items[item.Id].GetInstanceID());

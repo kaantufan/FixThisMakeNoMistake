@@ -81,27 +81,38 @@ namespace TooLateToPanic
 
         public static GameObject CreatePedestrianVisual(int variant)
         {
-            var source=Resources.Load<GameObject>("Player/SurvivorV2");
-            if(!source){Debug.LogWarning("EXTERIOR_NPC_MISSING retained CC0 SurvivorV2 prefab");return null;}
-            var root=UnityEngine.Object.Instantiate(source);root.name="Neighbour pedestrian "+variant;
-            foreach(var c in root.GetComponentsInChildren<Collider>(true)){c.enabled=false;Remove(c);}
-            foreach(var r in root.GetComponentsInChildren<Rigidbody>(true)){r.isKinematic=true;r.detectCollisions=false;Remove(r);}
-            // Existing Animator/Avatar/clips are retained. Root owns Speed, route and phase behaviour.
-            foreach(var a in root.GetComponentsInChildren<Animator>(true)){a.applyRootMotion=false;a.cullingMode=AnimatorCullingMode.CullUpdateTransforms;}
-            var state=root.AddComponent<PanicExteriorOwnedArt>();var colors=new[]{new Color(.24f,.37f,.34f),new Color(.43f,.29f,.21f),new Color(.32f,.30f,.45f),new Color(.43f,.41f,.27f)};
-            var replacements=new Dictionary<Material,Material>();Color tint=colors[((variant%4)+4)%4];
-            foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
+            var source = Resources.Load<GameObject>("Player/SurvivorV2");
+            if (!source)
             {
-                var mats=renderer.sharedMaterials;
-                for(int i=0;i<mats.Length;i++)
-                {
-                    var original=mats[i];if(!original||!original.name.ToLowerInvariant().Contains("jacket"))continue;
-                    if(!replacements.TryGetValue(original,out var mat))
-                    {mat=new Material(original){name="Neighbour canvas "+variant,color=tint};replacements[original]=mat;state.Materials.Add(mat);}
-                    mats[i]=mat;
-                }
-                renderer.sharedMaterials=mats;
+                Debug.LogWarning("EXTERIOR_NPC_MISSING retained CC0 SurvivorV2 prefab");
+                return null;
             }
+
+            int role = ((variant % 4) + 4) % 4;
+            string[] roleNames = { "Police", "Paramedic", "Firefighter", "Rescue" };
+
+            var root = UnityEngine.Object.Instantiate(source);
+            root.name = "Neighbour responder " + roleNames[role] + " " + variant;
+
+            // Initial physics sanitization pass (T2_R3_4)
+            PanicCharacterArt.StripPhysics(root);
+
+            // Humanoid animator configuration (T2_R3_5)
+            var animator = root.GetComponentInChildren<Animator>(true);
+            if (animator != null)
+            {
+                animator.applyRootMotion = false;
+                animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            }
+
+            var state = root.GetComponent<PanicExteriorOwnedArt>() ?? root.AddComponent<PanicExteriorOwnedArt>();
+
+            // Authentic Milestone 3 responder dressing (T1_R3_1..4, T1_R3_5)
+            PanicCharacterArt.DressResponder(root, animator, role);
+
+            // Final physics verification pass
+            PanicCharacterArt.StripPhysics(root);
+
             return root;
         }
 
