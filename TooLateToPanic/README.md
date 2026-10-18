@@ -8,4 +8,6 @@ FPS'te özgün gerilim fon müziği, sürekli sınırlı kamera sarsıntısı ve
 
 [Başlat](Play-TooLateToPanic.cmd) · [Teslim](Documentation/HOME-V5.5-DELIVERY-2026-10-18.md)
 
+[18 Ekim oynanış/hikâye incelemesi](Documentation/HOME-V5.5-PLAYREVIEW-2026-10-18.md): Eski V5.4 kullanıcı isteğiyle kapatılıp V5.5 açıldı. Gerçek OS defter/kapı/F1/pause/FPS ve normal timeout kaybı; ardından ayrı işaretli F3/Enter çoklu afet kontrolü yapıldı. Dört öncelikli HUD/yönlendirme/geçiş bulgusu açık. Kesintisiz normal kazanma, insan konforu ve dinleme kabulü yoktur. Test sonunda V5.5 ana menüde açık bırakıldı.
+
 113/113 ilgili native API/model/fizik/kamera/ekran/teknik ses kontrolü; 0 runtime hata, 29.57s. Açık kaynak-toplama/iş/konum/saat/ikincil olay/listener fixture'ları vardır. OS/insan/işitme/tüm kampanya kabulü değildir.

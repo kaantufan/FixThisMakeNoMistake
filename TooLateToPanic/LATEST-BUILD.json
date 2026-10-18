@@ -13,7 +13,7 @@
   "buildErrors": 0,
   "buildWarnings": 0,
   "buildUtc": "2026-10-18T00:07:14.9420318Z",
-  "promotedUtc": "2026-10-18T00:09:21.772804+00:00",
+  "promotedUtc": "2026-10-18T03:09:21.772804+03:00",
   "sourceManifest": "../Evidence/GamejamOrchestra/TLTP-V55-20261018/manager/final-source-manifest-r2.json",
   "sourceManifestSha256": "15149716ADFC0538FA55748AEF4C7537A2E1DA15E0A438B345AFCF582FF65F7C",
   "buildManifest": "../Evidence/GamejamOrchestra/TLTP-V55-20261018/manager/final-build-manifest-r2.json",
@@ -65,7 +65,8 @@
   "legacyFpsProjectTouched": false,
   "publishedToGitHub": true,
   "knownLimits": [
-    "OS and human play/listening not run",
+    "Bounded OS review completed; continuous physical winning route, human comfort/fun and listening remain open",
+    "Four P2 HUD/guidance/cinematic findings in HOME-V5.5-PLAYREVIEW-2026-10-18.md",
     "Full campaign and every floor/door combination not run",
     "Original V5.4 floor triangle symptom remained unreproduced; causal shadow repair acceptance UNVERIFIED",
     "Small neck/collar shell seams remain a visual limitation"
@@ -119,13 +120,21 @@
   "normalLaunch": {
     "players": [
       {
-        "pid": 34104,
-        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r3-20261018\\TooLateToPanic.exe"
+        "pid": 35640,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.5-r2-20261018\\TooLateToPanic.exe"
       }
     ],
-    "utc": "2026-10-18T00:09:22.0374283Z",
-    "noInputOrTerminationSentToUserPlayer": true,
-    "status": "NOT_RUN_WHILE_USER_GAME_ACTIVE"
+    "utc": "2026-10-18T06:24:52.2665353Z",
+    "status": "OPEN_AT_TITLE_FOR_USER",
+    "pid": 35640,
+    "executable": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.5-r2-20261018\\TooLateToPanic.exe",
+    "normalUi": true,
+    "isolatedScoreProfile": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-V55-PLAYREVIEW-20261018\\manager\\interactive-97825cf1-fd32-4db2-baad-7e002d55d3e3",
+    "userAuthorizedPreviousPlayerClose": true,
+    "previousPlayerClosed": 34104,
+    "inputLayer": "Windows computer-use OS keyboard/mouse",
+    "noInputOrTerminationSentToUserPlayer": false,
+    "review": "Documentation/HOME-V5.5-PLAYREVIEW-2026-10-18.md"
   },
   "waveDifficulty": {
     "damageMultiplier": {
@@ -274,18 +283,42 @@
     "drawRngOrDamageEvaluation": false,
     "blocksGameplay": false
   },
+  "normalLaunchBeforePlayreview": {
+    "players": [
+      {
+        "pid": 34104,
+        "path": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\TooLateToPanic\\Builds\\Home-V5.4-r3-20261018\\TooLateToPanic.exe"
+      }
+    ],
+    "utc": "2026-10-18T00:09:22.0374283Z",
+    "noInputOrTerminationSentToUserPlayer": true,
+    "status": "NOT_RUN_WHILE_USER_GAME_ACTIVE"
+  },
+  "playReview": {
+    "utc": "2026-10-18T06:24:52.2665353Z",
+    "report": "Documentation/HOME-V5.5-PLAYREVIEW-2026-10-18.md",
+    "evidence": "../Evidence/GamejamOrchestra/TLTP-V55-PLAYREVIEW-20261018/manager/final-review.json",
+    "OSInput": true,
+    "osObservationRecords": 34,
+    "normalWinningRouteComplete": false,
+    "humanAcceptance": false,
+    "listening": false,
+    "openP2Findings": 4,
+    "finalUi": "Title menu; Serbest Oyna ready for fresh run",
+    "sourceBuildUnchanged": true
+  },
   "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.5-r2",
   "publication": {
-    "sourceSnapshotUtc": "2026-10-18T00:15:20.6039497Z",
-    "sourceManifest": "Documentation/Publications/v0.5.5-r2/source-sha256.json",
-    "sourceVsBuildReport": "Documentation/Publications/v0.5.5-r2/source-vs-build.json",
-    "selectedSourceFiles": 3956,
+    "sourceSnapshotUtc": "2026-10-18T06:25:27.6149167Z",
+    "sourceManifest": "Documentation/Publications/Snapshots/20261018T062510Z/source-sha256.json",
+    "sourceVsBuildReport": "Documentation/Publications/Snapshots/20261018T062510Z/source-vs-build.json",
+    "selectedSourceFiles": 3957,
     "compiledSourceMismatches": [],
     "selectedBuildAssetMismatches": [],
     "missingGuids": 0,
     "newBuildPerformed": false,
     "newNativeRunPerformed": false,
     "localEvidenceNotIncluded": true,
-    "existingReleaseUnchanged": false
+    "existingReleaseUnchanged": true
   }
 }
