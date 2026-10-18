@@ -156,8 +156,11 @@ namespace TooLateToPanic
                 m.Disaster=DisasterType.Flood;Call(m,"CalculateSingleDisasterDamageV54",true);float flood=m.TotalDamage;m.Disaster=DisasterType.Earthquake;
                 float weighted=quake+.45f*flood;
                 float sharedScale=weighted>0?Mathf.Min(100,Mathf.Max(quake,flood)+.03f*weighted/1.45f)/weighted:0;
-                int before=m.Budget;m.TryEnterShelterV5(m.RequiredShelterV5);m.Tick(8f);float expected=(7f+5f*.45f)*sharedScale;
-                check(label+".secondary-weighting",Near(m.SecondaryDamageV5,expected),"Actual permitted memo fixtures7+5*.45 share the same composition/cap scale="+sharedScale+"; expected="+expected+"; secondary="+m.SecondaryDamageV5+" total="+m.TotalDamage);
+                // This fixture has no anchor and open electricity: nominal20+25 shares
+                // the new40 critical cap, then the same100 household cap as all rows.
+                float criticalScale=Mathf.Min(1f,100f/(weighted*sharedScale+40f));
+                int before=m.Budget;m.TryEnterShelterV5(m.RequiredShelterV5);m.Tick(8f);float expected=(7f+5f*.45f)*sharedScale*criticalScale;
+                check(label+".secondary-weighting",Near(m.SecondaryDamageV5,expected),"Actual memo fixtures7+5*.45 share composition scale="+sharedScale+" and independently expected critical40/household100 scale="+criticalScale+"; expected="+expected+"; secondary="+m.SecondaryDamageV5+" total="+m.TotalDamage);
                 m.Tick(4f);VerifyLedger(label,m,before,!capped,check);
                 object ledger=Ledger(m);var rows=Rows(ledger);float utilities=rows.Where(r=>Read<string>(r,"Id").StartsWith("utility:",StringComparison.Ordinal)).Sum(r=>Read<float>(r,"DamageContribution"));
                 check(label+".separate-secondary-once",Near(utilities,m.SecondaryDamageV5)&&rows.Count(r=>Read<string>(r,"Id").StartsWith("utility:",StringComparison.Ordinal))==2,"Two separate actual weighted secondary rows; no double counting within ordinary item rows.");

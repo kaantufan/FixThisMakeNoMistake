@@ -38,15 +38,18 @@ namespace TooLateToPanic
             return false;
         }
         static bool IsStructure(PanicItem item)
-        { return item.Kind == ItemKind.Wall || item.Kind == ItemKind.Window || item.Kind == ItemKind.Door || item.Kind == ItemKind.Roof; }
+        { return item.Kind == ItemKind.Wall || item.Kind == ItemKind.Window || item.Kind == ItemKind.Door; }
         static bool NearWall(PanicItem item)
         { return Math.Abs(item.Position.x) > 6.3f || Math.Abs(item.Position.z) > 4.5f || Math.Abs(item.Position.x - 2f) < 1.1f; }
-        static bool CanAnchor(PanicItem item)
+        public static bool CanAnchor(PanicItem item)
         {
+            if (item == null) return false;
             if (item.Kind != ItemKind.Furniture || !item.Movable || item.Id == "bunker" || item.Id == "bagstation") return false;
             string family = item.ArtId ?? string.Empty;
             return family == "bookshelf" || family == "fridge" || family == "cabinet" || family == "kitchencabinet" ||
-                family == "tvstand" || family == "locker" || family == "storagerack";
+                family == "tvstand" || family == "locker" || family == "storagerack" ||
+                family == "table" || family == "chair" || family == "bed" || family == "sofa" ||
+                family == "sofa_indigo" || family == "sofa_olive";
         }
     }
 }

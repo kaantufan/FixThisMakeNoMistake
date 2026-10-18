@@ -240,7 +240,7 @@ namespace TooLateToPanic
             var s=NearestSource;var item=Selected;var site=gardenSites.Find(x=>x.id==focusId);
             FocusLabel=s!=null?s.Label:item!=null?item.Label:site!=null?site.label:focusId=="@radio"?"Radyo":focusId=="@computer"?"Bilgisayar":focusId=="@fireplace"?"Şömine":focusId=="@garage"?"Garaj":focusId=="@laundry"?"Çamaşır makinesi":focusId=="@toilet"?"Tuvalet":focusId=="@sink"?"Lavabo":"";
             ShortAction=s!=null?(s.Open?"Kapat":"Aç"):focusId=="@bunker"||item!=null&&item.Id=="bunker"?"Sığın":focusId=="@radio"?(RadioEnabled?"Kapat":"Aç"):focusId=="@garage"?(garageOpen?"Kapat":"Aç"):focusId=="@fireplace"?(hearthEnabled?"Söndür":"Yak"):focusId=="@computer"?(computerEnabled?"Kapat":"Aç"):focusId!=null&&hinges.ContainsKey(focusId)?(hinges[focusId].open?"Kapat":"Aç"):item!=null&&item.Kind==ItemKind.Door?"Aç / Kapat":site!=null&&!site.done?"Başla":"";
-            ContextHint=CanInteract?"E "+ShortAction:"";
+            ContextHint=CanInteract&&!string.IsNullOrEmpty(ShortAction)?"E "+ShortAction:"";
             if (focusId == PanicItemActionRules.FireStationId)
             {
                 FocusLabel = "Yangın ekipmanı noktası";
@@ -261,7 +261,7 @@ namespace TooLateToPanic
                 if(m.HasProperty("_Color"))b.SetColor("_Color",on?m.color:new Color(.018f,.025f,.029f));r.SetPropertyBlock(b);b.Clear();
             }
         }
-        void Notice(string text){ShortNotice=text;noticeAge=2.2f;}
+        void Notice(string text){preparationShortageNoticeV512=false;preparationNoticeTargetV512=null;ShortNotice=text;noticeAge=2.2f;}
         public void ToggleRadio(){RadioEnabled=false;radioVoice.Stop();radioNoise.Stop();RadioHeadline="";Notice("Radyo daha sonra");UpdateContext();}
         string DisasterVoiceId(){return Model.Disaster==DisasterType.Earthquake?"earthquake":Model.Disaster==DisasterType.Flood?"flood":"fire";}
         void QueueRadio(string id){queuedVoice=null;radioClock=35;}
@@ -291,6 +291,7 @@ namespace TooLateToPanic
         }
         void ResetResidenceLife()
         {
+            ResetPreparationNoticeV512();
             ResetAutoFocusV510();
             residenceAftermathWaveV56 = -1; ResidenceAftermathSetupCountV56 = 0;
             if (hud) hud.CancelFreeplayOnboardingV414();
@@ -310,6 +311,7 @@ namespace TooLateToPanic
         }
         void StartRescue()
         {
+            if(!ResidenceRescueAllowedV512)return;
             if(!helicopter){helicopter=PanicAtmosphereArt.CreateHelicopter();rotorAudio=helicopter.AddComponent<AudioSource>();rotorAudio.playOnAwake=false;rotorAudio.loop=true;rotorAudio.spatialBlend=.85f;rotorAudio.minDistance=10;rotorAudio.maxDistance=100;rotorAudio.volume=0;helicopterSearch=new GameObject("Rescue search beam").AddComponent<Light>();helicopterSearch.transform.SetParent(helicopter.transform,false);helicopterSearch.transform.localPosition=new Vector3(0,.7f,1);helicopterSearch.transform.localRotation=Quaternion.Euler(80,0,0);helicopterSearch.type=LightType.Spot;helicopterSearch.range=24;helicopterSearch.spotAngle=34;helicopterSearch.intensity=2.6f;helicopterSearch.color=new Color(.9f,.95f,1);}
             rescueAge=9;
         }
@@ -326,8 +328,8 @@ namespace TooLateToPanic
             if(Model.Phase!=PanicPhase.Title){radioClock-=dt;if(radioClock<=0&&string.IsNullOrEmpty(queuedVoice)&&!RadioSpeaking){QueueRadio((radioSequence++%3)==0?DisasterVoiceId():"news");}PlayQueuedRadio();}
             if(Model.Phase==PanicPhase.Preparing&&Model.TimeRemaining<=60&&!minuteVoice){minuteVoice=true;QueueRadio("deadline");}
             if(aftermath)PanicAtmosphereArt.AnimateAftermath(aftermath,residenceTime);
-            if(helicopter){bool interiorShot=CinematicActive&&(CinematicKind=="Success"||CinematicKind=="BagFailure");bool visible=!interiorShot&&(!inside||ResidenceCinematicExteriorView);helicopter.SetActive(visible);if(visible){rescueAge+=dt;float cycle=Mathf.Repeat(rescueAge,27)/27;helicopter.transform.position=new Vector3(Mathf.Lerp(-31,32,cycle),9.2f+Mathf.Sin(cycle*Mathf.PI*2)*.7f,8-Mathf.Sin(cycle*Mathf.PI)*14);helicopter.transform.rotation=Quaternion.Euler(0,78,Mathf.Sin(rescueAge*.4f)*3);PanicAtmosphereArt.AnimateHelicopter(helicopter,residenceTime);}}
-            if(Model.Message!=lastNotice){lastNotice=Model.Message;string m=(Model.Message??"").ToLowerInvariant();if(m.Contains("gereki")||m.Contains("eksik")||m.Contains("yok"))Notice(m.Contains("bütçe")?"Para yetmiyor":"Malzeme eksik");else if(m.Contains("dolu"))Notice("Yer yok");}
+            if(helicopter){bool interiorShot=CinematicActive&&(CinematicKind=="Success"||CinematicKind=="BagFailure");bool visible=ResidenceRescueAllowedV512&&!interiorShot&&(!inside||ResidenceCinematicExteriorView);helicopter.SetActive(visible);if(visible){rescueAge+=dt;float cycle=Mathf.Repeat(rescueAge,27)/27;helicopter.transform.position=new Vector3(Mathf.Lerp(-31,32,cycle),9.2f+Mathf.Sin(cycle*Mathf.PI*2)*.7f,8-Mathf.Sin(cycle*Mathf.PI)*14);helicopter.transform.rotation=Quaternion.Euler(0,78,Mathf.Sin(rescueAge*.4f)*3);PanicAtmosphereArt.AnimateHelicopter(helicopter,residenceTime);}}
+            TickPreparationNoticeV512();
         }
     }
 }

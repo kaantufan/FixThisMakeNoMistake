@@ -115,7 +115,7 @@ namespace TooLateToPanic
                 firstAid, flashlight, water, food };
             pages[(int)PanicNotebookPage.Storm] = new[] {
                 new PanicNotebookCheck("Ağaç sıraları", "Üç bahçe bölgesi", trees, 3),
-                new PanicNotebookCheck("Çatı güçlendirme", "En az bir seviye", roofsDone, roofs), window, anchor,
+                new PanicNotebookCheck("Çatı güçlendirme", "Üst kat duvarlarıyla birlikte", roofsDone, roofs), window, anchor,
                 new PanicNotebookCheck("Pilli radyo", "Pili takılmış", (model.PackedSupportMask & 4) != 0 ? 1 : 0, 1),
                 new PanicNotebookCheck("Su ve gıda", "Bu dalga için", model.BagReady ? 1 : 0, 1) };
             pages[(int)PanicNotebookPage.Inventory] = new[] { water, food, firstAid, flashlight };

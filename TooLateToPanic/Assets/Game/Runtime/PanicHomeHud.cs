@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -231,7 +231,7 @@ namespace TooLateToPanic
             _lastPhase = phase;
         }
 
-        void Update() { ProcessFrameHotkeys(); }
+        void Update() { ProcessFrameHotkeys(); TickPresentationV513(); }
 
         public void ProcessFrameHotkeys()
         {
@@ -396,13 +396,14 @@ namespace TooLateToPanic
 
             if (!WaveLedgerInputBlockedV56 && !KeyboardHelpBlockingV56)
             {
+                DrawCriticalTasksV513();
                 DrawFirstWaveOnboardingV510();
                 DrawSelectedTargetHudV56();
                 DrawAssistantHudV55();
                 DrawNotebookCursorV59();
                 DrawSecondaryAlertV55();
                 DrawCompactControlsV5();
-                if (!FreeplayOnboardingOpenV414 && !World.IntroStoryActiveV414) DrawPresentationSubtitle();
+                if (!FreeplayOnboardingOpenV414 && !World.CinematicActive) DrawPresentationSubtitle();
                 if (World.Model.CheatedRun) DrawCheatedRunIndicator();
                 if (!FreeplayOnboardingOpenV414 && !_developerMenuOpen && !string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)
                 {
@@ -414,6 +415,10 @@ namespace TooLateToPanic
             }
 
             // Single final blackout owner; the full opaque interval also covers HUD cards.
+            InteractionAvoidRectV513 = CriticalCardBoundsV513;
+            if (FirstWaveCardVisibleV510)
+                InteractionAvoidRectV513 = Rect.MinMaxRect(24f, 116f, 454f, Mathf.Max(CriticalCardBoundsV513.yMax, FirstWaveCardBoundsV510.yMax));
+            DrawPresentationV513();
             World.DrawBagBlackoutV51();
             GUI.matrix = oldMatrix;
             GUI.color = oldColor;
@@ -531,7 +536,6 @@ namespace TooLateToPanic
                 Frame(context, Night, accent, 1f); Region(context);
                 FittedLabel(new Rect(context.x + 16, context.y + 3, context.width - 32, 36), World.PlacementMessage, _center, MainText, 14);
             }
-            DrawApplicableAction();
         }
 
         void DrawRequirements()

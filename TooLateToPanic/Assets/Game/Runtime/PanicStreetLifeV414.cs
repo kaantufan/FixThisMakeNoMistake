@@ -24,6 +24,8 @@ namespace TooLateToPanic
         float clock,responseClock,hazardClock;
         bool initialized,phaseLatch,responsePending,observedFloodV54;
         int eventCount;
+        int observedDisasterWaveV512=-1;
+        public int ObservedDisasterWaveV512 {get{return observedDisasterWaveV512;}}
         public bool HasObservedDisaster {get;private set;}
         public DisasterType LastObservedDisaster {get;private set;}
         public bool ResponseActive {get{return responseRoot&&responseRoot.activeInHierarchy&&response.Count>0;}}
@@ -54,6 +56,7 @@ namespace TooLateToPanic
         }
         public void ResetRun()
         {
+            observedDisasterWaveV512=-1;
             clock=responseClock=hazardClock=0;observedFloodV54=false;eventCount=0;HasObservedDisaster=false;phaseLatch=responsePending=false;
             if(responseRoot){responseRoot.SetActive(false);Destroy(responseRoot);}responseRoot=null;response.Clear();zodiac=zodiacCrew=null;zodiacRig=null;zodiacAnimator=null;zodiacSpeed=0;
             for(int i=0;i<wrecks.Length;i++)if(wrecks[i]){wrecks[i].SetActive(false);Destroy(wrecks[i]);wrecks[i]=null;}
@@ -65,7 +68,25 @@ namespace TooLateToPanic
         public void ObserveDisaster(DisasterType type)
         {
             if(!world||world.Model==null||world.Model.Phase!=PanicPhase.Disaster||world.Model.Disaster!=type||phaseLatch)return;
+            observedDisasterWaveV512=world.Model.Wave;
             phaseLatch=true;observedFloodV54=world.Model.HasActiveDisasterV54(DisasterType.Flood);HasObservedDisaster=true;LastObservedDisaster=type;responsePending=true;eventCount++;hazardClock=0;
+        }
+        // Safety runs before modal/paused early exits; a retained response must never survive into a new hazard.
+        public void ApplySafetyV512()
+        {
+            if(!world||world.Model==null)return;
+            bool recovery=world.RecoveryResponseAllowedV512&&observedDisasterWaveV512==world.Model.Wave;
+            if(responseRoot)responseRoot.SetActive(recovery);
+            if(world.OutdoorDisasterActiveV512||world.Model.Phase==PanicPhase.Title)
+            {
+                foreach(var c in traffic){c.Speed=0;if(c.Root)c.Root.SetActive(false);}
+                foreach(var w in civilians){w.Speed=0;if(w.Root)w.Root.SetActive(false);}
+            }
+            if(!recovery)
+            {
+                zodiacSpeed=0;
+                foreach(var r in response){r.Car.Speed=0;if(r.Crew!=null)r.Crew.Speed=0;}
+            }
         }
         void Update(){Tick(Time.deltaTime);}
         public void Tick(float dt)
@@ -74,11 +95,12 @@ namespace TooLateToPanic
             var model=world.Model;var phase=model.Phase;
             if(phase==PanicPhase.Title&&lastPhase!=PanicPhase.Title)ResetRun();
             if(phase==PanicPhase.Disaster)ObserveDisaster(model.Disaster);else phaseLatch=false;
+            ApplySafetyV512();
             bool paused=model.IsPaused||world.NotebookBlocksInput;
             foreach(var ps in residualSmoke)if(ps){var main=ps.main;main.simulationSpeed=paused?0:1;}
             if(paused){FreezeMotion();lastPhase=phase;return;}
             dt=Mathf.Clamp(dt,0,.1f);clock+=dt;
-            bool ambient=phase!=PanicPhase.Title&&!HasObservedDisaster&&model.Wave==1&&(phase==PanicPhase.Preparing||phase==PanicPhase.Tutorial);
+            bool ambient=!world.OutdoorDisasterActiveV512&&phase!=PanicPhase.Title&&!HasObservedDisaster&&model.Wave==1&&(phase==PanicPhase.Preparing||phase==PanicPhase.Tutorial);
             foreach(var c in traffic)
             {
                 c.Root.SetActive(ambient);c.Speed=ambient?(c.Offset==0?3.6f:3.1f):0;
@@ -99,7 +121,7 @@ namespace TooLateToPanic
             }
             foreach(var walker in civilians)
             {walker.Root.SetActive(ambient);if(ambient)MoveWalker(walker,clock,.65f,dt);else walker.Speed=0;}
-            if(responsePending&&phase!=PanicPhase.Disaster&&phase!=PanicPhase.Title)
+            if(responsePending&&world.RecoveryResponseAllowedV512&&observedDisasterWaveV512==model.Wave)
             {responsePending=false;CreateResponse();CreateAffectedCar(LastObservedDisaster);}
             if(ResponseActive)AnimateResponse(dt);
             lastPhase=phase;

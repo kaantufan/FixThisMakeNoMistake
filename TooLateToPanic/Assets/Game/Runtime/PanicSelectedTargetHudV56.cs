@@ -46,6 +46,7 @@ namespace TooLateToPanic
             var source = NearestSource;
             var site = gardenSites.Find(candidate => candidate.id == id);
             bool isRoof = item != null && item.Kind == ItemKind.Roof;
+            if (isRoof) return false;
             bool isSupply = supply != null;
             IReadOnlyList<PanicMaterialRequirement> requirements = Array.Empty<PanicMaterialRequirement>();
 

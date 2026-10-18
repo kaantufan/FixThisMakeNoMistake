@@ -223,6 +223,7 @@ namespace TooLateToPanic
 
         void OnPresentationPhase(PanicPhase phase, PanicPhase from)
         {
+            ApplyOutdoorSafetyV512();
             RestoreHeroReactions();
             if (presentationAudio) presentationAudio.CancelSpeech();
             if (phase == PanicPhase.Title) { ResetPresentation(); return; }

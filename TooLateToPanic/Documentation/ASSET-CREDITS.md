@@ -74,3 +74,23 @@ Home V4.8 güncel akış kabulü: TLTP-FULLFLOW-QA-20261017; 149/149 gerçek zam
 ## Home V5.10 — 18 Ekim 2026
 
 OpenAI Codex ile stok durumuna bağlı loot yüzey shaderı, yakınlık/bakış otomatik hedef seçimi, ilk dalga yönlendirme kodu ve Türkçe arayüz metinleri geliştirildi. Yeni görsel model, dış ses kaydı veya üçüncü taraf asset eklenmedi. Yeni sağlayıcı/kredi/ödeme kullanımı 0; önceki kaynakların lisans ve provenansı korunur. Kod/metin ve prosedürel shader beyanı bu sürüme dahildir.
+
+
+## Home V5.11 — 18 Ekim 2026
+
+OpenAI Codex ile üst kat duvarı ve çatının tek güçlendirme işlemi, seçim kapıları, Türkçe etiketleri ve ilgili regresyon kontrolleri geliştirildi. Yeni model, görsel, shader veya ses eklenmedi; mevcut çatı donanımı ve lisans/provenans korunur. Yeni sağlayıcı/kredi/ödeme kullanımı 0.
+
+
+## Home V5.13 — 18 Ekim 2026
+
+OpenAI Codex ile panik odasının prosedürel çelik kapı/koruma kuşağı/ilk yardım/levha detayları ve sinematik kamera yönlendirmesi geliştirildi. Mevcut Yarkın EmergencyRadio ve oda ekipmanı kendi provenans/lisansıyla kullanıldı. Kod ve Türkçe etiketler, mobilya sabitleme erişimi, bağlamsal malzeme uyarısı ve afet/sonrası aktör-ses yaşam döngüsü AI desteğiyle düzenlendi. V5.13 kritik afet görevleri ve gerçek ek hasarı, dalga sonunda hasarlı yapı gruplarının RNG ile bir kademe düşmesi, gerçek eylem tuşu istemleri ve yeni dalga duyurusu da Codex ile geliştirildi. Yeni dış model, shader, ses kaydı, sağlayıcı/kredi/ödeme yoktur.
+
+
+## Home V5.13-r5 — 18 Ekim 2026
+
+OpenAI Codex ile normal otomatik tam ekran başlangıcı ve nesne üzerinde küçük yuvarlatılmış gerçek tuş balonu geliştirildi. Önceki büyük etkileşim kartı bu son kullanıcı kararıyla değiştirildi. Yeni dış görsel/model/shader/ses kaydı, sağlayıcı kredisi veya ödeme yoktur.
+
+
+## Home V5.13-r6 — 18 Ekim 2026
+
+OpenAI Codex ile normal otomatik tam ekran başlangıcı ve nesne üzerinde küçük yuvarlatılmış gerçek tuş balonu geliştirildi. Önceki büyük etkileşim kartı değiştirildi; son kullanıcı kararıyla sağ alttaki yinelenen eylem düğmesi de kaldırılırken küçük nesne tuş balonu korundu. Yeni dış görsel/model/shader/ses kaydı, sağlayıcı kredisi veya ödeme yoktur.

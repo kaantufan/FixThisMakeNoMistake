@@ -77,9 +77,10 @@ namespace TooLateToPanic
             foreach(var s in e.Sources){e.ToggleSource(s.Id);e.ToggleSource(s.Id);}
             check("same-wave-no-reroll",e.LootLayoutRevisionV5==revision&&Stock(e)==stock,"One finite snapshot.");
             e=New(5902);m=e.Model;Gather(e,14,1);m.Budget=0;budget=m.Budget;stock=Stock(e);
-            check("insufficient-budget-atomic",!e.BeginValidatedWorkV414("upgrade","roof",false)&&m.Budget==budget&&Stock(e)==stock&&m.Items.Find(i=>i.Id=="roof").Tier==0,"Cannot partially consume.");
+            var upper = m.Items.First(i => i.Kind == ItemKind.Wall && Mathf.FloorToInt((i.Position.y + .15f) / 3.2f) == 1);
+            check("insufficient-budget-atomic",!e.BeginValidatedWorkV414("upgrade",upper.Id,false)&&m.Budget==budget&&Stock(e)==stock&&m.Items.Find(i=>i.Id=="roof").Tier==0,"Upper walls+roof cannot partially consume.");
             m.SetDeveloperOption(PanicDeveloperOption.InfiniteBudget,true);m.SetDeveloperOption(PanicDeveloperOption.FreeMaterials,true);
-            check("f2-free-score-isolated",Complete(e,"upgrade","roof")&&m.Budget==0&&Stock(e)==stock&&m.CheatedRun,"Production developer mutation and actual free work.");
+            check("f2-free-score-isolated",Complete(e,"upgrade",upper.Id)&&m.Items.Find(i=>i.Id=="roof").Tier==1&&m.Budget==0&&Stock(e)==stock&&m.CheatedRun,"Production developer mutation and actual bundled free work.");
             check("full-target-count",m.Items.Count(i=>i.Kind!=ItemKind.Furniture)==30,"Physical residence layout fixture, no meshes.");
             e=New(5903);m=e.Model;Gather(e,14,1);budget=m.Budget;stock=Stock(e);
             check("floor-start-no-charge",e.BeginValidatedWorkV414("upgrade","wall_north",false)&&m.Budget==budget&&Stock(e)==stock,"Batch preflight.");

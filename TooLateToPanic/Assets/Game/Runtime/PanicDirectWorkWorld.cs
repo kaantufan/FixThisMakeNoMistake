@@ -102,8 +102,10 @@ namespace TooLateToPanic
             var item = Model.Items.Find(i => i.Id == target);
             if (action == "upgrade" && item != null)
             {
+                int targetTier = Expedition.ActiveFloorWallUpgradeV414 != null ? Expedition.ActiveFloorWallUpgradeV414.TargetTier : item.Tier + 1;
+                if (item.Tier >= targetTier) return;
                 SetPreviousReinforcementVisible(target, false);
-                var next = new PanicItem { Id = item.Id, Kind = item.Kind, Size = item.Size, Position = item.Position, Rotation = item.Rotation, Tier = item.Tier + 1 };
+                var next = new PanicItem { Id = item.Id, Kind = item.Kind, Size = item.Size, Position = item.Position, Rotation = item.Rotation, Tier = targetTier };
                 constructionPreview = PanicConstructionArt.CreateReinforcement(next);
                 constructionPreview.transform.position = item.Position;
                 constructionPreview.transform.rotation = Quaternion.Euler(0, item.Rotation, 0);

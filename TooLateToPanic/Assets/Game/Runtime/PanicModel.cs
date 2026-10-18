@@ -315,6 +315,7 @@ namespace TooLateToPanic
             if (!CanPrepare()) return RefuseBool("Yükseltme yalnızca hazırlıkta yapılabilir.");
             PanicItem item = FindItem(id);
             if (item == null) return RefuseBool("Yükseltilecek parça bulunamadı.");
+            if (item.Kind == ItemKind.Roof) return RefuseBool("Çatı, üst kat duvarlarıyla birlikte güçlendirilir.");
             if (!item.Installed) return RefuseBool("Önce bu pencereyi tak.");
             if (!IsStructure(item)) return RefuseBool("Bu parça yükseltilemez.");
             if (item.Tier >= 2) return RefuseBool(item.Label + " zaten en yüksek kademe olan T2.");
@@ -654,6 +655,7 @@ namespace TooLateToPanic
             recordedRunHighscore = null;
             runSeed = 0x20261016u;
             ResetCompoundDisastersV54();
+            ResetUpgradeDowngradesV513();
             Items = CreateInitialItems();
         }
 
@@ -765,6 +767,9 @@ namespace TooLateToPanic
             waveResolved = true;
 
             CalculateDamage();
+            ApplyCriticalTaskPenaltyV513();
+            CaptureCriticalTasksV513();
+            ResolveUpgradeDowngradesV513();
             bagWasReadyForWave = BagReady;
             FailureReason = BuildFailureReason(bagWasReadyForWave, PackedWater, PackedFood);
             ConsumeWaveSupplies();
@@ -983,6 +988,9 @@ namespace TooLateToPanic
                 summary.Append(" ").Append(FailureReason);
             else if (bagWasReadyForWave)
                 summary.Append(IsSimulation ? " Çantadaki su ve gıda yeterliydi." : " Çanta bu dalga için yeterli.");
+            if (!string.IsNullOrEmpty(CriticalTaskPenaltySummaryV513)) summary.Append(" ").Append(CriticalTaskPenaltySummaryV513);
+            if (UpgradeDowngradeWaveV513 == Wave && !string.IsNullOrEmpty(UpgradeDowngradeSummaryV513))
+                summary.Append(" ").Append(UpgradeDowngradeSummaryV513);
             return summary.ToString();
         }
 

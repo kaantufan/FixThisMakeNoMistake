@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -43,17 +43,22 @@ namespace TooLateToPanic
             if (World.WorkActive)
             {
                 var work = World.Expedition.Work;
-                Rect strip = new Rect(24f, 112f, 390f, 40f);
+                float workY = CriticalRecommendedNextYV513 - 4f;
+                Rect strip = new Rect(24f, workY, 390f, 40f);
                 FirstWaveCardBoundsV510 = strip;
                 bool anchor = work.Action == "anchorwall" || work.Action == "anchorfloor";
-                FirstWaveRenderedTextV510 = work.IsUtility ? "3 · TESİSAT · İŞİ TAMAMLA" : anchor ?
+                bool floorUpgrade = work.Action == "upgrade" && World.Expedition.ActiveFloorWallUpgradeV414 != null;
+                FirstWaveRenderedTextV510 = floorUpgrade ?
+                    World.Expedition.ActiveFloorWallUpgradeV414.IncludesRoof ? "ÜST KAT + ÇATI · GÜÇLENDİR" : "KAT DUVARLARI · GÜÇLENDİR" :
+                    work.IsUtility ? "3 · TESİSAT · İŞİ TAMAMLA" : anchor ?
                     "2 · SABİTLEME · " + work.CompletedSteps + "/" + work.TotalSteps + " VİDA" : "ÖNLEM · " + work.Label;
                 FirstWaveContentHeightV510 = 28f;
                 Frame(strip, Night, Brass, 1f); Region(strip);
-                FittedLabel(new Rect(36f, 118f, 366f, 28f), FirstWaveRenderedTextV510, firstWaveTitleV510, Brass, 18);
+                FittedLabel(new Rect(36f, workY + 6f, 366f, 28f), FirstWaveRenderedTextV510, firstWaveTitleV510, Brass, 18);
                 firstWaveDrawFrameV510 = Time.frameCount; return;
             }
-            const float x = 24f, y = 116f, width = 390f, inner = 358f;
+            const float x = 24f, width = 390f, inner = 358f;
+            float y = CriticalRecommendedNextYV513;
             string body = card.Body;
             string place = card.Location;
             string status = "İLK DALGA · DEPREM\n" +

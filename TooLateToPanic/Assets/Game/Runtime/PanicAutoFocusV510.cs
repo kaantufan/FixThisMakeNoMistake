@@ -156,9 +156,9 @@ namespace TooLateToPanic
         {
             Physics.SyncTransforms();
             focusCandidates.Clear();
-            // Membership is the V5.9-r7 contract, including roof exception and surface reach limits.
+            // Roof upgrades belong to the upper-wall transaction; physical reach rules remain unchanged.
             foreach (var item in Model.Items)
-                if (item.Id != "bagstation" && item.Installed && (item.Kind == ItemKind.Roof || SameLevel(item.Position)) &&
+                if (item.Id != "bagstation" && item.Kind != ItemKind.Roof && item.Installed && SameLevel(item.Position) &&
                     !(BagFinalStageActive && Expedition.Sources.Exists(source => source.Id == item.Id)) && InteractionDistance(item.Id) < 2.8f) focusCandidates.Add(item.Id);
             if (!BagFinalStageActive) foreach (var source in Expedition.Sources)
                 if (SameLevel(source.Position) && InteractionDistance(source.Id) < 2.8f && !focusCandidates.Contains(source.Id)) focusCandidates.Add(source.Id);

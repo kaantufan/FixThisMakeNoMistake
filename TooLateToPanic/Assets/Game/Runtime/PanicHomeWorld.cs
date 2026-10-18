@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -417,6 +417,8 @@ namespace TooLateToPanic
 
         void LateUpdate()
         {
+            // Enforce presentation safety even when Update exits for a pause/modal.
+            ApplyOutdoorSafetyV512();
             TickLootSourceShimmerV510();
             TickNotebookLocalGlowV59();
             if (!hero || !animator || Model.IsPaused || Model.WaveLedgerOpenV56 || Model.KeyboardHelpOpenV56 || NotebookBlocksInput) return;
@@ -607,6 +609,8 @@ namespace TooLateToPanic
         }
         public void SetFocus(string id)
         {
+            if (Model.Items.Exists(item => item.Id == id && item.Kind == ItemKind.Roof)) id = null;
+            if (focusId != id) ClearStalePreparationNoticeV512(id);
             if (Selected != null && items.TryGetValue(Selected.Id, out var old)) PanicArt.SetSelected(old, false);
             focusId = id;
             if (Selected != null && items.TryGetValue(Selected.Id, out var next)) PanicArt.SetSelected(next, true);
@@ -855,7 +859,8 @@ namespace TooLateToPanic
                 if (pick)
                 {
                     if (Expedition.FindWorldSupply(pick.Id) != null && !BagFinalStageActive || BagFinalStageActive && Expedition.Sources.Exists(source => source.Id == pick.Id)) return;
-                    if (PositionOf(pick.Id, out var position) && (SameLevel(position) || Model.Items.Exists(item => item.Id == pick.Id && item.Kind == ItemKind.Roof))) SetFocus(pick.Id);
+                    if (Model.Items.Exists(item => item.Id == pick.Id && item.Kind == ItemKind.Roof)) return;
+                    if (PositionOf(pick.Id, out var position) && SameLevel(position)) SetFocus(pick.Id);
                     return;
                 }
                 // A visible physical obstacle owns this pixel; don't select through it.
@@ -999,7 +1004,7 @@ namespace TooLateToPanic
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}
             if (BagCameraOwnsView || !View || Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.GameOver || Model.Phase == PanicPhase.Success || WorkActive || InventoryOpen || CinematicActive || InputLocked || !JuryAllowsMovement || (hud&&hud.DeveloperMenuOpen)) return;
             DrawJuryWorldTarget();
-            DrawPrimaryInteractionV51();
+            // V5.13 HUD draws the actual action key after physical eligibility checks.
             if (Model.Phase == PanicPhase.Inspection)
             {
                 foreach (var item in Model.Items.Where(i => i.Contribution > .1f && SameLevel(i.Position)).OrderByDescending(i => i.Contribution).Take(3))

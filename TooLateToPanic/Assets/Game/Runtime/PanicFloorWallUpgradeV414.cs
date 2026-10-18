@@ -9,26 +9,34 @@ namespace TooLateToPanic
     {
         public int Floor { get; private set; }
         public int TargetTier { get; private set; }
-        public int WallCount { get { return Members.Length; } }
+        public int WallCount { get { return WallIds.Count; } }
         public int ChangedWallCount { get; private set; }
+        public int RoofCount { get { return RoofIds.Count; } }
+        public int ChangedRoofCount { get; private set; }
+        public int ChangedMemberCount { get { return ChangedWallCount + ChangedRoofCount; } }
+        public bool IncludesRoof { get { return RoofCount > 0; } }
         public int BudgetCost { get; private set; }
         public IReadOnlyList<PanicMaterialCost> MaterialCosts { get; private set; }
         public IReadOnlyList<string> WallIds { get; private set; }
+        public IReadOnlyList<string> RoofIds { get; private set; }
         public string FloorLabel { get { return Floor == 0 ? "Zemin Kat" : Floor == -1 ? "Bodrum" : Floor + ". Kat"; } }
-        public string Label { get { return FloorLabel + " Duvarlarını Güçlendir"; } }
-        public string Detail { get { return ChangedWallCount + " / " + WallCount + " duvar · Hedef: " + TargetTier + ". seviye"; } }
+        public string Label { get { return FloorLabel + (IncludesRoof ? " Duvarları ve Çatıyı Güçlendir" : " Duvarlarını Güçlendir"); } }
+        public string Detail { get { return ChangedWallCount + " / " + WallCount + " duvar" + (IncludesRoof ? " + çatı" : "") + " · Hedef: " + TargetTier + ". seviye"; } }
         internal readonly PanicModel Owner;
         internal readonly string SelectedId;
         internal readonly PanicItem[] Members;
         internal readonly int[] Tiers;
 
         internal PanicFloorWallUpgradePlanV414(PanicModel model, string selectedId, int floor, int target,
-            List<PanicItem> members, int changed, int budget, List<PanicMaterialCost> costs)
+            List<PanicItem> members, int changedWalls, int changedRoofs, int budget, List<PanicMaterialCost> costs)
         {
             Owner = model; SelectedId = selectedId; Floor = floor; TargetTier = target;
-            Members = members.ToArray(); Tiers = new int[Members.Length]; var ids = new string[Members.Length];
-            for (int i = 0; i < Members.Length; i++) { Tiers[i] = Members[i].Tier; ids[i] = Members[i].Id; }
-            WallIds = Array.AsReadOnly(ids); ChangedWallCount = changed; BudgetCost = budget;
+            Members = members.ToArray(); Tiers = new int[Members.Length];
+            var wallIds = new List<string>(); var roofIds = new List<string>();
+            for (int i = 0; i < Members.Length; i++)
+            { Tiers[i] = Members[i].Tier; if (Members[i].Kind == ItemKind.Roof) roofIds.Add(Members[i].Id); else wallIds.Add(Members[i].Id); }
+            WallIds = wallIds.AsReadOnly(); RoofIds = roofIds.AsReadOnly();
+            ChangedWallCount = changedWalls; ChangedRoofCount = changedRoofs; BudgetCost = budget;
             MaterialCosts = costs.AsReadOnly();
         }
     }
@@ -60,14 +68,28 @@ namespace TooLateToPanic
                 if (!item.Installed || item.Tier < 0 || item.Tier > 2 || string.IsNullOrEmpty(item.Id) || !ids.Add(item.Id)) return false;
                 members.Add(item); minimum = Math.Min(minimum, item.Tier);
             }
-            if (members.Count == 0 || minimum >= 2) return false;
+            if (members.Count == 0) return false;
+            if (floor == 1)
+            {
+                int roofs = 0;
+                foreach (var item in Model.Items)
+                {
+                    if (item == null || item.Kind != ItemKind.Roof || !item.Installed) continue;
+                    if (!ValidWallHeightV414(item) || item.Tier < 0 || item.Tier > 2 ||
+                        string.IsNullOrEmpty(item.Id) || !ids.Add(item.Id)) return false;
+                    members.Add(item); minimum = Math.Min(minimum, item.Tier); roofs++;
+                }
+                if (roofs == 0) return false;
+            }
+            if (minimum >= 2) return false;
             members.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
-            int target = minimum + 1, changed = 0; long budget = 0;
+            int target = minimum + 1, changedWalls = 0, changedRoofs = 0; long budget = 0;
             var totals = new Dictionary<string, long>(StringComparer.Ordinal); var order = new List<string>();
             foreach (var item in members)
             {
                 if (item.Tier >= target) continue;
-                changed++; budget += WorkCost("upgrade", item);
+                if (item.Kind == ItemKind.Roof) changedRoofs++; else changedWalls++;
+                budget += WorkCost("upgrade", item);
                 foreach (var cost in MaterialCosts("upgrade", item))
                 {
                     if (!totals.ContainsKey(cost.Id)) { totals[cost.Id] = 0; order.Add(cost.Id); }
@@ -78,7 +100,7 @@ namespace TooLateToPanic
             }
             var costs = new List<PanicMaterialCost>();
             foreach (string id in order) costs.Add(new PanicMaterialCost(id, (int)totals[id]));
-            plan = new PanicFloorWallUpgradePlanV414(Model, targetId, floor, target, members, changed, (int)budget, costs);
+            plan = new PanicFloorWallUpgradePlanV414(Model, targetId, floor, target, members, changedWalls, changedRoofs, (int)budget, costs);
             return true;
         }
 
@@ -108,11 +130,16 @@ namespace TooLateToPanic
         public int PrimaryShortcutV414(PanicItem item)
         { return item != null && item.Kind == ItemKind.Wall ? PrimaryActionV414(item) == "upgrade" ? 3 : 0 : PanicItemActionRules.PrimaryShortcut(item); }
         public string PrimaryLabelV414(PanicItem item)
-        { return item != null && item.Kind == ItemKind.Wall ? PrimaryActionV414(item) == "upgrade" ? "KATI GÜÇLENDİR" : string.Empty : PanicItemActionRules.PrimaryLabel(item); }
+        {
+            if (item == null || item.Kind != ItemKind.Wall) return PanicItemActionRules.PrimaryLabel(item);
+            PanicFloorWallUpgradePlanV414 plan;
+            return TryGetFloorWallUpgradeV414(item.Id, out plan) ? plan.IncludesRoof ? "ÜST KAT + ÇATI" : "KATI GÜÇLENDİR" : string.Empty;
+        }
         public string WorkTargetLabelV414(string action, string targetId)
         {
             PanicFloorWallUpgradePlanV414 plan;
-            if (action == "upgrade" && TryGetFloorWallUpgradeV414(targetId, out plan)) return plan.Label + " · " + plan.Detail;
+            if (action == "upgrade" && TryGetFloorWallUpgradeV414(targetId, out plan))
+                return plan.FloorLabel + " Duvarları" + (plan.IncludesRoof ? " + Çatı" : "") + " · " + plan.TargetTier + ". Seviye";
             var item = FindItem(targetId); return item == null ? string.Empty : item.Label;
         }
         public string FloorWallRequirementLabelV414
@@ -121,7 +148,7 @@ namespace TooLateToPanic
             {
                 PanicFloorWallUpgradePlanV414 plan;
                 return requirementAction == "upgrade" && TryGetFloorWallUpgradeV414(requirementTargetId, out plan) ?
-                    plan.FloorLabel + " · " + plan.ChangedWallCount + " duvar → " + plan.TargetTier + ". seviye" : string.Empty;
+                    plan.FloorLabel + " · " + plan.ChangedWallCount + " duvar" + (plan.IncludesRoof ? " + çatı" : "") + " → " + plan.TargetTier + ". seviye" : string.Empty;
             }
         }
 
@@ -144,7 +171,7 @@ namespace TooLateToPanic
             Work.Begin(action, targetId, juryDemo);
             if (!Work.Active) return false;
             floorWallWorkV414 = plan;
-            if (plan != null) Work.Label = plan.Label + " · " + plan.Detail;
+            if (plan != null) Work.Label = WorkTargetLabelV414(action, targetId);
             return true;
         }
         public void CancelFloorWallUpgradeV414() { floorWallWorkV414 = null; }
@@ -153,7 +180,8 @@ namespace TooLateToPanic
             var started = floorWallWorkV414;
             if (started == null || !ReferenceEquals(started.Owner, Model) || current.SelectedId != started.SelectedId ||
                 current.Floor != started.Floor || current.TargetTier != started.TargetTier || current.WallCount != started.WallCount ||
-                current.ChangedWallCount != started.ChangedWallCount || current.BudgetCost != started.BudgetCost) return false;
+                current.ChangedWallCount != started.ChangedWallCount || current.RoofCount != started.RoofCount ||
+                current.ChangedRoofCount != started.ChangedRoofCount || current.Members.Length != started.Members.Length || current.BudgetCost != started.BudgetCost) return false;
             for (int i = 0; i < started.Members.Length; i++)
                 if (!ReferenceEquals(started.Members[i], current.Members[i]) || started.Tiers[i] != current.Tiers[i]) return false;
             return true;
@@ -192,7 +220,7 @@ namespace TooLateToPanic
             Frame(panel, Night, Line, 1f); Region(panel);
             FittedLabel(new Rect(1118, 179, 438, 29), plan.Label, _body, MainText, 16);
             Label(new Rect(1118, 210, 438, 24), plan.Detail, ColorText(_small, Brass));
-            Button(new Rect(1118, 239, 438, 52), "KATI GÜÇLENDİR · 3", true, Brass, () => World.QuickAction(3));
+            Button(new Rect(1118, 239, 438, 52), plan.IncludesRoof ? "ÜST KAT + ÇATI · 3" : "KATI GÜÇLENDİR · 3", true, Brass, () => World.QuickAction(3));
             Label(new Rect(1118, 302, 192, 20), "TOPLAM BEDEL", _tiny);
             Label(new Rect(1320, 302, 66, 20), "VAR", _caps);
             Label(new Rect(1390, 302, 66, 20), "GEREK", _caps);

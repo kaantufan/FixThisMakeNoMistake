@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -74,6 +74,7 @@ namespace TooLateToPanic
 
         void BeginWaveSystemsV5()
         {
+            ResetCriticalTasksV513();
             EnteredShelterV5 = PanicShelterKindV5.None;
             secondaryEventsV5.Clear();
             SecondaryDamageV5 = 0f;

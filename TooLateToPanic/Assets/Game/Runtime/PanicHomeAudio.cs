@@ -144,7 +144,7 @@ namespace TooLateToPanic
             bool paused = InputLocked || Model.IsPaused || Model.WaveLedgerOpenV56 || Model.KeyboardHelpOpenV56 || NotebookBlocksInput || (!Application.isFocused && !Application.runInBackground);
             effects.SetSuspended(paused);
             TickSecondaryAudioV56(paused);
-            effects.SetEnvironment(Model.Phase != PanicPhase.Title && !paused, inside, hearthEnabled && inside, helicopter && helicopter.activeInHierarchy);
+            effects.SetEnvironment(Model.Phase != PanicPhase.Title && !paused, inside, hearthEnabled && inside, ResidenceRescueAllowedV512 && helicopter && helicopter.activeInHierarchy);
             if (!WorkActive) { audioWorkTarget = null; audioWorkStep = -1; audioWorkApplying = false; audioWorkStrokesV56 = 0; }
             if (Model.Phase == PanicPhase.Title || Model.Phase == PanicPhase.Preparing) heardDamage.Clear();
             else if (!paused && Time.unscaledTime >= nextDamageSound)

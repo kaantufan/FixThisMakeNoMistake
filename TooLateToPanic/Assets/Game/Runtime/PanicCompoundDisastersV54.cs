@@ -71,6 +71,9 @@ namespace TooLateToPanic
         }
         void CalculateDamage()
         {
+            // A resolved wave owns an immutable damage/utility/critical snapshot. Later
+            // analytical reads must not rebuild it from consumed supplies or worn tiers.
+            if (waveResolved && criticalResolvedWaveV513 == Wave) return;
             Array.Clear(hazardDamageV54, 0, hazardDamageV54.Length);
             int mask = ActiveDisasterMaskV54;
             DisasterType primary = Disaster;

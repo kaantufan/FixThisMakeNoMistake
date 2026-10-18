@@ -1,8 +1,9 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -69,6 +70,16 @@ namespace TooLateToPanic
                     source.AutoLooted=true;Check("pin-collected",PanicNotebookData.PinState(new PanicNotebookPin(source))=="Toplandı","Actual AutoLooted flag reflects material collection, independent of cupboard open/closed.");
                 });
                 RunGroup("economy",()=>PanicEconomyChecksV59.Run(Check));
+                RunGroup("roof-wall",()=>PanicRoofWallChecksV511.Run(Check));
+                RunGroup("presentation-v512",()=>PanicPresentationChecksV512.Run(Check));
+                RunGroup("critical-v513",()=>PanicCriticalTasksChecksV513.Run(Check));
+                RunGroup("downgrade-v513",()=>PanicUpgradeDowngradeChecksV513.Run(Check));
+                RunGroup("startup-fullscreen-v513",()=>{
+                    Check("normal",PanicStartupDisplayV513.ShouldApplyV513(Array.Empty<string>()),"Normal launch requests native borderless fullscreen once.");
+                    Check("observer-normal-policy",PanicStartupDisplayV513.ShouldApplyV513(new[]{"--fullscreen-startup-observe","--home-evidence","fixture"}),"Read-only observer does not bypass normal startup policy.");
+                    Check("explicit-windowed-preference-overridden",PanicStartupDisplayV513.ShouldApplyV513(new[]{"-screen-fullscreen","0"}),"Normal startup also overrides an old windowed preference.");
+                    Check("qa-drivers-retain-own-display",PanicTestLaunchRules.Drivers.All(flag=>!PanicStartupDisplayV513.ShouldApplyV513(new[]{flag})),"All registered gameplay drivers retain their explicit QA framebuffer settings.");
+                });
                 RunGroup("final-policy",()=>PanicFinalPolicyChecksV59.Run(Check));
                 RunGroup("clock-boundaries",()=>PanicPreparationClockChecksV59.Run(Check));
                 RunGroup("music-mix-import",()=>PanicMusicMixPolicyV59.Run(Check));

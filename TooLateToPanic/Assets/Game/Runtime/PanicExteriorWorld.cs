@@ -103,10 +103,13 @@ namespace TooLateToPanic
         void TickExteriorLife(float dt)
         {
             bool hazard=Model.Phase==PanicPhase.Disaster||Model.Phase==PanicPhase.Aftermath||CinematicActive||LossAnnounced;
-            bool running=Model.Phase!=PanicPhase.GameOver&&!hazard;
+            bool running=Model.Phase!=PanicPhase.Title&&Model.Phase!=PanicPhase.GameOver&&!hazard&&!OutdoorDisasterActiveV512;
             foreach(var neighbor in neighbors)
             {
                 if(!neighbor.visual)continue;
+                // Before the hybrid response pose path: no outdoor person may be revived during a hazard.
+                if(OutdoorDisasterActiveV512||Model.Phase==PanicPhase.Title)
+                {neighbor.visual.SetActive(false);continue;}
                 if(TryTickNeighbourDetailsHybrid(neighbor,dt))continue;
                 neighbor.visual.SetActive(running);
                 if(!running)continue;

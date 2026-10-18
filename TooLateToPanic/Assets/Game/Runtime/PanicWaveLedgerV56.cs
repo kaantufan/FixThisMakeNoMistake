@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -89,7 +89,7 @@ namespace TooLateToPanic
                 {
                     float utility;
                     utilityByItem.TryGetValue(item.Id, out utility);
-                    float ordinary = Mathf.Max(0, item.Contribution - utility);
+                    float ordinary = Mathf.Max(0, item.Contribution - utility - CriticalPenaltyForItemV513(item.Id));
                     if (ordinary > 0)
                         rows.Add(new PanicWaveLedgerRowV56(item.Id, item.Label, "Afetin toplam hasarına katkı", ordinary));
                 }
@@ -101,6 +101,7 @@ namespace TooLateToPanic
                     rows.Add(new PanicWaveLedgerRowV56("utility:" + incident.TargetId + ":" + incident.Kind,
                         label, incident.Label + (target == null ? "" : " · " + target.Label), incident.DamagePoints));
                 }
+                AppendCriticalPenaltyLedgerRowsV513(rows);
                 rows.Sort((a, b) => b.DamageContribution.CompareTo(a.DamageContribution));
             }
             LastWaveLedgerV56 = new PanicWaveLedgerV56(this, outcome, explanation, before, basis, deduction, bonus, rows, waveResolved);

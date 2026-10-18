@@ -237,6 +237,7 @@ namespace TooLateToPanic
             panicRoomBeaconV5.transform.position=PanicRoomPositionV5+new Vector3(0,1.72f,0);
             panicRoomBeaconV5.type=LightType.Point;panicRoomBeaconV5.range=3;panicRoomBeaconV5.color=new Color(.55f,1f,.69f);panicRoomBeaconV5.intensity=.25f;
             var door=Model.Items.Find(i=>i.Id=="door_study");if(door!=null)door.Label="Panik odası";
+            BuildPanicRoomIdentityV512();
         }
 
         public bool TryEnterActiveShelterV5()

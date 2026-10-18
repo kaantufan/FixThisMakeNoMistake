@@ -18,7 +18,7 @@ namespace TooLateToPanic
         const string HomeArt = "Assets/Game/Resources/HomeArt";
         const string ResidenceArt = "Assets/Game/Resources/ResidenceArt";
         const string ScenePath = "Assets/Game/Scenes/TooLateToPanicResidence.unity";
-        const string Version = "0.5.10";
+        const string Version = "0.5.13";
 
         // Every explicit Create case in the residence r1 package; no default/fallback IDs.
         static readonly string[] ResidenceIds =
@@ -43,7 +43,8 @@ namespace TooLateToPanic
                 PlayerSettings.productName = "Too Late to Panic! — Home V4";
                 PlayerSettings.bundleVersion = Version;
                 PlayerSettings.defaultScreenWidth = 1600; PlayerSettings.defaultScreenHeight = 900;
-                PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
+                PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
+                PlayerSettings.defaultIsNativeResolution = true;
                 PlayerSettings.resizableWindow = true; PlayerSettings.runInBackground = false;
                 PlayerSettings.colorSpace = ColorSpace.Linear; PlayerSettings.usePlayerLog = true;
                 PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
@@ -107,7 +108,7 @@ namespace TooLateToPanic
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
                 AssetDatabase.SaveAssets();
                 var project = Directory.GetParent(Application.dataPath).FullName;
-                var outputDir = Path.Combine(project, "Builds", "Home-V5.10-20261018");
+                var outputDir = Path.Combine(project, "Builds", "Home-V5.13-20261018");
                 var buildArgs = Environment.GetCommandLineArgs();
                 int auditOutput = Array.IndexOf(buildArgs, "-panicBuildDirectory");
                 if (auditOutput >= 0)

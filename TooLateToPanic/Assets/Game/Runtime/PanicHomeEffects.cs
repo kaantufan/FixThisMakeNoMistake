@@ -113,6 +113,15 @@ namespace TooLateToPanic
             source.volume=volume*PanicAudioSettingsV56.EffectiveSfxGain;
             if(source.clip&&!source.isPlaying&&!suspended)source.Play();
         }
+        public void StopRescueAudioV512()
+        { rotorGain=0; if(rotor){rotor.volume=0;rotor.Stop();} }
+        void StopRecoveryStormV512()
+        {
+            // Model resolution is complete. Do not keep a live storm around incoming rescue actors.
+            PanicDisasterArt.StopHazardV54(weather,DisasterType.Storm);
+            int storm=(int)DisasterType.Storm;hazardAudioActiveV54[storm]=false;
+            if(hazardAmbiencesV54[storm]){hazardAmbiencesV54[storm].Stop();hazardAmbiencesV54[storm].volume=0;}
+        }
         public void SetEnvironment(bool active,bool inside,bool fire,bool helicopter)
         {
             Loop(roomTone,"roomtone",active&&inside?.025f*(1-shelterMix):0);
@@ -120,6 +129,8 @@ namespace TooLateToPanic
             Loop(hearth,"fireplace",active&&fire?.09f:0);
             float distance=World?World.AudioHelicopterDistance:1000;
             float target=active&&helicopter?.12f*DistanceGain(distance,12,75)*Mathf.Lerp(1,.08f,shelterMix):0;
+            // Absent/forbidden actor is immediately silent; only an approaching visible actor fades in.
+            if(!active||!helicopter)StopRescueAudioV512();
             rotorGain=Mathf.MoveTowards(rotorGain,target,Time.unscaledDeltaTime*.20f);
             Loop(rotor,"rotor",rotorGain);
             if(rotorFilter)rotorFilter.cutoffFrequency=Mathf.Lerp(12000,550,shelterMix);
@@ -156,9 +167,14 @@ namespace TooLateToPanic
                 StartHazardAmbienceV54(); SetDisasterAmbienceVolume(.22f);
                 Play("warning",.35f);
             }
-            else if (phase == PanicPhase.Aftermath) SetDisasterAmbienceVolume(.14f);
+            else if (phase == PanicPhase.Aftermath)
+            {
+                StopRecoveryStormV512();
+                SetDisasterAmbienceVolume(.14f);
+            }
             else if (phase == PanicPhase.Success || phase == PanicPhase.Inspection || phase == PanicPhase.GameOver)
             {
+                if(World&&World.RecoveryResponseAllowedV512)StopRecoveryStormV512();
                 SetDisasterAmbienceVolume(.07f);
                 // The damage tour already owns settled ash/smoke. Stop active fire
                 // and its multi-floor scorch mesh before the house returns to cutaway.

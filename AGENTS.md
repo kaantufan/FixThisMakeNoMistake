@@ -198,3 +198,31 @@ Kesin kaynak/build/native sayıları yalnız LATEST ve HOME-V5.9-LOCAL-GLOW-DELI
 ## Home V5.10 —18 Ekim 2026
 
 Kapaklı gerçek stok kaynakları toplanana kadar sürekli kendi görünen meshinde parlar; boş/AutoLooted kaynakta söner. Yakın ve karakterin baktığı yöndeki fiziksel uygun hedef otomatik seçilir; Q/fare isteğe bağlı seçimi dururken korunur, hareket/dönüşte otomatik seçim sürer. FPS merkez ışını korunur. Normal ilk dalgada amaç açıklaması ve kapatılamayan, gerçek malzeme/sabitleme/tesisat/su/gıda/sığınak durumundan ilerleyen adım kartı vardır; öğreticiden normal koşuya geçiş ve restart yeniden kurar. Sonraki dalgalar normal küçük yardımcıyı kullanır. 90+40s/1500bütçe/%75kayıp ve maliyet/iptal/controller/stok/RNG/skor/fiziksel sığınak korunur. Güncel kabul yalnız LATEST ve HOME-V5.10-ONBOARDING-DELIVERY-2026-10-18.md ile bağlıdır; eski DLL sayıları aktarılmaz. OS/insan kabulü ayrı, açık eski player ve bağımsız FPS korunur. Yeni sağlayıcı/kredi/ödeme yoktur.
+
+
+## Home V5.11 —18 Ekim 2026
+
+Üst kat duvarları ve kurulu çatı tek güçlendirme işlemidir. Çatı otomatik/Q/fare hedefinden çıkarılır; doğrudan çatı işi model/iş kapısında reddedilir. Üst kattaki herhangi bir duvarın 3 eylemi tüm grubun en düşük seviyesini bir artırır; ilerideki parça gerilemez, çatı duvar eylemiyle yetişir. Gerçek parça tarifleri toplamı önizlemede gösterilir ve tamamlamada bir kez alınır. İptal ücretsiz; eksik bütçe/malzeme veya değişen üye/seviye atomik harcamasız reddir. Zemin kat/bodrum yalnız kendi duvarlarını güçlendirir. Çatı hasarı/görsel donanımı/fiziksel engeller, 90+40s/1500/%75 ve gerçek stok/skor/controller kuralları korunur. Güncel kimlik yalnız LATEST ve HOME-V5.11-ROOF-WALL-DELIVERY-2026-10-18.md ile bağlıdır. Eski DLL sayıları aktarılmaz. OS/insan kabulü ayrı; kayıtlar/bağımsız FPS korunur; yeni sağlayıcı/kredi/ödeme yoktur.
+
+
+## Home V5.13 —18 Ekim 2026
+
+Afete özel kritik işler gerçek ankraj/elektrik/gaz/çatı durumunu gösterir; eksik afet önlemi gerçek ek hasara bağlıdır. Su/gıda/sığınak sert kapıları korunur. Normal gerçek afet sonunda hasarlı yapı grubu RNG ile bir kademe düşebilir; üst kat duvarları ve kurulu çatı birlikte düşer, T0 tabanı ve mevcut dalganın çözülmüş hasarı korunur. Aynı dalga/koşu tekrarında veya UI okumasında yeniden zar atılmaz. Öğretici/simülasyon/kısa akış/F3/kaybetmeme düşüş oluşturmaz. Gerçek eylem tuşu ve yeni dalganın seçilmiş afet duyurusu sunulur; duyuru oyun saatini/afet RNG'sini değiştirmez. V5.12-r2 doğrulanmış ara kaynak/aday olarak korunur, ayrıca paket/LATEST/yayın olmadı.
+
+Üst fiziksel panik odasında koruyucu çelik kapı/kuşak, ilk yardım, mevcut radyo ve levha vardır; mevcut bank/yelek/erzak/collider/gerçek giriş korunur. Kullanıcının açık düzeltmesiyle masa/sandalye/koltuk/renkleri/çalışma masası ve yetişkin/çocuk yatağına gerçek iki vidalı sabitleme eklendi; hasar bağışıklığı yoktur. Afete özel kritik önlemlerin eksikliği gerçek ek hasar doğurur; mevcut temel risk ve75% kayıp kapısı korunur. Malzeme/bütçe gerçek iş tamamlandığında bir kez düşer; iptal ücretsizdir. Malzeme popup'ı genel metin kelimelerinden üretilmez; gerçek hedefli iş eksikliğiyle bağlıdır, hedef/eksik durumu değişince temizlenir.
+
+Açılış/deprem/sonuçta farklı kadrajlar, plan içi kısa hareket ve planlar arası kesme vardır. Mevcut16s/süre/skip/model/gerçek sığınak kabulü korunur. Afet ve kısa akış afetlerinde dış siviller görünmez; önceki kurtarma kökleri ve helikopter sonraki hazırlık/afette kapanır/rotor durur. Ekipler gerçek dalga sonucundan sonra gelir; aktif fırtına görsel/sesi önce söner, selin çekilmesi korunur. Üst duvar+çatı ortak işlemi,90+40s/1500/%75, gerçek maliyet/stok/controller/skor kuralları korunur. Güncel kaynak/DLL/ZIP/Editor/native yalnız LATEST ve HOME-V5.13-CRITICAL-DELIVERY-2026-10-18.md ile bağlıdır. V5.11 yerel paket ayrı yayımlanmadı; eski sonuçlar yeni DLL'ye aktarılmaz. OS/insan kabulü ayrı, açık eski player/kayıtlar/bağımsız FPS korunur; yeni sağlayıcı/kredi/ödeme yoktur.
+
+
+## Home V5.13-r5 —18 Ekim 2026
+
+Son kullanıcı isteğiyle normal oyun başlangıcı otomatik tam ekran olur. Önceki büyük etkileşim kartı yerine nesne üzerinde küçük yuvarlatılmış gerçek tuş balonu gösterilir. Gerçek eylem tuşu, yakınlık/ışın/kat/modal kapıları ve skor/hasar/maliyet/iptal/controller kuralları korunur. Yeni shader/model/ses/sağlayıcı/kredi/ödeme yoktur. Önceki r3 yerel paket ve hazırlanmış public index idi; push/tag/release yapılmadan bu adayla güncellendi. Önceki gerçek public sürüm V5.10-r2 kalır. R3 kaynak/native sayıları yeni DLL kanıtı değildir.
+
+Güncel kimlik LATEST ve HOME-V5.13-CRITICAL-DELIVERY-2026-10-18.md ile bağlıdır. Aynı DLL kritik görev/kat kaybı/tuş balonu/dalga duyurusu ve korunan sunum regresyonu ayrı raporlanır; normal otomatik tam ekran gözlemi ayrıca bağlanır. OS girdisi, insan oynanış/okunurluk/dinleme/konfor ve tam kampanya kabulü ayrı kalır. Eski açık oyuncular, gerçek kayıtlar, bağımsız FPS, önceki küçük belgeler ve eşzamanlı yerel video korunur.
+
+
+## Home V5.13-r6 —18 Ekim 2026
+
+Son kullanıcı isteğiyle sağ alttaki yinelenen eylem düğmesi kaldırıldı; nesne üzerindeki küçük yuvarlatılmış gerçek tuş balonu korunur. Önceki normal otomatik tam ekran kararı devam eder. Önceki büyük etkileşim kartı yerine nesne üzerinde küçük yuvarlatılmış gerçek tuş balonu gösterilir. Gerçek eylem tuşu, yakınlık/ışın/kat/modal kapıları ve skor/hasar/maliyet/iptal/controller kuralları korunur. Yeni shader/model/ses/sağlayıcı/kredi/ödeme yoktur. Önceki r3 ve r5 yerel paketler ve hazırlanmış public indexler idi; push/tag/release yapılmadan bu adayla güncellendi. Önceki gerçek public sürüm V5.10-r2 kalır. R3/R5 kaynak/native sayıları yeni DLL kanıtı değildir.
+
+Güncel kimlik LATEST ve HOME-V5.13-CRITICAL-DELIVERY-2026-10-18.md ile bağlıdır. Aynı DLL kritik görev/kat kaybı/tuş balonu/dalga duyurusu ve korunan sunum regresyonu ayrı raporlanır; normal otomatik tam ekran gözlemi ayrıca bağlanır. OS girdisi, insan oynanış/okunurluk/dinleme/konfor ve tam kampanya kabulü ayrı kalır. Eski açık oyuncular, gerçek kayıtlar, bağımsız FPS, önceki küçük belgeler ve eşzamanlı yerel video korunur.

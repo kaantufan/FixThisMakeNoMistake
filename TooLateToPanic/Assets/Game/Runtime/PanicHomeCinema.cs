@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -258,11 +258,12 @@ namespace TooLateToPanic
             Vector3 destination, target;
             float fov;
             GetResidenceCinematicShot(out destination, out target, out fov);
-            int shot = CinematicKind == "Disaster" ? (residenceCinematicAge < 1.65f ? 0 : residenceCinematicAge < 4.7f ? 1 : residenceCinematicAge < 6.2f ? 2 : 3) :
-                CinematicKind == "Aftermath" ? (residenceCinematicAge < 2.15f ? 4 : 5) : CinematicKind == "Opening" ? (residenceCinematicAge < 4 ? 6 : residenceCinematicAge < 8 ? 7 : residenceCinematicAge < 12 ? 8 : 9) : 10;
+            int shot = ResidenceShotIndexV512();
             bool cut = residenceCameraCutPending;
             if (shot != residenceShotIndex)
             {
+                // Editorial angle change: never interpolate a camera through the house.
+                cut = true;
                 residenceShotIndex = shot;
                 residenceShotBlendStartV5 = View.transform.position;
                 residenceShotBlendRotationV5 = View.transform.rotation;
@@ -297,6 +298,13 @@ namespace TooLateToPanic
         }
 
         void GetResidenceCinematicShot(out Vector3 camera, out Vector3 target, out float fov)
+        {
+            // The baseline must execute first: quake readability also owns visual restoration.
+            GetResidenceCinematicShotBaselineV512(out camera, out target, out fov);
+            DirectResidenceShotV512(ref camera, ref target, ref fov);
+        }
+
+        void GetResidenceCinematicShotBaselineV512(out Vector3 camera, out Vector3 target, out float fov)
         {
             if (TryQuakeReadabilityShotV414(out camera, out target, out fov)) return;
             if (StoryShotV414(out camera, out target, out fov)) return;
