@@ -42,10 +42,22 @@ namespace TooLateToPanic
 
         void AnimateV5Furniture()
         {
+            float dt=Mathf.Min(Time.deltaTime,.08f);
             foreach(var source in Expedition.Sources)
             {
                 if(hinges.TryGetValue(source.Id,out var hinge))hinge.open=source.Open;
-                if(sourceObjects.TryGetValue(source.Id,out var visual)&&visual&&visual.TryGetComponent<PanicV5FurnitureRig>(out var rig)){rig.SetOpen(source.Open);AdvanceSafeFurnitureV5(rig,Mathf.Min(Time.deltaTime,.08f));}
+                if(sourceObjects.TryGetValue(source.Id,out var visual)&&visual&&visual.TryGetComponent<PanicV5FurnitureRig>(out var rig))
+                {
+                    rig.MainsPowered=MainsPoweredV5;
+                    rig.SetOpen(source.Open);
+                    AdvanceSafeFurnitureV5(rig,dt);
+                }
+            }
+            if(residenceTargets.TryGetValue("@microwave",out var micro)&&micro&&micro.TryGetComponent<PanicV5FurnitureRig>(out var microRig))
+            {
+                microRig.MainsPowered=MainsPoweredV5;
+                microRig.SetOpen(microwaveOpenV5);
+                microRig.Advance(dt);
             }
             TickSecondaryFeedbackV5();
         }

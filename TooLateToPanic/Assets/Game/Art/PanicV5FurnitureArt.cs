@@ -22,11 +22,13 @@ namespace TooLateToPanic
                 case "v5_cabinet_pantry":return V(1.14f,1.96f,.55f);
                 case "v5_cabinet_wardrobe":return V(1.62f,2.20f,.64f);
                 case "v5_cabinet_utility":return V(1.12f,1.08f,.52f);
+                case "v5_microwave":case "microwave":return V(.54f,.32f,.39f);
                 default:throw new ArgumentException("Unknown V5 storage art id: "+id);
             }
         }
         public static GameObject Create(string id,bool colliders=true)
         {
+            if(id=="v5_microwave"||id=="microwave")return CreateMicrowave(colliders);
             PanicHomeArt.EnsurePalette();var size=Size(id);var root=new GameObject("V5 "+id);
             var owner=root.AddComponent<PanicV5AssetOwner>();var rig=root.AddComponent<PanicV5FurnitureRig>();
             rig.ArtId=id;rig.LocalSize=size;
@@ -104,8 +106,26 @@ namespace TooLateToPanic
             if(wardrobe)
             {
                 b.Cylinder(V(0,1.60f,.04f),.016f,w-.17f,M.Steel,10,Quaternion.Euler(0,0,90));
+                for(int hg=-1;hg<=1;hg++)b.Box(V(hg*.34f,1.52f,.04f),V(.014f,.10f,.28f),M.Steel,.003f);
                 b.Box(V(0,h-.12f,-d*.5f-.015f),V(w+.045f,.07f,.065f),M.WalnutLight,.012f);
             }
+            if(pantry)
+            {
+                for(int i=0;i<levels.Length;i++)
+                    b.Cylinder(V(0,levels[i]+.042f,-d*.5f+.085f),.008f,w-.16f,M.Steel,8,Quaternion.Euler(0,0,90));
+            }
+            // Interior cabinet ceiling light (illuminates when cabinet doors open while MainsPowered is true)
+            var lampNode=Group(root,"V5 cabinet interior lamp",V(pantry||wardrobe?0:-w*.24f,h-.11f,-.06f));
+            var lb=new B();lb.Box(Vector3.zero,V(pantry||wardrobe?w*.48f:w*.32f,.018f,.045f),M.Linen,.004f);lb.Attach(lampNode,"CabinetInteriorLampLens");
+            var lampMat=new Material(Shader.Find("Standard")){name="V5 cabinet lamp "+rig.ArtId,color=new Color(1f,.92f,.74f)};
+            lampMat.EnableKeyword("_EMISSION");lampMat.SetColor("_EmissionColor",Color.black);
+            root.GetComponent<PanicV5AssetOwner>().Owned.Add(lampMat);
+            var lampRen=lampNode.GetComponentInChildren<Renderer>();if(lampRen)lampRen.sharedMaterial=lampMat;
+            var intLight=lampNode.AddComponent<Light>();intLight.type=LightType.Point;intLight.color=new Color(1f,.86f,.58f);
+            intLight.range=1.85f;intLight.intensity=0f;intLight.enabled=false;intLight.shadows=LightShadows.None;intLight.renderMode=LightRenderMode.ForceVertex;
+            rig.InteriorLight=intLight;rig.InteriorLightRenderer=lampRen;
+
+            var drawers=new List<Transform>();var drawerDist=new List<float>();
             if(pantry||wardrobe)
             {
                 foreach(int s in new[]{-1,1})
@@ -130,7 +150,7 @@ namespace TooLateToPanic
             }
             else
             {
-                // A visible asymmetric utility unit: left cupboard, right three actual drawer fronts.
+                // A visible asymmetric utility unit: left cupboard, right three actual articulated drawers.
                 float leftWidth=w*.51f;
                 var hinge=Group(root,"V5 utility cupboard hinge",V(-w*.5f+.04f,.59f,-d*.5f-.015f));var db=new B();
                 Solid(hinge,db,"utility opening door",V(leftWidth*.5f,0,0),V(leftWidth,.75f,.052f),body,collision,.012f);
@@ -140,12 +160,90 @@ namespace TooLateToPanic
                 for(int drawer=0;drawer<3;drawer++)
                 {
                     float y=.34f+drawer*.26f;
-                    b.Box(V(w*.26f,y,-d*.5f-.018f),V(w*.43f,.23f,.06f),body,.012f);
-                    b.Beam(V(w*.26f-.10f,y,-d*.5f-.063f),V(w*.26f+.10f,y,-d*.5f-.063f),.023f,M.Steel,.004f);
+                    var drPivot=Group(root,"V5 utility drawer "+drawer,V(w*.26f,y,-d*.5f-.018f));
+                    var drb=new B();
+                    drb.Box(Vector3.zero,V(w*.43f,.23f,.06f),body,.012f);
+                    drb.Box(V(0,.04f,-.034f),V(.11f,.036f,.008f),M.Linen,.002f);
+                    drb.Beam(V(-.10f,-.02f,-.045f),V(.10f,-.02f,-.045f),.023f,M.Steel,.004f);
+                    drb.Attach(drPivot,"UtilitySlidingDrawerFront");
+                    drawers.Add(drPivot.transform);drawerDist.Add(.14f-drawer*.03f);
                 }
                 b.Box(V(0,h+.002f,0),V(w+.055f,.055f,d+.055f),M.WalnutLight,.012f);
             }
-            b.Attach(root,"CabinetCarcassShelvesFeetCornice");rig.Doors=doors.ToArray();rig.OpenAngles=degrees.ToArray();rig.LootAnchors=anchors.ToArray();
+            b.Attach(root,"CabinetCarcassShelvesFeetCornice");
+            rig.Doors=doors.ToArray();rig.OpenAngles=degrees.ToArray();
+            rig.Drawers=drawers.ToArray();rig.DrawerDistances=drawerDist.ToArray();
+            rig.LootAnchors=anchors.ToArray();
+        }
+        public static GameObject CreateMicrowave(bool collision=true)
+        {
+            PanicHomeArt.EnsurePalette();
+            var root=new GameObject("V5 microwave");
+            var owner=root.AddComponent<PanicV5AssetOwner>();
+            var rig=root.AddComponent<PanicV5FurnitureRig>();
+            rig.ArtId="v5_microwave";rig.LocalSize=V(.54f,.32f,.40f);
+            float w=.54f,h=.32f,d=.40f;
+            var b=new B();
+            foreach(float sx in new[]{-.21f,.21f})foreach(float sz in new[]{-.15f,.15f})
+                b.Cylinder(V(sx,.01f,sz),.022f,.02f,M.Black,10);
+            b.Box(V(0,.035f,0),V(w,.03f,d),M.Steel,.006f);
+            b.Box(V(0,h-.015f,0),V(w,.03f,d),M.Steel,.008f);
+            b.Box(V(0,h*.5f,d*.5f-.015f),V(w,h-.04f,.03f),M.Charcoal,.006f);
+            b.Box(V(-w*.5f+.018f,h*.5f,0),V(.036f,h-.04f,d),M.Steel,.006f);
+            b.Box(V(w*.5f-.065f,h*.5f,0),V(.13f,h-.04f,d),M.Steel,.008f);
+            b.Box(V(w*.5f-.065f,h*.5f,-d*.5f-.004f),V(.11f,h-.06f,.012f),M.Black,.004f);
+            b.Cylinder(V(w*.5f-.065f,.13f,-d*.5f-.016f),.026f,.022f,M.Steel,14,Quaternion.Euler(90,0,0));
+            for(int btn=0;btn<4;btn++)
+                b.Box(V(w*.5f-.09f+(btn%2)*.05f,.065f+(btn/2)*.028f,-d*.5f-.012f),V(.038f,.016f,.008f),M.Linen,.002f);
+            b.Box(V(-.055f,.052f,.01f),V(.36f,.01f,.34f),M.Linen,.002f);
+            b.Box(V(-.055f,h*.5f,.17f),V(.36f,h-.06f,.01f),M.Linen,.002f);
+            b.Attach(root,"MicrowaveHousingCavityControlPanel");
+
+            // Digital green LED clock/timer display (registered in mainsEmittersV5)
+            var disp=Group(root,"DigitalDisplay_Emitter",V(w*.5f-.065f,.24f,-d*.5f-.011f));
+            var dispB=new B();dispB.Box(Vector3.zero,V(.082f,.038f,.006f),M.Linen,.002f);dispB.Attach(disp,"MicrowaveDigitalDisplay");
+            var dispMat=new Material(Shader.Find("Standard")){name="V5 microwave LED display",color=new Color(.20f,.95f,.45f)};
+            dispMat.EnableKeyword("_EMISSION");dispMat.SetColor("_EmissionColor",new Color(.18f,.88f,.38f)*1.4f);
+            owner.Owned.Add(dispMat);
+            var dispRen=disp.GetComponentInChildren<Renderer>();if(dispRen)dispRen.sharedMaterial=dispMat;
+
+            // Interior cavity light + emitter (controlled by PanicV5FurnitureRig when door opens and MainsPowered is true)
+            var cavLamp=Group(root,"V5 microwave interior lamp",V(.08f,.26f,0));
+            var cavB=new B();cavB.Box(V(.03f,0,0),V(.016f,.04f,.12f),M.Linen,.003f);cavB.Attach(cavLamp,"MicrowaveCavityBulb");
+            var cavMat=new Material(Shader.Find("Standard")){name="V5 microwave cavity bulb",color=new Color(1f,.90f,.68f)};
+            cavMat.EnableKeyword("_EMISSION");cavMat.SetColor("_EmissionColor",Color.black);
+            owner.Owned.Add(cavMat);
+            var cavRen=cavLamp.GetComponentInChildren<Renderer>();if(cavRen)cavRen.sharedMaterial=cavMat;
+            var cavLight=cavLamp.AddComponent<Light>();cavLight.type=LightType.Point;cavLight.color=new Color(1f,.86f,.58f);
+            cavLight.range=1.35f;cavLight.intensity=.55f;cavLight.shadows=LightShadows.None;cavLight.renderMode=LightRenderMode.ForceVertex;cavLight.enabled=false;
+            rig.InteriorLight=cavLight;rig.InteriorLightRenderer=cavRen;
+
+            // Rotating glass turntable plate
+            var tt=Group(root,"Turntable_Pivot",V(-.055f,.065f,0));
+            var ttb=new B();
+            ttb.Cylinder(V(0,-.003f,0),.10f,.008f,M.Charcoal,14);
+            ttb.Cylinder(V(0,.005f,0),.145f,.010f,M.Glass,18);
+            ttb.Attach(tt,"MicrowaveGlassTurntable");
+            rig.TurntablePivot=tt.transform;
+
+            // Hinged Microwave Door (named DoorLeaf so BindHinge and PanicV5FurnitureRig both work)
+            var door=Group(root,"DoorLeaf",V(-.252f,.16f,-.202f));
+            var db=new B();float cx=.194f;
+            db.Box(V(cx,.115f,-.006f),V(.388f,.045f,.024f),M.Charcoal,.005f);
+            db.Box(V(cx,-.115f,-.006f),V(.388f,.045f,.024f),M.Charcoal,.005f);
+            db.Box(V(.024f,0,-.006f),V(.048f,.19f,.024f),M.Charcoal,.005f);
+            db.Box(V(.364f,0,-.006f),V(.048f,.19f,.024f),M.Charcoal,.005f);
+            db.Box(V(cx,0,-.006f),V(.295f,.185f,.010f),M.Glass,.002f);
+            db.Box(V(.357f,0,-.030f),V(.018f,.19f,.024f),M.Steel,.005f);
+            db.Attach(door,"MicrowaveHingedDoor");
+            if(collision)
+            {
+                var dc=door.AddComponent<BoxCollider>();dc.center=V(cx,0,-.006f);dc.size=V(.388f,.275f,.028f);
+                var bc=root.AddComponent<BoxCollider>();bc.center=V(0,h*.5f,0);bc.size=V(w,h,d);
+            }
+            rig.Doors=new[]{door.transform};rig.OpenAngles=new[]{-95f};
+            Refinish(root,owner);owner.CaptureGeneratedMeshes();
+            return root;
         }
         static void Refinish(GameObject root,PanicV5AssetOwner owner)
         {
@@ -155,7 +253,7 @@ namespace TooLateToPanic
                 var materials=r.sharedMaterials;
                 for(int i=0;i<materials.Length;i++)
                 {
-                    var source=materials[i];if(!source)continue;
+                    var source=materials[i];if(!source||!source.name.StartsWith("HomeV2_"))continue;
                     if(!map.TryGetValue(source,out var mat))
                     {
                         mat=new Material(source){name="V5 storage "+source.name};mat.SetFloat("_Glossiness",.20f);

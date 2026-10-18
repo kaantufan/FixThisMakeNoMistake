@@ -77,13 +77,192 @@ namespace TooLateToPanic
             Bake(HomeArt, "roof", PanicHomeArt.BuildRoof());
 
             foreach (var id in ResidenceIds) Bake(ResidenceArt, id, PanicResidenceArt.Create(id));
+            foreach (var v5Id in new[] { "v5_shelf_large", "v5_shelf_small", "v5_cabinet_pantry", "v5_cabinet_wardrobe", "v5_cabinet_utility", "v5_microwave" })
+                Bake(ResidenceArt, v5Id, PanicV5FurnitureArt.Create(v5Id, true));
             Bake(ResidenceArt, "basement", PanicResidenceArt.BuildBasement());
             Bake(ResidenceArt, "balcony", PanicResidenceArt.BuildBalcony());
             Bake(ResidenceArt, "bathroom", PanicResidenceArt.BuildBathroom());
             Bake(ResidenceArt, "garage", PanicResidenceArt.BuildGarage());
             Bake(ResidenceArt, "bunker_interior", PanicResidenceArt.BuildBunkerInterior());
+            BakeCuratedV5Prefabs();
 
             AssetDatabase.SaveAssets();
+        }
+
+        [MenuItem("Too Late to Panic/Bake Curated V5 Prefabs")]
+        public static void BakeCuratedV5PrefabsMenu()
+        {
+            Folder(Generated); Folder(ResidenceArt);
+            foreach (var v5Id in new[] { "v5_shelf_large", "v5_shelf_small", "v5_cabinet_pantry", "v5_cabinet_wardrobe", "v5_cabinet_utility", "v5_microwave" })
+                Bake(ResidenceArt, v5Id, PanicV5FurnitureArt.Create(v5Id, true));
+            BakeCuratedV5Prefabs();
+            AssetDatabase.SaveAssets();
+            PanicAssetVerification.RunAllTests();
+        }
+
+        public static void BakeCuratedV5Prefabs()
+        {
+            const string modelsDir = "Assets/Game/Resources/CuratedYarkin/Models";
+            const string prefabsDir = "Assets/Game/Resources/CuratedYarkin/Prefabs";
+            Folder(prefabsDir);
+
+            Transform FindNode(Transform root, string nodeName)
+            {
+                return root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == nodeName);
+            }
+            Light AddLightChild(Transform parent, string name, LightType type, Color color, float range, float intensity, float spotAngle = 48f, bool enabled = true)
+            {
+                if (!parent) return null;
+                var go = new GameObject(name);
+                go.transform.SetParent(parent, false);
+                var l = go.AddComponent<Light>();
+                l.type = type; l.color = color; l.range = range; l.intensity = intensity;
+                if (type == LightType.Spot) l.spotAngle = spotAngle;
+                l.shadows = LightShadows.None; l.renderMode = LightRenderMode.ForceVertex;
+                l.enabled = enabled;
+                return l;
+            }
+
+            string[] allNames =
+            {
+                "Ambulance", "PoliceCar", "FireEngine", "RescueTruck", "ZodiacBoat",
+                "Microwave", "ShelfLarge", "ShelfSmall",
+                "CabinetPantry", "CabinetWardrobe", "CabinetUtility",
+                "ResponderKit_Police", "ResponderKit_Firefighter", "ResponderKit_Paramedic", "ResponderKit_Rescue"
+            };
+
+            foreach (string assetName in allNames)
+            {
+                string fbxPath = modelsDir + "/SM_" + assetName + ".fbx";
+                var fbx = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+                if (!fbx)
+                {
+                    Debug.LogWarning("CURATED_V5_FBX_MISSING " + fbxPath);
+                    continue;
+                }
+                var root = UnityEngine.Object.Instantiate(fbx);
+                root.name = "PF_" + assetName;
+                var visual = root.transform;
+
+                if (assetName == "Ambulance" || assetName == "PoliceCar" || assetName == "FireEngine" || assetName == "RescueTruck")
+                {
+                    var rig = root.AddComponent<PanicV5VehicleRig>();
+                    rig.ServiceId = assetName;
+                    rig.Wheels = new[] { FindNode(visual, "Wheel_FL_Pivot"), FindNode(visual, "Wheel_FR_Pivot"), FindNode(visual, "Wheel_RL_Pivot"), FindNode(visual, "Wheel_RR_Pivot") }.Where(x => x != null).ToArray();
+                    rig.SteeringWheel = FindNode(visual, "SteeringWheel_Pivot");
+                    var doors = new System.Collections.Generic.List<Transform>();
+                    var angles = new System.Collections.Generic.List<float>();
+                    void TryDoor(string n, float a) { var d = FindNode(visual, n); if (d) { doors.Add(d); angles.Add(a); } }
+                    TryDoor("Door_FrontLeft_Pivot", -64f);
+                    TryDoor("Door_FrontRight_Pivot", 64f);
+                    TryDoor("Door_RearLeft_Pivot", -74f);
+                    TryDoor("Door_RearRight_Pivot", 74f);
+                    TryDoor("Compartment_Left_Pivot", -68f);
+                    TryDoor("Compartment_Right_Pivot", 68f);
+                    rig.Doors = doors.ToArray();
+                    rig.DoorAngles = angles.ToArray();
+
+                    var lbL = FindNode(visual, "Lightbar_Left_Emitter");
+                    var lbR = FindNode(visual, "Lightbar_Right_Emitter");
+                    Color cL = new Color(1f, 0.18f, 0.14f);
+                    Color cR = assetName == "RescueTruck" ? new Color(1f, 0.65f, 0.12f) : new Color(0.18f, 0.56f, 1f);
+                    var flL = AddLightChild(lbL, "Beacon_Light_L", LightType.Point, cL, 7.5f, 2.0f);
+                    var flR = AddLightChild(lbR, "Beacon_Light_R", LightType.Point, cR, 7.5f, 2.0f);
+                    rig.FlashLights = new[] { flL, flR }.Where(x => x != null).ToArray();
+                    rig.FlashRenderers = new[] { lbL ? lbL.GetComponent<Renderer>() : null, lbR ? lbR.GetComponent<Renderer>() : null }.Where(x => x != null).ToArray();
+                    rig.FlashColors = new[] { cL, cR };
+
+                    var hlL = FindNode(visual, "Headlight_Left_Emitter");
+                    var hlR = FindNode(visual, "Headlight_Right_Emitter");
+                    var spotL = AddLightChild(hlL, "Headlight_Spot_L", LightType.Spot, new Color(1f, 0.97f, 0.88f), 14f, 1.6f, 52f);
+                    var spotR = AddLightChild(hlR, "Headlight_Spot_R", LightType.Spot, new Color(1f, 0.97f, 0.88f), 14f, 1.6f, 52f);
+                    if (spotL) spotL.transform.localRotation = Quaternion.Euler(8f, 180f, 0f);
+                    if (spotR) spotR.transform.localRotation = Quaternion.Euler(8f, 180f, 0f);
+                    rig.Headlights = new[] { spotL, spotR }.Where(x => x != null).ToArray();
+                    rig.HeadlightRenderers = new[] { hlL ? hlL.GetComponent<Renderer>() : null, hlR ? hlR.GetComponent<Renderer>() : null }.Where(x => x != null).ToArray();
+
+                    var tlL = FindNode(visual, "Taillight_Left_Emitter");
+                    var tlR = FindNode(visual, "Taillight_Right_Emitter");
+                    var ptL = AddLightChild(tlL, "Taillight_Point_L", LightType.Point, new Color(1f, 0.14f, 0.10f), 3.2f, 0.85f);
+                    var ptR = AddLightChild(tlR, "Taillight_Point_R", LightType.Point, new Color(1f, 0.14f, 0.10f), 3.2f, 0.85f);
+                    rig.Taillights = new[] { ptL, ptR }.Where(x => x != null).ToArray();
+                    rig.TaillightRenderers = new[] { tlL ? tlL.GetComponent<Renderer>() : null, tlR ? tlR.GetComponent<Renderer>() : null }.Where(x => x != null).ToArray();
+
+                    if (assetName == "Ambulance")
+                    {
+                        var cabNode = FindNode(visual, "CabinInterior_Light_Emitter");
+                        rig.InteriorLight = AddLightChild(cabNode, "CabinInterior_PointLight", LightType.Point, new Color(0.95f, 0.98f, 1f), 2.8f, 1.15f, 48f, false);
+                        if (cabNode) rig.InteriorLightRenderer = cabNode.GetComponent<Renderer>();
+                    }
+                    else if (assetName == "FireEngine")
+                    {
+                        rig.LadderBasePivot = FindNode(visual, "Ladder_Turntable_Pivot");
+                        rig.LadderExtendPivot = FindNode(visual, "Ladder_FlySection_Pivot");
+                        rig.RoofMonitorPivot = FindNode(visual, "WaterMonitor_Pivot");
+                    }
+                    else if (assetName == "RescueTruck")
+                    {
+                        rig.WinchPivot = FindNode(visual, "FrontWinch_Drum_Pivot");
+                        rig.CraneBoomPivot = FindNode(visual, "RoofCrane_Boom_Pivot");
+                    }
+                }
+                else if (assetName == "ZodiacBoat")
+                {
+                    var rig = root.AddComponent<PanicV5VehicleRig>();
+                    rig.ServiceId = "FloodZodiac";
+                    rig.IsBoat = true;
+                    rig.OutboardPivot = FindNode(visual, "OutboardMotor_Pivot");
+                    rig.Propeller = FindNode(visual, "Propeller_Pivot");
+                    rig.SteeringWheel = FindNode(visual, "ConsoleSteering_Pivot");
+                    var bowNode = FindNode(visual, "BowSearchlight_Emitter") ?? FindNode(visual, "BowSearchlight_Pivot");
+                    var bowSpot = AddLightChild(bowNode, "BowSearchlight_Spot", LightType.Spot, new Color(1f, 0.97f, 0.88f), 16f, 1.85f, 46f);
+                    if (bowSpot) bowSpot.transform.localRotation = Quaternion.Euler(10f, 180f, 0f);
+                    rig.Headlights = bowSpot ? new[] { bowSpot } : Array.Empty<Light>();
+                    rig.HeadlightRenderers = bowNode && bowNode.GetComponent<Renderer>() ? new[] { bowNode.GetComponent<Renderer>() } : Array.Empty<Renderer>();
+                    var sternNode = FindNode(visual, "SternBeacon_Emitter");
+                    var sternPt = AddLightChild(sternNode, "SternBeacon_Point", LightType.Point, new Color(1f, 0.56f, 0.12f), 6.5f, 1.8f);
+                    rig.FlashLights = sternPt ? new[] { sternPt } : Array.Empty<Light>();
+                    rig.FlashRenderers = sternNode && sternNode.GetComponent<Renderer>() ? new[] { sternNode.GetComponent<Renderer>() } : Array.Empty<Renderer>();
+                    rig.FlashColors = new[] { new Color(1f, 0.56f, 0.12f) };
+                }
+                else if (assetName == "Microwave" || assetName == "ShelfLarge" || assetName == "ShelfSmall" ||
+                         assetName == "CabinetPantry" || assetName == "CabinetWardrobe" || assetName == "CabinetUtility")
+                {
+                    var rig = root.AddComponent<PanicV5FurnitureRig>();
+                    rig.ArtId = assetName;
+                    rig.TurntablePivot = FindNode(visual, "Turntable_Pivot");
+                    var dSingle = FindNode(visual, "Door_Pivot");
+                    var dLeft = FindNode(visual, "Door_Left_Pivot");
+                    var dRight = FindNode(visual, "Door_Right_Pivot");
+                    if (dSingle) { rig.Doors = new[] { dSingle }; rig.OpenAngles = new[] { -95f }; }
+                    else if (dLeft && dRight) { rig.Doors = new[] { dLeft, dRight }; rig.OpenAngles = new[] { -96f, 96f }; }
+                    var drTop = FindNode(visual, "Drawer_Top_Pivot");
+                    var drMid = FindNode(visual, "Drawer_Mid_Pivot");
+                    var drBot = FindNode(visual, "Drawer_Bot_Pivot");
+                    var drawers = new[] { drTop, drMid, drBot }.Where(x => x != null).ToArray();
+                    if (drawers.Length > 0)
+                    {
+                        rig.Drawers = drawers;
+                        rig.DrawerDistances = drawers.Select((_, idx) => -0.22f + idx * 0.03f).ToArray();
+                    }
+                    var lampNode = FindNode(visual, "CavityLight_Emitter") ?? FindNode(visual, "InteriorLight_Emitter");
+                    if (lampNode)
+                    {
+                        rig.InteriorLight = AddLightChild(lampNode, "Interior_PointLight", LightType.Point, new Color(1f, 0.88f, 0.62f), 1.45f, 0.58f, 48f, false);
+                        rig.InteriorLightRenderer = lampNode.GetComponent<Renderer>();
+                    }
+                }
+                else if (assetName == "ResponderKit_Firefighter" || assetName == "ResponderKit_Rescue")
+                {
+                    var hlNode = FindNode(visual, "Helmet_Headlamp_Emitter");
+                    var spot = AddLightChild(hlNode, "Headlamp_SpotLight", LightType.Spot, new Color(1f, 0.96f, 0.82f), 5.8f, 0.88f, 46f);
+                    if (spot) spot.transform.localRotation = Quaternion.Euler(8f, 180f, 0f);
+                }
+
+                PrefabUtility.SaveAsPrefabAsset(root, prefabsDir + "/PF_" + assetName + ".prefab");
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+            Debug.Log("HOME_V5_CURATED_PREFABS_BAKED count=" + allNames.Length);
         }
 
         static void BakeShaders()

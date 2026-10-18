@@ -603,6 +603,7 @@ namespace TooLateToPanic
             {
                 if (hit.collider == controller || hit.collider.GetComponentInParent<ResidenceLootPick>() || hit.transform.IsChildOf(player)) continue;
                 if (id == "@computer" && residenceTargets.TryGetValue(id, out var device) && device && hit.transform == device.transform.parent) continue;
+                if (id == "@microwave" && hit.collider && hit.collider.name.Contains("counter")) continue;
                 var pick = hit.collider.GetComponentInParent<HomePick>();
                 if (pick && (pick.Id == id || id == "@bunker" && pick.Id == "bunker" || id == "bagstation" && pick.Id == "@bagstation")) return true;
                 return false;
@@ -657,6 +658,7 @@ namespace TooLateToPanic
             if(focusId=="@radio") { ToggleRadio(); return; }
             if(focusId=="@fireplace") { ToggleHearth(); return; }
             if(focusId=="@computer") { ToggleComputer(); return; }
+            if(focusId=="@microwave") { ToggleMicrowaveV5(); return; }
             if(focusId=="@garage") { if(Model.UtilitySafety.PowerOff){Notice("Ana şalter kapalı; garajın iç kapısını kullan.");return;}garageOpen=!garageOpen; effects.Play("garage",.45f); UpdateContext(); return; }
             if (focusId == PanicItemActionRules.FireStationId) { BeginWork("fire", focusId); return; }
             if(focusId!=null&&focusId.StartsWith("@")&&hinges.ContainsKey(focusId)){ToggleDoor();UpdateContext();return;}

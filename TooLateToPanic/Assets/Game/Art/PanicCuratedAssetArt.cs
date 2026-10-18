@@ -155,6 +155,17 @@ namespace TooLateToPanic
                 case "breakerbox": asset="BreakerBox"; size=.75f; break;
                 case "airconditioner": asset="AirConditioner"; size=1.1f; break;
                 case "firecabinet": asset="FireCabinet"; size=.9f; break;
+                case "microwave": asset="Microwave"; size=.54f; break;
+                case "shelflarge": asset="ShelfLarge"; size=1.96f; break;
+                case "shelfsmall": asset="ShelfSmall"; size=1.34f; break;
+                case "cabinetpantry": asset="CabinetPantry"; size=1.92f; break;
+                case "cabinetwardrobe": asset="CabinetWardrobe"; size=2.04f; break;
+                case "cabinetutility": asset="CabinetUtility"; size=1.82f; break;
+                case "ambulance": asset="Ambulance"; size=4.68f; break;
+                case "policecar": asset="PoliceCar"; size=4.34f; break;
+                case "fireengine": asset="FireEngine"; size=5.18f; break;
+                case "rescuetruck": asset="RescueTruck"; size=4.76f; break;
+                case "zodiacboat": asset="ZodiacBoat"; size=3.45f; break;
                 default: visual=null; return false;
             }
             visual=CreateDisplay(asset,size);

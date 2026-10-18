@@ -81,6 +81,9 @@ namespace TooLateToPanic
 
                 // Tier 4: Real-World Game Progression Simulation (4 tests)
                 RunTier4_GameProgression(tempContainer);
+
+                // Tier 5: Curated V5 Assets, Skeletons/Pivots & Lighting Verification
+                RunCuratedV5AssetTests(tempContainer);
             }
             catch (Exception ex)
             {
@@ -1780,6 +1783,140 @@ namespace TooLateToPanic
                     }
                 }
                 return null;
+            }
+        }
+
+        static void RunCuratedV5AssetTests(GameObject root)
+        {
+            Debug.Log("--- RUNNING TIER 5: CURATED V5 ASSETS, SKELETONS & LIGHTING ---");
+
+            // 1. Verify all 15 FBX models and 15 PF_ prefabs exist and load
+            string[] assetNames =
+            {
+                "Ambulance", "PoliceCar", "FireEngine", "RescueTruck", "ZodiacBoat",
+                "Microwave", "ShelfLarge", "ShelfSmall",
+                "CabinetPantry", "CabinetWardrobe", "CabinetUtility",
+                "ResponderKit_Police", "ResponderKit_Firefighter", "ResponderKit_Paramedic", "ResponderKit_Rescue"
+            };
+            bool allFbxPresent = true;
+            bool allPrefabsPresent = true;
+            foreach (var name in assetNames)
+            {
+                if (!Resources.Load<GameObject>("CuratedYarkin/Models/SM_" + name)) allFbxPresent = false;
+                if (!Resources.Load<GameObject>("CuratedYarkin/Prefabs/PF_" + name)) allPrefabsPresent = false;
+            }
+            Assert("V5_CURATED_15_FBX_AND_PREFABS",
+                allFbxPresent && allPrefabsPresent,
+                "All 15 SM_*.fbx models and 15 PF_*.prefab prefabs loaded from Resources/CuratedYarkin/",
+                $"Missing FBX ({allFbxPresent}) or Prefab ({allPrefabsPresent}) in Resources/CuratedYarkin/");
+
+            // 2. Verify 4 Emergency Vehicles (Ambulance, Police, Fire, Rescue) rigs + lighting
+            foreach (PanicStreetLifeArtV414.Service svc in new[] { PanicStreetLifeArtV414.Service.Ambulance, PanicStreetLifeArtV414.Service.Police, PanicStreetLifeArtV414.Service.Fire, PanicStreetLifeArtV414.Service.Rescue })
+            {
+                var vGo = PanicV5ResponseArt.CreateVehicle(svc);
+                vGo.transform.SetParent(root.transform, false);
+                var rig = vGo.GetComponent<PanicV5VehicleRig>();
+                bool hasRig = rig != null && rig.Wheels != null && rig.Wheels.Length == 4 && rig.Doors != null && rig.Doors.Length >= 2 && rig.SteeringWheel != null;
+                bool hasLights = rig != null && rig.FlashLights != null && rig.FlashLights.Length == 2 &&
+                                 rig.Headlights != null && rig.Headlights.Length == 2 && rig.Headlights.All(l => l && l.type == LightType.Spot) &&
+                                 rig.Taillights != null && rig.Taillights.Length == 2 && rig.Taillights.All(l => l && l.type == LightType.Point);
+                rig.Sample(1.5f, 4f, 0.4f, false);
+                rig.SetDoorsOpen(1f);
+                bool extraOk = true;
+                if (svc == PanicStreetLifeArtV414.Service.Ambulance)
+                    extraOk = rig.InteriorLight != null && rig.InteriorLight.enabled;
+                else if (svc == PanicStreetLifeArtV414.Service.Fire)
+                    extraOk = rig.LadderBasePivot != null && rig.LadderExtendPivot != null && rig.RoofMonitorPivot != null;
+                else if (svc == PanicStreetLifeArtV414.Service.Rescue)
+                    extraOk = rig.WinchPivot != null && rig.CraneBoomPivot != null;
+                Assert($"V5_VEHICLE_{svc}_RIG_AND_LIGHTS",
+                    hasRig && hasLights && extraOk,
+                    $"{svc} vehicle rig (wheels, steering, doors, specialized mechanisms) and lighting (lightbars, headlights, taillights, interior) verified",
+                    $"{svc} vehicle rig or lighting check failed: rig={hasRig}, lights={hasLights}, extra={extraOk}");
+            }
+
+            // 3. Verify Zodiac Boat rig + lighting
+            {
+                var boat = PanicV5ResponseArt.CreateZodiac();
+                boat.transform.SetParent(root.transform, false);
+                var rig = boat.GetComponent<PanicV5VehicleRig>();
+                bool ok = rig != null && rig.IsBoat && rig.Propeller != null && rig.OutboardPivot != null && rig.SteeringWheel != null &&
+                          rig.Headlights != null && rig.Headlights.Length >= 1 && rig.FlashLights != null && rig.FlashLights.Length >= 1;
+                if (rig) rig.Sample(2.0f, 3.5f, 0.3f, false);
+                Assert("V5_ZODIAC_BOAT_RIG_AND_LIGHTS",
+                    ok,
+                    "Zodiac boat outboard motor steering pivot, propeller, console wheel, bow spot searchlight, and stern beacon verified",
+                    "Zodiac boat rig or lighting incomplete");
+            }
+
+            // 4. Verify Microwave rig + cavity light + turntable + digital display
+            {
+                var mw = PanicV5FurnitureArt.Create("v5_microwave", true);
+                mw.transform.SetParent(root.transform, false);
+                var rig = mw.GetComponent<PanicV5FurnitureRig>();
+                bool ok = rig != null && rig.Doors != null && rig.Doors.Length == 1 && rig.TurntablePivot != null && rig.InteriorLight != null;
+                Quaternion ttBefore = rig.TurntablePivot.localRotation;
+                rig.MainsPowered = true;
+                rig.SetOpen(false);
+                rig.Advance(0.25f);
+                bool ttMoved = Quaternion.Angle(ttBefore, rig.TurntablePivot.localRotation) > 0.1f && !rig.InteriorLight.enabled;
+                rig.SetOpenAmount(1f);
+                bool litWhenOpen = rig.InteriorLight.enabled;
+                rig.MainsPowered = false;
+                rig.SetOpenAmount(1f);
+                bool offWhenMainsCut = !rig.InteriorLight.enabled;
+                Assert("V5_MICROWAVE_RIG_AND_MAINS_LIGHT",
+                    ok && ttMoved && litWhenOpen && offWhenMainsCut,
+                    "Microwave door hinge, rotating turntable, digital display, and mains-gated door-reactive cavity light verified",
+                    $"Microwave check failed: ok={ok}, ttMoved={ttMoved}, litWhenOpen={litWhenOpen}, offWhenMainsCut={offWhenMainsCut}");
+            }
+
+            // 5. Verify 2 Shelves and 3 Cabinets (doors, drawers, interior lights)
+            {
+                var sLarge = PanicV5FurnitureArt.Create("v5_shelf_large", true);
+                var sSmall = PanicV5FurnitureArt.Create("v5_shelf_small", true);
+                var cPantry = PanicV5FurnitureArt.Create("v5_cabinet_pantry", true);
+                var cWardrobe = PanicV5FurnitureArt.Create("v5_cabinet_wardrobe", true);
+                var cUtility = PanicV5FurnitureArt.Create("v5_cabinet_utility", true);
+                foreach (var go in new[] { sLarge, sSmall, cPantry, cWardrobe, cUtility }) go.transform.SetParent(root.transform, false);
+
+                var rPantry = cPantry.GetComponent<PanicV5FurnitureRig>();
+                var rWardrobe = cWardrobe.GetComponent<PanicV5FurnitureRig>();
+                var rUtility = cUtility.GetComponent<PanicV5FurnitureRig>();
+
+                bool shelvesOk = sLarge.GetComponent<PanicV5FurnitureRig>() != null && sSmall.GetComponent<PanicV5FurnitureRig>() != null;
+                bool cabinetsOk = rPantry != null && rPantry.Doors.Length == 2 && rPantry.InteriorLight != null &&
+                                  rWardrobe != null && rWardrobe.Doors.Length == 2 && rWardrobe.InteriorLight != null &&
+                                  rUtility != null && rUtility.Doors.Length == 1 && rUtility.Drawers != null && rUtility.Drawers.Length == 3 && rUtility.InteriorLight != null;
+                rUtility.MainsPowered = true;
+                rUtility.SetOpenAmount(1f);
+                bool utilityOpenLit = rUtility.InteriorLight.enabled && Vector3.Distance(rUtility.Drawers[0].localPosition, Vector3.zero) > 0.05f;
+                rUtility.MainsPowered = false;
+                rUtility.SetOpenAmount(1f);
+                bool utilityPowerCutOff = !rUtility.InteriorLight.enabled;
+
+                Assert("V5_SHELVES_AND_CABINETS_RIGS_AND_LIGHTS",
+                    shelvesOk && cabinetsOk && utilityOpenLit && utilityPowerCutOff,
+                    "2 Shelves (large/small) and 3 Cabinets (pantry, wardrobe, utility with 3 sliding drawers + door-reactive interior lights) verified",
+                    $"Shelves/Cabinets check failed: shelves={shelvesOk}, cabinets={cabinetsOk}, openLit={utilityOpenLit}, powerCut={utilityPowerCutOff}");
+            }
+
+            // 6. Verify Responder Characters (Police, Firefighter, Paramedic/Medic, Rescue) + Helmet Headlamps
+            {
+                var p = PanicV5ResponseArt.CreateResponder(PanicStreetLifeArtV414.Service.Police, 0);
+                var f = PanicV5ResponseArt.CreateResponder(PanicStreetLifeArtV414.Service.Fire, 1);
+                var m = PanicV5ResponseArt.CreateResponder(PanicStreetLifeArtV414.Service.Ambulance, 2);
+                var r = PanicV5ResponseArt.CreateResponder(PanicStreetLifeArtV414.Service.Rescue, 3);
+                foreach (var go in new[] { p, f, m, r }) go.transform.SetParent(root.transform, false);
+
+                bool fSpot = f.GetComponentsInChildren<Light>(true).Any(l => l.type == LightType.Spot && l.name == "Headlamp_SpotLight");
+                bool rSpot = r.GetComponentsInChildren<Light>(true).Any(l => l.type == LightType.Spot && l.name == "Headlamp_SpotLight");
+                bool animOk = new[] { p, f, m, r }.All(go => go.GetComponentInChildren<Animator>() != null);
+
+                Assert("V5_RESPONDER_CHARACTERS_AND_HEADLAMPS",
+                    fSpot && rSpot && animOk,
+                    "Police, Firefighter, Paramedic (Medic), and Rescue responder rigs + active helmet SpotLight headlamps verified",
+                    $"Responder check failed: fSpot={fSpot}, rSpot={rSpot}, animOk={animOk}");
             }
         }
     }

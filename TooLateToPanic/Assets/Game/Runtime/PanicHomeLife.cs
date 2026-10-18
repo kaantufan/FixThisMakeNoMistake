@@ -16,7 +16,7 @@ namespace TooLateToPanic
         Transform bunkerLeaf,garageLeaf; Vector3 garageLeafClosed; float residenceTime,radioClock,noticeAge,rescueAge,jumpCooldown;
         Quaternion bunkerClosed;
         AudioSource radioVoice,radioNoise,rotorAudio; Light helicopterSearch,hearthLight;
-        bool hearthEnabled=true,computerEnabled=true,garageOpen,minuteVoice;
+        bool hearthEnabled=true,computerEnabled=true,garageOpen,microwaveOpenV5,minuteVoice;
         string lastNotice,queuedVoice,radioClipId;
         int radioSequence;
         public LootSource OpenSource { get { var s=NearestSource; return s!=null&&s.Open&&CanInteract&&!InventoryOpen&&!WorkActive&&!IsMoving ? s:null; } }
@@ -114,6 +114,7 @@ namespace TooLateToPanic
             residenceBunkerRoom=Room("bunker_interior",PanicResidenceArt.BuildBunkerInterior,BunkerInteriorPosition);
             var lit=new GameObject("Bunker emergency lamp").AddComponent<Light>();lit.transform.position=BunkerInteriorPosition+new Vector3(0,2.2f,0);lit.type=LightType.Point;lit.color=new Color(1,.65f,.3f);lit.range=8;lit.intensity=2;
             var kitchenDetails=Room("kitchen_v414",PanicHomeArt.BuildKitchenDetailsV414,Vector3.zero);floorItems.Add(kitchenDetails);
+            AddDecor("@microwave","v5_microwave",new Vector3(3.48f,.975f,4.82f),0,false);
             var childDetails=Room("child_v414",PanicHomeArt.BuildChildDetailsV414,Vector3.up*3.2f);floorItems.Add(childDetails);
             AddDecor("decor_wc_toilet","toilet",new Vector3(2.9f,.035f,-5.52f),180);
             AddDecor("decor_wc_sink","sink",new Vector3(4.05f,.035f,-5.52f),180);
@@ -231,8 +232,8 @@ namespace TooLateToPanic
             }
             if(focusId=="@bagstation") {FocusLabel="Afet çantası";ShortAction="";ContextHint="TAB · Çantayı düzenle";return;}
             var s=NearestSource;var item=Selected;var site=gardenSites.Find(x=>x.id==focusId);
-            FocusLabel=s!=null?s.Label:item!=null?item.Label:site!=null?site.label:focusId=="@radio"?"Radyo":focusId=="@computer"?"Bilgisayar":focusId=="@fireplace"?"Şömine":focusId=="@garage"?"Garaj":focusId=="@laundry"?"Çamaşır makinesi":focusId=="@toilet"?"Tuvalet":focusId=="@sink"?"Lavabo":"";
-            ShortAction=s!=null?(s.Open?"Kapat":"Aç"):focusId=="@bunker"||item!=null&&item.Id=="bunker"?"Sığın":focusId=="@radio"?(RadioEnabled?"Kapat":"Aç"):focusId=="@garage"?(garageOpen?"Kapat":"Aç"):focusId=="@fireplace"?(hearthEnabled?"Söndür":"Yak"):focusId=="@computer"?(computerEnabled?"Kapat":"Aç"):focusId!=null&&hinges.ContainsKey(focusId)?(hinges[focusId].open?"Kapat":"Aç"):item!=null&&item.Kind==ItemKind.Door?"Aç / Kapat":site!=null&&!site.done?"Başla":"";
+            FocusLabel=s!=null?s.Label:item!=null?item.Label:site!=null?site.label:focusId=="@radio"?"Radyo":focusId=="@computer"?"Bilgisayar":focusId=="@microwave"?"Mikrodalga":focusId=="@fireplace"?"Şömine":focusId=="@garage"?"Garaj":focusId=="@laundry"?"Çamaşır makinesi":focusId=="@toilet"?"Tuvalet":focusId=="@sink"?"Lavabo":"";
+            ShortAction=s!=null?(s.Open?"Kapat":"Aç"):focusId=="@bunker"||item!=null&&item.Id=="bunker"?"Sığın":focusId=="@radio"?(RadioEnabled?"Kapat":"Aç"):focusId=="@garage"?(garageOpen?"Kapat":"Aç"):focusId=="@fireplace"?(hearthEnabled?"Söndür":"Yak"):focusId=="@computer"?(computerEnabled?"Kapat":"Aç"):focusId=="@microwave"?(microwaveOpenV5?"Kapat":"Aç"):focusId!=null&&hinges.ContainsKey(focusId)?(hinges[focusId].open?"Kapat":"Aç"):item!=null&&item.Kind==ItemKind.Door?"Aç / Kapat":site!=null&&!site.done?"Başla":"";
             ContextHint=CanInteract?"E "+ShortAction:"";
             if (focusId == PanicItemActionRules.FireStationId)
             {
@@ -242,6 +243,7 @@ namespace TooLateToPanic
             }
         }
         void ToggleHearth(){hearthEnabled=!hearthEnabled;effects.Play("ignite",hearthEnabled?.38f:.16f);if(hearthFlame)hearthFlame.SetActive(hearthEnabled);if(hearthLight)hearthLight.enabled=hearthEnabled;}
+        void ToggleMicrowaveV5(){microwaveOpenV5=!microwaveOpenV5;effects.Play("door_wood",.32f);UpdateContext();}
         void ToggleComputer(){if(Model.UtilitySafety.PowerOff){Notice("Ana şalter kapalı; evde elektrik yok.");return;}computerEnabled=!computerEnabled;effects.Play("computer",.3f);ApplyComputerPower();UpdateContext();}
         void ApplyComputerPower()
         {
@@ -278,7 +280,7 @@ namespace TooLateToPanic
             ResetRevisionWorld();
             ResetResidenceCinematic();ResetPresentation();ResetCameraOrbit();ResetExteriorLife();if(lootTray)Destroy(lootTray);lootTray=null;GatherFeedback=0;LootIndex=0;noticeAge=0;minuteVoice=false;radioClock=15;queuedVoice=null;
             if(aftermath)Destroy(aftermath);aftermath=null;if(helicopter)Destroy(helicopter);helicopter=null;if(rotorAudio)Destroy(rotorAudio);rotorAudio=null;radioVoice?.Stop();SetBunkerDoorOpen(false);
-            foreach(var h in hinges.Values){h.open=false;h.closeBlocked=h.motionBlocked=false;}garageOpen=false;
+            foreach(var h in hinges.Values){h.open=false;h.closeBlocked=h.motionBlocked=false;}garageOpen=false;microwaveOpenV5=false;
         }
         void SetBunkerDoorOpen(bool open)
         {

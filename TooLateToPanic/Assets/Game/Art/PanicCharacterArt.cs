@@ -583,7 +583,7 @@ namespace TooLateToPanic
             state.Materials.Add(stripeSilver);
             state.Materials.Add(blackNomex);
 
-            // Head: Fire helmet with neck shield and smoked visor (matches 'fire', 'helmet', 'turnout')
+            // Head: Fire helmet with neck shield, smoked visor and forward LED headlamp (matches 'fire', 'helmet', 'turnout')
             if (head != null)
             {
                 var helmet = AttachCuratedOrProceduralProp(null, head, new Vector3(0, 0.14f, 0), Quaternion.identity, new Vector3(0.28f, 0.12f, 0.32f), "Firefighter_FireHelmet_Turnout", PrimitiveType.Cube, helmetYellow, state);
@@ -591,6 +591,14 @@ namespace TooLateToPanic
                 {
                     AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, -0.04f, 0.14f), Quaternion.Euler(15f, 0, 0), new Vector3(0.24f, 0.06f, 0.02f), "Turnout_Visor", PrimitiveType.Cube, visorSmoked, state);
                     AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, -0.06f, -0.14f), Quaternion.Euler(-10f, 0, 0), new Vector3(0.26f, 0.10f, 0.02f), "Turnout_NeckShield", PrimitiveType.Cube, blackNomex, state);
+                    var lampGo = new GameObject("Headlamp_SpotLight");
+                    lampGo.transform.SetParent(helmet.transform, false);
+                    lampGo.transform.localPosition = new Vector3(0, 0.02f, 0.17f);
+                    lampGo.transform.localRotation = Quaternion.Euler(8f, 0, 0);
+                    var spot = lampGo.AddComponent<Light>();
+                    spot.type = LightType.Spot; spot.color = new Color(1f, 0.95f, 0.82f);
+                    spot.range = 5.5f; spot.spotAngle = 46f; spot.intensity = 0.85f;
+                    spot.shadows = LightShadows.None; spot.renderMode = LightRenderMode.ForceVertex;
                 }
             }
 
@@ -612,6 +620,7 @@ namespace TooLateToPanic
         {
             var whiteMat = CreateRoleMaterial("Rescue_HelmetWhite", new Color(0.97f, 0.98f, 0.99f), 0.50f);
             var ledMat = CreateRoleMaterial("Rescue_HeadlampLens", new Color(1.00f, 0.98f, 0.92f), 0.90f);
+            if (ledMat.HasProperty("_EmissionColor")) { ledMat.EnableKeyword("_EMISSION"); ledMat.SetColor("_EmissionColor", new Color(1f, 0.95f, 0.82f) * 1.3f); }
             var harnessMat = CreateRoleMaterial("Rescue_HarnessBlack", new Color(0.09f, 0.10f, 0.11f), 0.20f);
             var carabinerMat = CreateRoleMaterial("Rescue_CarabinerSilver", new Color(0.58f, 0.64f, 0.72f), 0.70f, 0.85f);
             var packMat = CreateRoleMaterial("Rescue_PackOrange", new Color(0.90f, 0.32f, 0.00f), 0.16f);
@@ -632,6 +641,14 @@ namespace TooLateToPanic
                 {
                     AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, 0.01f, 0.145f), Quaternion.identity, new Vector3(0.08f, 0.04f, 0.03f), "Rescue_Headlamp_Housing", PrimitiveType.Cube, harnessMat, state);
                     AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, 0.01f, 0.162f), Quaternion.identity, new Vector3(0.04f, 0.02f, 0.01f), "Rescue_Headlamp_Lens", PrimitiveType.Cube, ledMat, state);
+                    var lampGo = new GameObject("Headlamp_SpotLight");
+                    lampGo.transform.SetParent(helmet.transform, false);
+                    lampGo.transform.localPosition = new Vector3(0, 0.01f, 0.17f);
+                    lampGo.transform.localRotation = Quaternion.Euler(8f, 0, 0);
+                    var spot = lampGo.AddComponent<Light>();
+                    spot.type = LightType.Spot; spot.color = new Color(1f, 0.96f, 0.84f);
+                    spot.range = 6.0f; spot.spotAngle = 48f; spot.intensity = 0.90f;
+                    spot.shadows = LightShadows.None; spot.renderMode = LightRenderMode.ForceVertex;
                 }
             }
 

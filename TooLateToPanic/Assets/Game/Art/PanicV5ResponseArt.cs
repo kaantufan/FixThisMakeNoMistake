@@ -96,9 +96,9 @@ namespace TooLateToPanic
             rig.Wheels = wheels.ToArray();
             var doors = new List<Transform>(); var angles = new List<float>();
             AddCabDoors(root, b, doors, angles, width, cabZ, police, body);
-            if (service == Service.Ambulance) Ambulance(root, b, doors, angles, width, length);
-            if (fire) FireEngine(root, b, width, length);
-            if (service == Service.Rescue) RescueTruck(root, b, width);
+            if (service == Service.Ambulance) Ambulance(root, b, rig, doors, angles, width, length);
+            if (fire) FireEngine(root, b, rig, width, length);
+            if (service == Service.Rescue) RescueTruck(root, b, rig, width);
             // Headlight/taillight glass remains separate from the red/blue warning lamps.
             foreach (int s in new[] { -1, 1 })
             {
@@ -112,6 +112,7 @@ namespace TooLateToPanic
             b.Attach(root, "V5BodyCabSeamsServiceEquipment");
             rig.Doors = doors.ToArray(); rig.DoorAngles = angles.ToArray();
             AddLightbar(root, rig, police ? 1.68f : 2.31f, cabZ, service == Service.Rescue);
+            AddHeadlightsAndTaillights(root, rig, width, length);
             BodyCollider(root, V(0, .79f, 0), V(width, .68f, length - .12f));
             BodyCollider(root, V(0, police ? 1.33f : 1.68f, cabZ), V(width - .18f, police ? .50f : 1.12f, police ? 2.18f : 1.70f));
             if (!police) BodyCollider(root, V(0, (1.1f + roof) * .5f, fire?-1.02f:service==Service.Ambulance?-.95f:-.88f), V(width - .10f, roof - 1.1f, fire?4.12f:service==Service.Ambulance?3.55f:2.98f));
@@ -135,10 +136,15 @@ namespace TooLateToPanic
             }
         }
 
-        static void Ambulance(GameObject root, B b, List<Transform> doors, List<float> angles, float w, float length)
+        static void Ambulance(GameObject root, B b, PanicV5VehicleRig rig, List<Transform> doors, List<float> angles, float w, float length)
         {
             b.Box(V(0, 1.72f, -.95f), V(w, 1.55f, 3.55f), M.Linen, .065f);
             b.Box(V(0, 2.52f, -.95f), V(w + .06f, .12f, 3.64f), M.Linen, .035f);
+            // Interior stretcher, oxygen cylinder, and medical cabinets inside the rear compartment
+            b.Box(V(-.58f, 1.48f, -1.05f), V(.36f, 1.18f, 2.45f), M.Linen, .015f);
+            b.Cylinder(V(-.56f, 1.24f, .25f), .095f, .64f, M.Olive, 12);
+            b.Box(V(.16f, .98f, -1.15f), V(.56f, .08f, 1.78f), M.Steel, .012f);
+            b.Box(V(.16f, 1.07f, -1.15f), V(.52f, .11f, 1.70f), M.SafetyAmber, .022f);
             foreach (int s in new[] { -1, 1 })
             {
                 b.Box(V(s * (w * .5f + .013f), 1.44f, -.82f), V(.02f, .18f, 3.18f), M.Red, .005f);
@@ -156,9 +162,15 @@ namespace TooLateToPanic
             // Small oxygen canister/service hatch rather than a plain white box side.
             b.Box(V(w * .5f + .028f, 1.08f, -1.74f), V(.035f, .42f, .61f), M.Steel, .018f);
             for (int i = 0; i < 4; i++) b.Box(V(w * .5f + .05f, .97f + i * .075f, -1.74f), V(.015f, .012f, .47f), M.Charcoal, .001f);
+            // Rear medical compartment ceiling lamp (illuminates when rear doors open)
+            var cabinLamp = Group(root, "V5 AmbulanceCabinLight", V(0, 2.38f, -1.10f));
+            var clb = new B(); clb.Box(Vector3.zero, V(.34f, .035f, 1.35f), M.WarmWindow, .006f); clb.Attach(cabinLamp, "AmbulanceCabinLampLens");
+            var clLight = cabinLamp.AddComponent<Light>(); clLight.type = LightType.Point; clLight.color = new Color(1f, .92f, .74f);
+            clLight.range = 3.6f; clLight.intensity = 0f; clLight.enabled = false; clLight.shadows = LightShadows.None; clLight.renderMode = LightRenderMode.ForceVertex;
+            rig.InteriorLight = clLight; rig.InteriorLightRenderer = cabinLamp.GetComponentInChildren<Renderer>();
         }
 
-        static void FireEngine(GameObject root, B b, float w, float length)
+        static void FireEngine(GameObject root, B b, PanicV5VehicleRig rig, float w, float length)
         {
             b.Box(V(0, 1.48f, -1.02f), V(w, 1.32f, 4.12f), M.Red, .045f);
             foreach (int s in new[] { -1, 1 }) for (int bay = 0; bay < 3; bay++)
@@ -170,15 +182,30 @@ namespace TooLateToPanic
                 b.Box(V(s * (w * .5f + .03f), .88f, z), V(.022f, .09f, 1f), M.Linen, .005f);
             }
             b.Box(V(0, 2.20f, -1.02f), V(w - .11f, .10f, 4.17f), M.Charcoal, .02f);
+            // Articulated 2-stage telescopic turntable ladder
             var ladder = Group(root, "V5 TelescopicLadderEquipmentMount", V(0, 2.31f, -.72f)); var l = new B();
-            foreach (float y in new[] { 0f, .13f })
-            {
-                foreach (int s in new[] { -1, 1 }) l.Beam(V(s * .33f, y, -2.13f), V(s * .33f, y, 2.23f), .052f, M.Steel);
-                for (int i = 0; i < 17; i++) l.Beam(V(-.33f, y, -2.1f + i * .265f), V(.33f, y, -2.1f + i * .265f), .032f, M.Steel);
-            }
+            l.Cylinder(V(0, -.04f, -1.35f), .38f, .08f, M.Charcoal, 16);
+            foreach (int s in new[] { -1, 1 }) l.Beam(V(s * .33f, 0f, -2.13f), V(s * .33f, 0f, 2.23f), .052f, M.Steel);
+            for (int i = 0; i < 17; i++) l.Beam(V(-.33f, 0f, -2.1f + i * .265f), V(.33f, 0f, -2.1f + i * .265f), .032f, M.Steel);
             l.Attach(ladder, "DoubleLadderRailsRungs");
-            b.Cylinder(V(.70f, 2.42f, -1.42f), .20f, .32f, M.Red, 16);
-            b.Beam(V(.70f, 2.53f, -1.42f), V(.70f, 2.66f, -.72f), .12f, M.Steel);
+            rig.LadderBasePivot = ladder.transform;
+
+            var ladderExt = Group(ladder, "V5 TelescopicLadderExtension", V(0, .13f, 0)); var le = new B();
+            foreach (int s in new[] { -1, 1 })
+            {
+                le.Beam(V(s * .26f, 0f, -2.05f), V(s * .26f, 0f, 2.15f), .044f, M.Steel);
+                le.Box(V(s * .26f, 0f, 2.12f), V(.06f, .08f, .22f), M.SafetyAmber, .008f);
+            }
+            for (int i = 0; i < 16; i++) le.Beam(V(-.26f, 0f, -1.95f + i * .26f), V(.26f, 0f, -1.95f + i * .26f), .028f, M.Steel);
+            le.Attach(ladderExt, "TelescopicExtensionSection");
+            rig.LadderExtendPivot = ladderExt.transform;
+
+            var monitor = Group(root, "V5 FireRoofWaterMonitor", V(.70f, 2.42f, -1.42f)); var mb = new B();
+            mb.Cylinder(Vector3.zero, .20f, .32f, M.Red, 16);
+            mb.Beam(V(0, .11f, 0), V(0, .24f, .70f), .12f, M.Steel);
+            mb.Attach(monitor, "WaterMonitorCannon");
+            rig.RoofMonitorPivot = monitor.transform;
+
             b.Torus(V(-.70f, 2.30f, -.88f), .28f, .062f, M.SafetyAmber, Quaternion.identity);
             // Real pump gauges and hose couplings face rear, with a climb step underneath.
             b.Box(V(0, 1.30f, -length * .5f - .035f), V(1.52f, .83f, .06f), M.Charcoal, .025f);
@@ -192,7 +219,7 @@ namespace TooLateToPanic
             b.Box(V(0, .52f, -length * .5f - .23f), V(1.52f, .12f, .47f), M.Steel, .02f);
         }
 
-        static void RescueTruck(GameObject root, B b, float w)
+        static void RescueTruck(GameObject root, B b, PanicV5VehicleRig rig, float w)
         {
             b.Box(V(0, 1.36f, -.88f), V(w, .98f, 2.98f), M.SafetyAmber, .05f);
             foreach (int s in new[] { -1, 1 })
@@ -212,10 +239,40 @@ namespace TooLateToPanic
             }
             b.Torus(V(0, 1.51f, -2.53f), .36f, .10f, M.Black, Quaternion.Euler(90, 0, 0));
             b.Cylinder(V(0, 1.51f, -2.55f), .17f, .055f, M.Steel, 12, Quaternion.Euler(90, 0, 0));
-            b.Cylinder(V(0, .64f, 2.91f), .14f, .54f, M.Steel, 14, Quaternion.Euler(0, 0, 90));
-            b.Torus(V(0, .56f, 2.96f), .09f, .019f, M.Red, Quaternion.Euler(90, 0, 0));
-            foreach (int s in new[] { -1, 1 }) b.Beam(V(s * .73f, 2.23f, .55f), V(s * .73f, 2.78f, .55f), .035f, M.Steel);
-            b.Box(V(0, 2.79f, .55f), V(1.56f, .12f, .16f), M.Steel, .02f);
+            // Articulated front bumper motorized winch spool + hook
+            var winch = Group(root, "V5 RescueWinchPivot", V(0, .64f, 2.91f)); var wb = new B();
+            wb.Cylinder(Vector3.zero, .14f, .54f, M.Steel, 14, Quaternion.Euler(0, 0, 90));
+            wb.Torus(V(0, -.08f, .05f), .09f, .019f, M.Red, Quaternion.Euler(90, 0, 0));
+            wb.Attach(winch, "MotorizedWinchDrumHook");
+            rig.WinchPivot = winch.transform;
+
+            // Articulated floodlight & recovery boom mast
+            var crane = Group(root, "V5 RescueCraneBoomPivot", V(0, 2.23f, .55f)); var cb = new B();
+            foreach (int s in new[] { -1, 1 }) cb.Beam(V(s * .73f, 0, 0), V(s * .73f, .55f, 0), .035f, M.Steel);
+            cb.Box(V(0, .56f, 0), V(1.56f, .12f, .16f), M.Steel, .02f);
+            cb.Beam(V(0, .05f, -.25f), V(0, .48f, -1.35f), .085f, M.SafetyAmber);
+            cb.Attach(crane, "ArticulatedFloodlightAndBoom");
+            rig.CraneBoomPivot = crane.transform;
+        }
+
+        static void AddHeadlightsAndTaillights(GameObject root, PanicV5VehicleRig rig, float width, float length)
+        {
+            var hLights = new List<Light>(); var tLights = new List<Light>();
+            foreach (int s in new[] { -1, 1 })
+            {
+                var hlNode = Group(root, "V5 HeadlightSpot " + s, V(s * width * .37f, .99f, length * .5f + .06f));
+                hlNode.transform.localRotation = Quaternion.Euler(8f, 0f, 0f);
+                var hl = hlNode.AddComponent<Light>(); hl.type = LightType.Spot; hl.color = new Color(1f, .95f, .82f);
+                hl.range = 10f; hl.spotAngle = 46f; hl.intensity = .88f; hl.shadows = LightShadows.None; hl.renderMode = LightRenderMode.ForceVertex;
+                hLights.Add(hl);
+
+                var tlNode = Group(root, "V5 TaillightPoint " + s, V(s * width * .39f, .89f, -length * .5f - .05f));
+                var tl = tlNode.AddComponent<Light>(); tl.type = LightType.Point; tl.color = new Color(1f, .10f, .05f);
+                tl.range = 3.2f; tl.intensity = .40f; tl.shadows = LightShadows.None; tl.renderMode = LightRenderMode.ForceVertex;
+                tLights.Add(tl);
+            }
+            rig.Headlights = hLights.ToArray();
+            rig.Taillights = tLights.ToArray();
         }
 
         static void AddLightbar(GameObject root, PanicV5VehicleRig rig, float y, float z, bool amber)
@@ -267,18 +324,27 @@ namespace TooLateToPanic
             b.Box(V(0, .34f, -1.80f), V(1.44f, .49f, .09f), M.Charcoal, .025f);
             b.Box(V(.34f, .49f, -.20f), V(.48f, .64f, .50f), M.SafetyAmber, .045f);
             b.Box(V(.34f, .84f, -.20f), V(.49f, .07f, .51f), M.Charcoal, .015f);
-            b.Torus(V(.34f, .91f, -.20f), .13f, .021f, M.Black, Quaternion.Euler(65, 0, 0));
+            var zSteer = Group(root, "V5 ZodiacSteeringWheel", V(.34f, .91f, -.20f)); var zsb = new B();
+            zsb.Torus(Vector3.zero, .13f, .021f, M.Black, Quaternion.Euler(65, 0, 0));
+            zsb.Beam(V(-.10f, 0, 0), V(.10f, 0, 0), .018f, M.Steel);
+            zsb.Attach(zSteer, "ZodiacHelmWheel"); rig.SteeringWheel = zSteer.transform;
             b.Torus(V(-.49f, .27f, .95f), .31f, .070f, M.Red, Quaternion.identity);
             for (int i = 0; i < 4; i++) { float a = i * Mathf.PI * .5f; b.Box(V(-.49f + Mathf.Cos(a) * .31f, .28f, .95f + Mathf.Sin(a) * .31f), V(.10f, .13f, .13f), M.Linen, .012f, Quaternion.Euler(0, -i * 90, 0)); }
             b.Box(V(-.32f, .32f, -.36f), V(.42f, .25f, .54f), M.Olive, .045f);
             b.Box(V(-.32f, .46f, -.36f), V(.43f, .045f, .55f), M.Charcoal, .012f);
             b.Beam(V(0, .65f, 1.85f), V(0, 1.10f, 1.85f), .027f, M.Steel);
             b.Box(V(0, 1.12f, 1.85f), V(.19f, .10f, .16f), M.WarmWindow, .02f);
+            var bowSpotNode = Group(root, "V5 ZodiacBowSpot", V(0, 1.12f, 1.94f));
+            bowSpotNode.transform.localRotation = Quaternion.Euler(10f, 0f, 0f);
+            var bowSpot = bowSpotNode.AddComponent<Light>(); bowSpot.type = LightType.Spot; bowSpot.color = new Color(1f, .94f, .78f);
+            bowSpot.range = 9.5f; bowSpot.spotAngle = 44f; bowSpot.intensity = .85f; bowSpot.shadows = LightShadows.None; bowSpot.renderMode = LightRenderMode.ForceVertex;
+            rig.Headlights = new[] { bowSpot };
             var motor = Group(root, "V5 OutboardMotor", V(0, .27f, -2.02f)); var mb = new B();
             mb.Box(V(0, .34f, 0), V(.54f, .52f, .49f), M.Charcoal, .08f);
             mb.Box(V(0, .38f, -.25f), V(.35f, .14f, .018f), M.Red, .012f);
             mb.Box(V(0, -.18f, .04f), V(.15f, .57f, .19f), M.Steel, .025f);
             mb.Box(V(0, -.46f, -.02f), V(.39f, .035f, .34f), M.Charcoal, .015f); mb.Attach(motor, "OutboardCowlingShaftFin");
+            rig.OutboardPivot = motor.transform;
             var prop = Group(motor, "V5 OutboardPropeller", V(0, -.36f, -.20f)); var pb = new B();
             pb.Cylinder(Vector3.zero, .065f, .12f, M.Steel, 10, Quaternion.Euler(90, 0, 0));
             for (int i = 0; i < 3; i++) { float a = i * 120; pb.Box(Quaternion.Euler(0, 0, a) * V(.10f, 0, 0), V(.22f, .067f, .033f), M.Steel, .018f, Quaternion.Euler(12, 0, a + 18)); }
@@ -290,6 +356,15 @@ namespace TooLateToPanic
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             AddNavigationLight(root, V(-1.02f, .61f, .92f), new Color(1, .07f, .03f), owner);
             AddNavigationLight(root, V(1.02f, .61f, .92f), new Color(.03f, .8f, .29f), owner);
+            var sternPole = Group(root, "V5 ZodiacSternBeacon", V(.55f, 1.05f, -1.68f));
+            var sb = new B(); sb.Beam(V(0, -.55f, 0), V(0, 0, 0), .02f, M.Steel); sb.Cylinder(V(0, .04f, 0), .055f, .08f, M.SafetyAmber, 12); sb.Attach(sternPole, "SternBeaconDome");
+            var beaconColor = new Color(1f, .58f, .10f);
+            var beaconMat = new Material(Shader.Find("Standard")) { name = "V5 zodiac stern beacon", color = beaconColor };
+            beaconMat.EnableKeyword("_EMISSION"); beaconMat.SetColor("_EmissionColor", beaconColor * 1.9f); owner.Owned.Add(beaconMat);
+            var sternRen = sternPole.GetComponentInChildren<Renderer>(); if (sternRen) sternRen.sharedMaterial = beaconMat;
+            var sternLight = sternPole.AddComponent<Light>(); sternLight.type = LightType.Point; sternLight.color = beaconColor;
+            sternLight.range = 6.2f; sternLight.intensity = 1.6f; sternLight.shadows = LightShadows.None; sternLight.renderMode = LightRenderMode.ForceVertex;
+            rig.FlashLights = new[] { sternLight }; rig.FlashRenderers = sternRen ? new[] { sternRen } : new Renderer[0]; rig.FlashColors = new[] { beaconColor };
             Refinish(root, owner, Service.Rescue); owner.CaptureGeneratedMeshes(); return root;
         }
 
@@ -347,11 +422,18 @@ namespace TooLateToPanic
                     hb.Box(h + V(0, .12f, .167f), V(.075f, .045f, .045f), M.Charcoal, .01f);
                     hb.Box(h + V(0, .12f, .193f), V(.054f, .029f, .014f), M.WarmWindow, .004f);
                     if (service == Service.Fire) hb.Box(h + V(0, -.01f, -.12f), V(.27f, .20f, .075f), M.Charcoal, .035f);
+                    var headlampNode = Group(hat, "Headlamp_SpotLight", h + V(0, .12f, .20f));
+                    headlampNode.transform.localRotation = Quaternion.Euler(8f, 0f, 0f);
+                    var headlamp = headlampNode.AddComponent<Light>(); headlamp.type = LightType.Spot;
+                    headlamp.color = new Color(1f, .94f, .78f); headlamp.range = 8f; headlamp.spotAngle = 42f;
+                    headlamp.intensity = .82f; headlamp.shadows = LightShadows.None; headlamp.renderMode = LightRenderMode.ForceVertex;
                 }
                 else
                 {
                     hb.Cylinder(h + V(0, .12f, 0), .142f, .065f, M.Olive, 16);
                     hb.Box(h + V(0, .10f, .135f), V(.20f, .022f, .11f), M.Olive, .025f);
+                    hb.Box(h + V(0, .13f, .142f), V(.042f, .014f, .008f), M.Red, .002f);
+                    hb.Box(h + V(0, .13f, .142f), V(.014f, .042f, .008f), M.Red, .002f);
                 }
             }
             hb.Attach(hat, "ProfessionHelmetCap"); AttachBoneGeometry(hat, head, root);
@@ -366,6 +448,8 @@ namespace TooLateToPanic
             vb.Box(V(c.x, c.y - .17f, front - .007f), V(.39f, .027f, .018f), service == Service.Fire ? M.SafetyAmber : M.Steel, .004f);
             vb.Box(V(c.x - .17f, c.y + .12f, front + .025f), V(.06f, .105f, .038f), M.Charcoal, .008f);
             vb.Beam(V(c.x - .17f, c.y + .16f, front), V(c.x - .17f, c.y + .26f, front), .010f, M.Black);
+            if (service == Service.Police)
+                vb.Box(V(c.x - .08f, c.y + .09f, front + .015f), V(.038f, .046f, .010f), M.SafetyAmber, .003f);
             if (service == Service.Ambulance)
             {
                 vb.Torus(V(c.x, c.y + .17f, front), .072f, .012f, M.Charcoal, Quaternion.Euler(90, 0, 0));
