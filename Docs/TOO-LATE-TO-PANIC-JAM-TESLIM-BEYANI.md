@@ -1,6 +1,6 @@
 # Too Late to Panic! - CIVIL GAME JAM teslim beyanı
 
-18 Ekim 2026. **Güncel yerel aday: Home V5.13-r7 /0.5.13; GitHub güncellemesi hazırlanıyor.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
+18 Ekim 2026. **Güncel yerel aday: Home V5.13-r7 /0.5.13; [GitHub ön sürümü](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r7) doğrulandı.** Yarışma formu gönderilmedi. Temsilci, üretim zamanı ve kaynak izinlerine ilişkin açık alanlar ayrıca doğrulanmalıdır.
 
 Güncel teslim dayanağı, kullanıcının **18 Ekim 2026'da doğrudan ilettiği resmî organizasyon duyurusu** ve [etkinlik sitesi](https://game.ktimo.com.tr/)'dir. Duyuruya göre teslim **18 Ekim 12.00-18.15 UTC+3**, takım PIN'iyle yapılır. Video **en fazla 1 dakika**, oyun görüntüsü veya fragman olabilir; **MP4/AVI** olarak oynanabilir **ZIP'ten ayrı yüklenir**. Toplam sahne süresi **video dahil 3 dakika**; sunum performansı puanlanmaz, jüri oyunu izler ve oynar. Public Git kaynak reposu gerekir; web bağlantısı yalnız web build içindir. AI'nin görsel/ses/kod/metin/diğer kategorileri ayrı Kullanıldı/Kullanılmadı seçimi ve ayrıntıyla bildirilir; hazır kaynaklar ayrıca beyan edilir. Yüklemelerden sonra doğrulama ve makbuz kontrol edilir.
 
@@ -35,7 +35,7 @@ Oyuncu önce evi yukarıdan okuyup hangi riske para ve zaman ayıracağını se�
 | EXE | `TooLateToPanic/Builds/Home-V5.13-r7-20261018/TooLateToPanic.exe` |
 | DLL SHA256 | `813B2C2A5F3CF5035B25067755D0C39225FCE3B8ECE60A23261C530A910F8535` |
 | ZIP SHA256 / bayt | `FC148A55BE2F89ECDD643A38B8709C35E49EDFC32A0B4E9BA6A5AE8D6C110D23` / 215414127 |
-| Public kaynak / oynanabilir paket | Yeni yayın hazırlanıyor; [yayın kaydı](../PUBLICATION.md) kaynak commit'i ve paket kimliğini ayırır |
+| Public kaynak / oynanabilir paket | [v0.5.13-r7](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r7) · [ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.13-r7/TooLateToPanic-Home-V5.13-r7-20261018-portable.zip); tam kaynak commit’i `a0b531679e0b292f74ba227fda53b19fecb10c08`. [Yayın kaydı](../PUBLICATION.md) |
 | Önceki yayın | v0.5.13-r6 ve eski release/tag/asset'ler korunur |
 | Teknik sonuç | 810 Editor / 425 native API/render / 14 incelenmiş görüntü; ayrıca 291 aynı DLL sunum kontrolü/12 kare, 10 tam ekran gözlemi/1 kare; OS/insan kabulü NOT_RUN |
 | Video /180s prova | Ayrı video önceki R7 paketiyle bağlıdır; bu DLL için video/prova kabulü NOT_RUN |

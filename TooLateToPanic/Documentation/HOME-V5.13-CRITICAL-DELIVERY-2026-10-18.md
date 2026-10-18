@@ -18,3 +18,7 @@ Yeni DLL: **810 Editor**, **425 ana native API/render kontrolü**, **14 incelenm
 [Başlatıcı](../Play-TooLateToPanic.cmd) · [Portable ZIP](../Builds/TooLateToPanic-Home-V5.13-r7-20261018-portable.zip) · [Güncel indeks](../LATEST-BUILD.json) · [AI/asset/lisans](ASSET-CREDITS.md)
 
 Aynı DLL sunum/regresyon turu: **291 kontrol /12 incelenmiş kare**. Normal otomatik tam ekran gözlemi: **10 kontrol /1 incelenmiş kare**. Ortak regresyonlar benzersiz test sayısı iddiası değildir.
+
+## GitHub yayını
+
+[v0.5.13-r7](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r7) ve [doğrulanmış ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.13-r7/TooLateToPanic-Home-V5.13-r7-20261018-portable.zip) yayımlandı. Kabul edilmiş kaynak commit’i `a0b531679e0b292f74ba227fda53b19fecb10c08`; GitHub ZIP digest/boyutu yerel paketle eşleşir. Belge güncellemeleri yeni native test değildir. Eski release/tag/asset ve stable v0.4.13 korunur.
