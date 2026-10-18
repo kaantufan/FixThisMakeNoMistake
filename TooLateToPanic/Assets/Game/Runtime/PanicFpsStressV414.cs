@@ -17,7 +17,7 @@ namespace TooLateToPanic
         public Quaternion FpsInputRotationV54 { get { return Quaternion.Euler(bagPitch,bagYaw,0); } }
         public float StressIntensityV414 { get { return fpsStressV414; } }
         public bool StressAudioActiveV414 { get { return FpsFeedbackAudioPlayingV414; } }
-        public float PoseSwayAmplitudeV414 { get { return FpsStressVisibleV414&&!ReducedFpsMotionV54 ? Mathf.Lerp(.75f,1.4f,fpsStressV414) : 0; } }
+        public float PoseSwayAmplitudeV414 { get { return FpsStressVisibleV414&&!ReducedFpsMotionV54 ? Mathf.Lerp(1.5f,2.15f,fpsStressV414) : 0; } }
         public float FpsStressIntensityV414 { get { return fpsStressV414; } }
         public float FpsVeilOpacityV414 { get { return FpsStressVisibleV414 ? EvaluateFpsVeilOpacityV54(fpsStressClockV414,fpsStressV414,ReducedFpsMotionV54) : 0; } }
         public float FpsMovementMultiplierV414 { get { return FpsStressVisibleV414 ? Mathf.Lerp(1,.94f,fpsStressV414) : 1; } }
@@ -37,26 +37,33 @@ namespace TooLateToPanic
         public void SetReducedFpsMotionV54(bool value)
         { ReducedFpsMotionV54=value;fpsPoseReadyV414=false; }
 
-        // Low-frequency motion, no actor translation, input smoothing, random shake,
-        // or flashing. Reduced motion retains a steady vignette and urgency audio.
+        // Continuous deterministic camera-only tension. The controller still reads
+        // FpsInputRotationV54; the displayed centre ray follows the displayed pose.
+        // Reduced motion removes sway/FOV movement and keeps a steady veil.
         public static Vector3 EvaluateFpsSwayDegreesV54(float clock,float urgency,bool reducedMotion)
         {
             if(reducedMotion||float.IsNaN(clock)||float.IsInfinity(clock))return Vector3.zero;
             urgency=FiniteUnitV54(urgency);
-            return new Vector3(Mathf.Sin(clock*1.37f)*Mathf.Lerp(.30f,.62f,urgency),
-                Mathf.Sin(clock*.93f+.8f)*Mathf.Lerp(.16f,.34f,urgency),
-                Mathf.Sin(clock*1.12f)*Mathf.Lerp(.75f,1.4f,urgency));
+            float strength=Mathf.Lerp(.70f,1f,urgency);
+            return new Vector3((Mathf.Sin(clock*1.37f)*.78f+Mathf.Sin(clock*25.13f)*.17f)*strength,
+                (Mathf.Sin(clock*.93f+.8f)*.28f+Mathf.Sin(clock*23.24f+.4f)*.10f)*strength,
+                (Mathf.Sin(clock*1.12f)*1.82f+Mathf.Sin(clock*26.08f)*.33f)*strength);
         }
         public static float EvaluateFpsFovV54(float clock,float urgency,bool reducedMotion)
         {
             if(reducedMotion||float.IsNaN(clock)||float.IsInfinity(clock))return 62;
-            return 62+Mathf.Sin(clock*1.66f)*Mathf.Lerp(.35f,.85f,FiniteUnitV54(urgency));
+            return 62+Mathf.Sin(clock*1.66f)*Mathf.Lerp(.55f,1.1f,FiniteUnitV54(urgency));
         }
         public static float EvaluateFpsVeilOpacityV54(float clock,float urgency,bool reducedMotion)
         {
             if(float.IsNaN(clock)||float.IsInfinity(clock))clock=0;
-            float breath=reducedMotion?0:(.5f+.5f*Mathf.Sin(clock*2.35f));
-            return .57f+.13f*FiniteUnitV54(urgency)+.045f*breath;
+            if(reducedMotion)return .58f;
+            // A 7.2 s cycle has about 1.4 s of clear relief, joined with slow
+            // one-second ramps. Darkness never flashes or blankets the centre.
+            float phase=Mathf.Repeat(clock+3.6f,7.2f);
+            float dark=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.70f,1.75f,phase))*
+                (1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(5.45f,6.50f,phase)));
+            return Mathf.Lerp(.22f,Mathf.Lerp(.80f,.88f,FiniteUnitV54(urgency)),dark);
         }
         static float FiniteUnitV54(float value)
         {return float.IsNaN(value)||float.IsInfinity(value)?0:Mathf.Clamp01(value);}
@@ -66,6 +73,7 @@ namespace TooLateToPanic
             if(feedbackOwnerV414)return;
             feedbackOwnerV414=gameObject.AddComponent<PanicExperienceFeedbackOwnerV414>();feedbackOwnerV414.Owner=this;
             stressAudioV414=new PanicStressAudioV414(transform);
+            InitFpsTensionV55();
             fpsVeilV414=new Texture2D(96,96,TextureFormat.RGBA32,false,true){name="V54_ClearCentrePanicVignette",hideFlags=HideFlags.HideAndDontSave,wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};
             var pixels=new Color32[96*96];
             for(int y=0;y<96;y++)for(int x=0;x<96;x++)
@@ -82,6 +90,7 @@ namespace TooLateToPanic
         {
             if(!feedbackOwnerV414)InitExperienceFeedbackV414();
             dt=float.IsNaN(dt)||float.IsInfinity(dt)?0:Mathf.Clamp(dt,0,.1f);
+            TickFpsTensionV55(dt);
             TickGatherFeedbackV414(dt);
             if((!BagFirstPersonActive&&!BagHandoffActiveV51)||!BagFinalStageActive)
             {fpsStressV414=0;fpsStressClockV414=0;fpsPoseReadyV414=false;stressAudioV414.Stop();return;}
@@ -95,9 +104,10 @@ namespace TooLateToPanic
             stressAudioV414.Tick(fpsStressV414);
         }
         public void SuspendExperienceFeedbackV414()
-        {if(stressAudioV414!=null)stressAudioV414.Stop();}
+        {if(stressAudioV414!=null)stressAudioV414.Stop();StopFpsTensionV55();}
         public void DisposeExperienceFeedbackV414()
         {
+            DisposeFpsTensionV55();
             if(stressAudioV414!=null)stressAudioV414.Dispose();stressAudioV414=null;
             if(fpsVeilV414)Destroy(fpsVeilV414);fpsVeilV414=null;
             DisposeGatherFeedbackV414();fpsStressV414=0;fpsPoseReadyV414=false;

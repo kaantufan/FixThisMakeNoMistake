@@ -24,10 +24,11 @@ namespace TooLateToPanic
         PanicHomeWorld world;
         Func<bool> modalBlocked;
         PanicNotebookSnapshot snapshot, turningSnapshot;
+        PanicNotebookPlanSnapshotV55 planSnapshotV55;
         GUIStyle titleStyle, headingStyle, bodyStyle, smallStyle, tinyStyle, centerStyle, valueStyle;
         int processedFrame = -1, transitionFrame = -1, floor, sourceOffset;
         float nextSnapshot;
-        bool pointerOwned, pendingInventory;
+        bool pointerOwned, pendingInventory, introSeenV55, introOpenV55, compactAssistantV55 = true;
         string selectedSource, pendingFocus;
         PanicPhase pendingPhase;
         int pendingWave;
@@ -47,6 +48,15 @@ namespace TooLateToPanic
         public Rect BookScreenBounds { get { Layout(); return ScreenRect(new Rect(Book.x, Book.y - 65, Book.width + (compact ? 121 : 147), Book.height + (compact ? 172 : 164))); } }
         public Rect CloseScreenBounds { get { Layout(); return ScreenRect(CloseRect); } }
         public Rect PageScreenBounds(PanicNotebookPage page) { Layout(); return ScreenRect(TabRect((int)page)); }
+        public bool IntroVisibleV55 { get { return IsVisible && introOpenV55; } }
+        public bool IntroSeenV55 { get { return introSeenV55; } }
+        public const string AssistantIntroTextV55 = "Ailen güvenli alanda. Sen Kalkanlı'daki aile evini afete hazırlıyorsun. Bu defter, gerçek ilerlemene bakarak sıradaki küçük adımı önerir. Adımları kendi hızında izle; başka bir önlem seçmekte özgürsün. Normal oyunda 120 saniye önlem, ardından 45 saniye çanta hazırlığı var. Defter açıkken süre durur. J veya Esc ile oyuna dön.";
+        public Rect IntroContinueScreenBoundsV55 { get { Layout(); return ScreenRect(OffsetToBookV55(IntroContinueRectV55)); } }
+        public Rect AssistantToggleScreenBoundsV55 { get { Layout(); return ScreenRect(OffsetToBookV55(AssistantToggleRectV55)); } }
+        public PanicNotebookPlanSnapshotV55 PlanSnapshotV55 { get { return planSnapshotV55; } }
+        public Rect PlanScreenBoundsV55 { get { Layout(); return ScreenRect(OffsetToBookV55(PlanRect)); } }
+        public float PlanWorldScaleV55 { get { Layout(); return PlanScaleV55()*scale; } }
+        public Vector2 PlanWorldToScreenV55(Vector3 position) { Layout();return ScreenRect(new Rect(Book.position+MapPoint(position),Vector2.zero)).position; }
 
         float CanvasWidth { get { return compact ? 760 : 1600; } }
         float CanvasHeight { get { return compact ? 1100 : 900; } }
@@ -56,19 +66,25 @@ namespace TooLateToPanic
         Rect CloseRect { get { return new Rect(Book.x + Book.width - 208, Book.y - 59, 208, 42); } }
         Rect MotionRect { get { return new Rect(Book.x, Book.y + Book.height + 19, 240, 36); } }
         Rect InventoryRect { get { return new Rect(28, Book.height - 92, PageWidth - 56, 47); } }
+        Rect IntroContinueRectV55 { get { return new Rect(compact ? 28 : PageWidth + 28, Book.height - 105, PageWidth - 56, 49); } }
+        Rect AssistantToggleRectV55 { get { return new Rect(compact ? 28 : PageWidth + 28, Book.height - 88, PageWidth - 56, 40); } }
+        Rect CompactPlanSwitchRectV55 { get { return new Rect(28, Book.height - 179, PageWidth - 56, 38); } }
+        Rect OffsetToBookV55(Rect rect) { rect.position += Book.position; return rect; }
         Rect TabRect(int index)
         {
             float height = compact ? 126 : 98;
             return new Rect(Book.xMax + 9, Book.y + 8 + index * (height + 7), compact ? 112 : 138, height);
         }
         Rect FloorRect(int index) { return new Rect(28 + index * ((PageWidth - 56) / 3), 101, (PageWidth - 56) / 3 - 5, 38); }
-        Rect PlanRect { get { return new Rect(28, 155, PageWidth - 56, compact ? 268 : 209); } }
-        Rect SourceRow(int index) { return new Rect(28, PlanRect.yMax + 17 + index * 43, PageWidth - 56, 39); }
-        int VisibleSourceRows { get { return compact ? 4 : 3; } }
+        Rect PlanRect { get { return new Rect(28, 155, PageWidth - 56, compact ? 360 : 294); } }
+        Rect SourceRow(int index) { return new Rect(28, PlanRect.yMax + 9 + index * 37, PageWidth - 56, 35); }
+        int VisibleSourceRows { get { return 2; } }
 
         public void Bind(PanicHomeWorld owner, Func<bool> isModalBlocked)
         {
+            bool changedOwner = world != owner;
             ForceClosed(); world = owner; modalBlocked = isModalBlocked;
+            if (changedOwner) { introSeenV55 = false; planSnapshotV55 = null; }
             floor = world ? world.ActiveFloor : 0; RefreshSnapshot();
         }
         void Update() { ProcessInput(); }
@@ -110,11 +126,20 @@ namespace TooLateToPanic
                 }
                 return;
             }
+            if (animationState.TargetOpen && introOpenV55 &&
+                (Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Backspace)))
+            { ProcessAssistantIntroKeyV55(Input.GetKeyDown(KeyCode.J) ? KeyCode.J : KeyCode.Escape); return; }
             if (Input.GetKeyDown(KeyCode.J)) { if (animationState.TargetOpen) RequestClose(); else RequestOpen(); return; }
             if (animationState.Visible)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Backspace)) { RequestClose(); return; }
                 if (!animationState.TargetOpen) return;
+                if (introOpenV55)
+                {
+                    if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) { ProcessAssistantIntroKeyV55(KeyCode.Return); return; }
+                    if (Input.GetMouseButtonDown(0)) ProcessPointer(LogicalPointer());
+                    return;
+                }
                 if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.B)) { RequestInventory(); return; }
                 int delta = (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.PageDown) ? 1 : 0) -
                     (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.PageUp) ? 1 : 0);
@@ -131,6 +156,8 @@ namespace TooLateToPanic
         {
             if (!CanOpenNow()) return false;
             ClearPending(); transitionFrame = Time.frameCount;
+            if (!animationState.TargetOpen) introOpenV55 = false;
+            if (!introSeenV55) { introSeenV55 = true; introOpenV55 = true; }
             if (!animationState.Visible) { floor = world.ActiveFloor; selectedSource = null; }
             animationState.SetOpen(true); RefreshSnapshot(); return true;
         }
@@ -143,23 +170,45 @@ namespace TooLateToPanic
         {
             bool owned = animationState.Visible || pendingInventory || !string.IsNullOrEmpty(pendingFocus);
             animationState.ForceClosed(); ClearPending(); turningSnapshot = null;
+            introOpenV55 = false;
             if (owned) transitionFrame = Time.frameCount;
         }
         public void RequestPage(PanicNotebookPage page)
         {
-            if (!animationState.TargetOpen) return;
+            if (!animationState.TargetOpen || introOpenV55) return;
             if (!animationState.Turning) turningSnapshot = snapshot;
             animationState.RequestPage(page);
         }
         public void SetReducedMotion(bool value) { animationState.SetReducedMotion(value); turningSnapshot = null; }
+        public bool DismissAssistantIntroV55()
+        {
+            if (!animationState.TargetOpen || !introOpenV55) return false;
+            introOpenV55 = false; transitionFrame = Time.frameCount;
+            animationState.RequestPage(PanicNotebookPage.Rooms); RefreshSnapshot(); return true;
+        }
+        /// <summary>The same semantic handler used by physical Enter; callers do not simulate OS input.</summary>
+        public bool ProcessAssistantIntroKeyV55(KeyCode key)
+        {
+            if (!animationState.TargetOpen || !introOpenV55) return false;
+            if (key == KeyCode.Return || key == KeyCode.KeypadEnter) return DismissAssistantIntroV55();
+            if (key == KeyCode.J || key == KeyCode.Escape || key == KeyCode.Backspace) { RequestClose(); return true; }
+            return false;
+        }
         public bool RequestInventory()
         {
-            if (!animationState.TargetOpen || !world || (world.Model.Phase != PanicPhase.Preparing && world.Model.Phase != PanicPhase.Tutorial)) return false;
+            if (!animationState.TargetOpen || introOpenV55 || !world || (world.Model.Phase != PanicPhase.Preparing && world.Model.Phase != PanicPhase.Tutorial)) return false;
             pendingInventory = true; pendingFocus = null; pendingPhase = world.Model.Phase; pendingWave = world.Model.Wave;
             RequestClose(); return true;
         }
         public void SelectFloor(int value) { floor = Mathf.Clamp(value, -1, 1); sourceOffset = 0; selectedSource = null; RefreshSnapshot(); }
-        public void RefreshSnapshot() { snapshot = PanicNotebookData.Capture(world, floor); nextSnapshot = Time.unscaledTime + .2f; }
+        public void RefreshSnapshot()
+        {
+            snapshot = PanicNotebookData.Capture(world, floor);
+            // Geometry projection is notebook-only work; closed gameplay keeps its existing
+            // lightweight data refresh without traversing meshes or allocating plan polygons.
+            if(world&&(animationState.Visible||animationState.TargetOpen))planSnapshotV55=world.CaptureNotebookPlanV55(floor);
+            nextSnapshot = Time.unscaledTime + .2f;
+        }
 
         bool PhaseAllowsNotebook()
         {
@@ -180,17 +229,27 @@ namespace TooLateToPanic
             pointerOwned = true; transitionFrame = Time.frameCount;
             if (CloseRect.Contains(point)) { RequestClose(); return; }
             if (MotionRect.Contains(point)) { SetReducedMotion(!animationState.ReducedMotion); return; }
+            if (introOpenV55)
+            {
+                if (animationState.Openness >= 1f && OffsetToBookV55(IntroContinueRectV55).Contains(point)) DismissAssistantIntroV55();
+                return;
+            }
+            if ((!compact || compactAssistantV55) && animationState.CurrentPage == PanicNotebookPage.Rooms && !animationState.Turning &&
+                animationState.Openness >= 1f && OffsetToBookV55(AssistantToggleRectV55).Contains(point))
+            { world.SetAssistantEnabledV55(!world.AssistantEnabledV55); return; }
             for (int i = 0; i < 6; i++) if (TabRect(i).Contains(point)) { RequestPage((PanicNotebookPage)i); return; }
             if (animationState.Turning || animationState.Openness < 1f) return;
             Vector2 local = point - Book.position;
             if (animationState.CurrentPage == PanicNotebookPage.Rooms)
             {
+                if (compact && CompactPlanSwitchRectV55.Contains(local)) { compactAssistantV55 = !compactAssistantV55; return; }
+                if (compact && compactAssistantV55) return;
                 for (int i = 0; i < 3; i++) if (FloorRect(i).Contains(local)) { SelectFloor(i - 1); return; }
                 if (snapshot == null) return;
-                for (int i = 0; i < snapshot.Pins.Length; i++)
+                for (int i = snapshot.Pins.Length-1; i >=0; i--)
                 {
                     bool rowVisible = i >= sourceOffset && i < sourceOffset + VisibleSourceRows;
-                    if (PinRect(snapshot.Pins[i]).Contains(local) || rowVisible && SourceRow(i - sourceOffset).Contains(local))
+                    if (PlanRect.Contains(local) && PinRect(snapshot.Pins[i]).Contains(local) || rowVisible && SourceRow(i - sourceOffset).Contains(local))
                     {
                         selectedSource = snapshot.Pins[i].Id; return;
                     }
@@ -244,29 +303,102 @@ namespace TooLateToPanic
                 for (int i = 3; i > 0; i--) Frame(new Rect(i * 3, i * 4, Book.width, Book.height), PaperBack, new Color(.15f, .2f, .18f, .38f));
                 Frame(new Rect(0, 0, Book.width, Book.height), Paper, Ink);
                 PaperGrid(new Rect(0, 0, Book.width, Book.height));
-                if (!compact) { Fill(new Rect(PageWidth - 1, 34, 1, Book.height - 62), new Color(.32f, .40f, .35f, .18f)); DrawRightPage(snapshot); }
-                DrawLeftPage(animationState.Turning ? animationState.ToPage : animationState.CurrentPage, snapshot);
-                if (animationState.Turning && Event.current.type == EventType.Repaint) DrawTurningLeaf();
+                if (!compact) Fill(new Rect(PageWidth - 1, 34, 1, Book.height - 62), new Color(.32f, .40f, .35f, .18f));
+                if (introOpenV55) DrawAssistantIntroV55();
+                else
+                {
+                    if (!compact) DrawRightPage(snapshot);
+                    DrawLeftPage(animationState.Turning ? animationState.ToPage : animationState.CurrentPage, snapshot);
+                    if (animationState.Turning && Event.current.type == EventType.Repaint) DrawTurningLeaf();
+                }
                 DrawSpiral();
                 GUI.matrix = oldBookMatrix;
-                DrawTabs();
+                bool enabledBeforeTabs = GUI.enabled; GUI.enabled = !introOpenV55; DrawTabs(); GUI.enabled = enabledBeforeTabs;
                 DrawButton(MotionRect, animationState.ReducedMotion ? "HAREKET: AZ" : "HAREKET: TAM", PaperBack, Ink, true);
-                Label(new Rect(Book.x + 256, Book.yMax + 25, Book.width - 255, 31), compact ? "← / →  SAYFA   ·   TAB  ÇANTA" : "← / →  SAYFA    ·    TAB  ÇANTAYI DÜZENLE    ·    DEFTER AÇIKKEN SÜRE DURUR", tinyStyle, Paper);
+                Label(new Rect(Book.x + 256, Book.yMax + 25, Book.width - 255, 31), introOpenV55 ? "ENTER  DEVAM    ·    J / ESC  OYUNA DÖN" : compact ? "← / →  SAYFA   ·   TAB  ÇANTA" : "← / →  SAYFA    ·    TAB  ÇANTAYI DÜZENLE    ·    DEFTER AÇIKKEN SÜRE DURUR", tinyStyle, Paper);
                 Label(new Rect(Book.x, Book.yMax + 63, Book.width, compact ? 42 : 34), snapshot.StoryNote, tinyStyle, Paper);
             }
             finally { GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.contentColor = oldContent; GUI.depth = oldDepth; }
         }
 
+        void DrawAssistantIntroV55()
+        {
+            float width = PageWidth - 56;
+            Label(new Rect(28, 35, width, 51), "EVİN İÇİN KÜÇÜK ADIMLAR", titleStyle, Ink);
+            Fill(new Rect(28, 98, width, 2), Green);
+            Label(new Rect(28, 119, width, compact ? 114 : 137), "Ailen güvenli alanda. Sen Kalkanlı'daki aile evini afete hazırlıyorsun.", bodyStyle, Ink);
+            float y = compact ? 244 : 271;
+            Label(new Rect(28, y, width, 31), "BU DEFTER NE İŞE YARAR?", headingStyle, Green);
+            Label(new Rect(28, y + 43, width, compact ? 125 : 142), "Gerçek ilerlemene bakar ve sıradaki küçük adımı önerir. Tamamlanan işler burada işaretlenir; sonraki adım oyun ekranında kısaca görünür.", smallStyle, Ink);
+            Label(new Rect(28, compact ? 426 : 489, width, compact ? 70 : 102), "İstersen başka bir önlem seç. Yardımcı yalnızca yol gösterir; senin yerine iş yapmaz.", smallStyle, Green);
+            float right = compact ? 28 : PageWidth + 28;
+            if (!compact)
+            {
+                Label(new Rect(right, 35, width, 51), "DEFTERİ NASIL KULLANIRIM?", titleStyle, Ink);
+                Fill(new Rect(right, 98, width, 2), Green);
+                Label(new Rect(right, 122, width, 108), "Normal oyunda 120 saniye önlem al, ardından 45 saniyede çantanı hazırla. Defter açıkken süre durur.", smallStyle, Ink);
+                Label(new Rect(right, 256, width, 139), "J / Esc   Defteri kapat\n← / →   Sayfaları değiştir\nE   Yakındaki ana etkileşim\nF   Seçili malzemeyi al\nTab   Envanter / çanta", smallStyle, Ink);
+                Label(new Rect(right, 418, width, 96), "İlk sayfada yardımcı adımlarını ve ev planını bulursun. İstersen yardımcıyı buradan kapatabilirsin.", smallStyle, Green);
+            }
+            else Label(new Rect(28, 515, width, 156), "120 sn önlem + 45 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: etkileşim   ·   F: malzeme   ·   Tab: çanta\nİlk sayfadan yardımcıyı açıp kapatabilirsin.", smallStyle, Ink);
+            DrawButton(IntroContinueRectV55, "REHBERE GEÇ  ·  ENTER", Green, Paper, true);
+            Label(new Rect(right, Book.height - 44, width, 24), "Hazır olduğunda J ile evine dön.", tinyStyle, Green);
+        }
+
+        void DrawAssistantPageV55(float x, float width)
+        {
+            var assistant = world.AssistantV55;
+            bool enabled = world.AssistantEnabledV55;
+            bool available = assistant.Available;
+            Label(new Rect(x, 25, width, 43), "HAZIRLIK YARDIMCISI", titleStyle, Ink);
+            Label(new Rect(x, 74, width, 24), "GERÇEK İLERLEMEN  ·  DALGA " + snapshot.Wave, tinyStyle, Green);
+            Fill(new Rect(x, 101, width, 2), Green);
+            Rect note = new Rect(x, 117, width, 123);
+            Frame(note, enabled ? new Color(.92f, .94f, .86f) : PaperBack, Rule);
+            Label(new Rect(x + 13, 126, width - 26, 25), !enabled ? "YARDIMCI KAPALI" : available ? assistant.Title : "HAZIRLIK NOTU", smallStyle, Green);
+            Label(new Rect(x + 13, 157, width - 26, 43), !enabled ? "Adımlar burada kalır. İstediğinde yeniden açabilirsin." : available ? assistant.Task : "Yeni hazırlık başladığında sıradaki adım burada görünecek.", smallStyle, Ink);
+            Label(new Rect(x + 13, 203, width - 26, 32), enabled && available ? assistant.Hint : "Seçimlerin ve oyun kuralları değişmez.", tinyStyle, Green);
+            Label(new Rect(x, 248, width, 24), "ADIM ADIM HAZIRLIK", tinyStyle, Green);
+            var steps = assistant.Steps;
+            int count = steps == null ? 0 : steps.Length;
+            float rowHeight = compact ? 60 : 48;
+            for (int i = 0; i < count; i++)
+            {
+                var step = steps[i]; Rect row = new Rect(x, 267 + i * rowHeight, width, rowHeight - 4);
+                bool active = enabled && step.Active;
+                Color ink = step.Complete || active ? Ink : new Color(Ink.r, Ink.g, Ink.b, .64f);
+                Frame(row, active ? new Color(.96f, .94f, .78f) : step.Complete ? new Color(.91f, .94f, .87f) : Paper, Rule);
+                if (active) Fill(new Rect(row.x, row.y, 3, row.height), Green);
+                Rect number = new Rect(row.x + 9, row.y + 8, 24, 24);
+                Frame(number, step.Complete ? Green : PaperBack, active ? Green : Rule);
+                if (step.Complete) Check(new Rect(number.x + 5, number.y + 5, 14, 14), Paper);
+                else Label(number, (i + 1).ToString(), centerStyle, active ? Green : ink);
+                Label(new Rect(row.x + 44, row.y + 2, row.width - 55, 24), step.Label, smallStyle, ink);
+                Label(new Rect(row.x + 44, row.y + 24, row.width - 55, compact ? 28 : 20), step.Detail, tinyStyle, step.Complete || active ? Green : ink);
+            }
+            DrawButton(AssistantToggleRectV55, enabled ? "YARDIMCI: AÇIK  ·  KAPAT" : "YARDIMCI: KAPALI  ·  AÇ", enabled ? Green : PaperBack, enabled ? Paper : Ink, true);
+            Label(new Rect(x, Book.height - 32, width, 22), "İstersen başka bir önlem seçebilirsin.", tinyStyle, Green);
+        }
+
         void DrawLeftPage(PanicNotebookPage page, PanicNotebookSnapshot data)
         {
             if (data == null) return;
+            if (compact && page == PanicNotebookPage.Rooms && compactAssistantV55)
+            {
+                DrawAssistantPageV55(28, PageWidth - 56);
+                DrawButton(CompactPlanSwitchRectV55, "EV PLANINA GEÇ", PaperBack, Ink, true); return;
+            }
             GUI.BeginGroup(new Rect(0, 0, PageWidth, Book.height));
             Label(new Rect(28, 25, PageWidth - 56, 43), PanicNotebookData.PageName(page).ToUpperInvariant(), titleStyle, Ink);
-            string sub = page == PanicNotebookPage.Rooms ? "GERÇEK DEPO NOKTALARI  ·  " + PanicNotebookData.FloorName(floor) :
+            string sub = page == PanicNotebookPage.Rooms ? "EVİN GERÇEK KROKİSİ  ·  " + PanicNotebookData.FloorName(floor) :
                 page == PanicNotebookPage.Inventory ? "ENVANTER VE AFET ÇANTASI" : "OYUNDA TAMAMLANAN ÖNLEMLER";
             Label(new Rect(28, 72, PageWidth - 56, 25), sub, tinyStyle, Green);
             Fill(new Rect(28, 97, PageWidth - 56, 2), Green);
-            if (page == PanicNotebookPage.Rooms) DrawPlan(data);
+            if (page == PanicNotebookPage.Rooms)
+            {
+                DrawPlan(data);
+                if (compact) DrawButton(CompactPlanSwitchRectV55, "YARDIMCI ADIMLARINA GEÇ", PaperBack, Ink, true);
+            }
             else if (page == PanicNotebookPage.Inventory) DrawInventory(data);
             else DrawChecks(page, data);
             Label(new Rect(28, Book.height - 30, PageWidth - 56, 22), "KAYIT: CANLI OYUN     ·     S. " + ((int)page + 1).ToString("00"), tinyStyle, Green);
@@ -294,20 +426,26 @@ namespace TooLateToPanic
         {
             for (int i = 0; i < 3; i++) DrawButton(FloorRect(i), PanicNotebookData.FloorName(i - 1), floor == i - 1 ? Ink : PaperBack, floor == i - 1 ? Paper : Ink, true);
             Rect map = PlanRect; Frame(map, Color.white, Ink);
-            // Coordinates are a schematic projection of actual source positions, including attached garage.
-            Line(MapPoint(new Vector3(-8, 0, -6)), MapPoint(new Vector3(8, 0, -6)), Ink, 2);
-            Line(MapPoint(new Vector3(8, 0, -6)), MapPoint(new Vector3(8, 0, 6)), Ink, 2);
-            Line(MapPoint(new Vector3(8, 0, 6)), MapPoint(new Vector3(-8, 0, 6)), Ink, 2);
-            Line(MapPoint(new Vector3(-8, 0, 6)), MapPoint(new Vector3(-8, 0, -6)), Ink, 2);
-            if (floor == 0) { var garage = MapRect(new Vector3(8, 0, -1), new Vector3(17, 0, 6)); Frame(garage, new Color(.91f, .94f, .90f), Rule); }
-            Label(new Rect(map.x + 8, map.y + 6, map.width - 16, 26), "K", tinyStyle, Green);
+            GUI.BeginGroup(map);
+            if(planSnapshotV55!=null)
+            {
+                foreach(PanicNotebookPlanKindV55 kind in new[]{PanicNotebookPlanKindV55.Floor,PanicNotebookPlanKindV55.Stair,PanicNotebookPlanKindV55.Furniture,PanicNotebookPlanKindV55.Wall,PanicNotebookPlanKindV55.Window,PanicNotebookPlanKindV55.Door})
+                    foreach(var shape in planSnapshotV55.Shapes)if(shape.Kind==kind)DrawPlanShapeV55(shape);
+            }
+            Label(new Rect(8, 6, map.width - 16, 26), "K", tinyStyle, Green);
             for (int i = 0; i < data.Pins.Length; i++)
             {
-                var pin = data.Pins[i]; Rect rect = PinRect(pin);
+                var pin = data.Pins[i]; Rect rect = PinRect(pin);rect.position-=map.position;
                 DrawButton(rect, (i + 1).ToString(), pin.Id == selectedSource ? Yellow : pin.Empty ? Olive : Ink, pin.Id == selectedSource || pin.Empty ? Ink : Paper, true);
             }
             int actorFloor = Mathf.Clamp(Mathf.FloorToInt((data.ActorPosition.y + .65f) / 3.2f), -1, 1);
-            if (actorFloor == floor) { Vector2 p = MapPoint(data.ActorPosition); Frame(new Rect(p.x - 6, p.y - 6, 12, 12), Alarm, Paper); }
+            if (actorFloor == floor)
+            {
+                Vector2 p = MapDrawPointV55(data.ActorPosition); Frame(new Rect(p.x - 5, p.y - 5, 10, 10), Alarm, Paper);
+                Vector3 forward=planSnapshotV55==null?Vector3.forward:planSnapshotV55.ActorForward;
+                Line(p,MapDrawPointV55(data.ActorPosition+forward*.65f),Alarm,3);
+            }
+            GUI.EndGroup();
             int empty = 0;
             for (int i = 0; i < data.Pins.Length; i++)
             {
@@ -316,18 +454,73 @@ namespace TooLateToPanic
                 string state = pin.Empty ? "BOŞ" : pin.Open ? "AÇIK" : "KAPALI";
                 Rect row = SourceRow(i - sourceOffset);
                 Frame(row, pin.Id == selectedSource ? new Color(.96f, .93f, .72f) : PaperBack, Rule);
-                Label(new Rect(row.x + 9, row.y + 7, row.width - 105, 27), (i + 1) + "  " + pin.Label, smallStyle, Ink);
-                Label(new Rect(row.xMax - 91, row.y + 8, 82, 25), state, tinyStyle, pin.Empty ? Green : Ink);
+                Label(new Rect(row.x + 9, row.y + 4, row.width - 105, 27), (i + 1) + "  " + pin.Label, smallStyle, Ink);
+                Label(new Rect(row.xMax - 91, row.y + 5, 82, 25), state, tinyStyle, pin.Empty ? Green : Ink);
             }
-            Label(new Rect(28, Book.height - 132, PageWidth - 56, 36), empty + " / " + data.Pins.Length + " kaynak boş. Kırmızı işaret sensin." + (data.Pins.Length > VisibleSourceRows ? " Liste: tekerlek." : ""), tinyStyle, Green);
+            Label(new Rect(28, compact?PlanRect.yMax+90:Book.height - 116, PageWidth - 56, 22), "Kırmızı: sen  ·  Gri: duvar  ·  " + empty + "/"+data.Pins.Length+" boş" + (data.Pins.Length > VisibleSourceRows ? "  ·  Liste: tekerlek" : ""), tinyStyle, Green);
             DrawButton(InventoryRect, string.IsNullOrEmpty(selectedSource) ? "PLAN ÜZERİNDEN BİR HEDEF SEÇ" : "SEÇİLİ HEDEFİ İŞARETLE", string.IsNullOrEmpty(selectedSource) ? PaperBack : Green, string.IsNullOrEmpty(selectedSource) ? Ink : Paper, true);
         }
         Vector2 MapPoint(Vector3 position)
         {
-            var map = PlanRect; return new Vector2(map.x + 18 + (position.x + 9) / 27 * (map.width - 36), map.y + 25 + (7 - position.z) / 15 * (map.height - 45));
+            var map=PlanRect;var center=planSnapshotV55==null?position:planSnapshotV55.WorldBounds.center;float s=PlanScaleV55();
+            return map.center+new Vector2(position.x-center.x,center.z-position.z)*s;
+        }
+        float PlanScaleV55()
+        {
+            if(planSnapshotV55==null)return 1;
+            var size=planSnapshotV55.WorldBounds.size;
+            return Mathf.Min((PlanRect.width-36)/Mathf.Max(.1f,size.x),(PlanRect.height-34)/Mathf.Max(.1f,size.z));
+        }
+        void DrawPlanShapeV55(PanicNotebookPlanShapeV55 shape)
+        {
+            var a=MapDrawPointV55(shape.Corners[3]);var b=MapDrawPointV55(shape.Corners[2]);var c=MapDrawPointV55(shape.Corners[1]);
+            Color fill=shape.Kind==PanicNotebookPlanKindV55.Floor?new Color(.93f,.94f,.88f):shape.Kind==PanicNotebookPlanKindV55.Wall?Ink:
+                shape.Kind==PanicNotebookPlanKindV55.Door?new Color(.62f,.43f,.25f):shape.Kind==PanicNotebookPlanKindV55.Window?new Color(.38f,.58f,.62f):
+                shape.Kind==PanicNotebookPlanKindV55.Stair?new Color(.77f,.79f,.72f):new Color(.73f,.79f,.69f);
+            FillPlanQuadV55(a,b,c,MapDrawPointV55(shape.Corners[0]),fill);
+            if(shape.Kind!=PanicNotebookPlanKindV55.Floor)for(int i=0;i<4;i++)Line(MapDrawPointV55(shape.Corners[i]),MapDrawPointV55(shape.Corners[(i+1)%4]),shape.Kind==PanicNotebookPlanKindV55.Wall?Ink:Rule,1);
+            if(shape.Kind==PanicNotebookPlanKindV55.Door)
+            {
+                var pivot=MapDrawPointV55(shape.Pivot);var end=MapDrawPointV55(shape.CurrentEnd);var closed=MapDrawPointV55(shape.ClosedEnd);
+                Line(pivot,end,new Color(.46f,.31f,.2f),2);
+                float start=Mathf.Atan2(closed.y-pivot.y,closed.x-pivot.x)*Mathf.Rad2Deg;
+                float finish=Mathf.Atan2(end.y-pivot.y,end.x-pivot.x)*Mathf.Rad2Deg;
+                float sweep=Mathf.DeltaAngle(start,finish),radius=Vector2.Distance(pivot,closed);var previous=closed;
+                if(Mathf.Abs(sweep)>2)for(int i=1;i<=10;i++)
+                { float angle=(start+sweep*i/10)*Mathf.Deg2Rad;var next=pivot+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*radius;Line(previous,next,new Color(.46f,.31f,.2f,.45f),1);previous=next; }
+                string room=shape.Label.Replace("Ebeveyn odası","Ebeveyn").Replace("Çocuk odası","Çocuk").Replace(" iç kapısı","").Replace(" kapısı","");
+                Label(new Rect(pivot.x+4,pivot.y-17,110,21),room,tinyStyle,Green);
+            }
+            if(shape.Kind==PanicNotebookPlanKindV55.Floor&&!string.IsNullOrEmpty(shape.Label))
+                Label(new Rect(MapDrawPointV55(shape.Pivot).x-43,MapDrawPointV55(shape.Pivot).y-9,86,20),shape.Label.ToUpperInvariant(),tinyStyle,Green);
+        }
+        Vector2 MapDrawPointV55(Vector3 position) { return MapPoint(position)-PlanRect.position; }
+        void FillPlanQuadV55(Vector2 a,Vector2 b,Vector2 c,Vector2 d,Color color)
+        {
+            // GUIUtility.RotateAroundPivot cannot safely preserve nested page/strip clips.
+            // Fill the actual convex footprint in local scan lines without any matrix change.
+            var points=new[]{a,b,c,d};
+            float minY=Mathf.Max(0,Mathf.Min(a.y,b.y,c.y,d.y)),maxY=Mathf.Min(PlanRect.height,Mathf.Max(a.y,b.y,c.y,d.y));
+            if((Mathf.Abs(a.y-b.y)<.001f&&Mathf.Abs(b.x-c.x)<.001f)||(Mathf.Abs(a.x-b.x)<.001f&&Mathf.Abs(b.y-c.y)<.001f))
+            {
+                float lo=Mathf.Max(0,Mathf.Min(a.x,b.x,c.x,d.x)),hi=Mathf.Min(PlanRect.width,Mathf.Max(a.x,b.x,c.x,d.x));
+                if(hi>lo&&maxY>minY)Fill(Rect.MinMaxRect(lo,minY,hi,maxY),color);return;
+            }
+            for(float y=minY;y<maxY;y+=1f)
+            {
+                float sample=Mathf.Min(y+.5f,(y+maxY)*.5f),lo=float.PositiveInfinity,hi=float.NegativeInfinity;
+                for(int i=0;i<4;i++)
+                {
+                    var p=points[i];var q=points[(i+1)%4];
+                    if((p.y<=sample&&q.y>sample)||(q.y<=sample&&p.y>sample))
+                    { float x=Mathf.Lerp(p.x,q.x,(sample-p.y)/(q.y-p.y));lo=Mathf.Min(lo,x);hi=Mathf.Max(hi,x); }
+                }
+                lo=Mathf.Max(0,lo);hi=Mathf.Min(PlanRect.width,hi);
+                if(hi>lo)Fill(new Rect(lo,y,hi-lo,Mathf.Min(1.05f,maxY-y)),color);
+            }
         }
         Rect MapRect(Vector3 a, Vector3 b) { Vector2 aa = MapPoint(a), bb = MapPoint(b); return Rect.MinMaxRect(Mathf.Min(aa.x, bb.x), Mathf.Min(aa.y, bb.y), Mathf.Max(aa.x, bb.x), Mathf.Max(aa.y, bb.y)); }
-        Rect PinRect(PanicNotebookPin pin) { Vector2 p = MapPoint(pin.Position); return new Rect(p.x - 15, p.y - 15, 30, 30); }
+        Rect PinRect(PanicNotebookPin pin) { Vector2 p = MapPoint(pin.Position); return new Rect(p.x - 11, p.y - 11, 22, 22); }
 
         void DrawInventory(PanicNotebookSnapshot data)
         {
@@ -366,6 +559,7 @@ namespace TooLateToPanic
         {
             if (data == null) return;
             float x = PageWidth + 28, width = PageWidth - 56;
+            if (animationState.RequestedPage == PanicNotebookPage.Rooms) { DrawAssistantPageV55(x, width); return; }
             Label(new Rect(x, 25, width, 43), data.StoryTitle.ToUpperInvariant(), titleStyle, Ink);
             Label(new Rect(x, 74, width, 24), "DALGA " + data.Wave + "  ·  " + data.Disaster + "  ·  " + data.Phase, tinyStyle, Green);
             Fill(new Rect(x, 101, width, 2), Green);

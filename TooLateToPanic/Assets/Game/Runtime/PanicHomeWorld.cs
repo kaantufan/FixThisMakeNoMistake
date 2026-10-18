@@ -85,7 +85,7 @@ namespace TooLateToPanic
             bool jurySmoke = Array.IndexOf(args, "--jury-smoke") >= 0;
             bool fullFlowSmoke = Array.IndexOf(args, "--fullflow-smoke") >= 0;
             if (Array.IndexOf(args, "--overhaul414-smoke") >= 0) Application.runInBackground = true;
-            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0 || Array.IndexOf(args, "--v54-smoke") >= 0) Application.runInBackground = true;
+            if (Array.IndexOf(args, "--v5-smoke") >= 0 || Array.IndexOf(args, "--v51-smoke") >= 0 || Array.IndexOf(args, "--v52-smoke") >= 0 || Array.IndexOf(args, "--v53-smoke") >= 0 || Array.IndexOf(args, "--v54-smoke") >= 0 || Array.IndexOf(args, "--v55-smoke") >= 0) Application.runInBackground = true;
             for (int i = 0; i < args.Length - 1; i++) if (args[i] == "--home-evidence") EvidencePath = args[i + 1];
             if (!string.IsNullOrEmpty(EvidencePath)) { System.IO.Directory.CreateDirectory(EvidencePath); PanicModel.ScorePathOverride = System.IO.Path.Combine(EvidencePath, "isolated-home-scores.json"); }
             if (fullFlowSmoke)
@@ -408,6 +408,7 @@ namespace TooLateToPanic
             TickHouseAudio();
             TickExperienceFeedbackV414(dt);
             TickGuidanceV54();
+            if (hud) hud.TickSecondaryAlertV55(dt);
         }
 
         void LateUpdate()
@@ -814,6 +815,8 @@ namespace TooLateToPanic
             CancelWork(); CancelMove();
             if (Model.Phase != PanicPhase.Title && Model.Phase != PanicPhase.GameOver) Model.ReturnToTitle();
             Model.StartRun(tutorial); ConfigureResidenceModel(); Expedition.Reset(); ResetResidenceLife(); previousWave = Model.Wave; previousPhase = Model.Phase; focusId = null; InventoryOpen = false; ClearGarden(); Warp(new Vector3(0, .05f, -7.5f)); SyncVisuals(true); effects.OnPhase(Model.Phase); QueueRadio(DisasterVoiceId());
+            ResetAssistantV55();
+            if (hud) hud.ResetSecondaryAlertV55();
             ResetOverhaulRunV414(); BeginIntroStoryV414();
             if (hud) hud.BeginFreeplayOnboardingV414();
         }
@@ -983,7 +986,6 @@ namespace TooLateToPanic
         }
         void OnGUI()
         {
-            DrawGuidanceV54();
             if(NotebookBlocksInput)return;
             DrawGatherRewardsV414();
             if(BagCameraOwnsView){DrawBagPreparationOverlay();return;}

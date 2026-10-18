@@ -369,6 +369,8 @@ namespace TooLateToPanic
                 if (World.NotificationVisible) DrawToast(World.ShortNotice);
             }
 
+            DrawAssistantHudV55();
+            DrawSecondaryAlertV55();
             DrawCompactControlsV5();
             if (!FreeplayOnboardingOpenV414 && !World.IntroStoryActiveV414) DrawPresentationSubtitle();
             if (World.Model.CheatedRun) DrawCheatedRunIndicator();

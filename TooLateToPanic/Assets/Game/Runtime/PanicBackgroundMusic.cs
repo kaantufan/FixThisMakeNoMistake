@@ -55,6 +55,12 @@ namespace TooLateToPanic
         {
             if(!world)world=FindFirstObjectByType<PanicHomeWorld>();
             if(!world||world.Model==null)return;
+            if(world.FpsTensionOwnsMusicV55)
+            {
+                a.Stop(); b.Stop(); a.volume=b.volume=0;
+                CurrentTrack=null; outgoing=null; paused=false;
+                return;
+            }
             bool stop=world.InputLocked||world.Model.IsPaused||world.NotebookBlocksInput||!Enabled||(!Application.isFocused&&!Application.runInBackground);
             if(stop!=paused)
             {

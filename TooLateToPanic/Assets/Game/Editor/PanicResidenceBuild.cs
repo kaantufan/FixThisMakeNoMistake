@@ -18,7 +18,7 @@ namespace TooLateToPanic
         const string HomeArt = "Assets/Game/Resources/HomeArt";
         const string ResidenceArt = "Assets/Game/Resources/ResidenceArt";
         const string ScenePath = "Assets/Game/Scenes/TooLateToPanicResidence.unity";
-        const string Version = "0.5.4";
+        const string Version = "0.5.5";
 
         // Every explicit Create case in the residence r1 package; no default/fallback IDs.
         static readonly string[] ResidenceIds =

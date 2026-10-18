@@ -10,6 +10,20 @@ namespace TooLateToPanic
         readonly AudioSource[] hazardAmbiencesV54 = new AudioSource[4];
         readonly AudioLowPassFilter[] hazardFiltersV54 = new AudioLowPassFilter[4];
         readonly bool[] hazardAudioActiveV54 = new bool[4];
+        AudioSource quakeStructureV55;
+        AudioClip quakeWoodV55, quakeMetalV55, measuredQuakeClipV55;
+        float quakeClipRmsV55;
+        int nextQuakeRattleV55;
+        static readonly float[] QuakeRattleTimesV55 = { .4f, 1.5f, 2.65f, 3.75f, 4.9f, 6.05f, 7.25f };
+        bool QuakeCinematicWindowV55
+        { get { return World && World.Model != null && World.CinematicActive && World.Model.Phase == PanicPhase.Disaster && World.Model.HasActiveDisasterV54(DisasterType.Earthquake); } }
+        public bool QuakeCinematicAudioPlayingV55
+        { get { var source=hazardAmbiencesV54[(int)DisasterType.Earthquake];return QuakeCinematicWindowV55&&!suspended&&source&&source.enabled&&source.isPlaying&&!source.mute&&source.volume>0; } }
+        public float QuakeCinematicAudioGainV55
+        { get { var source=hazardAmbiencesV54[(int)DisasterType.Earthquake];return QuakeCinematicWindowV55&&source?source.volume:0; } }
+        public float QuakeCinematicClipRmsV55 { get { return quakeClipRmsV55; } }
+        public AudioSource QuakeCinematicSourceV55 { get { return hazardAmbiencesV54[(int)DisasterType.Earthquake]; } }
+        public AudioSource QuakeStructureSourceV55 { get { return quakeStructureV55; } }
         public int ActiveHazardVisualCountV54 { get { return PanicDisasterArt.ActiveHazardCountV54(weather); } }
         public int ActiveHazardAudioCountV54
         {
@@ -59,17 +73,26 @@ namespace TooLateToPanic
             voices = new AudioSource[8];voiceFilters=new AudioLowPassFilter[8];
             for(int i=0;i<voices.Length;i++) { var go=new GameObject("Foley voice "+i);go.transform.SetParent(transform,false);voices[i]=go.AddComponent<AudioSource>(); voices[i].playOnAwake=false;voiceFilters[i]=go.AddComponent<AudioLowPassFilter>();voiceFilters[i].cutoffFrequency=22000; }
             outdoors=MakeLoop(); hearth=MakeLoop(); rotor=MakeLoop();
+            quakeStructureV55=MakeLoop();quakeStructureV55.gameObject.name="Earthquake structural rattle V5.5";
+            quakeStructureV55.loop=false;quakeStructureV55.spatialBlend=0f;quakeStructureV55.priority=72;
             hazardFilter=hazardFiltersV54[0]=ambience.gameObject.AddComponent<AudioLowPassFilter>();
             for(int i=1;i<4;i++)hazardFiltersV54[i]=hazardAmbiencesV54[i].gameObject.AddComponent<AudioLowPassFilter>();
             for(int i=0;i<4;i++)hazardFiltersV54[i].cutoffFrequency=22000;
             // Filter on the rotor child only, so footsteps/UI retain clarity.
             rotorFilter=rotor.gameObject.AddComponent<AudioLowPassFilter>();rotorFilter.cutoffFrequency=22000;
         }
-        AudioSource MakeLoop() { var go=new GameObject("Environment loop");go.transform.SetParent(transform,false);var s=go.AddComponent<AudioSource>();s.playOnAwake=false;s.loop=true;s.volume=0;s.dopplerLevel=0;return s; }
+        AudioSource MakeLoop() { var go=new GameObject("Environment loop");go.transform.SetParent(transform,false);var s=go.AddComponent<AudioSource>();s.playOnAwake=false;s.loop=true;s.volume=0;s.dopplerLevel=0;s.spatialBlend=0f;return s; }
         public void SetSuspended(bool value)
         {
             if(suspended==value)return;suspended=value;
             foreach(var s in GetComponentsInChildren<AudioSource>(true)) { if(value)s.Pause();else s.UnPause(); }
+            // A cinematic may be requested while a modal still owns suspension (F3).
+            // UnPause alone cannot start a newly assigned clip that has never played.
+            if(!value)for(int i=0;i<4;i++)
+            {
+                var source=hazardAmbiencesV54[i];
+                if(hazardAudioActiveV54[i]&&source&&source.clip&&!source.isPlaying)source.Play();
+            }
         }
         void Loop(AudioSource source,string id,float volume)
         {
@@ -147,12 +170,24 @@ namespace TooLateToPanic
         }
         void StartHazardAmbienceV54()
         {
+            nextQuakeRattleV55=0;
+            if(quakeStructureV55)quakeStructureV55.Stop();
             for(int i=0;i<4;i++)
             {
                 var source=hazardAmbiencesV54[i];source.Stop();source.volume=0;
                 bool active=World&&World.Model!=null&&World.Model.HasActiveDisasterV54((DisasterType)i);
                 hazardAudioActiveV54[i]=active;
                 source.clip=active?PanicAudioBank.Get(HazardSoundId((DisasterType)i)):null;
+                if(active&&i==(int)DisasterType.Earthquake)
+                {
+                    source.priority=64;source.spatialBlend=0f;
+                    if(!source.clip)Debug.LogWarning("AUDIO_MISSING earthquake (cinematic rumble unavailable)");
+                    else if(measuredQuakeClipV55!=source.clip)
+                    { measuredQuakeClipV55=source.clip;quakeClipRmsV55=ReadClipRmsV55(source.clip); }
+                    if(!quakeWoodV55)quakeWoodV55=PanicAudioBank.Get("impact_wood");
+                    if(!quakeMetalV55)quakeMetalV55=PanicAudioBank.Get("impact_metal");
+                    if(!quakeWoodV55||!quakeMetalV55)Debug.LogWarning("AUDIO_MISSING earthquake structural impact_wood/impact_metal");
+                }
                 if(active&&source.clip&&!suspended)source.Play();
             }
         }
@@ -164,11 +199,48 @@ namespace TooLateToPanic
             float gain=count>0?1f/Mathf.Sqrt(count):0f;
             float volume=disasterAmbienceVolume*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*Mathf.Lerp(1,.18f,shelterMix)*gain;
             float cutoff=Mathf.Lerp(16000,World&&World.AudioHatchOpen?1600:650,shelterMix);
+            bool cinematicQuake=QuakeCinematicWindowV55;
             for(int i=0;i<4;i++)
             {
-                if(hazardAmbiencesV54[i])hazardAmbiencesV54[i].volume=hazardAudioActiveV54[i]?volume:0f;
-                if(hazardFiltersV54[i])hazardFiltersV54[i].cutoffFrequency=cutoff;
+                // The cinematic camera leaves the bunker. Keeping the player's shelter mix
+                // here hid an already bass-heavy real clip at .22*.18=.0396 gain (-52dB RMS).
+                // The quake's bounded screen-space layer follows the actual cinematic, while
+                // ordinary shelter/environment mixing and concurrent equal-power gain remain.
+                bool quake=cinematicQuake&&i==(int)DisasterType.Earthquake;
+                float channelVolume=quake?.55f*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*gain:volume;
+                if(hazardAmbiencesV54[i])hazardAmbiencesV54[i].volume=hazardAudioActiveV54[i]?Mathf.Clamp01(channelVolume):0f;
+                if(hazardFiltersV54[i])hazardFiltersV54[i].cutoffFrequency=quake?16000:cutoff;
             }
+        }
+        static float ReadClipRmsV55(AudioClip clip)
+        {
+            if(!clip)return 0;
+            if(clip.loadState==AudioDataLoadState.Unloaded)clip.LoadAudioData();
+            int channels=Mathf.Max(1,clip.channels),frames=Mathf.Max(1,4096/channels),total=clip.samples*channels;
+            var data=new float[frames*channels];double sum=0;
+            for(int offset=0;offset<clip.samples;offset+=frames)
+            {
+                if(!clip.GetData(data,offset)){Debug.LogWarning("AUDIO_PCM_UNAVAILABLE earthquake");return 0;}
+                int count=Mathf.Min(data.Length,(clip.samples-offset)*channels);
+                for(int i=0;i<count;i++)sum+=(double)data[i]*data[i];
+            }
+            return total>0?(float)System.Math.Sqrt(sum/total):0;
+        }
+        void TickQuakeRattleV55()
+        {
+            if(!quakeStructureV55)return;
+            if(!QuakeCinematicWindowV55)
+            { if(quakeStructureV55.isPlaying)quakeStructureV55.Stop();return; }
+            if(nextQuakeRattleV55>=QuakeRattleTimesV55.Length||age<QuakeRattleTimesV55[nextQuakeRattleV55])return;
+            int index=nextQuakeRattleV55++;
+            var clip=(index%3==1)?quakeMetalV55:quakeWoodV55;
+            // A missing rumble remains a visible resource failure; impacts never replace it.
+            if(!clip||!hazardAmbiencesV54[(int)DisasterType.Earthquake].clip)return;
+            float gain=1f/Mathf.Sqrt(Mathf.Max(1,ActiveHazardAudioCountV54));
+            quakeStructureV55.Stop();quakeStructureV55.clip=clip;
+            quakeStructureV55.pitch=index%3==1?.88f:.78f;
+            quakeStructureV55.volume=Mathf.Clamp01(.18f*DisasterAmbienceGainV52*(World?World.PresentationEffectsDuckFactor:1f)*gain);
+            quakeStructureV55.Play();
         }
         static string HazardSoundId(DisasterType type)
         {
@@ -176,6 +248,8 @@ namespace TooLateToPanic
         }
         public void StopJuryHazard()
         {
+            if(quakeStructureV55){quakeStructureV55.Stop();quakeStructureV55.volume=0;}
+            nextQuakeRattleV55=0;
             for(int i=0;i<4;i++)
             {
                 hazardAudioActiveV54[i]=false;
@@ -194,6 +268,7 @@ namespace TooLateToPanic
             if (weather) PanicDisasterArt.Animate(weather, age, World.Model.Phase == PanicPhase.Disaster || World.CinematicActive&&World.Model.Phase==PanicPhase.GameOver ? Mathf.Clamp01(age * .4f) : .35f, PresentationScaleV52);
             shelterMix=Mathf.MoveTowards(shelterMix,World.AudioShelterAmount,Time.unscaledDeltaTime/1.2f);
             ApplyHazardAmbienceMixV54();
+            TickQuakeRattleV55();
         }
     }
 }

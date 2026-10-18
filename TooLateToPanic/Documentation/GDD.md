@@ -1,6 +1,6 @@
 # Too Late to Panic! — Oyun Tasarım Dokümanı
 
-**Sürüm 2.8 · 18 Ekim 2026 · Home V5.4**
+**Sürüm 2.9 · 18 Ekim 2026 · Home V5.5**
 
 Güncel **Home V5.4-r3 /0.5.4**. FPS geçişi0,84sn tam siyah bekler; devam eden panik kararması ve sınırlı kamera salınımı/FOV hissi vardır. Duraklat menüsünde FPS hareketini azalt seçeneği bulunur. Eldivenin kesik gibi görünen üstü kapalı tek kabukla yenilendi; ince ahşap zeminin kendi gölge üretimi kapatıldı. Karanlık/açık banyo kapısı görüntüsünde zemin temiz; eski üçgen kusuru karşılaştırmada yeniden oluşmadığından gölge değişikliğinin kesin neden kabulü UNVERIFIED kalır.
 
@@ -197,3 +197,12 @@ Güncel **Home V5.4-r3 /0.5.4**. FPS geçişi0,84sn tam siyah bekler; devam eden
 İlk dalga tek deprem; ikinci dalgadan itibaren dört afet havuzundan her koşuda RNG seçilir. Aynı dalgada iki veya üç farklı afet aynı anda gelebilir. Her biri kendi önlemleri ve gerçek hasarıyla değerlendirilir, erzak/ödül bir kez çözülür. Sel varsa üst panik odası kullanılır. Gerçek duruma bağlı küçük görev kartı ve sıradaki geçilebilir kapı/merdiven checkpoint'i oyuncuya önlem, su, gıda ve sığınak sırasında yol gösterir.120+45sn,75%kayıp ve KKTC · Güzelyurt · Kalkanlı hikâyesi korunur.
 
 Güncel kanıt yalnız LATEST ve HOME-V5.4-DELIVERY-2026-10-18.md ile bağlıdır. Önceki tek tür/sabit ilk9dalga sözleşmesi normal kampanya için bu istekle güncellenir. Kaynak/native/OS/insan sınırları teslimde ayrıdır.
+
+
+## Home V5.5 —18Ekim2026
+
+Güncel **Home V5.5-r2 /0.5.5**. Defter ilk açılışında amacını ve kullanımı anlatır; gerçek malzeme → sabitleme → tesisat → su → gıda → sığınak adımları önerilir. Küçük yardımcı mevcut HUD font/renk/çerçevesiyle J defter düğmesinin üzerindedir; defterden kapatılabilir. Turkuaz dünya halkası ve havada yön oku kaldırıldı. Kroki gerçek sahne/kapı/eşya/oyuncu geometrisini aynı ölçekte gösterir.
+
+FPS'te özgün gerilim fon müziği, sürekli sınırlı kamera sarsıntısı ve7.2s yumuşak kararma/ferahlama döngüsü vardır. Azaltılmış hareket seçeneği korunur. Deprem sinematiğinin sığınak filtresi ve askıdan yeni klip başlatması düzeltildi; gerçek rumble/yapısal sesler kullanılır. Oluşan vana/elektrik RNG olayı, neden ve ek hasarla belirgin TESİSAT UYARISI bandında görünür.120+45s,75%kayıp, RNG/çoklu afetler ve KKTC · Güzelyurt · Kalkanlı korunur.
+
+Güncel kaynak/build/native kimliği yalnız LATEST ve HOME-V5.5-DELIVERY-2026-10-18.md ile bağlıdır. Eski turkuaz dünya checkpoint işareti isteği bu son kullanıcı kaldırma isteğiyle güncellendi; yol analizi küçük defter yardımcısında yer metni sağlar.

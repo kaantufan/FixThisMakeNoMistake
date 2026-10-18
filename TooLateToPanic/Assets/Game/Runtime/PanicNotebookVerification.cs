@@ -22,6 +22,7 @@ namespace TooLateToPanic
             float priorClock = world.Model.TimeRemaining;
             float priorJuryClock = world.JurySnapshot == null ? 0 : world.JurySnapshot.ElapsedSeconds;
             record(notebook.RequestOpen() && notebook.BlocksInput && notebook.IsVisible, "Open owns input in the request frame");
+            notebook.DismissAssistantIntroV55();
             yield return new WaitForSecondsRealtime(.42f);
             record(notebook.Animation.Openness == 1f, "Open animation reaches its final pose");
             record(world.InputLocked == priorLock, "Notebook does not steal the existing InputLocked owner");

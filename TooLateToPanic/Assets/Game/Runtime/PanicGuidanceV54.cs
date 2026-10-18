@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace TooLateToPanic
 {
@@ -30,9 +29,7 @@ namespace TooLateToPanic
         Vector3 guidancePlannedFromV54;
         string guidanceStateV54;
         int guidancePlansV54;
-        LineRenderer guidanceBeaconV54;
-        Material guidanceMaterialV54;
-        GUIStyle guidanceTextV54, guidanceSmallV54, guidanceArrowV54;
+        bool guidanceInitializedV55;
 
         sealed class GuidanceGoalV54
         {
@@ -72,19 +69,8 @@ namespace TooLateToPanic
 
         public void InitGuidanceV54()
         {
-            if (guidanceBeaconV54) return;
-            var root = new GameObject("V54 next reachable checkpoint beacon");
-            root.transform.SetParent(transform, false);
-            guidanceBeaconV54 = root.AddComponent<LineRenderer>();
-            var shader = Shader.Find("Sprites/Default") ?? Shader.Find("Standard");
-            if (shader) { guidanceMaterialV54 = new Material(shader); guidanceMaterialV54.color = new Color(.27f, .92f, .81f); guidanceBeaconV54.sharedMaterial = guidanceMaterialV54; }
-            guidanceBeaconV54.useWorldSpace = true;
-            guidanceBeaconV54.startWidth = guidanceBeaconV54.endWidth = .035f;
-            guidanceBeaconV54.startColor = guidanceBeaconV54.endColor = new Color(.27f, .92f, .81f, .95f);
-            guidanceBeaconV54.shadowCastingMode = ShadowCastingMode.Off;
-            guidanceBeaconV54.receiveShadows = false;
-            guidanceBeaconV54.enabled = false;
-            // This art has no collider, picking target, light, audio, or input ownership.
+            if (guidanceInitializedV55) return;
+            guidanceInitializedV55 = true;
             foreach (var pair in hinges)
                 if (pair.Value.directionalDoor && pair.Value.leaf)
                     foreach (var c in pair.Value.leaf.GetComponentsInChildren<Collider>(true)) guidanceDoorsV54[c] = pair.Key;
@@ -97,15 +83,16 @@ namespace TooLateToPanic
                 (Model.Phase == PanicPhase.Preparing || Model.Phase == PanicPhase.Tutorial) &&
                 !Model.IsPaused && !NotebookBlocksInput && !InputLocked && !CinematicActive && !LossAnnounced &&
                 !BagCameraTransitionActive && !InventoryOpen && !WorkActive && !IsMoving && JuryAllowsMovement &&
-                !(hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
+                AssistantEnabledV55 && !(hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
         }
 
         // Hook once at the end of the normal Update, after hinges/visibility and actual model progress.
         public void TickGuidanceV54()
         {
-            if (!guidanceBeaconV54) InitGuidanceV54();
+            InitGuidanceV54();
+            TickAssistantV55();
             GuidanceVisibleV54 = GuidanceCanShowV54();
-            if (!GuidanceVisibleV54) { if (guidanceBeaconV54) guidanceBeaconV54.enabled = false; return; }
+            if (!GuidanceVisibleV54) return;
             string state = GuidanceStateKeyV54();
             bool changed = state != guidanceStateV54;
             var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -130,7 +117,6 @@ namespace TooLateToPanic
                 GuidancePeakSliceMillisecondsV54 = Math.Max(GuidancePeakSliceMillisecondsV54, watch.Elapsed.TotalMilliseconds);
             }
             GuidanceChooseCheckpointV54();
-            GuidanceUpdateBeaconV54();
         }
 
         string GuidanceStateKeyV54()
@@ -191,11 +177,8 @@ namespace TooLateToPanic
                 GuidanceQueueGoalsV54(guidanceGoalsV54);
                 return;
             }
-            // A quake makes anchoring the first recommendation. Other hazards first expose their real utility controls.
-            bool quake = Model.HasActiveDisasterV54(DisasterType.Earthquake);
-            if (quake) GuidanceQueueAnchorsV54();
-            GuidanceQueueUtilitiesV54();
-            if (!quake) GuidanceQueueAnchorsV54();
+            // The notebook owns one stable material -> work -> utilities sequence.
+            GuidanceQueueAssistantV55();
             guidanceNoRouteV54 = "Önlemlerini kontrol et · son 45 saniyede çantanı hazırla";
             if (guidancePlanGroupsV54.Count == 0) GuidanceObjectiveLabelV54 = guidanceNoRouteV54;
         }
@@ -516,62 +499,5 @@ namespace TooLateToPanic
             }
         }
 
-        bool GuidanceBeaconVisibleV54(Vector3 p)
-        {
-            if (!View || Mathf.Abs(p.y - PlayerPosition.y) > 1.1f) return false;
-            Vector3 delta = p - View.transform.position;
-            int n = Physics.RaycastNonAlloc(View.transform.position, delta.normalized, guidanceHitsV54, Mathf.Max(0, delta.magnitude - .12f), ~(1 << 30), QueryTriggerInteraction.Ignore);
-            if (n >= guidanceHitsV54.Length) return false;
-            for (int i = 0; i < n; i++) if (guidanceHitsV54[i].collider && !GuidanceIgnoreActorV54(guidanceHitsV54[i].collider)) return false;
-            return true;
-        }
-        void GuidanceUpdateBeaconV54()
-        {
-            if (!guidanceBeaconV54) return;
-            Vector3 p = GuidanceCheckpointPositionV54 + Vector3.up * .10f;
-            guidanceBeaconV54.enabled = GuidanceVisibleV54 && GuidanceRouteValidV54 && GuidanceBeaconVisibleV54(p + Vector3.up * .18f);
-            if (!guidanceBeaconV54.enabled) return;
-            guidanceBeaconV54.positionCount = 22;
-            float radius = .24f + .025f * Mathf.Sin(Time.unscaledTime * 3f);
-            for (int i = 0; i <= 18; i++)
-            { float angle = i * Mathf.PI * 2 / 18; guidanceBeaconV54.SetPosition(i, p + new Vector3(Mathf.Cos(angle) * radius, 0, Mathf.Sin(angle) * radius)); }
-            guidanceBeaconV54.SetPosition(19, p); guidanceBeaconV54.SetPosition(20, p + Vector3.up * .52f);
-            guidanceBeaconV54.SetPosition(21, p + new Vector3(.10f, .42f, 0));
-        }
-
-        // Hook from exactly one OnGUI owner in both views, before any bag overlay early return.
-        public void DrawGuidanceV54()
-        {
-            if (!GuidanceVisibleV54 || !GuidanceCanShowV54())
-            { if (guidanceBeaconV54) guidanceBeaconV54.enabled = false; return; }
-            Matrix4x4 matrix = GUI.matrix; Color color = GUI.color; int depth = GUI.depth;
-            GUI.matrix = Matrix4x4.identity; GUI.depth = -16;
-            if (guidanceTextV54 == null)
-            {
-                guidanceTextV54 = new GUIStyle(GUI.skin.label) { fontSize = 14, wordWrap = true, padding = new RectOffset(10, 10, 7, 4) };
-                guidanceTextV54.normal.textColor = new Color(.92f, .96f, .95f);
-                guidanceSmallV54 = new GUIStyle(guidanceTextV54) { fontSize = 12, padding = new RectOffset(10, 10, 0, 4) };
-                guidanceSmallV54.normal.textColor = new Color(.38f, .91f, .81f);
-                guidanceArrowV54 = new GUIStyle(guidanceSmallV54) { fontSize = 24, padding = new RectOffset(), alignment = TextAnchor.MiddleCenter };
-            }
-            float width = Mathf.Min(320, Screen.width - 32);
-            Rect card = new Rect(16, Screen.height - 140, width, 70);
-            GUI.color = new Color(.035f, .075f, .09f, .91f); GUI.DrawTexture(card, Texture2D.whiteTexture); GUI.color = Color.white;
-            GUI.Label(new Rect(card.x, card.y, width, 40), GuidanceObjectiveLabelV54, guidanceTextV54);
-            string hint = GuidanceRouteValidV54 ? GuidanceCheckpointLabelV54 + " · " + Vector3.Distance(PlayerPosition, GuidanceCheckpointPositionV54).ToString("0.0") + " m" : string.Empty;
-            GUI.Label(new Rect(card.x, card.y + 43, width, 25), hint, guidanceSmallV54);
-            if (GuidanceRouteValidV54)
-            {
-                Vector3 projected = View.WorldToScreenPoint(GuidanceCheckpointPositionV54 + Vector3.up * .55f);
-                Vector2 center = new Vector2(Screen.width * .5f, Screen.height * .5f);
-                Vector2 dir = new Vector2(projected.x - center.x, Screen.height - projected.y - center.y);
-                if (projected.z < 0) dir = -dir;
-                if (dir.sqrMagnitude < 4) dir = Vector2.up;
-                Vector2 pos = new Vector2(Mathf.Clamp(center.x + dir.x, 30, Screen.width - 30), Mathf.Clamp(center.y + dir.y, 100, Screen.height - 170));
-                GUIUtility.RotateAroundPivot(Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg, pos);
-                GUI.Label(new Rect(pos.x - 12, pos.y - 12, 26, 26), ">", guidanceArrowV54);
-            }
-            GUI.matrix = matrix; GUI.color = color; GUI.depth = depth;
-        }
     }
 }
