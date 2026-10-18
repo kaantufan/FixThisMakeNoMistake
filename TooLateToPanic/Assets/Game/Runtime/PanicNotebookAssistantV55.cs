@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -98,8 +98,8 @@ namespace TooLateToPanic
                 anchored ? "Yeni ankraj malzemesi gerekmiyor" : materials ? "Ankraj malzemeleri hazır" : target + " için gereken malzemeler",
                 anchorDeferred ? target + " · " + budgetReason + "; tesisat ücretsiz" : target,
                 "Gaz, su vanası ve ana elektrik şalteri",
-                "Son 45 saniyede; aldığın su envanterine eklenir",
-                "Son 45 saniyede; aldığın gıda envanterine eklenir",
+                "Son 40 saniyede; aldığın su envanterine eklenir",
+                "Son 40 saniyede; aldığın gıda envanterine eklenir",
                 Model.HasActiveDisasterV54(DisasterType.Flood) ? "Sel var: üst kat panik odası" : "Bodrum sığınağı"
             };
             // An unaffordable suggestion must not hide the still actionable free utilities.
@@ -116,7 +116,7 @@ namespace TooLateToPanic
             }
             result.Task = result.Steps[current].Complete ? bag ? "Güvenli alandasın" : "Diğer önlemleri gözden geçir" : labels[current];
             result.Hint = bag ? details[current] : current < 2 ? target : "Gaz, su ve elektrik noktalarını kontrol et";
-            if (!bag && materials && anchored && utility) result.Hint = "Son 45 saniyede çantanı hazırlayacaksın";
+            if (!bag && materials && anchored && utility) result.Hint = "Son 40 saniyede çantanı hazırlayacaksın";
             if (GuidanceRouteValidV54 && !string.IsNullOrEmpty(GuidanceObjectiveIdV54))
             {
                 string floor = GuidanceObjectivePositionV54.y > 2 ? "Üst kat" : GuidanceObjectivePositionV54.y < -1 ? "Bodrum" : "Alt kat";

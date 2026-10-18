@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -128,7 +128,7 @@ namespace TooLateToPanic
             var requirements = new PanicMaterialRequirement[sourceRequirements.Count];
             for (int i = 0; i < sourceRequirements.Count; i++) requirements[i] = sourceRequirements[i];
             bool timedJury = jury != null && jury.Active;
-            string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlemleri tamamla. Son 45 saniyede çanta hazırlığı başlayacak." : model.BagReady ? model.HasActiveDisasterV54(DisasterType.Flood) ? "Su ve gıda hazır. Üst kat panik odasına git." : "Su ve gıda hazır. Bodrumdaki sığınağa git." :
+            string note = timedJury ? jury.Hint : model.TimeRemaining > PanicModel.NormalBagSeconds ? "Önlemleri tamamla. Son 40 saniyede çanta hazırlığı başlayacak." : model.BagReady ? model.HasActiveDisasterV54(DisasterType.Flood) ? "Su ve gıda hazır. Üst kat panik odasına git." : "Su ve gıda hazır. Bodrumdaki sığınağa git." :
                 "Açıktaki erzakları al: " + Mathf.Max(0, model.RequiredDays - model.PackedWater) + " su ve " + Mathf.Max(0, model.RequiredDays - model.PackedFood) + " gıda gerekli. Aldığın erzak envanterinde hazırdır.";
             return new PanicNotebookSnapshot {
                 StoryLocation = PanicKktcStoryV53.LocationBadge, StoryTitle = PanicKktcStoryV53.DiaryTitle, StoryNote = PanicKktcStoryV53.DiaryPersonalNote,

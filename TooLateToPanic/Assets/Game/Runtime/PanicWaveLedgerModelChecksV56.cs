@@ -50,7 +50,7 @@ namespace TooLateToPanic
             object ledger=Ledger(m);emit(label+".snapshot-exists",ledger!=null,"Snapshot must exist after the committed outcome.");if(ledger==null)return;
             int before=Read<int>(ledger,"BudgetBeforeReward"),after=Read<int>(ledger,"BudgetAfterReward"),credited=Read<int>(ledger,"ActualCredited");
             emit(label+".actual-budget-reconciles",before==actualBudgetBefore&&after==m.Budget&&credited==(long)m.Budget-actualBudgetBefore,"Observed before="+actualBudgetBefore+" after="+m.Budget+"; snapshot="+before+" -> "+after+" credited="+credited);
-            int basis=rewarded?Math.Max(0,Mathf.RoundToInt(400f+60f*Mathf.Max(0,m.Wave-1))):0;
+            int basis=rewarded?Math.Max(0,Mathf.RoundToInt(1600f+100f*Mathf.Max(0,m.Wave-1))):0;
             int afterDamage=rewarded?Math.Max(0,Mathf.RoundToInt(basis*(1f-.5f*m.TotalDamage/100f))):0;
             int calculated=rewarded?Math.Max(0,Mathf.RoundToInt(basis*(1f-.5f*m.TotalDamage/100f)*(1f+.05f*m.SupportCount))):0;
             int deduction=basis-afterDamage,bonus=calculated-afterDamage,capacity=calculated-credited;
@@ -83,11 +83,11 @@ namespace TooLateToPanic
         static void Budgets()
         {
             PanicModel.ScorePathOverride=Path.Combine(directory,"initial.json");var m=new PanicModel();FixtureModels++;
-            check("model.budget.unstarted-title",m.Phase==PanicPhase.Title,"Unstarted constructor budget="+m.Budget+" is not an active run; starting2500 is asserted at StartRun/reset below.");
-            m.StartRun(false);check("model.budget.new-normal",m.Budget==2500,"Normal run budget="+m.Budget);
-            m.AddDeveloperBudget(123);m.ReturnToTitle();check("model.budget.return-title-reset",m.Budget==2500,"Reset discards prior developer change.");
-            m.StartRun(true);check("model.budget.tutorial",m.Budget==2500,"Tutorial uses same starting budget.");m.ReturnToTitle();m.StartSimulation(DisasterType.Flood);check("model.budget.simulation",m.Budget==2500,"Simulation starting budget.");
-            m.ReturnToTitle();m.StartJuryDemo();check("model.budget.short-flow",m.Budget==2500,"Short-flow model starting budget.");
+            check("model.budget.unstarted-title",m.Phase==PanicPhase.Title,"Unstarted constructor budget="+m.Budget+" is not an active run; starting1500 is asserted at StartRun/reset below.");
+            m.StartRun(false);check("model.budget.new-normal",m.Budget==1500,"Normal run budget="+m.Budget);
+            m.AddDeveloperBudget(123);m.ReturnToTitle();check("model.budget.return-title-reset",m.Budget==1500,"Reset discards prior developer change.");
+            m.StartRun(true);check("model.budget.tutorial",m.Budget==1500,"Tutorial uses same starting budget.");m.ReturnToTitle();m.StartSimulation(DisasterType.Flood);check("model.budget.simulation",m.Budget==1500,"Simulation starting budget.");
+            m.ReturnToTitle();m.StartJuryDemo();check("model.budget.short-flow",m.Budget==1500,"Short-flow model starting budget.");
         }
         static void Resolve(string label,PanicModel m,bool rewarded)
         {
@@ -102,10 +102,10 @@ namespace TooLateToPanic
         }
         static void Outcomes()
         {
-            var zero=New("zero",true,false);Resolve("model.zero-success",zero,true);check("model.zero-success.full-base",zero.TotalDamage==0&&zero.LastReward==400,"No damage: real credited base400.");
+            var zero=New("zero",true,false);Resolve("model.zero-success",zero,true);check("model.zero-success.full-base",zero.TotalDamage==0&&zero.LastReward==1600,"No damage: real credited base1600.");
             var damage=New("damage");Resolve("model.damage-success",damage,true);check("model.damage-success.actual-deduction",damage.TotalDamage>0&&Read<int>(Ledger(damage),"DamageDeduction")>0,"Actual damaged item drives reduced reward.");
             var support=New("support");support.SupportOwnedMask=3;support.PackSupport(0);support.PackSupport(1);Resolve("model.support-success",support,true);check("model.support-success.bonus",support.SupportCount==2&&Read<int>(Ledger(support),"SupportBonus")>0,"Two explicit owned-stock fixtures, real PackSupport APIs, existing +5% each.");
-            var cap=New("capacity",true,false);cap.Budget=int.MaxValue-7;Resolve("model.capacity-saturation",cap,true);check("model.capacity-saturation.actual-seven",Read<int>(Ledger(cap),"ActualCredited")==7&&Read<int>(Ledger(cap),"CapacityDeduction")==393,"Actual saturating budget delta must never claim +400.");
+            var cap=New("capacity",true,false);cap.Budget=int.MaxValue-7;Resolve("model.capacity-saturation",cap,true);check("model.capacity-saturation.actual-seven",Read<int>(Ledger(cap),"ActualCredited")==7&&Read<int>(Ledger(cap),"CapacityDeduction")==1593,"Actual saturating budget delta must never claim +1600.");
             var noloss=New("noloss",false);noloss.SetDeveloperOption(PanicDeveloperOption.NoLoss,true);Resolve("model.noloss-no-award",noloss,false);check("model.noloss-no-award.sticky",noloss.CheatedRun&&noloss.CompletedWaves==0&&noloss.Score==0,"Missing supplies remain failure evidence under developer protection.");
             var skip=New("f3",false);int budget=skip.Budget;check("model.f3.production-skip",skip.TryDeveloperSkipToDisasterV51(),"Actual one-wave unranked skip API.");skip.Tick(12f);VerifyLedger("model.f3-no-award",skip,budget,false,check);
             var failure=New("failure",false);Resolve("model.failure-no-award",failure,false);check("model.failure-no-award.actual-loss",failure.Phase==PanicPhase.GameOver,"Missing real required stocks loses normally.");
@@ -114,7 +114,7 @@ namespace TooLateToPanic
             var deadline=New("deadline",false);budget=deadline.Budget;deadline.Tick(deadline.TimeRemaining+.01f);VerifyLedger("model.deadline-no-award",deadline,budget,false,check);check("model.deadline-no-fake-damage",!Read<bool>(Ledger(deadline),"HasResolvedDamage")&&deadline.TotalDamage==0,"Deadline has no fabricated disaster item damage.");
             object oldLedger=Ledger(damage);string oldStamp=LedgerStamp(oldLedger);damage.Tick(3f);int beforeBudget=damage.Budget,rolls=damage.SecondaryRollCountV5;damage.FinishInspection();int wave=damage.Wave;damage.FinishInspection();
             check("model.continue-once",wave==2&&damage.Wave==wave&&damage.Budget==beforeBudget&&damage.SecondaryRollCountV5==rolls,"Success to inspection then production FinishInspection twice: one new wave, no extra credit or RNG.");
-            check("model.prior-snapshot-retained-value",LedgerStamp(oldLedger)==oldStamp,"Retained immutable snapshot remains stable after new-wave reset clears live item damage.");damage.ReturnToTitle();check("model.reset-clears-ledger",Ledger(damage)==null&&!Read<bool>(damage,"WaveLedgerOpenV56")&&damage.Budget==2500,"Title/reset removes stale result and open-list state.");
+            check("model.prior-snapshot-retained-value",LedgerStamp(oldLedger)==oldStamp,"Retained immutable snapshot remains stable after new-wave reset clears live item damage.");damage.ReturnToTitle();check("model.reset-clears-ledger",Ledger(damage)==null&&!Read<bool>(damage,"WaveLedgerOpenV56")&&damage.Budget==1500,"Title/reset removes stale result and open-list state.");
         }
         static void SeedSweep()
         {
@@ -151,8 +151,13 @@ namespace TooLateToPanic
                 var cache=Read<Dictionary<string,PanicSecondaryEventV5>>(m,"secondaryRollsV5");
                 cache["2:0"]=new PanicSecondaryEventV5(PanicSecondaryEventKindV5.GasFlare,"qa_v56_furniture",7f,"QA memo fixture: actual permitted gas7");
                 cache["2:1"]=new PanicSecondaryEventV5(PanicSecondaryEventKindV5.PipeLeak,"qa_v56_furniture",5f,"QA memo fixture: actual permitted water5");
-                int before=m.Budget;m.TryEnterShelterV5(m.RequiredShelterV5);m.Tick(8f);float expected=7f+5f*.45f;
-                check(label+".secondary-weighting",capped?m.TotalDamage<=100&&m.SecondaryDamageV5<expected:Near(m.SecondaryDamageV5,expected),"Actual permitted memo fixtures7+5*.45="+expected+"; secondary="+m.SecondaryDamageV5+" total="+m.TotalDamage+". Global cap may proportionally lower actual values.");
+                // Independent attribution oracle includes the V5.9 shared-house composition.
+                Call(m,"CalculateSingleDisasterDamageV54",true);float quake=m.TotalDamage;
+                m.Disaster=DisasterType.Flood;Call(m,"CalculateSingleDisasterDamageV54",true);float flood=m.TotalDamage;m.Disaster=DisasterType.Earthquake;
+                float weighted=quake+.45f*flood;
+                float sharedScale=weighted>0?Mathf.Min(100,Mathf.Max(quake,flood)+.03f*weighted/1.45f)/weighted:0;
+                int before=m.Budget;m.TryEnterShelterV5(m.RequiredShelterV5);m.Tick(8f);float expected=(7f+5f*.45f)*sharedScale;
+                check(label+".secondary-weighting",Near(m.SecondaryDamageV5,expected),"Actual permitted memo fixtures7+5*.45 share the same composition/cap scale="+sharedScale+"; expected="+expected+"; secondary="+m.SecondaryDamageV5+" total="+m.TotalDamage);
                 m.Tick(4f);VerifyLedger(label,m,before,!capped,check);
                 object ledger=Ledger(m);var rows=Rows(ledger);float utilities=rows.Where(r=>Read<string>(r,"Id").StartsWith("utility:",StringComparison.Ordinal)).Sum(r=>Read<float>(r,"DamageContribution"));
                 check(label+".separate-secondary-once",Near(utilities,m.SecondaryDamageV5)&&rows.Count(r=>Read<string>(r,"Id").StartsWith("utility:",StringComparison.Ordinal))==2,"Two separate actual weighted secondary rows; no double counting within ordinary item rows.");

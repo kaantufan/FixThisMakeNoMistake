@@ -25,10 +25,10 @@ namespace TooLateToPanic
         {
             switch (choice)
             {
-                case 0: return "SERBEST OYNA";
-                case 1: return "HAZIRLIK SENARYOSU · KISA AKIŞ";
-                case 2: return "AFET SİMÜLASYONU";
-                case 3: return "ÖĞRETİCİ";
+                case 0: return "OYNA";
+                case 1: return "KISA OYUN";
+                case 2: return "AFETİ DENE";
+                case 3: return "NASIL OYNANIR";
                 default: return "ÇIKIŞ";
             }
         }
@@ -208,7 +208,7 @@ namespace TooLateToPanic
             Fill(LogicalCanvasBounds, new Color32(10, 16, 21, 248));
             Frame(new Rect(44, 34, 1512, 842), new Color32(16, 25, 31, 255), new Color32(132, 149, 158, 255), 1);
             Region(LogicalCanvasBounds);
-            Label(new Rect(80, 57, 1050, 48), "Serbest oyna · Kontroller", _freeplayGuideTitleV414);
+            Label(new Rect(80, 57, 1050, 48), "Oyuna başlarken · Kontroller", _freeplayGuideTitleV414);
             Frame(new Rect(1172, 58, 352, 44), FreeplayKeyFillV414(1), FreeplayKeyEdgeV414(1), 1);
             Label(new Rect(1184, 63, 328, 34), "Duraklatıldı · " + FormatTime(World.Model.TimeRemaining), _freeplayGuideKeyWideV414);
             Label(new Rect(82, 111, 1436, 31), "Önce evi hazırla, sonra çantanı hazırla ve sığınağa yetiş.", _freeplayGuideBodyV414);
@@ -251,14 +251,14 @@ namespace TooLateToPanic
             FreeplayGuideLegendV414(new Rect(104, 534, 452, 42), "WASD / Oklar · Hareket et", 1);
             FreeplayGuideLegendV414(new Rect(572, 534, 462, 42), "E · Etkileşim   Q · Hedef değiştir", 2);
             FreeplayGuideLegendV414(new Rect(104, 582, 452, 42), "Sol Shift · Koş  /  Space · Zıpla", 1);
-            FreeplayGuideLegendV414(new Rect(572, 582, 462, 42), "F · Erzak al (son 45 sn)", 2);
-            FreeplayGuideLegendV414(new Rect(104, 630, 930, 42), "Tab · Çanta     J · Defter     F1 · Küçük tuş rehberi     Esc · Duraklat", 3);
+            FreeplayGuideLegendV414(new Rect(572, 582, 462, 42), "F · Erzak al (son 40 sn)", 2);
+            FreeplayGuideLegendV414(new Rect(104, 630, 930, 42), "Tab · Envanter     J · Defter     F1 · Tuşlar     Esc · Duraklat", 3);
             Label(new Rect(104, 681, 930, 28), "1 · Sabitle    3 · Kat duvarlarını güçlendir    Space · İşte vur", _freeplayGuideMutedV414);
             Label(new Rect(104, 718, 930, 32), "Fare: hedef seç · FPS'te fareyle bak, E/F ile erzak al.", _freeplayGuideMutedV414);
 
-            FreeplayGuideStepV414(new Rect(1096, 208, 412, 142), 1, "120 sn · Önlem",
+            FreeplayGuideStepV414(new Rect(1096, 208, 412, 142), 1, "90 sn · Önlem",
                 "Malzeme topla, eşyaları sabitle.\nDuvar ve tesisatı güvene al.");
-            FreeplayGuideStepV414(new Rect(1096, 364, 412, 158), 2, "Son 45 sn · Çanta",
+            FreeplayGuideStepV414(new Rect(1096, 364, 412, 158), 2, "Son 40 sn · Çanta",
                 "Kamera otomatik FPS olur.\nE/F ile 1 su + 1 gıda al.");
             FreeplayGuideStepV414(new Rect(1096, 536, 412, 158), 3, "Süre dolmadan · Sığınak",
                 "Selde üst kat panik odasına çık.\nDiğer afetlerde bodruma in; E ile gir.");

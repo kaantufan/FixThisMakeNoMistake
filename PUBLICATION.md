@@ -12,14 +12,14 @@ The recorded package was not rebuilt here. Recorded native evidence: 981/981 API
 
 ZIP SHA256: `E853DE2D63ED843E963777A3F61046047A98D7E06CC5C2603D8CBC2D041EB12C` (211267930 bytes). DLL SHA256: `BA49CD61AE45BB29CA68AF29EEEEB8BDED9574C8D7B5B2D48B3EC477D64FD394`.
 
-Selected snapshot: 4092 files, 1279 generated dependencies, 0 missing GUIDs. Compared with the recorded build: 7 mismatched C# files out of 187; 9 mismatched selected asset files. Exact paths/hashes are recorded below. Static publication checks are not a fresh Unity import/build/native test.
+Selected snapshot: 4130 files, 1279 generated dependencies, 0 missing GUIDs. Compared with the recorded build: 41 mismatched C# files out of 187; 82 mismatched selected asset files. Exact paths/hashes are recorded below. Static publication checks are not a fresh Unity import/build/native test.
 
-[Source manifest](TooLateToPanic/Documentation/Publications/Snapshots/20261018T091013Z/source-sha256.json), [source/build comparison](TooLateToPanic/Documentation/Publications/Snapshots/20261018T091013Z/source-vs-build.json), [native summary](TooLateToPanic/Documentation/Publications/Snapshots/20261018T091013Z/native-summary.json), [original local package metadata](TooLateToPanic/Documentation/Publications/Snapshots/20261018T091013Z/local-latest-original.json), [delivery](TooLateToPanic/Documentation/HOME-V5.7-UI-DELIVERY-2026-10-18.md).
+[Source manifest](TooLateToPanic/Documentation/Publications/Snapshots/20261018T093013Z/source-sha256.json), [source/build comparison](TooLateToPanic/Documentation/Publications/Snapshots/20261018T093013Z/source-vs-build.json), [native summary](TooLateToPanic/Documentation/Publications/Snapshots/20261018T093013Z/native-summary.json), [original local package metadata](TooLateToPanic/Documentation/Publications/Snapshots/20261018T093013Z/local-latest-original.json), [delivery](TooLateToPanic/Documentation/HOME-V5.7-UI-DELIVERY-2026-10-18.md).
 
 Live sources, players and saves are unchanged by this publication. Existing licenses and historical publications are retained. Cache, Builds, Evidence, private saves/keys, the separate legacy FPS project and deferred legacy audio remain excluded. Public README/download/metadata links are adapted only inside the publication copy.
 
-[Evidence layers and acceptance limits](TooLateToPanic/Documentation/Publications/Snapshots/20261018T091013Z/acceptance-layers.json).
+[Evidence layers and acceptance limits](TooLateToPanic/Documentation/Publications/Snapshots/20261018T093013Z/acceptance-layers.json).
 
 **Windows OS review: STOPPED_BY_USER; complete=False, passed=False.** Four-hazard simulation sweep is incomplete. New normal global-profile launch: NOT_RUN_USER_STOP. Human physical Escape stopped further GUI input, launch and close; the isolated observer was preserved. Partial completed checks do not certify the whole sweep, physical winning route, human listening or full campaign. See delivery and evidence layers for exact scope.
 
-Existing older generated asset paths are retained in Git without deletion; they are outside the current GUID-selected source manifest. [Retention record](TooLateToPanic/Documentation/Publications/Snapshots/20261018T091013Z/retained-generated-paths.json).
+Existing older generated asset paths are retained in Git without deletion; they are outside the current GUID-selected source manifest. [Retention record](TooLateToPanic/Documentation/Publications/Snapshots/20261018T093013Z/retained-generated-paths.json).

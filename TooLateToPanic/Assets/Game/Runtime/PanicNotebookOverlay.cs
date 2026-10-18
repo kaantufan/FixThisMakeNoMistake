@@ -50,7 +50,7 @@ namespace TooLateToPanic
         public Rect PageScreenBounds(PanicNotebookPage page) { Layout(); return ScreenRect(TabRect((int)page)); }
         public bool IntroVisibleV55 { get { return IsVisible && introOpenV55; } }
         public bool IntroSeenV55 { get { return introSeenV55; } }
-        public const string AssistantIntroTextV55 = "Ailen güvenli alanda. Sen Kalkanlı'daki aile evini afete hazırlıyorsun. Bu defter, gerçek ilerlemene bakarak sıradaki küçük adımı önerir. Adımları kendi hızında izle; başka bir önlem seçmekte özgürsün. Normal oyunda 120 saniye önlem, ardından 45 saniye çanta hazırlığı var. Defter açıkken süre durur. J veya Esc ile oyuna dön.";
+        public const string AssistantIntroTextV55 = "Ailen güvenli alanda. Sen Kalkanlı'daki aile evini afete hazırlıyorsun. Bu defter, gerçek ilerlemene bakarak sıradaki küçük adımı önerir. Adımları kendi hızında izle; başka bir önlem seçmekte özgürsün. Normal oyunda 90 saniye önlem, ardından 40 saniye çanta hazırlığı var. Defter açıkken süre durur. J veya Esc ile oyuna dön.";
         public Rect IntroContinueScreenBoundsV55 { get { Layout(); return ScreenRect(OffsetToBookV55(IntroContinueRectV55)); } }
         public Rect AssistantToggleScreenBoundsV55 { get { Layout(); return ScreenRect(OffsetToBookV55(AssistantToggleRectV55)); } }
         public PanicNotebookPlanSnapshotV55 PlanSnapshotV55 { get { return planSnapshotV55; } }
@@ -338,11 +338,11 @@ namespace TooLateToPanic
             {
                 Label(new Rect(right, 35, width, 51), "DEFTERİ NASIL KULLANIRIM?", titleStyle, Ink);
                 Fill(new Rect(right, 98, width, 2), Green);
-                Label(new Rect(right, 122, width, 108), "Normal oyunda 120 saniye önlem al, ardından 45 saniyede çantanı hazırla. Defter açıkken süre durur.", smallStyle, Ink);
+                Label(new Rect(right, 122, width, 108), "Normal oyunda 90 saniye önlem al, ardından 40 saniyede çantanı hazırla. Defter açıkken süre durur.", smallStyle, Ink);
                 Label(new Rect(right, 256, width, 139), "J / Esc   Defteri kapat\n← / →   Sayfaları değiştir\nE   Aç / topla\nF   Erzak al (FPS)\nTab   Envanter", smallStyle, Ink);
-                Label(new Rect(right, 418, width, 96), "İlk sayfada yardımcı adımlarını ve ev planını bulursun. İstersen yardımcıyı buradan kapatabilirsin.", smallStyle, Green);
+                Label(new Rect(right, 418, width, 96), "Krokiden eşya seç, OYUNDA GÖSTER'e bas. Oyuna dönünce eşyanın işaretini izle.", smallStyle, Green);
             }
-            else Label(new Rect(28, 515, width, 156), "120 sn önlem + 45 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: aç / topla   ·   F: erzak (FPS)   ·   Tab: envanter\nİlk sayfadan yardımcıyı açıp kapatabilirsin.", smallStyle, Ink);
+            else Label(new Rect(28, 515, width, 156), "90 sn önlem + 40 sn çanta. Defter açıkken süre durur.\nJ / Esc: dön   ·   ← / →: sayfa\nE: aç / topla   ·   F: erzak (FPS)   ·   Tab: envanter\nKrokiden hedef seç: OYUNDA GÖSTER.", smallStyle, Ink);
             DrawButton(IntroContinueRectV55, "REHBERE GEÇ  ·  ENTER", Green, Paper, true);
             Label(new Rect(right, Book.height - 44, width, 24), "Hazır olduğunda J ile evine dön.", tinyStyle, Green);
         }
@@ -462,7 +462,7 @@ namespace TooLateToPanic
             }
             Label(new Rect(28, compact?PlanRect.yMax+90:Book.height - 116, PageWidth - 56, 22), "Kırmızı: sen  ·  Gri: duvar  ·  " + empty + "/"+data.Pins.Length+" boş" + (data.Pins.Length > VisibleSourceRows ? "  ·  Liste: tekerlek" : ""), tinyStyle, Green);
             bool marked = world && world.HasNotebookTargetV57 && world.NotebookTargetIdV57 == selectedSource;
-            DrawButton(InventoryRect, string.IsNullOrEmpty(selectedSource) ? "PLAN ÜZERİNDEN BİR HEDEF SEÇ" : marked ? "İŞARETLENDİ · KALDIR" : "SEÇİLİ HEDEFİ İŞARETLE", string.IsNullOrEmpty(selectedSource) ? PaperBack : Green, string.IsNullOrEmpty(selectedSource) ? Ink : Paper, true);
+            DrawButton(InventoryRect, string.IsNullOrEmpty(selectedSource) ? "KROKİDEN BİR HEDEF SEÇ" : marked ? "İŞARETİ KALDIR" : "OYUNDA GÖSTER", string.IsNullOrEmpty(selectedSource) ? PaperBack : Green, string.IsNullOrEmpty(selectedSource) ? Ink : Paper, true);
         }
         Vector2 MapPoint(Vector3 position)
         {

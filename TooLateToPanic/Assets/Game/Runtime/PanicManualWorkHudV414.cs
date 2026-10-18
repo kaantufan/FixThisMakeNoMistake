@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TooLateToPanic
 {
@@ -43,7 +43,7 @@ namespace TooLateToPanic
             Rect fitted = FittedTextureRect(new Rect(90, 225, 1006, 554), World.WorkTexture);
             World.SetManualWorkViewportV414(fitted);
             if (World.WorkTexture) GUI.DrawTexture(fitted, World.WorkTexture, ScaleMode.StretchToFill, false);
-            Label(new Rect(110, 191, 950, 30), work.Action=="poweroff"?"KIRMIZI KOLU TUT · AŞAĞI İNDİR":work.IsUtility?"VANA KOLUNU TUT · 90° SAAT YÖNÜNDE ÇEVİR":"SOL TUŞU BASILI TUT · SAAT YÖNÜNDE ÇEVİR", ColorText(_tiny, Brass));
+            FittedLabel(new Rect(110, 191, 950, 30), work.Action=="poweroff"?"KIRMIZI KOLU TUT · AŞAĞI İNDİR":work.IsUtility?"VANA KOLUNU TUT · 90° SAAT YÖNÜNDE ÇEVİR":"SOL TUŞU BASILI TUT · SAAT YÖNÜNDE ÇEVİR", _body, Brass, 20);
             Label(new Rect(110, 785, 950, 28), work.IsUtility ? "Mevcut tesisatı kapatmak ücretsizdir. İptal: ESC / BACKSPACE" :
                 "İş tamamlanınca bir kez harcanır. İptal: ESC / BACKSPACE", _tiny);
             for (int i = 0; i < work.TotalSteps; i++)
@@ -58,12 +58,8 @@ namespace TooLateToPanic
                 else if (current)
                 {
                     DrawManualRingV51(new Rect(hit.x + 9, hit.y + 9, hit.width - 18, hit.height - 18), work.StageProgress, Sea, 4);
-                    Label(new Rect(hit.center.x - 95, hit.yMax + 12, 190, 28), work.UsesLinearDrag?"AŞAĞI İNDİR":Mathf.RoundToInt(work.RequiredDegrees)+"° SAAT YÖNÜ", ColorText(_center, Brass));
-                    if(work.IsUtility&&World.ManualWorkClosedGripV414(out Vector2 end))
-                    {
-                        DrawManualRingV51(new Rect(end.x-10,end.y-10,20,20),1,Sea,2);
-                        Label(new Rect(end.x+15,end.y-14,150,28),"KAPALI KONUM",ColorText(_tiny,Sea));
-                    }
+                    if (work.IsUtility) DrawUtilityWorkLabelsV59(hit, fitted, work);
+                    else Label(new Rect(hit.center.x - 95, hit.yMax + 12, 190, 28), work.UsesLinearDrag?"AŞAĞI İNDİR":Mathf.RoundToInt(work.RequiredDegrees)+"° SAAT YÖNÜ", ColorText(_center, Brass));
                     // A single direction cue stays next to the actual selected grip/head.
                     // Pointer trails and a second large orbit obscure the object in close-up.
                     if(work.UsesLinearDrag)DrawManualArrowV51(new Vector2(hit.xMax+17,hit.center.y-23),new Vector2(hit.xMax+17,hit.center.y+23),Brass);

@@ -16,7 +16,7 @@ namespace TooLateToPanic
         {
             Fill(LogicalCanvasBounds,new Color(.04f,.05f,.06f,.62f));
             Rect panel = new Rect(230,95,1140,710); Frame(panel,Night,Line,1); Region(panel);
-            Label(new Rect(272,130,1030,65),"FELAKET SİMÜLASYONU",_title);
+            Label(new Rect(272,130,1030,65),"AFETİ DENE",_title);
             Label(new Rect(276,208,1020,42),"Afeti seç. Evini hazırla, başlat ve sonucunu incele.",_body);
             string[] hints = { "Eşyaları sabitle. Sarsıntının etkisini gör.", "Drenaj ve suya karşı önlemleri dene.", "Yangın önlemlerini hazırla ve sonucu izle.", "Çatı ve kapıları güçlendir, gevşek eşyaları sabitle." };
             for(int i=0;i<4;i++)

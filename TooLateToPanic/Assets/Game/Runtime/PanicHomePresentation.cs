@@ -141,7 +141,8 @@ namespace TooLateToPanic
         void TickPresentation(float dt)
         {
             bool suspended = InputLocked || (hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame));
-            if (presentationAudio) presentationAudio.Tick(dt, suspended);
+            if (presentationAudio) presentationAudio.Tick(dt, DialogueSuspendedV59);
+            ObserveDialogueV59();
             if (suspended) return;
             dt = Mathf.Max(0f, dt);
             if (selectedPickupVisual)
@@ -285,6 +286,7 @@ namespace TooLateToPanic
             presentationAnchored.Clear();
             if (Model != null) foreach (var item in Model.Items) presentationAnchored[item.Id] = item.Anchored;
             if (presentationAudio) presentationAudio.ResetRun();
+            ResetDialogueV59();
             ClearInteractionOutline();
         }
 

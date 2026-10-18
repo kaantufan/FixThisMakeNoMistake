@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using B = TooLateToPanic.PanicHomeArt.Builder;
@@ -17,7 +17,7 @@ namespace TooLateToPanic
             get
             {
                 if (Model == null) return string.Empty;
-                if (!BagFinalStageActive) return "Çanta hazırlığı son45 saniyede açılır";
+                if (!BagFinalStageActive) return "Çanta hazırlığı son40 saniyede açılır";
                 int water = Mathf.Max(0, PanicModel.RequiredSupplyPerWave - Model.PackedWater);
                 int food = Mathf.Max(0, PanicModel.RequiredSupplyPerWave - Model.PackedFood);
                 string missing = water > 0 ? water + " su" : string.Empty;
@@ -241,7 +241,7 @@ namespace TooLateToPanic
 
         public bool TryEnterActiveShelterV5()
         {
-            if (!BagFinalStageActive) { Notice("Önce önlemlerini tamamla; çanta hazırlığı son45 saniyede açılır.");return false; }
+            if (!BagFinalStageActive) { Notice("Önce önlemlerini tamamla; çanta hazırlığı son40 saniyede açılır.");return false; }
             string expected=UsesUpperPanicRoomV5?"@panicroom":"bunker";
             bool correct=focusId==expected||!UsesUpperPanicRoomV5&&focusId=="@bunker";
             if (!correct) { Notice(UsesUpperPanicRoomV5?"Sel sırasında bodruma inme. Üst kat panik odasına git.":"Bu afette bodrum sığınağına git.");return false; }

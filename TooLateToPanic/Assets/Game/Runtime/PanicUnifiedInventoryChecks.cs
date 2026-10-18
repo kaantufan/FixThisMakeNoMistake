@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -92,7 +92,7 @@ namespace TooLateToPanic
                 Check(check, "shelter.wrong-destination-reject", !e.Model.TryEnterShelterV5(PanicShelterKindV5.PanicRoom) && !e.Model.ReachedShelterV5 && e.Model.Phase == PanicPhase.Preparing);
                 e.Model.Tick(PanicModel.NormalPreparationSeconds + 8f); e.SyncConsumedBagSupplies();
                 Check(check, "deadline.no-fake-shelter", !e.Model.ReachedShelterV5 && e.Model.Phase == PanicPhase.GameOver && e.Count("water") == 2 && e.Count("food") == 2 && e.Model.FailureReason.Contains("zamanında"));
-                Check(check, "deadline.contract-boundaries", PanicModel.NormalPrecautionSeconds == 120f && PanicModel.NormalBagSeconds == 45f && PanicModel.NormalPreparationSeconds == 165f && !PanicModel.DamageCausesLoss(74.99f) && PanicModel.DamageCausesLoss(75f));
+                Check(check, "deadline.contract-boundaries", PanicModel.NormalPrecautionSeconds == 90f && PanicModel.NormalBagSeconds == 40f && PanicModel.NormalPreparationSeconds == 130f && !PanicModel.DamageCausesLoss(74.99f) && PanicModel.DamageCausesLoss(75f));
                 e = New(); Take(e, "water", 2); Take(e, "food", 2); e.Model.SetDeveloperOption(PanicDeveloperOption.NoLoss, true);
                 e.Model.Tick(PanicModel.NormalPreparationSeconds + 8f); e.SyncConsumedBagSupplies();
                 Check(check, "deadline.no-loss-real-consumption-no-fake-shelter", !e.Model.ReachedShelterV5 && e.Model.CheatedRun && e.Count("water") == 1 && e.Count("food") == 1);

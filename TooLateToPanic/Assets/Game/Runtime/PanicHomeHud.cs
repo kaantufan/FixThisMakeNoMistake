@@ -398,6 +398,7 @@ namespace TooLateToPanic
             {
                 DrawSelectedTargetHudV56();
                 DrawAssistantHudV55();
+                DrawNotebookCursorV59();
                 DrawSecondaryAlertV55();
                 DrawCompactControlsV5();
                 if (!FreeplayOnboardingOpenV414 && !World.IntroStoryActiveV414) DrawPresentationSubtitle();
@@ -838,7 +839,7 @@ namespace TooLateToPanic
             Brush(new Rect(38, 419, 177, 30), Petrol);
             Label(new Rect(52, 418, 318, 32), "HIZLI HAZIRLIK", _body);
             Label(new Rect(44, 463, 336, 27), "E ile dolabı aç · Malzeme havuza eklenir", _small);
-            Label(new Rect(44, 497, 336, 27), "Son 45 sn · su ve gıdayı al", _small);
+            Label(new Rect(44, 497, 336, 27), "Son 40 sn · su ve gıdayı al", _small);
             Label(new Rect(44, 531, 336, 27), "Nesnenin önlemini seç · H kapat", ColorText(_tiny, Sea));
         }
 
@@ -992,7 +993,7 @@ namespace TooLateToPanic
                 Label(budget, "+$1.000 · Koşuda kullanılabilir", ColorText(_center, Muted));
             }
             if (World.CanDeveloperSkipWaveV51) Button(new Rect(786, 610, 462, 42), "DALGAYI GEÇ · F3", _developerChoice == 5, Brass, RequestDeveloperWaveSkipV51);
-            else { Frame(new Rect(786,610,462,42), Panel, Line,1); Label(new Rect(786,610,462,42), "F3 · SERBEST OYUNDA DALGA GEÇ", ColorText(_center, Muted)); }
+            else { Frame(new Rect(786,610,462,42), Panel, Line,1); Label(new Rect(786,610,462,42), "F3 · OYUNDA DALGA GEÇ", ColorText(_center, Muted)); }
             Label(new Rect(352, 665, 896, 27), World.Model.CheatedRun
                 ? "HİLELİ KOŞU · Seçenekleri kapatsan da skor kaydedilmez."
                 : "F3: afeti izle, kaybetmeden devam et. Dalga ödülü ve skor kaydı verilmez.", ColorText(_small, World.Model.CheatedRun ? Brass : Muted));
@@ -1086,7 +1087,7 @@ namespace TooLateToPanic
             else
             {
                 Button(new Rect(318, 650, 454, 58), "YENİDEN BAŞLA", true, Brass, RestartRun);
-                Button(new Rect(790, 650, 470, 58), "BAŞLIĞA DÖN", false, Sea, ReturnToMenu);
+                Button(new Rect(790, 650, 470, 58), "ANA MENÜ", false, Sea, ReturnToMenu);
             }
         }
 
@@ -1329,7 +1330,7 @@ namespace TooLateToPanic
                 _timerPrecautionStage = precautions;
                 _timerMaximum = Mathf.Max(1f, value);
             }
-            _timerMaximum = precautions ? 120f : Mathf.Max(_timerMaximum, value);
+            _timerMaximum = precautions ? PanicModel.NormalPrecautionSeconds : Mathf.Max(_timerMaximum, value);
             Color accent = TimerAlarmActive ? Ember : Sea;
             Rect timer = TimerCardBounds;
             if (TimerAlarmActive)

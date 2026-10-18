@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -45,7 +45,7 @@ namespace TooLateToPanic
             var partial = new PanicExpedition(partialModel);
             for (int i = 0; i < partial.Inventory.Count; i++) partial.Inventory[i] = new SupplySlot("food", 5);
             partial.Inventory[0] = new SupplySlot("water", 4);
-            partial.Bag[0] = new SupplySlot("water", 1); partialModel.PackedWater = 1;
+            partial.SynchronizeInventoryModel(); // One canonical20-slot inventory; no second Bag store.
             var water = partial.FindWorldSupply("supply_water_kitchen"); water.Count = 3;
             bool collected = partial.TryCollectWorldSupply(water.Id);
             check("v5.supply.partial-stays-finite", collected && partial.LastWorldSupplyCollectedCountV5 == 1 && water.Count == 2 && partial.Count("water") == 5, "Explicit nearly-full inventory fixture: one actual unit moves, two remain.");
@@ -82,7 +82,7 @@ namespace TooLateToPanic
                 candidate.EnterBunker(); candidate.Tick(8f);
                 if (candidate.SecondaryEventsV5.Count > 0) incident = candidate;
             }
-            check("v5.secondary.real-small-event", incident != null && incident.SecondaryDamageV5 > 0 && incident.SecondaryDamageV5 <= 2.8001f && incident.SecondaryEventsV5.Count == 1, "At most one 1.2..2.8 percentage-point event, using an explicit RNG-seed fixture.");
+            check("v5.secondary.real-small-event", incident != null && incident.SecondaryDamageV5 > 0 && incident.SecondaryEventsV5.All(e=>e.DamagePoints>=0&&e.DamagePoints<=(e.Kind==PanicSecondaryEventKindV5.GasFlare?10.0001f:e.Kind==PanicSecondaryEventKindV5.PipeLeak?7.0001f:2.8001f)) && incident.SecondaryEventsV5.Count == 1, "At most one kind-specific gas6..10/pipe4..7/electric1.2..2.8 percentage-point event, using an explicit RNG-seed fixture.");
             if (incident != null && calculate != null)
             {
                 int rolls = incident.SecondaryRollCountV5;
@@ -92,7 +92,7 @@ namespace TooLateToPanic
                 check("v5.secondary.repeat-no-reroll-or-double-damage", incident.SecondaryRollCountV5 == rolls && Mathf.Abs(incident.TotalDamage - total) < .0001f && incident.SecondaryEventsV5.Count == 1 && incident.SecondaryEventsV5[0].TargetId == actual.TargetId, "Repeated evaluation restores primary contributions and reapplies the same memoized event once.");
                 check("v5.secondary.contributions-match-total", Mathf.Abs(incident.Items.Sum(item => item.Contribution) - incident.TotalDamage) < .001f && incident.SecondaryEventSummaryV5.Length > 0, "Event changes actual item contributions and the normal result text.");
             }
-            check("v5.rules.loss-boundary-retained", !PanicModel.DamageCausesLoss(74.99f) && PanicModel.DamageCausesLoss(75f) && PanicModel.NormalPreparationSeconds == 165f, "75% loss and 120+45s source of truth retained.");
+            check("v5.rules.loss-boundary-retained", !PanicModel.DamageCausesLoss(74.99f) && PanicModel.DamageCausesLoss(75f) && PanicModel.NormalPreparationSeconds == 130f, "75% loss and 90+40s source of truth retained.");
         }
     }
 }

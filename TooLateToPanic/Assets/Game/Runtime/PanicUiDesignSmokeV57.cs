@@ -538,6 +538,7 @@ namespace TooLateToPanic
             pointer=gameObject.AddComponent<PanicInteractionAudit>();pointer.enabled=false;Declare("gui-adapter","Disabled existing PanicInteractionAudit supplies logical pointer to explicitly injected production OnGUI callbacks; does not own an independent audit run.");
             foreach(int width in new[]{1600,960}){yield return Resolution(width,width==1600?900:540);hud.SetPaused(false);w.ReturnToMenu();yield return null;yield return Title(width);yield return Gameplay(width);}
             yield return PanicNotebookTargetChecksV57.Run(w, hud, (id, pass, detail) => Check(id, pass, detail), Capture, Resolution);
+            yield return PanicNavigationChecksV59.Run(w, hud, (id, pass, detail) => Check(id, pass, detail), Capture, Resolution);
             Check("runtime.no-errors",report.errors.Count==0,string.Join("\n",report.errors));
         }
         void Restore()

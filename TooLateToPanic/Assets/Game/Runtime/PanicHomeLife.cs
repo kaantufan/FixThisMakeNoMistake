@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -233,7 +233,7 @@ namespace TooLateToPanic
             {
                 FocusLabel=PanicExpedition.DisplayName(supply.ItemId);
                 ShortAction=BagFirstPersonActive?"Al":"Çanta hazırlığına geç";
-                ContextHint=CanInteract?(BagFirstPersonActive?"E / F · Al · Temel ihtiyaç çantaya eklenir":"Çanta hazırlığı son 45 saniyede başlar"):"";
+                ContextHint=CanInteract?(BagFirstPersonActive?"E / F · Al · Temel ihtiyaç çantaya eklenir":"Çanta hazırlığı son 40 saniyede başlar"):"";
                 return;
             }
             if(focusId=="@bagstation") {FocusLabel="Afet çantası";ShortAction="";ContextHint="TAB · Çantayı düzenle";return;}

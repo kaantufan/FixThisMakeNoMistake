@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -61,7 +61,7 @@ namespace TooLateToPanic
             campaign.Items = new List<PanicItem> { Item("qa_natural_rng_low_risk", ItemKind.Furniture, "chair", true) };
             CloseUtilities(campaign);
             bool first = campaign.Wave == 1 && campaign.Disaster == DisasterType.Earthquake && campaign.ActiveDisasterMaskV54 == 1 && campaign.ActiveDisasterCountV54 == 1;
-            int union = 0, counts = 0, firstNineUnion = 0;
+            int union = 0, counts = 0, firstNineUnion = 0; bool fixedSecond = false;
             bool valid = true, stable = true, actualProgression = true;
             for (int wave = 1; wave <= 128; wave++)
             {
@@ -69,7 +69,8 @@ namespace TooLateToPanic
                 int count = campaign.ActiveDisasterCountV54;
                 var primary = campaign.Disaster;
                 valid &= mask > 0 && (mask & ~15) == 0 && Count(mask) == count && count >= 1 && count <= 3 && campaign.HasActiveDisasterV54(primary);
-                if (wave > 1) { union |= mask; counts |= 1 << count; if (wave <= 9) firstNineUnion |= mask; }
+                if (wave == 2) fixedSecond = primary == DisasterType.Flood && mask == 10 && count == 2;
+                if (wave > 2) { union |= mask; counts |= 1 << count; if (wave <= 9) firstNineUnion |= mask; }
                 float clock = campaign.TimeRemaining;
                 for (int read = 0; read < 32; read++)
                 {
@@ -87,12 +88,13 @@ namespace TooLateToPanic
                 actualProgression &= campaign.TryEnterShelterV5(campaign.RequiredShelterV5);
                 campaign.Tick(15f);
                 actualProgression &= campaign.Phase == PanicPhase.Inspection && campaign.CompletedWaves == wave;
-                campaign.FinishInspection();
+                campaign.SetWaveLedgerOpenV56(true); campaign.SetWaveLedgerOpenV56(false); campaign.FinishInspection();
                 actualProgression &= campaign.Phase == PanicPhase.Preparing && campaign.Wave == wave + 1;
                 if (!actualProgression) break;
             }
+            check("v5.9.rng.wave2-fixed-flood-storm", fixedSecond, "Natural wave2 transition: Flood primary, mask10, exactly2 hazards.");
             check("v5.4.rng.wave1-single-earthquake", first, "Actual normal StartRun path.");
-            check("v5.4.rng.wave2plus-four-type-pool", union == 15 && (firstNineUnion & 8) != 0, "128 real resolver/reward/next-wave transitions with one explicitly secured low-risk item and packed supplies; fixed RNG seed fixture. Storm is observed before wave10.");
+            check("v5.9.rng.wave3plus-four-type-pool", union == 15 && (firstNineUnion & 8) != 0, "Wave3+ selection in128 real resolver/reward/next-wave transitions with one explicitly secured low-risk item and packed supplies; fixed RNG seed fixture. Storm is observed before wave10.");
             check("v5.4.rng.unique-valid-1to3-hazards", valid && counts == 14 && actualProgression, "Bit membership excludes duplicate types; fixed campaign observes singles, doubles and triples. Natural campaign state transitions, explicit low-risk inventory fixture.");
             check("v5.4.rng.stable-read-pause-and-same-wave-selection", stable, "Labels/membership reads and paused Tick do not reroll; repeated same-wave selector yields identical mask/primary.");
             check("v5.4.rng.invalid-enum-membership-rejected", !campaign.HasActiveDisasterV54((DisasterType)(-1)) && !campaign.HasActiveDisasterV54((DisasterType)4), "No shift wrapping for invalid types.");
@@ -113,7 +115,7 @@ namespace TooLateToPanic
             var actual = Fixture(DisasterType.Storm, all, 50, true, false, true);
             float[] expectedItems = new float[actual.Items.Count];
             float[] expectedHazards = new float[4];
-            float raw = 0;
+            float raw = 0, strongest = 0, weightTotal = 0;
             bool rawAboveCap = true;
             for (int n = 0; n < 4; n++)
             {
@@ -121,11 +123,15 @@ namespace TooLateToPanic
                 Call(single, "CalculateSingleDisasterDamageV54", true);
                 rawAboveCap &= single.TotalDamage > 100;
                 float weight = n == (int)DisasterType.Storm ? 1f : .45f;
+                strongest = Mathf.Max(strongest, single.TotalDamage); weightTotal += weight;
                 expectedHazards[n] = single.TotalDamage * weight; raw += expectedHazards[n];
                 for (int i = 0; i < single.Items.Count; i++) expectedItems[i] += single.Items[i].Contribution * weight;
             }
             Call(actual, "CalculateDamage");
-            float scale = raw > 100 ? 100 / raw : 1;
+            // Independent oracle: strongest raw hazard plus three percent of weighted
+            // mean per additional hazard; one shared cap/attribution scale.
+            float expectedTotal = Mathf.Min(100, strongest + .03f * 3 * raw / weightTotal);
+            float scale = raw > 0 ? expectedTotal / raw : 0;
             bool shares = true;
             float itemSum = 0, hazardSum = 0;
             for (int i = 0; i < actual.Items.Count; i++)
@@ -136,7 +142,7 @@ namespace TooLateToPanic
             }
             for (int n = 0; n < 4; n++)
             { float value = actual.HazardDamageContributionV54((DisasterType)n); hazardSum += value; shares &= Near(value, expectedHazards[n] * scale); }
-            check("v5.4.damage.raw-weighted-before-one-cap", rawAboveCap && Near(actual.TotalDamage, 100) && shares, "Explicit all-four, wave50, roof-heavy fixture with utilities isolated. Expected composition samples raw single helper, then weights primary1/secondary0.45 and applies one cap. Catches per-hazard premature100 caps.");
+            check("v5.4.damage.raw-weighted-before-one-cap", rawAboveCap && Near(actual.TotalDamage, 100) && shares, "Explicit all-four, wave50, roof-heavy fixture with utilities isolated. Expected composition samples raw single helper, then weights primary1/secondary0.45 for attribution, composes strongest plus3%mean per extra hazard and applies one cap. Catches per-hazard premature100 caps.");
             check("v5.4.damage.contribution-sums-primary-restored", Near(itemSum, actual.TotalDamage) && Near(hazardSum, actual.TotalDamage) && actual.Disaster == DisasterType.Storm && actual.ActiveDisasterMaskV54 == all, "Actual item and per-hazard contribution sums agree; temporary helper disaster selection cannot leak out.");
 
             var plain = Fixture(DisasterType.Earthquake, all, 2, false, false, true);
@@ -191,7 +197,7 @@ namespace TooLateToPanic
             skipped.Tick(8f); float realDamage = skipped.TotalDamage;
             skipped.TryDeveloperSkipToDisasterV51(); skipped.TryDeveloperSkipToDisasterV51(); skipped.Tick(4f);
             check("v5.4.once.F3-compound-has-one-consumption-no-award", started && noRestart && skipped.Phase == PanicPhase.Inspection && skipped.PackedWater == 2 && skipped.PackedFood == 2 && realDamage > 0 && skipped.TotalDamage == realDamage && skipped.CompletedWaves == 0 && skipped.LastReward == 0 && skipped.LastWaveScore == 0 && skipped.Score == 0 && skipped.Budget == originalBudget && skipped.CheatedRun && !skipped.ReachedShelterV5, "Actual F3 action, explicit two-hazard inventory/mask fixture. Unsheltered status remains honest; protection does not fake entry or success.");
-            skipped.FinishInspection();
+            skipped.SetWaveLedgerOpenV56(true); skipped.SetWaveLedgerOpenV56(false); skipped.FinishInspection();
             check("v5.4.once.F3-protection-clears-next-wave", skipped.Wave == 3 && skipped.Phase == PanicPhase.Preparing && !skipped.DeveloperWaveSkipProtectionV51 && skipped.CheatedRun && skipped.CompletedWaves == 0, "One wave protection ends; sticky score exclusion remains.");
         }
 

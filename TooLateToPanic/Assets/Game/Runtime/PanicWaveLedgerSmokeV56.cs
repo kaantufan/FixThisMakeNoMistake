@@ -136,10 +136,12 @@ namespace TooLateToPanic
             yield return Wait(.25f);Check("launch.isolated-guid-profile",Isolated(),PanicModel.ScorePathOverride,"NATIVE_FILE_PATH");if(!Isolated())throw new InvalidOperationException("Refusing ledger smoke outside isolated evidence profile.");
             Check("launch.exactly-one-driver",Environment.GetCommandLineArgs().Count(a=>PanicTestLaunchRules.Drivers.Contains(a))==1,"One registered isolated driver only.");
             PanicWaveLedgerModelChecksV56.Run(w.EvidencePath,(id,pass,detail)=>Check(id,pass,detail,"NATIVE_MODEL_FIXTURE"));report.isolatedFixtureModels=PanicWaveLedgerModelChecksV56.FixtureModels;report.seedCases=PanicWaveLedgerModelChecksV56.SeedCases;
+            PanicEconomyChecksV59.Run((id,pass,detail)=>Check("v59.economy."+id,pass,detail,"NATIVE_MODEL_FIXTURE"));
+            PanicCompoundChecksV54.Run((id,pass,detail)=>Check(id,pass,detail,"NATIVE_MODEL_FIXTURE"));
             yield return Resolution(1600,900);w.ReturnToMenu();w.StartGame(false);report.productionStartCalls++;w.FullFlowScriptedInput=true;yield return null;
             if(hud.FreeplayOnboardingOpenV414)hud.ConfirmFreeplayOnboardingV414();yield return null;w.SkipIntroStoryV414();yield return Wait(.20f);
-            Check("world.start-budget2500",w.Model.Budget==2500,"Actual normal world start budget="+w.Model.Budget);yield return PreparationPauses();yield return PanicVisualReadabilityChecksV56.Run(w,hud,(id,pass,detail)=>Check(id,pass,detail),Capture,Resolution);yield return ActualWorldLedger();
-            w.ReturnToMenu();yield return Wait(.10f);Check("world.reset-no-stale-ledger",PanicWaveLedgerModelChecksV56.Ledger(w.Model)==null&&!Visible&&w.Model.Budget==2500);
+            Check("world.start-budget1500",w.Model.Budget==1500,"Actual normal world start budget="+w.Model.Budget);yield return PreparationPauses();yield return PanicVisualReadabilityChecksV56.Run(w,hud,(id,pass,detail)=>Check(id,pass,detail),Capture,Resolution);yield return ActualWorldLedger();
+            w.ReturnToMenu();yield return Wait(.10f);Check("world.reset-no-stale-ledger",PanicWaveLedgerModelChecksV56.Ledger(w.Model)==null&&!Visible&&w.Model.Budget==1500);
             Check("finish.runtime-errors",report.errors.Count==0,string.Join("\n",report.errors));
         }
         static bool PngSize(string path,out int width,out int height)

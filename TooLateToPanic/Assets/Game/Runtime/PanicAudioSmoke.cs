@@ -93,7 +93,7 @@ namespace TooLateToPanic
             Check("footprint tile side of material boundary",world.FootstepSurfaceAt(new Vector3(4.15f,3.25f,4))=="step_tile");
             Check("vehicle gain near middle far",PanicHomeEffects.DistanceGain(3,3,34)>PanicHomeEffects.DistanceGain(18,3,34)&&PanicHomeEffects.DistanceGain(18,3,34)>PanicHomeEffects.DistanceGain(34,3,34)&&PanicHomeEffects.DistanceGain(34,3,34)==0);
             Check("rotor gain near far",PanicHomeEffects.DistanceGain(12,12,75)==1&&PanicHomeEffects.DistanceGain(75,12,75)==0);
-            Check("music lower default",Mathf.Abs(PanicBackgroundMusic.Volume-.075f)<.00001f);
+            Check("music current authored default",Mathf.Abs(PanicBackgroundMusic.Volume-PanicMusicMixPolicyV59.DefaultVolume)<.00001f);
 
             foreach(string id in PanicBackgroundMusic.TrackIds)
 
@@ -179,19 +179,8 @@ namespace TooLateToPanic
 
             var node=new GameObject("Isolated subtitle audio test");var speech=node.AddComponent<PanicPresentationAudio>();speech.Configure(true);
 
-            Check("subtitle event accepted",speech.TryPlay("jury_intro"));Check("subtitle begins empty",speech.Subtitle.Length==0);
-
-            speech.Tick(.1f,false);Check("typewriter partial",speech.Subtitle.Length>0&&speech.Subtitle.Length<44);
-
-            string frozen=speech.Subtitle;speech.Tick(1,true);Check("pause freezes subtitle",speech.Subtitle==frozen);
-
-            speech.Tick(.2f,false);Check("resume advances subtitle",speech.Subtitle.Length>frozen.Length);
-
-            foreach(var source in node.GetComponentsInChildren<AudioSource>())Check("subtitle source only blip",!source.clip||source.clip.name=="dialogue_blip");
-
-            Check("once per event",!speech.TryPlay("jury_intro"));speech.ResetRun();Check("reset clears subtitle",speech.Subtitle=="");Check("reset allows next run",speech.TryPlay("jury_intro"));
-
-            speech.Configure(false);Check("disable cancels subtitle",speech.Subtitle=="");Destroy(node);
+            PanicDialogueNativeChecksV59.Run(speech, Check);
+            Destroy(node);
 
             yield return new WaitForSecondsRealtime(.1f);
 

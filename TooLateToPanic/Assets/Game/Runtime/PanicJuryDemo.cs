@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -391,13 +391,13 @@ namespace TooLateToPanic
         {
             get
             {
-                if (Stage == PanicJuryStage.Onboarding) return "Aile evini hazırla. WASD / oklarla yürü; çanta son 45 saniyede.";
+                if (Stage == PanicJuryStage.Onboarding) return "Aile evini hazırla. WASD / oklarla yürü; çanta son 40 saniyede.";
                 if (Stage == PanicJuryStage.Preparation)
                 {
                     if (!BagFinalStageActive) return !ActualAnchoredHero() ?
-                        "Buzdolabı ya da kitaplığı seç · 1 ile vidaları tak. Çanta son 45 saniyede hazırlanır." :
-                        "Önlemin hazır. Çanta aşaması son 45 saniyede başlayacak; evde gezinebilirsin.";
-                    if (!Done("water_packed")) return "Son 45 saniye · mutfak tezgâhındaki suya yaklaş · E veya F ile al; aldığın su envanterinde hazırdır.";
+                        "Buzdolabı ya da kitaplığı seç · 1 ile vidaları tak. Çanta son 40 saniyede hazırlanır." :
+                        "Önlemin hazır. Çanta aşaması son 40 saniyede başlayacak; evde gezinebilirsin.";
+                    if (!Done("water_packed")) return "Son 40 saniye · mutfak tezgâhındaki suya yaklaş · E veya F ile al; aldığın su envanterinde hazırdır.";
                     return "İşaretli alana yaklaş · E ile çök–kapan–tutun. Sarsıntıda koşma.";
                 }
                 if (Stage == PanicJuryStage.Earthquake) return Done("quake_cover") ? "Sarsıntı sürüyor. Seçtiğin eşyanın bağlantısına bak." : "Hazırlık süresi bitti. Eksikler sonuçta gösterilecek; tamamlanmış sayılmadı.";

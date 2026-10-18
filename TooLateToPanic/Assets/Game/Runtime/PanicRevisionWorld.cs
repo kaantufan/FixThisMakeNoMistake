@@ -138,7 +138,7 @@ namespace TooLateToPanic
             if(BagFirstPersonActive) RefreshBagRayFocus();
             var supply = Expedition.FindWorldSupply(focusId);
             if (supply == null || supply.Count <= 0) { Notice("Erzakları evdeki eşyalardan al. Malzemeler dolap açıldığında eklenir."); return false; }
-            if (!BagFinalStageActive || !BagFirstPersonActive) { Notice("Çanta erzakları son 45 saniyede açılır."); return false; }
+            if (!BagFinalStageActive || !BagFirstPersonActive) { Notice("Çanta erzakları son 40 saniyede açılır."); return false; }
             if (Model.IsPaused || InputLocked || NotebookBlocksInput || WorkActive || IsMoving || InventoryOpen || !CanInteract || supply.Floor != ActiveFloor) return false;
             string id = supply.ItemId; int count = supply.Count; Vector3 start = supply.Position;
             if (!Expedition.TryCollectWorldSupply(supply.Id)) { Notice("Envanterde yer yok"); effects.Play("reject", .25f); return false; }

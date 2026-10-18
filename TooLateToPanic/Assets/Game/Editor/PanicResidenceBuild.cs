@@ -18,7 +18,7 @@ namespace TooLateToPanic
         const string HomeArt = "Assets/Game/Resources/HomeArt";
         const string ResidenceArt = "Assets/Game/Resources/ResidenceArt";
         const string ScenePath = "Assets/Game/Scenes/TooLateToPanicResidence.unity";
-        const string Version = "0.5.8";
+        const string Version = "0.5.9";
 
         // Every explicit Create case in the residence r1 package; no default/fallback IDs.
         static readonly string[] ResidenceIds =
@@ -99,7 +99,7 @@ namespace TooLateToPanic
                 {
                     if (visualEvidence + 1 >= visualArgs.Length) throw new ArgumentException("Missing -visualFixEvidence path");
                     if (!PanicVisualFixesHeadlessV58.ValidateAndSave(visualArgs[visualEvidence + 1]))
-                        throw new InvalidOperationException("V5.8 headless mesh/Avatar validation failed; see visual evidence");
+                        throw new InvalidOperationException("V5.9 headless mesh/Avatar validation failed; see visual evidence");
                 }
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
                 new GameObject("Too Late to Panic — Home V5").AddComponent<PanicHomeWorld>();
@@ -107,7 +107,7 @@ namespace TooLateToPanic
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
                 AssetDatabase.SaveAssets();
                 var project = Directory.GetParent(Application.dataPath).FullName;
-                var outputDir = Path.Combine(project, "Builds", "Home-V5.8-20261018");
+                var outputDir = Path.Combine(project, "Builds", "Home-V5.9-20261018");
                 var buildArgs = Environment.GetCommandLineArgs();
                 int auditOutput = Array.IndexOf(buildArgs, "-panicBuildDirectory");
                 if (auditOutput >= 0)

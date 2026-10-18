@@ -11,3 +11,7 @@ Provider outputs are subject to ElevenLabs terms; not relicensed as CC0/MIT. Off
 - https://elevenlabs.io/creative-terms
 
 Seven V4.7 spoken originals are preserved in Assets/Game/Deferred/Spoken-V47 outside Resources; never loaded by the new subtitle router. Existing three V4.7 ElevenLabs effects retain their existing provenance.
+
+## Home V5.9 revision — 18 October 2026
+
+The54provider Foley recordings above remain retained historical sources. Nineteen later temporary V56 procedural cues were replaced in place by new actual ElevenLabs effects or brief edits of retained provider grip/cloth recordings. Existing Unity GUIDs remain; their metadata now identifies actual provider/source/runtime SHA256 rather than the old procedural provenance. A110ms nonverbal dialogue bit and4.88second panting loop were added under Audio/V59. No intelligible speech/TTS was generated. Eleven source families used457existing account credits; no purchase, subscription or overage. Source WAVs, processed PCM and per-file identities are archived in TLTP-MENU-ECONOMY-AUDIO-V59-20261018/manager/provider. Current asset/provenance document: Documentation/HOME-V5.9-AUDIO-ASSETS-2026-10-18.md. Numerical PCM/import checks are separate from listening or native mix acceptance.

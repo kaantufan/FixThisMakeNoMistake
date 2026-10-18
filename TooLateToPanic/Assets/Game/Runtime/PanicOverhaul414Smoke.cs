@@ -315,7 +315,7 @@ namespace TooLateToPanic
             bool actions=hud.GetType().GetMethod("ActivateSelectedTitleChoiceV414",Instance)!=null&&hud.GetType().GetMethod("ConfirmFreeplayOnboardingV414",Instance)!=null;
             Check("onboarding.production-actions-present",actions,"Real title Enter/selected action and real ANLADIM BAŞLA acknowledgement must expose shared production actions; no QA-only state mutation shim.");
             if(!seams||!actions)yield break;
-            Check("onboarding.freeplay-default-title",w.Model.Phase==PanicPhase.Title&&Field<int>(hud,"_menuChoice")==0&&Text(hud,"PrimaryPlayLabelV414")=="SERBEST OYNA"&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Fresh actual title choice0 and real primary label; keyboard OS Enter remains root-owned.");
+            Check("onboarding.freeplay-default-title",w.Model.Phase==PanicPhase.Title&&Field<int>(hud,"_menuChoice")==0&&Text(hud,"PrimaryPlayLabelV414")=="OYNA"&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Fresh actual title choice0 and real primary label; keyboard OS Enter remains root-owned.");
             FixtureNote("ONBOARDING_ACTUAL_MENU_ACTION","Invoke shared production selected-title action at untouched fresh choice0, same dispatch used by the title Enter path. No menu field/seen flag/timer/Model.Tick writes and no OS input.");
             ActivateDefaultFreeplayForQa();object openingConfirm=Call(hud,"ConfirmFreeplayOnboardingV414");
             Check("onboarding.opening-frame-does-not-auto-ack",openingConfirm is bool openingAccepted&&!openingAccepted&&Bool(hud,"FreeplayOnboardingOpenV414")&&!Bool(hud,"FreeplayOnboardingSeenV414"),"Real production confirm rejects the title opening frame, preventing title Enter/click from instantly consuming the explanation.");

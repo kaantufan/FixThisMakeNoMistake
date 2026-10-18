@@ -42,7 +42,7 @@ namespace TooLateToPanic
             }
             Expedition.ClearRequirements();
             BeginBagPreparation(); RefreshPreparationVisibility();
-            Model.Notify(JuryActive ? "Son 45 saniye · suyunu al, işaretli güvenli alana geç." : "Son 45 saniye · erzaklar çantana girer; " + Model.RequiredShelterDestinationV5 + " git.");
+            Model.Notify(JuryActive ? "Son 40 saniye · suyunu al, işaretli güvenli alana geç." : "Son 40 saniye · erzaklar çantana girer; " + Model.RequiredShelterDestinationV5 + " git.");
         }
         public Vector3 BagTransitionActorPosition { get { return bagTransitionActor; } }
         public float BagCameraTransitionProgress { get { return Mathf.Clamp01(bagViewAge / (bagViewMode == BagViewMode.Entering ? BagHandoffDurationV51 : 1.1f)); } }

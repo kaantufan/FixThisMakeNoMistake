@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -149,7 +149,7 @@ namespace TooLateToPanic
             AddOne("extinguisher", 1);
             SetBagCount("food", 1);
             PrepareShortFlowSupplies();
-            Message = "Başlangıç: 1 gıda envanterde hazır. Yapı malzemeleri havuzda; dolaplarda fazlası var. Suyu son 45 saniyede al.";
+            Message = "Başlangıç: 1 gıda envanterde hazır. Yapı malzemeleri havuzda; dolaplarda fazlası var. Suyu son 40 saniyede al.";
             NotifyModel();
             return true;
         }
@@ -482,7 +482,7 @@ namespace TooLateToPanic
                         new[] { new PanicMaterialCost("bracket", 1), new PanicMaterialCost("screws", 2) };
                 case "upgrade":
                     return new[] { new PanicMaterialCost("plank", item != null && item.Tier > 0 ? 2 : 1),
-                        new PanicMaterialCost("screws", item != null && item.Tier > 0 ? 3 : 2) };
+                        new PanicMaterialCost("screws", item != null && item.Tier > 0 ? 4 : 1) };
                 case "flood":
                 case "drain": return new[] { new PanicMaterialCost("sandbag", 2), new PanicMaterialCost("plank", 1) };
                 case "fence": return new[] { new PanicMaterialCost("plank", 3), new PanicMaterialCost("screws", 2), new PanicMaterialCost("sandbag", 1) };
@@ -500,7 +500,7 @@ namespace TooLateToPanic
             {
                 case "anchorwall":
                 case "anchorfloor": return item != null && item.AnchorOwned ? 0 : 60;
-                case "upgrade": return item == null ? 0 : item.Tier == 0 ? 120 : item.Tier == 1 ? 180 : 0;
+                case "upgrade": return PanicEconomyV59.UpgradeBudgetCost(item);
                 case "flood": return 80;
                 case "fire": return 75;
                 case "plant": return 30;
@@ -547,7 +547,7 @@ namespace TooLateToPanic
             };
         }
 
-        private static SupplySlot Stack(string id, int count) { return new SupplySlot(id, count); }
+        private static SupplySlot Stack(string id, int count) { return new SupplySlot(id, PanicEconomyV59.AuthoredConstructionStock(id, count)); }
         private static List<SupplySlot> MakeEmptySlots(int count)
         {
             List<SupplySlot> slots = new List<SupplySlot>(count);

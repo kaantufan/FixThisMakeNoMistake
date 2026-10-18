@@ -75,7 +75,7 @@ namespace TooLateToPanic
                 () => ActivateTitleChoiceV414(3));
             MenuActionV57(new Rect(112, 711, 320, 58), TitleChoiceLabelV414(4), "exit", _menuChoice == 4, false,
                 () => ActivateTitleChoiceV414(4));
-            MenuKeysV57(new Rect(112, 792, 760, 30), "OKLAR / WASD  SEÇ", "ENTER  AÇ", false);
+            MenuKeysV57(new Rect(112, 792, 760, 30), "OKLAR / WASD  SEÇ", "ENTER  ONAYLA", false);
 
             DrawMenuFieldNotesV57();
             Event e = Event.current;
@@ -95,12 +95,12 @@ namespace TooLateToPanic
 
         void DrawMenuFieldNotesV57()
         {
-            Label(new Rect(958, 88, 528, 32), "EV HAZIRLIK NOTLARI", menuHeadingV57);
+            Label(new Rect(958, 88, 528, 32), "ÜÇ ADIMDA HAZIRLIK", menuHeadingV57);
             Fill(new Rect(958, 132, 64, 5), MenuOchreV57);
             Label(new Rect(958, 147, 528, 43), "ÖNCE ÖNLEM.", menuTitleV57);
             Label(new Rect(958, 190, 528, 43), "SONRA ÇANTA.", menuTitleV57);
             DrawMenuStepV57(232, "01", "tools", "EVİ HAZIRLA", "Malzeme topla, eşyaları sabitle.");
-            DrawMenuStepV57(310, "02", "bag", "ÇANTANI TAMAMLA", "Su ve gıdayı hazırlamayı unutma.");
+            DrawMenuStepV57(310, "02", "bag", "SU VE GIDA TOPLA", "Aldıkların envanterinde hazırdır.");
             DrawMenuStepV57(388, "03", "home", "SIĞINAĞA YETİŞ", "Sel varsa üst kattaki panik odasına.");
             Fill(new Rect(958, 477, 528, 2), MenuInkV57);
             Label(new Rect(958, 490, 328, 37), "YEREL SKORLAR", menuHeadingV57);
@@ -111,7 +111,7 @@ namespace TooLateToPanic
             if (entries == null || entries.Count == 0)
             {
                 PanicUiSymbolsV57.Draw(new Rect(958, 560, 48, 48), "book", MenuDimV57);
-                Label(new Rect(1028, 548, 458, 42), "İLK KOŞUNU TAMAMLA", menuHeadingV57);
+                Label(new Rect(1028, 548, 458, 42), "İLK OYUNUNU TAMAMLA", menuHeadingV57);
                 Label(new Rect(1028, 594, 458, 60), "Skorların bu bilgisayarda saklanır.", menuTextV57);
                 return;
             }
@@ -177,7 +177,7 @@ namespace TooLateToPanic
             MenuActionV57(new Rect(620, 181, 830, 68), "DEVAM ET", "continue", _pauseChoice == 0, true, () => SetPaused(false));
             MenuActionV57(new Rect(620, 267, 405, 64), "GELİŞTİRİCİ · F2", "tools", _pauseChoice == 1, true, ToggleDeveloperMenu);
             MenuActionV57(new Rect(1041, 267, 409, 64), "YENİDEN BAŞLA", "back", _pauseChoice == 2, true, RestartRun);
-            MenuActionV57(new Rect(620, 349, 830, 64), "BAŞLIĞA DÖN", "home", _pauseChoice == 3, true, ReturnToMenu);
+            MenuActionV57(new Rect(620, 349, 830, 64), "ANA MENÜ", "home", _pauseChoice == 3, true, ReturnToMenu);
             Fill(new Rect(620, 450, 830, 2), MenuInkV57);
             Label(new Rect(620, 467, 830, 36), "SES VE HAREKET", menuHeadingV57);
             MenuActionV57(new Rect(620, 523, 405, 64), PanicBackgroundMusic.Enabled ? "MÜZİK · AÇIK" : "MÜZİK · KAPALI",
@@ -185,7 +185,7 @@ namespace TooLateToPanic
             MenuActionV57(new Rect(1041, 523, 409, 64), World.ReducedFpsMotionV54 ? "PANİK EFEKTİ · AZ" : "PANİK EFEKTİ · TAM",
                 "motion", _pauseChoice == 5, true, () => World.SetReducedFpsMotionV54(!World.ReducedFpsMotionV54));
             MenuActionV57(new Rect(620, 605, 830, 64), "SES AYARLARI", "settings", _pauseChoice == 6, true, OpenAudioSettingsV56);
-            MenuKeysV57(new Rect(620, 736, 830, 32), "OKLAR  SEÇ  /  ENTER  AÇ", "ESC  DEVAM ET", true);
+            MenuKeysV57(new Rect(620, 736, 830, 32), "OKLAR  SEÇ  /  ENTER  ONAYLA", "ESC  DEVAM ET", true);
             HandlePauseNavigation();
         }
 

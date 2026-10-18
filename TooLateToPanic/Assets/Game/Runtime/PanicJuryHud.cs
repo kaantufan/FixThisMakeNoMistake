@@ -87,16 +87,12 @@ namespace TooLateToPanic
             }
             Label(new Rect(314, 610, 960, 30), "Yeniden oyna, başka bir önlem seç ve evindeki farkı gör.", _small);
             Button(new Rect(314, 669, 464, 58), "TEKRAR DENE", true, Brass, StartJuryRun);
-            Button(new Rect(798, 669, 488, 58), "BAŞLIĞA DÖN", false, Sea, ReturnToMenu);
+            Button(new Rect(798, 669, 488, 58), "ANA MENÜ", false, Sea, ReturnToMenu);
         }
 
         void DrawPresentationSubtitle()
         {
-            if (!World || string.IsNullOrEmpty(World.PresentationSubtitle) || _paused || DeveloperMenuOpen ||
-                (!string.IsNullOrEmpty(_developerNotice) && Time.unscaledTime < _developerNoticeUntil)) return;
-            Rect box = new Rect(390, World.BagCameraOwnsView ? 218 : 132, 820, 38);
-            Frame(box, Night, Line, 1f); Mark(box);
-            FittedLabel(new Rect(box.x + 16, box.y + 3, box.width - 32, 32), World.PresentationSubtitle, _center, MainText, 15);
+            DrawDialogueSubtitleV59();
         }
     }
 }

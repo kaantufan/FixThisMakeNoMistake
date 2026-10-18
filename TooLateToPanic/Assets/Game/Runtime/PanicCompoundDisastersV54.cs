@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -48,6 +48,13 @@ namespace TooLateToPanic
             compoundWaveV54 = Wave;
             if (Wave <= 1 || IsTutorial || IsJuryDemo)
             { Disaster = compoundPrimaryV54 = DisasterType.Earthquake; compoundMaskV54 = 1; return; }
+            // V5.9 final policy: second wave is the same taught combined threat.
+            if (Wave == 2)
+            {
+                Disaster = compoundPrimaryV54 = DisasterType.Flood;
+                compoundMaskV54 = (1 << (int)DisasterType.Flood) | (1 << (int)DisasterType.Storm);
+                return;
+            }
             uint state = compoundSeedV54 ^ unchecked((uint)Wave * 0x9E3779B9u);
             // Draw once per wave, independent from Unity/visual RNG and damage variation.
             int roll = (int)(NextUInt(ref state) % 100u);
@@ -76,7 +83,8 @@ namespace TooLateToPanic
             var contributions = new float[Items.Count];
             var baseRisks = new float[Items.Count];
             var secondary = new List<PanicSecondaryEventV5>();
-            float combined = 0, secondaryTotal = 0;
+            float combined = 0, secondaryTotal = 0, strongest = 0, totalWeight = 0;
+            int activeHazards = 0;
             try
             {
                 for (int n = 0; n < 4; n++)
@@ -86,6 +94,8 @@ namespace TooLateToPanic
                     Disaster = type;
                     float weight = type == primary ? 1f : .45f;
                     CalculateSingleDisasterDamageV54(true);
+                    strongest = Mathf.Max(strongest, TotalDamage);
+                    totalWeight += weight; activeHazards++;
                     hazardDamageV54[n] = TotalDamage * weight;
                     combined += hazardDamageV54[n];
                     for (int i = 0; i < Items.Count; i++)
@@ -100,7 +110,15 @@ namespace TooLateToPanic
                 }
             }
             finally { Disaster = primary; }
-            float scale = combined > 100f ? 100f / combined : 1f;
+            // Simultaneous hazards hit one house. Preserve the strongest actual hazard,
+            // then add 3% of the primary-weighted mean for each additional hazard.
+            // This is always at least the strongest isolated risk (before the shared
+            // 100 cap), while avoiding repeated full damage to the same household.
+            // Keep the original primary/secondary item shares and utility attribution;
+            // one common scale conserves their sum and the memoized event points.
+            float mean = totalWeight > 0 ? combined / totalWeight : 0;
+            float composed = strongest + .03f * Mathf.Max(0, activeHazards - 1) * mean;
+            float scale = combined > 0 ? Mathf.Min(100f, composed) / combined : 0;
             float total = 0;
             for (int i = 0; i < Items.Count; i++)
             {

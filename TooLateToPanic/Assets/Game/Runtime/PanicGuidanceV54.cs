@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -191,7 +191,7 @@ namespace TooLateToPanic
             }
             // The notebook owns one stable material -> work -> utilities sequence.
             GuidanceQueueAssistantV55();
-            guidanceNoRouteV54 = "Önlemlerini kontrol et · son 45 saniyede çantanı hazırla";
+            guidanceNoRouteV54 = "Önlemlerini kontrol et · son 40 saniyede çantanı hazırla";
             if (guidancePlanGroupsV54.Count == 0) GuidanceObjectiveLabelV54 = guidanceNoRouteV54;
         }
 

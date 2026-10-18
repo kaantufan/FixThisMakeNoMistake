@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -145,12 +145,12 @@ namespace TooLateToPanic
                 string target = model.SecondaryEventsV5.Count == 0 ? string.Empty : model.SecondaryEventsV5[0].TargetId;
                 Evaluate(model);
                 string repeatedTarget = model.SecondaryEventsV5.Count == 0 ? string.Empty : model.SecondaryEventsV5[0].TargetId;
-                bool secondaryBound = model.SecondaryDamageV5 >= 0f && model.SecondaryDamageV5 <= 2.8001f &&
+                bool secondaryBound = model.SecondaryDamageV5 >= 0f && BoundedSecondary(model) &&
                     model.SecondaryDamageV5 <= 100f - primary + Epsilon && model.SecondaryEventsV5.Count <= 1;
                 check("v5.2.damage.open-utilities." + hazard + "." + wave,
                     Near(primary, expected) && primary + Epsilon >= previousPrimary && secondaryBound &&
                     rolls == model.SecondaryRollCountV5 && Near(total, model.TotalDamage) && target == repeatedTarget && SoundTotals(model),
-                    "Primary total " + primary + " rises to its 100 cap. One memoized RNG event adds only 0..2.8 points; complete totals need not rise when an event disappears.");
+                    "Primary total " + primary + " rises to its 100 cap. One memoized RNG event adds only kind-specific gas6..10/pipe4..7/electric1.2..2.8 points; complete totals need not rise when an event disappears.");
                 previousPrimary = primary;
             }
         }
@@ -222,7 +222,7 @@ namespace TooLateToPanic
                 if (candidate.SecondaryEventsV5.Count == 1 && candidate.SecondaryDamageV5 > 0f) incident = candidate;
             }
             check("v5.2.secondary.actual-bounded-incident", incident != null &&
-                incident.SecondaryDamageV5 >= 1.1999f && incident.SecondaryDamageV5 <= 2.8001f && SoundTotals(incident),
+                incident.SecondaryDamageV5 > 0 && BoundedSecondary(incident) && SoundTotals(incident),
                 "Explicit deterministic seed search over at most64 fixtures confirms an actual event rather than only empty-event bounds.");
             if (incident == null) return;
             int rolls = incident.SecondaryRollCountV5;
@@ -271,9 +271,9 @@ namespace TooLateToPanic
         static void CheckResolutionAndDeveloperSkip(Action<string, bool, string> check)
         {
             check("v5.2.rules.exact-loss-boundary", !PanicModel.DamageCausesLoss(74.99f) &&
-                PanicModel.DamageCausesLoss(75f) && PanicModel.NormalPrecautionSeconds == 120f &&
-                PanicModel.NormalBagSeconds == 45f,
-                "75% inclusive loss and120+45s remain unchanged.");
+                PanicModel.DamageCausesLoss(75f) && PanicModel.NormalPrecautionSeconds == 90f &&
+                PanicModel.NormalBagSeconds == 40f,
+                "75% inclusive loss and90+40s final timing policy.");
 
             var unsafeHouse = Campaign(DisasterType.Earthquake, true);
             unsafeHouse.Wave = 50;
@@ -320,12 +320,22 @@ namespace TooLateToPanic
                 skipped.CompletedWaves == 0 && skipped.Score == 0 && skipped.LastWaveScore == 0 &&
                 skipped.LastReward == 0 && skipped.Budget == skippedBudget && !skipped.DeveloperNoLoss,
                 "F3 at wave50 preserves escalated damage and consumption, invents no shelter admission, avoids GameOver only for its protected wave and grants no award.");
-            skipped.FinishInspection();
+            skipped.SetWaveLedgerOpenV56(true); skipped.SetWaveLedgerOpenV56(false); skipped.FinishInspection();
             check("v5.2.devskip.high-wave-protection-scope", skipped.Wave == 51 &&
                 skipped.Phase == PanicPhase.Preparing && !skipped.DeveloperWaveSkipProtectionV51 && skipped.CheatedRun,
                 "The next wave clears one-wave protection while retaining sticky score exclusion.");
         }
 
+        static bool BoundedSecondary(PanicModel model)
+        {
+            if(model.SecondaryEventsV5.Count>1||model.SecondaryDamageV5<0)return false;
+            foreach(var e in model.SecondaryEventsV5)
+            {
+                float maximum=e.Kind==PanicSecondaryEventKindV5.GasFlare?10:e.Kind==PanicSecondaryEventKindV5.PipeLeak?7:2.8f;
+                if(e.DamagePoints<0||e.DamagePoints>maximum+.0001f)return false;
+            }
+            return Near(model.SecondaryDamageV5,model.SecondaryEventsV5.Sum(e=>e.DamagePoints));
+        }
         static bool SoundTotals(PanicModel model)
         {
             return model != null && Finite(model.TotalDamage) && model.TotalDamage >= 0f && model.TotalDamage <= 100.001f &&

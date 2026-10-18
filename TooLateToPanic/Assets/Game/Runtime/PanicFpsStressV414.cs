@@ -90,7 +90,7 @@ namespace TooLateToPanic
             // it never changes the controller, preparation timing or model outcome.
             float onset = .68f * (1 - Mathf.SmoothStep(0, 1, fpsStressClockV414 / 5f));
             fpsStressV414=Mathf.Max(.32f+.68f*EvaluateDeadlineStressV414(Model.TimeRemaining),onset);
-            stressAudioV414.Tick(fpsStressV414,ReducedFpsMotionV54);
+            stressAudioV414.Tick(fpsStressV414,ReducedFpsMotionV54,dt);
         }
         public void SuspendExperienceFeedbackV414()
         {if(stressAudioV414!=null)stressAudioV414.Stop();StopFpsTensionV55();}
@@ -133,58 +133,53 @@ namespace TooLateToPanic
         void OnDisable(){if(Owner)Owner.SuspendExperienceFeedbackV414();}
         void OnDestroy(){if(!ReferenceEquals(Owner,null))Owner.DisposeExperienceFeedbackV414();Owner=null;}
     }
-    /// <summary>Imported heartbeat plus retained original nonverbal breath. Never spoken voice.</summary>
+    /// <summary>Imported nonverbal heartbeat and panting. Resource assets are never destroyed by this owner.</summary>
     public sealed class PanicStressAudioV414 : IDisposable
     {
-        GameObject root;AudioSource heart,breath;AudioClip heartClip,breathClip;bool ownsHeart;
+        GameObject root;AudioSource heart,breath;AudioClip heartClip,breathClip;
+        float onset;
         public bool Playing { get { return heart&&heart.isPlaying||breath&&breath.isPlaying; } }
         public float HeartVolume { get { return heart&&heart.isPlaying?heart.volume:0; } }
         public float BreathVolume { get { return breath&&breath.isPlaying?breath.volume:0; } }
         public PanicStressAudioV414(Transform owner)
         {
-            root=new GameObject("V414 local breath and heartbeat");root.transform.SetParent(owner,false);
-            heartClip=PanicAudioBank.Get("heartbeat");ownsHeart=!heartClip;if(ownsHeart)heartClip=MakeHeart();breathClip=MakeBreath();heart=Source("Soft double heartbeat",heartClip);breath=Source("Soft nonverbal breath",breathClip);
+            root=new GameObject("V59 imported heartbeat and panting");root.transform.SetParent(owner,false);
+            heartClip=Resources.Load<AudioClip>("Audio/Foley/heartbeat");
+            breathClip=Resources.Load<AudioClip>("Audio/V59/panting");
+            if(!heartClip)Debug.LogWarning("AUDIO_MISSING imported heartbeat; no fabricated substitute.");
+            if(!breathClip)Debug.LogWarning("AUDIO_MISSING V59 imported panting; no fabricated substitute.");
+            heart=Source("Clear bounded heartbeat",heartClip,1500f);
+            breath=Source("Clear bounded nonverbal panting",breathClip,4400f);
         }
-        AudioSource Source(string name,AudioClip clip)
+        AudioSource Source(string name,AudioClip clip,float cutoff)
         {
-            var go=new GameObject(name);go.transform.SetParent(root.transform,false);var a=go.AddComponent<AudioSource>();a.clip=clip;a.loop=true;a.playOnAwake=false;a.spatialBlend=0;a.volume=0;a.priority=190;a.dopplerLevel=0;return a;
+            var go=new GameObject(name);go.transform.SetParent(root.transform,false);
+            var a=go.AddComponent<AudioSource>();a.clip=clip;a.loop=true;a.playOnAwake=false;a.spatialBlend=0f;
+            a.volume=0;a.priority=150;a.dopplerLevel=0;a.ignoreListenerPause=false;a.ignoreListenerVolume=false;
+            var filter=go.AddComponent<AudioLowPassFilter>();filter.cutoffFrequency=cutoff;filter.lowpassResonanceQ=1f;
+            return a;
         }
-        public void Tick(float urgency,bool reducedPanic=false)
+        public void Tick(float urgency,bool reducedPanic=false,float dt=.02f)
         {
             if(!heart||!breath)return;
-            urgency=float.IsNaN(urgency)||float.IsInfinity(urgency)?0:Mathf.Clamp01(urgency);
             float gain=PanicAudioSettingsV56.EffectiveSfxGain;
-            heart.volume=(reducedPanic?Mathf.Lerp(.085f,.16f,urgency):Mathf.Lerp(.13f,.28f,urgency))*gain;
-            heart.pitch=reducedPanic?Mathf.Lerp(1f,1.16f,urgency):Mathf.Lerp(1.05f,1.48f,urgency);
-            breath.volume=(reducedPanic?Mathf.Lerp(.026f,.05f,urgency):Mathf.Lerp(.045f,.095f,urgency))*gain;
-            breath.pitch=reducedPanic?Mathf.Lerp(.94f,1.08f,urgency):Mathf.Lerp(1f,1.36f,urgency);
-            if(!heart.isPlaying)heart.Play();if(!breath.isPlaying)breath.Play();
+            if(gain<=0f||(!Application.isFocused&&!Application.runInBackground)){Stop();return;}
+            urgency=float.IsNaN(urgency)||float.IsInfinity(urgency)?0f:Mathf.Clamp01(urgency);
+            dt=float.IsNaN(dt)||float.IsInfinity(dt)?0f:Mathf.Clamp(dt,0f,.1f);
+            onset=Mathf.MoveTowards(onset,1f,dt/1.1f);float fade=Mathf.SmoothStep(0f,1f,onset);
+            heart.volume=PanicMusicMixPolicyV59.Heart(urgency,reducedPanic,gain)*fade;
+            breath.volume=PanicMusicMixPolicyV59.Breath(urgency,reducedPanic,gain)*fade;
+            heart.pitch=reducedPanic?Mathf.Lerp(1f,1.14f,urgency):Mathf.Lerp(1.04f,1.34f,urgency);
+            breath.pitch=reducedPanic?1f:Mathf.Lerp(1f,1.06f,urgency);
+            if(heart.clip&&!heart.isPlaying)heart.Play();if(breath.clip&&!breath.isPlaying)breath.Play();
         }
-        public void Stop(){if(heart)heart.Stop();if(breath)breath.Stop();}
-        static AudioClip MakeHeart()
-        {
-            const int rate=22050;var data=new float[rate];
-            for(int i=0;i<data.Length;i++)
-            {
-                float t=i/(float)rate;
-                float first=t<.16f?Mathf.Sin(t*Mathf.PI*2*58)*Mathf.Exp(-t*29)*Mathf.Sin(Mathf.Clamp01(t/.012f)*Mathf.PI*.5f):0;
-                float b=t-.19f;float second=b>=0&&b<.14f?Mathf.Sin(b*Mathf.PI*2*71)*Mathf.Exp(-b*33)*Mathf.Sin(Mathf.Clamp01(b/.010f)*Mathf.PI*.5f)*.65f:0;
-                data[i]=(first+second)*.55f;
-            }
-            var clip=AudioClip.Create("V414_OriginalSoftHeartbeat",data.Length,1,rate,false);clip.SetData(data,0);return clip;
-        }
-        static AudioClip MakeBreath()
-        {
-            const int rate=22050;var data=new float[rate*3];uint seed=0x414BA6u;float low=0;
-            for(int i=0;i<data.Length;i++)
-            {
-                seed=1664525u*seed+1013904223u;float noise=((seed>>8)/16777215f)*2-1;low=Mathf.Lerp(low,noise,.09f);
-                float t=i/(float)rate;float inhale=Mathf.Sin(Mathf.PI*Mathf.Clamp01(t/1.28f));float exhale=Mathf.Sin(Mathf.PI*Mathf.Clamp01((t-1.40f)/1.45f));
-                float envelope=t<1.28f?inhale*.65f:t>1.40f?exhale:0;data[i]=low*envelope*.32f;
-            }
-            var clip=AudioClip.Create("V414_OriginalNonverbalBreath",data.Length,1,rate,false);clip.SetData(data,0);return clip;
-        }
+        public void Stop()
+        {onset=0f;if(heart){heart.volume=0;heart.Stop();}if(breath){breath.volume=0;breath.Stop();}}
         public void Dispose()
-        {Stop();if(root)UnityEngine.Object.Destroy(root);if(ownsHeart&&heartClip)UnityEngine.Object.Destroy(heartClip);if(breathClip)UnityEngine.Object.Destroy(breathClip);root=null;heart=null;breath=null;heartClip=null;breathClip=null;}
+        {
+            Stop();if(root)UnityEngine.Object.Destroy(root);
+            // Resources.Load assets remain valid for the music owner and subsequent runs.
+            root=null;heart=null;breath=null;heartClip=null;breathClip=null;
+        }
     }
 }

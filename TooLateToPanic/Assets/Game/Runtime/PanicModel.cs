@@ -73,12 +73,10 @@ namespace TooLateToPanic
     /// </summary>
     public sealed partial class PanicModel
     {
-        private const int StartingBudget = 2500;
+        private const int StartingBudget = PanicEconomyV59.StartingBudget;
         private const int WaterCost = 50;
         private const int FoodCost = 50;
         private const int AnchorCost = 50;
-        private const int TierOneCost = 150;
-        private const int TierTwoCost = 250;
         private const int FloodGuardCost = 150;
         private const int FireProtectionCost = 150;
         private const int SupportCost = 100;
@@ -86,8 +84,8 @@ namespace TooLateToPanic
         private const int SupportMask = 15;
         public const float DamageLossLimit = 75f;
         public const int RequiredSupplyPerWave = 1;
-        public const float NormalPrecautionSeconds = 120f;
-        public const float NormalBagSeconds = 45f;
+        public const float NormalPrecautionSeconds = 90f;
+        public const float NormalBagSeconds = 40f;
         public const float NormalPreparationSeconds = NormalPrecautionSeconds + NormalBagSeconds;
         private const int ScoreTableSchema = 1;
 
@@ -261,7 +259,7 @@ namespace TooLateToPanic
                     if (!prepWarningShown && before > 60f && TimeRemaining <= 60f)
                     {
                         prepWarningShown = true;
-                        Message = IsSimulation ? "Son 60 saniye: hazırlık süresi bitmeden önlemlerini tamamla." : "Son 60 saniye: önlemlerini tamamla. Son 45 saniyede çanta hazırlığı başlayacak.";
+                        Message = IsSimulation ? "Son 60 saniye: hazırlık süresi bitmeden önlemlerini tamamla." : "Son 60 saniye: önlemlerini tamamla. Son 40 saniyede çanta hazırlığı başlayacak.";
                     }
 
                     if (TimeRemaining <= 0f)
@@ -308,7 +306,7 @@ namespace TooLateToPanic
             ResetRunState(false);
             BeginWaveOne();
             Phase = PanicPhase.Preparing;
-            Message = "Öğretici tamamlandı. Gerçek koşu 1. dalga ve 2.500 bütçeyle başladı.";
+            Message = "Öğretici tamamlandı. Gerçek koşu 1. dalga ve 1.500 bütçeyle başladı.";
             MarkRunCheatedIfOptionsEnabled();
         }
 
@@ -321,7 +319,7 @@ namespace TooLateToPanic
             if (!IsStructure(item)) return RefuseBool("Bu parça yükseltilemez.");
             if (item.Tier >= 2) return RefuseBool(item.Label + " zaten en yüksek kademe olan T2.");
 
-            int cost = item.Tier == 0 ? TierOneCost : TierTwoCost;
+            int cost = PanicEconomyV59.UpgradeBudgetCost(item);
             if (!CanAfford(cost)) return RefuseBool("Bütçe yetersiz: bu yükseltme " + cost + " bütçe gerektiriyor.");
             SpendBudget(cost);
             item.Tier++;
@@ -570,7 +568,7 @@ namespace TooLateToPanic
             Phase = PanicPhase.Preparing;
             TimeRemaining = PhaseTime = 100f;
             MarkRunCheatedIfOptionsEnabled();
-            Message = "Önce evini hazırla. Son 45 saniyede suyu al; çantanda 1 gıda hazır.";
+            Message = "Önce evini hazırla. Son 40 saniyede suyu al; çantanda 1 gıda hazır.";
             return true;
         }
 
@@ -1021,7 +1019,7 @@ namespace TooLateToPanic
             LastWaveScore = Math.Max(0L, (long)Mathf.Round(scoreValue));
             Score = SaturatingAdd(Score, LastWaveScore);
 
-            float baseReward = 400f + 60f * Mathf.Max(0, Wave - 1);
+            float baseReward = PanicEconomyV59.BaseWaveReward(Wave);
             float damageMultiplier = 1f - 0.5f * (TotalDamage / 100f);
             float supportMultiplier = 1f + 0.05f * SupportCount;
             LastReward = Math.Max(0, Mathf.RoundToInt(baseReward * damageMultiplier * supportMultiplier));
@@ -1371,7 +1369,7 @@ namespace TooLateToPanic
 
         private static float PreparationSeconds()
         {
-            // Every campaign wave preserves 120 seconds for precautions, then 45 for the bag.
+            // Every campaign wave preserves 90 seconds for precautions, then 40 for the bag.
             return NormalPreparationSeconds;
         }
 
