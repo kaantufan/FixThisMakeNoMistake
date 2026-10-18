@@ -35,7 +35,7 @@
   "releaseStatus": "READY_FOR_USER_PLAYTEST_NATIVE_API_RENDER_VERIFIED",
   "requiresUserPlaytest": true,
   "executable": "Builds/Home-V5.13-r7-20261018/TooLateToPanic.exe",
-  "portableZip": "Builds/TooLateToPanic-Home-V5.13-r7-20261018-portable.zip",
+  "portableZip": "Builds/TooLateToPanic_FixThisMakeNoMistake.zip",
   "portableZipSha256": "FC148A55BE2F89ECDD643A38B8709C35E49EDFC32A0B4E9BA6A5AE8D6C110D23",
   "portableZipBytes": 215414127,
   "portableMatchesBuild": true,
@@ -118,13 +118,7 @@
     "Declared actor/camera and model budget/tier fixtures and API actions; no OS input or natural physical route.",
     "Human readability, listening, comfort and campaign acceptance NOT_RUN."
   ],
-  "preservedRunningBuilds": [
-    {
-      "reason": "Running user player preserved; no input or termination sent.",
-      "executable": "Builds/Home-V5.13-r6-20261018/TooLateToPanic.exe",
-      "pid": 22992
-    }
-  ],
+  "preservedRunningBuilds": [],
   "additionalNative": {
     "passed": true,
     "checks": 291,
@@ -185,7 +179,7 @@
     "remoteZipDigest": "sha256:fc148a55be2f89ecdd643a38b8709c35e49edfc32a0b4e9ba6a5ae8d6c110d23",
     "sourceAndBuildRecord": "Documentation/Publications/v0.5.13-r7/source-and-build.json",
     "releaseReceipt": "Documentation/Publications/v0.5.13-r7/release.json",
-    "verifiedUtc": "2026-10-18T13:27:41.810468+00:00",
+    "verifiedUtc": "2026-10-18T16:27:41.810468+03:00",
     "newBuildOrNativeRunForPublication": false,
     "stableReleasePreserved": "v0.4.13",
     "previousReleasePreserved": "v0.5.13-r6",
@@ -195,15 +189,19 @@
   "maintenance": {
     "cleanupReceipt": "../Evidence/GamejamOrchestra/TLTP-CRITICAL-V513-20261018/manager/cleanup-receipt.json",
     "oldPlayerInputOrTermination": false,
-    "oldPlayerObservedAtEnd": true,
+    "oldPlayerObservedAtEnd": false,
     "realProfilesPreserved": true,
-    "singleCurrentBuildAndZip": false,
-    "runningBuildExceptions": [
-      {
-        "reason": "Running user player preserved; no input or termination sent.",
-        "executable": "Builds/Home-V5.13-r6-20261018/TooLateToPanic.exe",
-        "pid": 22992
-      }
-    ]
+    "singleCurrentBuildAndZip": true,
+    "runningBuildExceptions": []
+  },
+  "localPackageRename": {
+    "utc": "2026-10-18T16:29:49.670884+03:00",
+    "previousPath": "Builds/TooLateToPanic-Home-V5.13-r7-20261018-portable.zip",
+    "currentPath": "Builds/TooLateToPanic_FixThisMakeNoMistake.zip",
+    "sha256": "FC148A55BE2F89ECDD643A38B8709C35E49EDFC32A0B4E9BA6A5AE8D6C110D23",
+    "bytes": 215414127,
+    "reason": "Observed local filename change; current bytes equal the verified published package.",
+    "remoteAssetRenamed": false,
+    "newBuildOrNativeRun": false
   }
 }
