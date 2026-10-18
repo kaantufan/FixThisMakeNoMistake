@@ -1,5 +1,11 @@
 # Too Late to Panic! — çalışma düzeni
 
+## 18 Ekim 2026 — repo ve güncelleme düzeni
+
+Kullanıcının son isteğiyle `CONTRIBUTING.md`, `Docs/RELEASE-WORKFLOW.md` ve `Docs/JAM-RULES-CHECKLIST.md` bütün sonraki proje güncellemelerinde uygulanır. Kaynak klasörleri/GUID'ler ve tarihsel küçük kanıtlar korunur; tek güncel build + ZIP, launcher/LATEST/README tutarlılığı, ayrı immutable yayın kopyası ve kaynak–paket kimlik ayrımı esastır. Cache, özel kayıt, Evidence ve bağımsız FPS kaynak yayınına girmez. Yeni belge veya kaynak snapshot'ı eski paketi yeniden test edilmiş saydırmaz.
+
+Son teslim duyurusu: 18 Ekim 2026 12.00–18.15 UTC+3; video en fazla 1 dakika, MP4/AVI ve ZIP'ten ayrı; sahne toplam 3 dakika ve video dahildir. AI görsel/ses/kod/metin/diğer kategorilerinde ayrı açıklanır. Bu son doğrudan kullanıcı duyurusu eski kitapçık veya planlardaki farklı video/sunum sürelerini günceller. Şimdiki yetki temizlik, GitHub ve dokümantasyondur; yarışma formuna gönderim/yükleme yoktur. Daha önce kapatılan otomatik yayın takibi kendiliğinden yeniden başlatılmaz.
+
 ## Home V5.2 — dalga şiddeti
 
 Güncel sözleşme `Evidence/GamejamOrchestra/TLTP-V52-20261018/CONTRACT.md`; teslim/kimlik yalnız güncel LATEST ve HOME-V5.2-DELIVERY-2026-10-18.md ile bağlıdır. Kampanya hasar çarpanı `PanicWaveDifficultyV52`:1/5/10/20/50dalga =1/1.32/1.72/2.17/3.52. İlk dalga varyasyonu sabit tutulur; sonraki temel risk aynı eşya/afet/önlem için artar. Toplam0..100orantılı katkı, kayıp75%. Önlem/ankraj/yükseltme, küçük memoize tesisat RNG'si korunur. Görsel/afet sesi1..1.65ile sınırlıdır ve aynı model eğrisinden gelir; simülasyon/öğretici/kısa akış1kalır. F3koruması tek dalga, ödülsüz ve skor dışıdır. Açık önceki player'a girdi/sonlandırma gönderilmez. Eski sonuçlar yeni DLLkanıtı değildir.
@@ -180,3 +186,10 @@ V5.8'in garaj/NPC/sel beş kaynak dosyası byte aynıdır. Yeni kaynak/build/ZIP
 Son ek kullanıcı isteğiyle bütün manuel işlerde mevcut gerçek fare/SPACE/ok/ESC girdileri tuş kapağı olarak gösterilir; çekiçte yalnız işaretli hedefe tıklama, ayrı vuruş ve ücretsiz iptal korunur.
 
 Son defter isteğiyle bütün altı sayfa/giriş/yardımcı metinleri incelendi ve kısaltıldı. UI başlıkları tr-TR büyük harf dönüşümü kullanır; EV PLANI sonundaki küçük ı düzelir. Stok Toplanmadı/Toplandı/Tükendi, önlem Yapılmadı/Kısmen hazır/Hazır ve gerekmiyorsa Gerekli değil gösterir; sayılar aynı üretim verisidir. Dünya etkileşim balonları ve çizgileri altyazıdan kaçınır. Yeni Repaint/all-page kanıtı güncel DLL ile bağlıdır.
+
+
+## Home V5.9-r7 — defter hedefinin yerel parlaması
+
+Son kullanıcı isteğiyle BURADA/DEFTER HEDEFİ kartı, mesafe, ekran köşe braketleri ve uzaktan/başka kattan yön gösterimi kaldırıldı. Elle seçilen gerçek nesne yalnız ev içinde aynı katta ve en fazla 8 metre yakında kendi görünen mesh yüzeyi/konturunda hafif sıcak parlar. Derinlik testiyle duvar arkasından parlamaz; modal/aşama/iptal/yeniden koşu kapıları ve azaltılmış harekette sabit parlama korunur. Önceki küresel hedef kartı kararı bu dar istekle güncellendi. Model, RNG, fizik, bütçe, stok, zaman ve kayıtlar değişmez.
+
+Kesin kaynak/build/native sayıları yalnız LATEST ve HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md ile bağlıdır. Önceki R5 943 testi yeni DLL için sayılmaz; R7 yalnız güncel UI/yerel parlama suite kullanır. OS/insan kabulü ayrı kalır. Açık kullanıcı oyuncusu korunur; temizlik ve yayın yapılmaz.

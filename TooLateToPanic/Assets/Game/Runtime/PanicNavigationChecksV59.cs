@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6,167 +6,88 @@ using UnityEngine;
 
 namespace TooLateToPanic
 {
-    /// <summary>Explicit helper for the root's isolated same-DLL UI driver. No self-attach, OS input,
-    /// actor placement, remote interaction, clock/phase writes, physics changes or model Tick.</summary>
+    // Opt-in current UI driver hook. Declared actor/view fixtures, never OS input or a natural route.
     public static class PanicNavigationChecksV59
     {
-        [Serializable] public sealed class Observation
-        {
-            public string id, target, mode, text;
-            public int frame, width, height, drawFrame;
-            public Rect outline, label;
-        }
         [Serializable] public sealed class Receipt
         {
-            public string layer = "NATIVE_API_AND_ACTUAL_HUD_REPAINT_NOT_OS_OR_HUMAN";
-            public bool complete, osInput, humanAcceptance;
+            public string layer = "NATIVE_LOCAL_ACTUAL_MESH_COMMANDS_AND_FRAMEBUFFERS_NOT_OS_OR_HUMAN";
+            public bool complete;
             public List<string> fixtures = new List<string>();
             public List<string> failures = new List<string>();
-            public List<Observation> observations = new List<Observation>();
         }
         static IEnumerator Wait(float seconds)
-        { float until = Time.realtimeSinceStartup + seconds; while (Time.realtimeSinceStartup < until) yield return null; }
+        { float until=Time.realtimeSinceStartup+seconds;while(Time.realtimeSinceStartup<until)yield return null; }
+        static void Check(Receipt r,Action<string,bool,string> record,string id,bool pass,string detail)
+        { if(!pass)r.failures.Add(id);record("navigation.local-v59."+id,pass,detail); }
         static string State(PanicHomeWorld w)
+        { return PanicNotebookVerification.GameplayFingerprint(w)+"|"+w.Model.SecondaryRollCountV5+"|"+JsonUtility.ToJson(UnityEngine.Random.state)+"|"+w.SelectedTargetIdV56+"|"+w.PlayerPosition; }
+        public static IEnumerator Run(PanicHomeWorld w,PanicHomeHud h,Action<string,bool,string> record,
+            Func<string,string,IEnumerator> capture,Func<int,int,IEnumerator> resolution)
         {
-            string result = PanicNotebookVerification.GameplayFingerprint(w) + "|" + w.Model.SecondaryRollCountV5 + "|" +
-                w.Model.SecondaryEventSummaryV5 + "|" + w.Model.UtilitySafety.GasClosed + ":" + w.Model.UtilitySafety.WaterClosed + ":" + w.Model.UtilitySafety.PowerOff;
-            foreach (var supply in w.Expedition.WorldSupplies) result += "|" + supply.Id + ":" + supply.Count;
-            return result;
-        }
-        static void Check(Receipt r, Action<string, bool, string> record, string id, bool pass, string detail)
-        { if (!pass) r.failures.Add(id); record("navigation.v59." + id, pass, detail); }
-        static bool InCanvas(Rect r)
-        { return r.width > 0f && r.height > 0f && r.xMin >= 0 && r.yMin >= 0 && r.xMax <= 1600.5f && r.yMax <= 900.5f; }
-        static void Observe(Receipt r, string id, PanicHomeHud h)
-        {
-            r.observations.Add(new Observation { id = id, frame = Time.frameCount, width = Screen.width, height = Screen.height,
-                target = h.NotebookCursorRenderedIdV59, mode = h.NotebookCursorRenderedModeV59.ToString(),
-                text = h.NotebookCursorRenderedTextV59, drawFrame = h.NotebookCursorDrawFrameV59,
-                outline = h.NotebookCursorRenderedOutlineV59, label = h.NotebookCursorRenderedLabelV59 });
-        }
-        static IEnumerator ActualHud(Receipt r, Action<string, bool, string> record, PanicHomeWorld w, PanicHomeHud h,
-            string id, PanicNotebookCursorModeV59 mode, Func<string, string, IEnumerator> capture)
-        {
-            int before = h.NotebookCursorDrawCountV59; float until = Time.realtimeSinceStartup + 2f;
-            while (h.NotebookCursorDrawCountV59 <= before && Time.realtimeSinceStartup < until) yield return null;
-            yield return new WaitForEndOfFrame();
-            bool here = mode == PanicNotebookCursorModeV59.Here;
-            Check(r, record, id + ".actual-repaint", h.NotebookCursorDrawFrameV59 >= Time.frameCount - 1 &&
-                h.NotebookCursorDrawCountV59 > before && h.NotebookCursorRenderedIdV59 == w.NotebookTargetIdV57 &&
-                h.NotebookCursorRenderedModeV59 == mode && h.NotebookCursorRenderedTextV59.Contains(w.NotebookTargetLabelV57) &&
-                h.NotebookCursorRenderedTextV59.Contains("DEFTER HEDEFİ") && InCanvas(h.NotebookCursorRenderedLabelV59) &&
-                (here ? InCanvas(h.NotebookCursorRenderedOutlineV59) && h.NotebookCursorRenderedTextV59.Contains("BURADA") :
-                    h.NotebookCursorRenderedOutlineV59.width == 0 && !h.NotebookCursorRenderedTextV59.Contains("BURADA")),
-                "Actual main-HUD Repaint uses manual id/name and correct here/floor mode. Other floors receive no outline and never say BURADA. Pixel quality requires root review.");
-            Observe(r, id, h);
-            yield return capture("notebook-cursor-v59-" + id,
-                "Actual graphical HUD for a real manual source, at the retained production spawn/view. No actor/camera placement, OS input or human readability acceptance.");
-        }
-
-        public static IEnumerator Run(PanicHomeWorld w, PanicHomeHud h, Action<string, bool, string> record,
-            Func<string, string, IEnumerator> capture, Func<int, int, IEnumerator> resolution)
-        {
-            var r = new Receipt(); bool priorHelper = w.AssistantEnabledV55, priorInput = w.FullFlowScriptedInput;
-            bool priorMotion = w.ReducedFpsMotionV54; int width = Screen.width, height = Screen.height;
-            r.fixtures.Add("Public ReturnToMenu/StartGame(false), production onboarding confirmation and SkipIntroStory; retained normal spawn/controller, no Warp or time edit. Public pin API is a declared manual-selection fixture; existing V5.7 notebook pointer suite must also run.");
-            r.fixtures.Add("Automatic assistant OFF to prove manual independence; public pause/notebook/inventory/F1/developer modal lifecycles; preferences restored. Resolution 1600x900 and 960x540 with actual frame captures.");
-            r.fixtures.Add("One synchronous view-only behind-camera projection fixture rotates the actual camera 180 degrees, calls layout, and restores its exact pose in finally before yielding or rendering. This is layout arithmetic evidence only, never a gameplay camera/render result.");
+            var r=new Receipt();bool priorHelper=w.AssistantEnabledV55,priorInput=w.FullFlowScriptedInput,priorMotion=w.ReducedFpsMotionV54;
+            int width=Screen.width,height=Screen.height;
+            r.fixtures.Add("Public normal start/skip, manual fridge pin; helper OFF. Explicit actor placements: production exterior spawn, inside(4,.05,1.5), far inside(-7,.05,-4), exterior(4,.05,-8), restore inside. No movement/route acceptance.");
+            r.fixtures.Add("Synchronous 180degree camera query restored before yielding. Native surfaces1600x900/960x540; ordinary camera follow and actual depth-tested mesh command buffer. Modal APIs and reduced-motion preference restored.");
             try
             {
-                if (string.IsNullOrEmpty(w.EvidencePath) || string.IsNullOrEmpty(PanicModel.ScorePathOverride))
-                    throw new InvalidOperationException("Navigation checks require the root's isolated evidence driver and score override.");
-                h.SetPaused(false); w.ReturnToMenu(); yield return null;
-                Check(r, record, "normal-play-label", PanicHomeHud.TitleChoiceLabelV414(0) == "OYNA", "Choice0 retains StartRun semantics; visible normal action is OYNA.");
-                Check(r, record, "other-mode-labels", PanicHomeHud.TitleChoiceLabelV414(1) == "KISA OYUN" &&
-                    PanicHomeHud.TitleChoiceLabelV414(2) == "AFETİ DENE" && PanicHomeHud.TitleChoiceLabelV414(3) == "NASIL OYNANIR",
-                    "The existing short scenario, simulation selector and tutorial remain separate existing actions.");
-                w.StartGame(false); w.FullFlowScriptedInput = true; yield return null;
-                if (h.FreeplayOnboardingOpenV414) h.ConfirmFreeplayOnboardingV414();
-                yield return null; w.SkipIntroStoryV414(); yield return Wait(.6f);
-                w.SetAssistantEnabledV55(false); yield return resolution(1600, 900);
-                Check(r, record, "no-manual-pin-no-cursor", !w.HasNotebookTargetV57 && !h.NotebookCursorVisibleV59,
-                    "An automatic suggestion or near/Q selection alone cannot create a manual cursor.");
-                string state = State(w), rng = JsonUtility.ToJson(UnityEngine.Random.state); Vector3 actor = w.PlayerPosition;
-                string selected = w.SelectedTargetIdV56, hereId = null, otherId = null;
-                foreach (var source in w.Expedition.Sources)
-                {
-                    if (source.Floor != w.ActiveFloor) { if (otherId == null) otherId = source.Id; continue; }
-                    if (w.TryMarkNotebookTargetV57(source.Id) && h.TryGetNotebookCursorLayoutV59(out var layout) && layout.Mode == PanicNotebookCursorModeV59.Here)
-                    { hereId = source.Id; break; }
-                }
-                if (otherId == null) foreach (var source in w.Expedition.Sources) if (source.Floor != w.ActiveFloor) { otherId = source.Id; break; }
-                Check(r, record, "real-onscreen-source", hereId != null, "Choose an actual source visible from production spawn without moving the actor or changing the view.");
-                if (hereId == null) yield break;
-                for (int i = 0; i < 24; i++) h.TryGetNotebookCursorLayoutV59(out var ignored);
-                Check(r, record, "pin-and-layout-pure", state == State(w) && rng == JsonUtility.ToJson(UnityEngine.Random.state) &&
-                    actor.Equals(w.PlayerPosition) && selected == w.SelectedTargetIdV56 && !w.AssistantEnabledV55,
-                    "Pin/layout reads retain real costs, stock, score, utilities, model+Unity RNG evidence, position and independent current near/Q selection; clock intentionally excluded.");
-                Check(r, record, "real-world-bounds", w.TryGetNotebookCursorTargetV59(out var id, out var label, out var actualBounds, out var floor) &&
-                    id == hereId && floor == w.ActiveFloor && w.TryGetInteractionBounds(id, out var expectedBounds) && actualBounds.Equals(expectedBounds),
-                    "Cursor derives its bounds from the existing real interaction-object bounds API and floor from source metadata.");
-                yield return ActualHud(r, record, w, h, "here-1600", PanicNotebookCursorModeV59.Here, capture);
-                yield return resolution(960, 540); yield return ActualHud(r, record, w, h, "here-960", PanicNotebookCursorModeV59.Here, capture);
-                yield return resolution(1600, 900);
-                w.SetReducedFpsMotionV54(true); yield return Wait(.2f); float firstGlow = h.NotebookCursorRenderedGlowV59;
-                yield return Wait(.25f);
-                Check(r, record, "reduced-motion-steady", h.NotebookCursorDrawFrameV59 >= Time.frameCount - 1 &&
-                    Mathf.Abs(firstGlow - .85f) < .0001f && Mathf.Abs(h.NotebookCursorRenderedGlowV59 - firstGlow) < .0001f,
-                    "Actual reduced-motion preference holds the marker glow steady across rendered wall frames.");
+                if(string.IsNullOrEmpty(w.EvidencePath)||string.IsNullOrEmpty(PanicModel.ScorePathOverride))throw new InvalidOperationException("Isolated root QA driver required.");
+                h.SetPaused(false);w.ReturnToMenu();w.StartGame(false);w.FullFlowScriptedInput=true;yield return null;
+                if(h.FreeplayOnboardingOpenV414)h.ConfirmFreeplayOnboardingV414();yield return null;w.SkipIntroStoryV414();yield return Wait(.35f);
+                w.SetAssistantEnabledV55(false);yield return resolution(1600,900);
+                Check(r,record,"no-pin-no-glow",!w.HasNotebookTargetV57&&!w.NotebookGlowActiveV59,"Ordinary nearby selection cannot create a notebook glow.");
+                Check(r,record,"manual-fridge-pin",w.TryMarkNotebookTargetV57("fridge"),"Actual public manual source selection, no automatic target choice.");
+                yield return Wait(.1f);
+                Check(r,record,"spawn-exterior-no-global-glow",!w.NotebookGlowActiveV59,"Production spawn outside residence receives no notebook marker or glow.");
+                yield return capture("local-glow-exterior-1600","Actual exterior spawn with fridge pin; no global card, bracket or arrow.");
+                w.Warp(new Vector3(4f,.05f,1.5f));w.SetFocus("door_main");yield return Wait(.65f);
+                Check(r,record,"inside-real-geometry",w.NotebookGlowActiveV59&&w.NotebookGlowTargetIdV59=="fridge"&&w.NotebookGlowRendererCountV59>0&&
+                    w.TryGetNotebookGlowStateV59(out var id,out var bounds,out var floor)&&w.TryGetInteractionBounds(id,out var expected)&&bounds.Equals(expected)&&floor==w.ActiveFloor,
+                    "Same actual floor and local source mesh bounds; manual pin is independent of current door focus.");
+                Check(r,record,"no-global-manual-helper",!h.AssistantHudVisibleV55&&!h.AssistantCardVisibleV55,"Even the old small corner manual target card is suppressed; only local mesh glow remains.");
+                var pass=w.View.GetComponent<PanicSelectionSilhouette>();yield return new WaitForEndOfFrame();
+                Check(r,record,"actual-mesh-pass-submitted",pass&&pass.PassReady&&pass.NotebookRendererCount>0&&pass.NotebookRenderedFrame>=Time.frameCount-1,
+                    "Native camera emitted actual mesh mask/composite commands. Submitted draws are not an unobscured-pixel claim; root inspects paired captures.");
+                string state=State(w);for(int i=0;i<20;i++)w.TryGetNotebookGlowStateV59(out var ignoredId,out var ignoredBounds,out var ignoredFloor);
+                Check(r,record,"read-only-query",state==State(w),"Synchronous before/after actual gameplay, stock, RNG, current focus and actor fingerprint unchanged; clock excluded.");
+                yield return capture("local-glow-fridge-1600","Actual local warm surface/mesh contour on pinned fridge; no floating target card or brackets.");
+                w.ClearNotebookTargetV57();yield return Wait(.05f);
+                Check(r,record,"clear-removes-mesh-pass",!w.NotebookGlowActiveV59&&pass.NotebookRendererCount==0,"Actual public clear removes only notebook list; original near selection/gather ownership retained.");
+                yield return capture("local-glow-fridge-unselected-1600","Same actor/view as glow frame, manual pin cleared; compare actual visible surface.");
+                w.TryMarkNotebookTargetV57("fridge");yield return resolution(960,540);
+                yield return capture("local-glow-fridge-960","Actual same local mesh glow at960x540; no screen locator.");
+                w.SetReducedFpsMotionV54(true);yield return Wait(.1f);float a=w.NotebookGlowStrengthV59;yield return Wait(.16f);
+                Check(r,record,"reduced-motion-steady",w.NotebookGlowActiveV59&&Mathf.Abs(a-.85f)<.0001f&&Mathf.Abs(w.NotebookGlowStrengthV59-a)<.0001f,"Reduced motion holds actual warm glow strength steady.");
                 w.SetReducedFpsMotionV54(priorMotion);
-
-                Vector3 cameraPosition = w.View.transform.position; Quaternion cameraRotation = w.View.transform.rotation;
-                try
-                {
-                    w.View.transform.rotation = cameraRotation * Quaternion.Euler(0f, 180f, 0f);
-                    Check(r, record, "behind-camera-direction-layout", h.TryGetNotebookCursorLayoutV59(out var behind) &&
-                        behind.Mode == PanicNotebookCursorModeV59.Offscreen && behind.Outline.width == 0 && behind.Heading == "BU YÖNDE" &&
-                        behind.Anchor.x >= 32f && behind.Anchor.x <= 1568f && behind.Anchor.y >= 160f && behind.Anchor.y <= 716f,
-                        "Declared synchronous camera fixture: behind-camera manual target becomes a bounded directional cue, with no false here/outline. No frame captured in fixture pose.");
-                }
-                finally { w.View.transform.SetPositionAndRotation(cameraPosition, cameraRotation); }
-
-                h.SetPaused(true); yield return new WaitForEndOfFrame();
-                Check(r, record, "pause-hides-retains-pin", !h.NotebookCursorVisibleV59 && !h.NotebookCursorRenderedV59 && w.NotebookTargetIdV57 == hereId,
-                    "Actual standard pause removes the cursor but keeps manual intent.");
-                h.SetPaused(false); yield return null;
-                bool opened = w.Notebook.RequestOpen(); float clock = w.Model.TimeRemaining; yield return Wait(.45f);
-                Check(r, record, "notebook-hides-pauses", opened && !h.NotebookCursorVisibleV59 && !h.NotebookCursorRenderedV59 &&
-                    w.NotebookTargetIdV57 == hereId && Mathf.Abs(w.Model.TimeRemaining - clock) < .003f,
-                    "Actual notebook modal hides the world cursor and its existing timer owner remains effective.");
-                w.Notebook.RequestClose(); yield return Wait(.5f);
-                w.ToggleInventory(); yield return null;
-                Check(r, record, "inventory-hides", w.InventoryOpen && !h.NotebookCursorVisibleV59, "Actual shared inventory modal suppresses locator.");
-                if (w.InventoryOpen) w.ToggleInventory(); yield return null;
-                bool help = h.OpenKeyboardHelpV56(); yield return null;
-                Check(r, record, "f1-hides", help && !h.NotebookCursorVisibleV59, "Actual F1 owner suppresses locator.");
-                h.CloseKeyboardHelpV56(); yield return Wait(.5f);
-                h.SetDeveloperMenuOpen(true); yield return null;
-                Check(r, record, "developer-menu-hides", h.DeveloperMenuOpen && !h.NotebookCursorVisibleV59, "F2 menu appearance alone suppresses locator without applying a developer option.");
-                h.SetDeveloperMenuOpen(false); yield return Wait(.2f);
-
-                Check(r, record, "real-other-floor-source", otherId != null && w.TryMarkNotebookTargetV57(otherId), "Use an authored source on a different actual floor; actor remains at spawn.");
-                if (otherId != null)
-                {
-                    yield return ActualHud(r, record, w, h, "other-floor-1600", PanicNotebookCursorModeV59.OtherFloor, capture);
-                    yield return resolution(960, 540); yield return ActualHud(r, record, w, h, "other-floor-960", PanicNotebookCursorModeV59.OtherFloor, capture);
-                }
-                w.ClearNotebookTargetV57(); yield return new WaitForEndOfFrame();
-                Check(r, record, "same-clear-removes-locator", !w.HasNotebookTargetV57 && !h.NotebookCursorVisibleV59 && !h.NotebookCursorRenderedV59,
-                    "Existing public pin clear removes both cursor and outline without adding another state owner.");
-                w.TryMarkNotebookTargetV57(hereId); w.StartGame(false);
-                Check(r, record, "same-wave-restart-clears", !w.HasNotebookTargetV57 && !h.NotebookCursorVisibleV59,
-                    "Existing production same-wave restart synchronously clears manual intent, including its locator.");
-                r.complete = true;
+                Quaternion rotation=w.View.transform.rotation;
+                try { w.View.transform.rotation=rotation*Quaternion.Euler(0,180,0);
+                    Check(r,record,"offscreen-has-no-direction",!w.TryGetNotebookGlowStateV59(out var offId,out var offBounds,out var offFloor),"View-only query rejects target behind camera; no fallback arrow or edge card."); }
+                finally { w.View.transform.rotation=rotation; }
+                h.SetPaused(true);yield return new WaitForEndOfFrame();
+                Check(r,record,"pause-clears",!w.NotebookGlowActiveV59&&pass.NotebookRendererCount==0&&w.HasNotebookTargetV57,"Camera-time guard clears notebook draw during real pause but retains manual intent.");h.SetPaused(false);yield return null;
+                w.ToggleInventory();yield return new WaitForEndOfFrame();
+                Check(r,record,"inventory-clears",w.InventoryOpen&&!w.NotebookGlowActiveV59&&pass.NotebookRendererCount==0,"Actual inventory hides local glow.");if(w.InventoryOpen)w.ToggleInventory();yield return null;
+                bool opened=w.Notebook.RequestOpen();yield return Wait(.3f);
+                Check(r,record,"notebook-clears",opened&&!w.NotebookGlowActiveV59&&pass.NotebookRendererCount==0,"Actual notebook modal clears mesh commands.");w.Notebook.RequestClose();yield return Wait(.4f);
+                w.TryMarkNotebookTargetV57("basement_pantry");yield return Wait(.1f);
+                Check(r,record,"other-floor-no-glow",!w.NotebookGlowActiveV59&&pass.NotebookRendererCount==0,"Different-floor pin has no world label or glow.");
+                yield return capture("local-glow-other-floor-960","Ground-floor actor with actual basement pin; no global or other-floor world indicator.");
+                w.TryMarkNotebookTargetV57("fridge");w.Warp(new Vector3(-7f,.05f,-4f));yield return Wait(.3f);
+                Check(r,record,"far-same-floor-no-glow",!w.NotebookGlowActiveV59&&pass.NotebookRendererCount==0,"Inside same floor beyond8metres receives no local cue.");
+                w.Warp(new Vector3(4f,.05f,-8f));yield return Wait(.3f);
+                Check(r,record,"outside-no-glow",!w.NotebookGlowActiveV59&&pass.NotebookRendererCount==0,"House pin cannot glow while player is outside.");
+                w.Warp(new Vector3(4f,.05f,1.5f));yield return Wait(.45f);
+                Check(r,record,"return-inside-resumes",w.NotebookGlowActiveV59&&w.NotebookGlowTargetIdV59=="fridge","Retained manual intent resumes local glow on return; no model mutation.");
+                w.StartGame(false);yield return null;
+                Check(r,record,"restart-clears",!w.HasNotebookTargetV57&&!w.NotebookGlowActiveV59,"Existing production restart clears manual pin and native mesh list.");
+                r.complete=true;
             }
             finally
             {
-                h.SetDeveloperMenuOpen(false); h.CloseKeyboardHelpV56(); h.SetPaused(false);
-                w.SetAssistantEnabledV55(priorHelper); w.SetReducedFpsMotionV54(priorMotion);
-                w.ReturnToMenu(); w.FullFlowScriptedInput = priorInput;
-                if (!string.IsNullOrEmpty(w.EvidencePath))
-                    File.WriteAllText(Path.Combine(w.EvidencePath, "navigation-v59.json"), JsonUtility.ToJson(r, true));
+                h.SetPaused(false);w.SetAssistantEnabledV55(priorHelper);w.SetReducedFpsMotionV54(priorMotion);w.ReturnToMenu();w.FullFlowScriptedInput=priorInput;
+                if(!string.IsNullOrEmpty(w.EvidencePath))File.WriteAllText(Path.Combine(w.EvidencePath,"navigation-v59.json"),JsonUtility.ToJson(r,true));
             }
-            yield return resolution(width, height);
+            yield return resolution(width,height);
         }
     }
 }

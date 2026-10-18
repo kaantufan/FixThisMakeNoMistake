@@ -113,16 +113,14 @@ namespace TooLateToPanic
         }
         static IEnumerator Hud(Receipt r, Action<string, bool, string> record, PanicHomeWorld w, PanicHomeHud h, int width, Func<string, string, IEnumerator> capture, Func<int, int, IEnumerator> resolution)
         {
-            yield return resolution(width, width == 1600 ? 900 : 540); int draws = h.AssistantHudDrawFramesV55;
-            float until = Time.realtimeSinceStartup + 2f;
-            while ((!h.AssistantHudVisibleV55 || h.AssistantHudDrawFramesV55 <= draws) && Time.realtimeSinceStartup < until) yield return null;
+            yield return resolution(width, width == 1600 ? 900 : 540);
+            yield return Wait(.08f);
             yield return new WaitForEndOfFrame();
             Rect bounds = Pixels(h, h.AssistantRenderedBoundsV55); string label = w.NotebookTargetLabelV57;
-            Check(r, record, "hud.actual-manual-label." + width, h.AssistantHudVisibleV55 && h.AssistantHudLastDrawFrameV55 >= Time.frameCount - 1 && h.AssistantHudDrawFramesV55 > draws &&
-                h.AssistantRenderedTextV55.Contains("İŞARETLİ HEDEF") && h.AssistantRenderedTaskV55 == label && h.AssistantRenderedHintV55.Contains(" m") && h.AssistantRenderedHintV55.Contains("J") && Fits(bounds),
-                "Actual HUD Repaint contains full manual source label=" + label + ", floor/distance/J hint and in-frame bounds=" + bounds + "; frame=" + h.AssistantHudLastDrawFrameV55);
+            Check(r, record, "hud.manual-pin-no-card." + width, w.HasNotebookTargetV57 && !h.AssistantHudVisibleV55 && !h.AssistantCardVisibleV55 && h.AssistantHudLastDrawFrameV55 < Time.frameCount - 1,
+                "Manual source label=" + label + " stays in notebook state; no global helper/target card drawn. Latest user request uses local actual mesh glow only.");
             Observe(r, "hud-" + width, w, h);
-            yield return capture("notebook-target-manual-" + width, "Actual marked-source HUD while automatic assistant remains OFF. Real source label/distance; owner pixel review required. Semantic pointer/API fixture, no OS/human acceptance.");
+            yield return capture("notebook-target-manual-" + width, "Actual manual pin while automatic helper remains OFF: no global target/helper card. Pin stays in notebook; local mesh requires in-house proximity. Semantic pointer/API fixture, no OS/human acceptance.");
         }
         public static IEnumerator Run(PanicHomeWorld w, PanicHomeHud h, Action<string, bool, string> record, Func<string, string, IEnumerator> capture, Func<int, int, IEnumerator> resolution)
         {

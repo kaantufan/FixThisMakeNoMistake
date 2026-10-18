@@ -1,14 +1,19 @@
-[Ll]ibrary/
-[Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
-[Ll]ogs/
-[Uu]ser[Ss]ettings/
-[Mm]emoryCaptures/
-[Rr]ecordings/
-Evidence/
-TooLateToPanicFPS/
+# Local work/evidence and preserved independent FPS experiment
+/Evidence/
+/TooLateToPanicFPS/
+/.claude/
+/.codex/
+
+# Unity outputs and per-machine data
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Ll]ogs/
+**/[Uu]ser[Ss]ettings/
+**/[Bb]uild/
+**/[Bb]uilds/
+**/MemoryCaptures/
+**/Recordings/
 .vs/
 .idea/
 .vscode/
@@ -21,12 +26,29 @@ TooLateToPanicFPS/
 *.mdb
 *.opendb
 *.VC.db
-*.log
-*.tmp
+*.booproj
+
+# Archived Windows TTS is retained locally, excluded from publication
+/TooLateToPanic/Assets/Game/Deferred/Radio-legacy/
+/TooLateToPanic/Assets/Game/Deferred/Radio-legacy.meta
+
+# Private configuration, scores and credentials
 .env
 .env.*
 *.pem
 *.key
 *.pfx
+*.p12
+*.keystore
+**/highscores*.json
+**/scores*.json
+**/savegame*.json
+
+# Operating system and temporary files
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.tmp
+*.log
+*.bak
+__pycache__/

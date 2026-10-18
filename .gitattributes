@@ -1,2 +1,18 @@
-# Preserve exact Unity asset/meta and source bytes used for release provenance.
+# Preserve source and Unity GUID bytes used by SHA256 delivery manifests.
+# Text files remain diffable; no automatic newline normalization is applied.
 * -text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.fbx binary
+*.FBX binary
+*.blend binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary

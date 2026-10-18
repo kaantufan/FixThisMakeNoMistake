@@ -415,6 +415,7 @@ namespace TooLateToPanic
 
         void LateUpdate()
         {
+            TickNotebookLocalGlowV59();
             if (!hero || !animator || Model.IsPaused || Model.WaveLedgerOpenV56 || Model.KeyboardHelpOpenV56 || NotebookBlocksInput) return;
             if (ApplyCinematicCharacterPoseV414()) return;
             // Retained V4.13 locomotion is evaluated solely by Animator after MovePlayer's original parameters.

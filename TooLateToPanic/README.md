@@ -1,9 +1,13 @@
-> **Windows Home V5.9 /0.5.9 /r5:** [Download portable ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.9-r5). Extract the ZIP and run the EXE beside its data folders. Source checkouts do not contain Builds. Unity 6000.0.73f1 / Built-In.
+# Too Late to Panic! — Unity projesi
 
-# Too Late to Panic!
+Güncel yerel sürüm **Home V5.9-r7 / 0.5.9**, Unity **6000.0.73f1**, Built-In, Windows64 ve çevrimdışı tek oyunculu.
 
-Home V5.9: sade menü,1500 bütçe,90 sn önlem+40 sn çanta, ilk Deprem/ikinci Sel+Fırtına/sonrası RNG;6–7 dalga ekonomik ilerleme, defter hedefinde BURADA işareti, ayrı vana/şalter etiketleri ve yenilenen bit/altyazı/gerilim sesleri. V5.8 garaj/NPC/sel düzeltmeleri aynı pakettedir.
+[Oyunu başlat](Play-TooLateToPanic.cmd) · [Güncel kimlik](LATEST-BUILD.json) · [R7 teslimi](Documentation/HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md) · [Ana README](../README.md).
 
-[Başlat](Play-TooLateToPanic.cmd) · [Teslim ve kesin sınırlar](Documentation/HOME-V5.9-DELIVERY-2026-10-18.md) · [Güncel paket](LATEST-BUILD.json)
+Normal kampanya 90 saniye önlem + 40 saniye erzak/FPS, başlangıç bütçesi 1500. İlk dalga Deprem, ikinci Sel + Fırtına; sonrası RNG. Selde üst panik odası, diğer afetlerde oyunun bodrum sığınağı kullanılır. Gerçek maliyet, sonlu stok, fiziksel giriş, ücretsiz iptal ve %75 kayıp sınırı korunur.
 
-Windows derlemesi ve 474/474 gerçek Unity Editor kontrolü geçti. Yazı yerleşimi 273 poz/2185 sınır kontrolünde geçti. 943 aynı DLL native API/render/ses kontrolü ve 90 incelenmiş görüntü geçti; OS girdisi yapılmadı; insan okunurluk/dinleme/90 sn fiziksel kampanya kabulü bekler. Açık eski oyun ve bağımsız FPS projesi korunur.
+WASD/oklar hareket, Shift koşma, Space zıplama; E etkileşim, F alma, Q hedef değiştirme; Tab envanter, J defter, F1 rehber, Esc duraklatma. İşlerin fare/tuş girdileri kendi ekranında gösterilir.
+
+R7 için 472 Editor ve 524 aynı DLL native UI/yerel parlama kontrolü, 69 incelenmiş görüntü, 0 runtime hatası kayıtlıdır. OS girdisi, insan oynanış/dinleme/okunurluk ve kampanya kabulü NOT_RUN. Önceki sürümlerin sonuçları yeni DLL kabulü değildir.
+
+Unity Hub'da bu klasörü açın. `Assets`, `Packages` ve `ProjectSettings` kaynak projenin çekirdeğidir. `Builds` yerel dağıtım alanı; `Library`, `Logs` ve `UserSettings` yerel Unity verileridir. [Lisanslar](Documentation/ASSET-CREDITS.md), [güncelleme düzeni](../Docs/RELEASE-WORKFLOW.md) ve [katkı kuralları](../CONTRIBUTING.md) korunur. Build ZIP'i Git kaynak ağacına eklenmez.

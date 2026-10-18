@@ -1,137 +1,101 @@
-> Source documentation snapshot. The promoted playable package at this snapshot is [Home V4.13 /0.4.13](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.13). This push changes documentation only; draft labels and team-confirmation fields remain authoritative. Local Evidence links refer to the original development archive. No form submission, new build/native/OS test or playable release is performed. Historical version-specific observations remain as originally recorded.
+# Too Late to Panic! - CIVIL GAME JAM teslim beyanı
 
-# Too Late to Panic! — CIVIL GAME JAM teslim formu hazırlığı
+18 Ekim 2026. **Güncel yerel aday: Home V5.9-r7 /0.5.9.** Kullanıcı açıklamasına göre **henüz hiçbir yarışma teslimi yapılmadı**; bu görevin kapsamı GitHub ve proje belgelerinin düzenlenmesidir. Takım bilgisi, üretim zamanı, hak sahipliği ve aşağıdaki açık alanlar temsilci tarafından doğrulanmalıdır.
 
-**Hazırlanma:** 17 Ekim 2026, 19:55 (UTC+3) · **Dayanak:** Kural Kitapçığı v04, md. 3.4, 3.6, 3.7, 4.2, 5.2 ve Ek A.1–A.5 · **Durum:** taslak. `[ONAY]` ile işaretli alanlar takım tarafından doğrulanmadan forma girilmemeli.
+Güncel teslim dayanağı, kullanıcının **18 Ekim 2026'da doğrudan ilettiği resmî organizasyon duyurusu** ve [etkinlik sitesi](https://game.ktimo.com.tr/)'dir. Duyuruya göre teslim **18 Ekim 12.00-18.15 UTC+3**, takım PIN'iyle yapılır. Video **en fazla 1 dakika**, oyun görüntüsü veya fragman olabilir; **MP4/AVI** olarak oynanabilir **ZIP'ten ayrı yüklenir**. Toplam sahne süresi **video dahil 3 dakika**; sunum performansı puanlanmaz, jüri oyunu izler ve oynar. Public Git kaynak reposu gerekir; web bağlantısı yalnız web build içindir. AI'nin görsel/ses/kod/metin/diğer kategorileri ayrı Kullanıldı/Kullanılmadı seçimi ve ayrıntıyla bildirilir; hazır kaynaklar ayrıca beyan edilir. Yüklemelerden sonra doğrulama ve makbuz kontrol edilir.
 
-Bu belge web formundaki alanlara kopyalanacak metni ve formdan önce yapılacak kontrolleri toplar. Form tek başına uygunluk onayı değildir (md. 5.5). Yanlış veya eksik AI/hazır kaynak beyanı diskalifiye nedenidir (md. 4.4, 10.1).
+Resmî v05 PDF de incelendi: SHA256 `D8F6F54137C0EE9A4ADFEC9BBF15206F10C8DD5DF536560752D18FFE86DA761B`. PDF'nin **en az 1 dakika video /5 dakika sunum /18.00 kapanış** bilgileri güncel duyuruyla çelişir ve bu teslim hazırlığında uygulanmaz. Değişmeyen kaynak/lisans/AI/commit maddeleri için aşağıdaki sayfa numaraları tarihsel başvurudur; güncel form ve duyurunun yerine geçmez. İlk iletilen sekiz sayfalık Murat Oktay konuşması kural kitabı değildir.
 
----
-
-## 1. Repo – commit – oynanabilir sürüm eşleşmesi
-
-### 1.1 Bugünkü doğrulanmış çift (17 Ekim 19:50 kontrolü)
-
-| Alan | Değer | Nasıl doğrulandı |
-|---|---|---|
-| Public repo | https://github.com/kaantufan/FixThisMakeNoMistake | GitHub API: `visibility: public` |
-| Release | `v0.4.13` — Home V4.13 | `gh release view` |
-| **Teslim edilecek commit** | **`b551edfc6c39b9704f3a663be2d0cfe6e6c3836a`** | `v0.4.13` tag'inin işaret ettiği commit |
-| Oyun bağlantısı | https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.4.13 | Release sayfası; asset hesapsız indirilebilir olmalı |
-| ZIP SHA256 | `E381BD36A9ABD96EF99E0051F0EC3392AFAEA3EC35C0156184E459964A08CCA7` (178.211.598 bayt) | Release asset digest = yerel `LATEST-BUILD.json` değeri |
-| Kaynak ↔ build | 100 C# dosyasında 0 fark, seçili asset'lerde 0 fark | Repoda `TooLateToPanic/Documentation/Publications/v0.4.13/source-vs-build.json` |
-
-**Kritik uyarı:** Forma **`main` dalının son commit'i yazılmamalı.** Otomatik yayın her 10 dakikada `main`'e kaynak snapshot'ı itiyor (şu an `945f9239…`, V4.14 ara kaynakları). Bu snapshot'lar yayımlanmış ZIP'ten **ileride**, yani md. 3.7'ye göre oynanabilir sürümle uyumsuz. Forma her zaman **teslim edilen ZIP'in release tag'inin commit'i** yazılmalı. Ek A.2 de dal adı veya etiket değil, tam commit kimliği istiyor.
-
-### 1.2 Son teslimden önce tekrar çalıştırılacak kontrol
-
-Son build V4.14 veya sonrası olursa, yeni release yayımlandıktan sonra aşağıdaki komutlarla aynı kontrol yeniden yapılmalı (`v0.4.13` yerine yeni tag yazılır):
-
-```bash
-gh api repos/kaantufan/FixThisMakeNoMistake/git/ref/tags/v0.4.13 --jq .object.sha
-```
-
-```bash
-gh release view v0.4.13 -R kaantufan/FixThisMakeNoMistake --json assets --jq ".assets[] | .name + \"  \" + .digest"
-```
-
-```bash
-gh api repos/kaantufan/FixThisMakeNoMistake --jq .visibility
-```
-
-Beklenen sonuç: tag commit'i forma yazılacak commit'le aynı; digest yerel `LATEST-BUILD.json` → `portableZipSha256` ile aynı; görünürlük `public`. Ayrıca indirme bağlantısı **çıkış yapılmış (gizli) tarayıcı penceresinde** açılıp ZIP'in indiği görülmeli (Ek A.1).
-
-### 1.3 Zamanlama
-
-- Git destek talebi için son saat **18 Ekim 12:00** (md. 6.3).
-- Önerilen sürüm dondurma: **18 Ekim 15:00**. Son release, kontroller ve form kaydı en geç **17:00**'de bitsin. Sunucu kaydı 18:00'de kapanıyor; yalnız düğmeye basmak yetmiyor (md. 6.1).
-- Formdan sonra makbuzdaki sürüm, saat ve bağlantılar kontrol edilmeli (md. 5.5).
-
----
-
-## 2. Forma girilecek metinler
-
-### 2.1 Oyun adı ve kısa açıklama
+## Oyun adı ve kısa açıklama
 
 **Too Late to Panic!**
 
-> Afet gelmeden önce oynanan bir hazırlık oyunu. İki katlı evini ve bahçeni gez; dolaplardan malzeme topla, mobilyaları duvara sabitle, duvar ve pencereleri güçlendir, drenaj kur. Süre bitmeden afet çantanı hazırla ve güvenli noktaya ulaş. Deprem, sel ve yangında aldığın önlemlerin sonucunu evin kendisinde gör.
+> Afet gelmeden önce evini hazırladığın bir gerilim ve kaynak yönetimi oyunu. KKTC, Güzelyurt, Kalkanlı'daki aile evinde sınırlı zaman ve bütçeyle mobilyaları sabitle, tesisatı güvene al ve yapıyı güçlendir. Son 40 saniyede aynı evin içinden birinci şahıs bakışla su ve gıda topla; afete uygun güvenli odaya yetiş. Aldığın önlemlerin sonucunu aynı ev ve eşyalar üzerinde gör.
 
-### 2.2 Platform
+Yer gerçektir; aile, kişiler ve afet olayları kurmacadır. Oyun, fiziksel afet eğitimi veya gerçek bina güvenlik değerlendirmesi olarak doğrulanmış değildir.
 
-Windows (64-bit).
+## Deneyimin ayırt edici yönü
 
-### 2.3 Kurulum, çalıştırma ve kontroller (Ek A.3)
+Oyuncu önce evi yukarıdan okuyup hangi riske para ve zaman ayıracağını seçer; ardından kendi hazırladığı evin içinde erzak toplar. Aynı nesnenin önlemden önceki ve afet sonrasındaki durumu kararın sonucunu gösterir. Sabitleme, tesisat ve kaynak yönetimi bu iki bakış açısını birbirine bağlar. Bu tasarım açıklamasıdır; özgünlük derecesi veya insanlarda ölçülmüş öğrenme etkisi iddiası değildir.
 
-- **Gereksinim:** Windows 10/11 64-bit. Ek yazılım gerekmez, internet bağlantısı gerekmez.
-- **Başlatma:** Release sayfasından `TooLateToPanic-Home-V4.13-20261017-portable.zip` dosyasını indirin. ZIP'i bir klasöre tamamen çıkarın. `TooLateToPanic.exe` dosyasını, yanındaki veri klasörleriyle birlikte, o klasörde çalıştırın. Windows SmartScreen uyarısında “Ek bilgi → Yine de çalıştır” seçilebilir (imzasız jam build'i).
-- **Oynanış:** Başlıkta **HAZIRLIĞA BAŞLA** kısa (yaklaşık 5 dakikalık) hazırlık–afet–sonuç akışını açar. **SERBEST OYUN** dalgalı normal kampanyayı açar. Amaç süre bitmeden evi hazırlamak, çantaya en az 1 su + 1 gıda koymak ve güvenli noktaya ulaşmak.
-- **Temel kontroller:** WASD/oklar hareket · Shift koşu · Space zıpla · E aç/kapat/etkileşim · Sol tık seç/vida tak · Sağ tık eşya taşı · Tab envanter/çanta · Enter onayla · Esc duraklat. Son 30 saniyede çanta aşaması birinci şahıs kameraya geçer: fare bakış, E/F erzak al.
-- **Bilinen sınırlar:** `[ONAY]` Son insan oynanış testinden sonra doldurun. Örnek: 960×540 çözünürlükte küçük açıklamalar küçük kalır; normal kampanyada sel/yangın dalgalarında güvenli hedef bodrum sığınağıdır (kısa akışta afete göre ayrı hedefler vardır).
+## Platform, kurulum ve ilk adım
 
-### 2.4 Hazır kaynak beyanı (md. 3.4, Ek A.4)
+- Platform: Windows x86-64; çevrimdışı tek oyuncu. Kaynak proje Unity **6000.0.73f1**, Built-In renderer kullanır. Windows 10/11 hedeflenir; minimum donanım ve farklı bilgisayarlarda uyumluluk ölçümü yapılmamıştır.
+- Yerel paket: `TooLateToPanic/Builds/TooLateToPanic-Home-V5.9-r7-20261018-portable.zip`. ZIP'in tamamını bir klasöre çıkarın. `TooLateToPanic.exe` dosyasını yanındaki `TooLateToPanic_Data`, `MonoBleedingEdge` ve diğer dosyalarla birlikte tutarak çalıştırın. Ayrı Unity kurulumu gerekmez.
+- İlk adım: ana menüden **Oyna** normal kampanyayı, **Kısa Oyun** kısa akışı, **Afeti Dene** simülasyonu açar; **Nasıl Oynanır** ve **F1** kontrolleri açıklar. **J** gerçek stok ve önlem durumunu gösteren defteri açar.
+- Normal dalga: **90 sn önlem + 40 sn erzak/FPS =130 sn**, başlangıç bütçesi **1500**. Her dalgada en az **1 su +1 gıda** gerekir. Sel varsa üst panik odasına, diğer afetlerde bodrum sığınağına gerçek geçiş gerekir. **%75 ve üzeri hasar** kayıptır. İlk dalga Deprem, ikinci dalga Sel+Fırtına, daha sonraki dalgalar RNG'dir.
+- Temel kontroller: WASD/oklar hareket, Shift koşu, Space zıplama; E ana etkileşim/aç-kapat, F seçili malzeme/erzak toplama; fare nesne seçimi ve FPS bakış; Tab envanter, J defter, F1 rehber, Esc duraklat/geri. El işlerinde ekranda gösterilen gerçek fare/SPACE/ok girdilerini kullanın; Esc ücretsiz iptal eder. F2 geliştirici seçeneklerinin kullanımı koşuyu skor dışı bırakır.
 
-| Kaynak ve sağlayıcı | Kaynak bağlantısı | Lisans / kullanım izni | Oyundaki yeri ve değişiklik | Repoda bulunmayan dosyalar |
-|---|---|---|---|---|
-| Quaternius — Universal Base Characters (ücretsiz Standard) | https://quaternius.com | CC0 1.0 (repoda `Assets/Game/Resources/Licenses/Quaternius-Base.txt`) | Oyuncu, NPC ve kurtarma ekibi gövdesi/iskeleti. Kıyafet, saç ve renkler yerel kodla değiştirildi. | Yok |
-| Quaternius — Universal Animation Library (Standard) | https://quaternius.com | CC0 1.0 (`Quaternius-Animation.txt`) | Idle/Walk/Jog/Jump/Interact/Fixing animasyonları | Yok |
-| Google Fonts — Oswald, Barlow, Barlow Condensed | https://fonts.google.com | SIL Open Font License 1.1 (`TooLateToPanic/Documentation/Licenses/HUD/`) | HUD ve menü yazı tipleri, çevrimdışı Font asset'i olarak paketlendi | Yok |
-| ElevenLabs — Text to Speech, Sound Effects, Music (üretilmiş çıktı; ayrıca AI beyanında) | https://elevenlabs.io | Ücretli Creator planı çıktısı, ElevenLabs ticari kullanım koşulları ([Creative Terms](https://elevenlabs.io/creative-terms), [Music Terms](https://elevenlabs.io/music-terms)). CC0/MIT olarak yeniden lisanslanmadı. | `Assets/Game/Resources/Audio/Jury` (7 Türkçe cümle + 3 efekt), `Audio/Foley` (efektler), `Audio/Music` (2 enstrümantal parça). Format/ses düzeyi dönüştürüldü, kısaltıldı. | Sağlayıcının orijinal indirmeleri repo dışında, kanıt arşivinde |
+## Teslim sürümü ve yayın sınırı
 
-**Takım içi kaynaklar (hazır kaynak değil, takımın jam süresinde ürettiği; açıklık için beyan edilir):**
+Yerel aday kimliğinin kaynağı [LATEST-BUILD.json](../TooLateToPanic/LATEST-BUILD.json) ve [V5.9-r7 teslim kaydı](../TooLateToPanic/Documentation/HOME-V5.9-LOCAL-GLOW-DELIVERY-2026-10-18.md)'dır.
 
-| Kaynak | Bağlantı | Oyundaki yeri |
-|---|---|---|
-| Yarkın — `yarkin-assets` dalı: 32 eşya modeli, ikon, materyal, sığınak kapağı | Repo commit'leri `eb05475e…`, `11f12b4c…`, `29bf309f…` | Su, gıda, ilk yardım, fener, pil, radyo, battaniye, yangın tüpü ve dekor modelleri (`Assets/Vendor/Yarkin`). Materyal renkleri ev paletine uyarlandı. |
-| `defter-mockup` dalı: hazırlık defteri HTML tasarımı | Repo commit'leri `07ecbccb…`, `00377265…` | J defteri ekranının Unity uyarlaması |
-| Ev, mobilya, iş düzenekleri, afet efektleri, logo, HUD | Bu repo, `Assets/Game/Art`, `Assets/Game/Runtime`, `Documentation/HUD-Concept` | Kodla prosedürel üretildi (AI beyanına bakın) |
-
-**Beyan dışı tutulan, oyunda olmayan kaynaklar:** Microsoft Tolga (Windows TTS) ile üretilmiş eski 6 radyo kaydı build'e girmez ve repoya konmaz. V4.13 build'inde Meshy dosyası yoktur.
-
-### 2.5 AI beyanı (md. 4.2, Ek A.5)
-
-Kural gereği: araç, amaç, oyundaki kullanım yeri. AI kullanımı doğrudan puan etkisi doğurmaz (md. 4.3).
-
-| Araç | Amaç | Oyundaki kullanım yeri |
-|---|---|---|
-| **OpenAI Codex ajanları** (GPT-6.1 Sol, GPT-6 Luna modelleri) `[ONAY: model/araç adlarını takım doğrulasın]` | Takım yönlendirmesiyle oyun kodunun yazılması; ev, mobilya, iş düzenekleri, afet efektleri ve ikonların prosedürel üretim kodu; Unity editör/build betikleri; HUD uyarlaması; logo üretim betiği; otomatik test ve oyun içi test sürüşü (Computer Use); tasarım ve teslim belgeleri | `TooLateToPanic/Assets/Game/**` (Runtime, Art, Editor), `Documentation/**`, `Documentation/HUD-Concept/logo` |
-| **Antigravity AI Agent** (Yarkın) | 32 eşya modelini, renk atlasını, materyalleri ve envanter ikonlarını üreten Blender/Unity betiklerinin yazılması; eşya metinleri | `TooLateToPanic/Assets/Vendor/Yarkin/**` (beyan: `Assets/Vendor/Yarkin/Documentation/UPSTREAM-ASSET-MANIFEST.md`) |
-| **ElevenLabs** — Text to Speech (Eleven Multilingual v2, hazır “Mia” sesi; ses klonlama yok) | Kısa hazırlık akışındaki 7 Türkçe yönlendirme cümlesinin seslendirilmesi. Metinler takım tarafından yazıldı. | `Assets/Game/Resources/Audio/Jury` |
-| **ElevenLabs** — Sound Effects | Kısa akış efektleri, adım/etkileşim/arayüz/ortam efektleri | `Audio/Jury`, `Audio/Foley` |
-| **ElevenLabs** — Music v2.5 (enstrümantal) | 2 arka plan müziği (hazırlık/menü ve afet gerilimi) | `Audio/Music` |
-| **Meshy AI** (image-to-3D) `[ONAY: kim, hangi planla üretti?]` | Karakter görünüm referansı modeli. **V4.13 build'inde yok.** V4.14 kaynaklarında arşivde duruyor, aktif oyuncu/NPC değil. | Yalnız V4.14 ve sonrası teslim edilirse beyan edilir |
-| **Anthropic Claude** (Claude Code) | Tür/forum araştırması, kural uyum kontrolü ve teslim beyanı taslağı | `Docs/TOO-LATE-TO-PANIC-ELESTIREL-ARASTIRMA-2026-10-17.md`, bu belge |
-| `[ONAY]` HUD HTML konsepti | Hangi araçla hazırlandığı kaynakta yazmıyor; takım doğrulasın | `Documentation/HUD-Concept/index.html` → oyundaki HUD tasarımı |
-
-**Forma yazılabilecek kısa özet metin:**
-
-> Oyunun kodu, prosedürel 3D ev/eşya/efekt üretim kodu, HUD ve belgeleri takımın yönlendirmesiyle OpenAI Codex ajanlarıyla yazıldı; otomatik testlerde de kullanıldı. Eşya modelleri ve ikonları Antigravity AI Agent ile yazılan Blender/Unity betikleriyle üretildi. Kısa akıştaki 7 Türkçe cümle (ElevenLabs Text to Speech, hazır ses, klon yok), ses efektleri (ElevenLabs Sound Effects) ve 2 enstrümantal müzik (ElevenLabs Music) AI ile üretildi. Araştırma ve teslim belgeleri için Anthropic Claude kullanıldı. Ayrıntılı tablo: repo `Docs/TOO-LATE-TO-PANIC-JAM-TESLIM-BEYANI.md`.
-
----
-
-## 3. Repo içeriği ve lisans riski (md. 3.6)
-
-| Kontrol | Sonuç |
+| Alan | Doğrulanmış yerel değer / açık durum |
 |---|---|
-| `v0.4.13` commit ağacında “meshy” geçen dosya | Yok (3.627 dosya tarandı) |
-| `main` ağacında “meshy” geçen dosya | Yok (7.626 dosya tarandı). `defter-mockup` dalında Meshy FBX'i ayrıca public durumda. |
-| Lisans metinleri repoda | Quaternius ×2 (CC0), OFL ×3, ElevenLabs Audio ×3 provenans, Yarkın beyanı |
-| ElevenLabs çıktıları | Ücretli planla üretildiği kayıtlı. Ticari kullanım izinli; repoda paylaşım sağlayıcı koşullarına tabi. |
+| Yerel EXE | `TooLateToPanic/Builds/Home-V5.9-r7-20261018/TooLateToPanic.exe` |
+| Yerel DLL SHA256 | `68BB4573E7ECC81250E2EB17488DF92987F3B0CFF2129C0CCA21C8B954AB5F29` |
+| Yerel ZIP SHA256 | `7A9031DBE96EA6FD291FED2911A0FCE1825F015A4997D017BEB1F93F4EC3D3A9` |
+| Yerel ZIP boyutu | 215.324.804 bayt |
+| Public repo adresi | [kaantufan/FixThisMakeNoMistake](https://github.com/kaantufan/FixThisMakeNoMistake) - son teslim anında erişim yeniden doğrulanacak |
+| Önceki yayın kaydı | `v0.5.9-r5`, tam commit `873422231245baf6f354c8a3a80220e6006e2c54`; r7 değildir |
+| Önceki r5 ZIP SHA256 | `4738918CAF0BC26150ACC5F72C331D2648633661EB32708677F75D67DF9EAFBF` |
+| r7 GitHub paket bağlantısı | **OLUŞTURULMADI** - bu güncelleme kaynak/belge snapshot'ıdır; R7 yerel paket olarak korunur. Windows için yarışma ZIP yüklemesi ayrıca yapılır. |
+| r7 ile eşleşen kaynak commit'i | Bu kaynak snapshot'ının tam commit'i: `git rev-parse HEAD`. [Yayın kaydı](../PUBLICATION.md) ve [213 C#/shader hash eşlemesi](../TooLateToPanic/Documentation/Publications/repository-layout-2026-10-18/source-and-build.json). Yarışma için seçilen paketle tam commit son kez doğrulanır. |
+| En fazla 1 dakikalık video | **HAZIRLANDIĞI DOĞRULANMADI** - MP4 veya AVI, oyun görüntüsü/fragman; ZIP'ten ayrı yüklenir |
+| Oynanabilir ZIP yüklemesi | **YAPILMADI** - kullanıcının açık beyanı |
+| Yarışma teslim makbuzu | **YOK** - kullanıcının açık beyanına göre henüz teslim yok |
 
-**Meshy riski:** Meshy ücretsiz planda üretilen modeller **CC BY 4.0**'dır; kullanım serbesttir ama **Meshy'ye atıf zorunludur**. Ücretli planda çıktı kullanıcıya aittir ([Meshy fiyat/lisans](https://docs.meshy.ai/en/webapp/pricing), [Meshy yardım](https://intercom.help/meshy/en/articles/16102098-can-i-use-meshy-assets-commercially)). Model ücretsiz planla üretildiyse V4.14 teslim edilecekse beyana “Meshy, CC BY 4.0” atfı eklenmeli. Hangi planla üretildiği bilinmiyorsa en güvenlisi atfı eklemektir.
+Önceki yayın bilgisi yerel `TLTP-GITHUB-AUTOPUSH-20261017/checks/20261018T100013Z/publication-state.json` kaydından gelir; güncel ağ erişimi testi değildir. `20261018T102014Z/user-stop-receipt.json`, otomatik yayının kullanıcı tarafından durdurulduğunu ve r7 yayınının tamamlanmadığını kaydeder. Yerel r7 kabulü, r5 release'ine veya eski `v0.4.13` release'ine aktarılmaz. Forma seçilen oynanabilir paketle eşleşen **tam commit** girilir (v05 s.3 madde 3.7; s.9 A.2).
 
-**Not:** “Yaşam üçgeni” etiketi Yarkın'ın upstream eşya listesinde (`PF_SturdyTable`) geçiyor; oyun kodunda bu metni bulmadım. Bu ifade çürütülmüş bir öneri olduğu için oyuncuya gösterilmemeli.
+## Hazır kaynak ve üretim beyanı
 
----
+AI beyanı aşağıdaki lisans tablosundan ayrıdır. Yerel üretim, kendiliğinden CC0/MIT lisansı veya bütün ekip adına yayın izni anlamına gelmez. Sağlayıcı çıktısının oyuna eklenebilmesi, ham dosyasının public repoda yeniden dağıtılabilmesiyle ayrı değerlendirilir (v05 s.3 madde 3.3-3.6; s.7 madde 9.7).
 
-## 4. Teslim günü kontrol listesi (Kitapçık s.10'dan, bu projeye göre)
+| Kaynak / sağlayıcı | Kaynak ve lisans bağlantısı | Kullanım ve değişiklik | Kanıt / açık sınır |
+|---|---|---|---|
+| Quaternius Universal Base Characters Standard ve Universal Animation Library Standard | [Quaternius](https://quaternius.com/); [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | Oyuncu/NPC/kurtarma humanoid tabanı ve mevcut Idle/Walk/Jog/Jump/Interact/Fixing klipleri; yerel sivil kıyafet/renk uyarlamaları | [Oyuncu provenansı](../TooLateToPanic/Documentation/Existing-Player-Provenance.md), `Assets/Game/Resources/Licenses/Quaternius-Base.txt` ve `Quaternius-Animation.txt`. CC0 yalnız ilgili dış kaynaklara aittir. |
+| Oswald, Barlow, Barlow Condensed / Google Fonts proje yazarları | [Oswald](https://github.com/google/fonts/tree/main/ofl/oswald), [Barlow](https://github.com/google/fonts/tree/main/ofl/barlow), [Barlow Condensed](https://github.com/google/fonts/tree/main/ofl/barlowcondensed); SIL OFL1.1 | Çevrimdışı HUD/menü/defter fontları; Oswald sabit ağırlığa dönüştürüldü | [HUD lisans kaydı ve tam metinler](../TooLateToPanic/Documentation/Licenses/HUD/README.md). |
+| ElevenLabs Sound Effects ve Music | [ElevenLabs](https://elevenlabs.io/), [Creative Terms](https://elevenlabs.io/creative-terms), [Music Terms](https://elevenlabs.io/music-terms) | Foley, afet/araç/tesisat/arayüz efektleri; sözsüz bit, nefes; preparation/fps_tension/disaster müzikleri. Format, süre ve ses düzeyi düzenlemeleri | [V5.9 ses kaydı](../TooLateToPanic/Documentation/HOME-V5.9-AUDIO-ASSETS-2026-10-18.md) ve `Assets/Game/Resources/Audio/{Foley,Music,Jury}/*PROVENANCE.md`. Üretim kayıtları Creator/mevcut kredi kullanımını bildirir. **Ham seslerin public yeniden dağıtım kapsamı son paket için ayrıca kontrol edilecek; CC0/MIT değildir.** |
+| Yarkın eşya/ikon/atlas/materyal ve mekanizma kaynakları | Repo dalları `yarkin-assets`; seçili kaynak commit'leri `eb05475ee0533b86031b36f156f6022521118a15`, `11f12b4cf1f6bf676dcf3dc5055e1b66c8b1ff57`, `29bf309fa0c7ccfdafd0a935e93512a44f550c9e` | `Assets/Vendor/Yarkin`; mevcut oynanışa uyarlanan seçili kaynaklar, bütün dalın merge'i değildir | [Upstream beyanı](../TooLateToPanic/Assets/Vendor/Yarkin/Documentation/UPSTREAM-ASSET-MANIFEST.md), [asset kredileri](../TooLateToPanic/Documentation/ASSET-CREDITS.md), `Resources/Licenses/Yarkin-V414-SuppliedDeclaration.txt`. Beyan farklı tarihlerde 31/32 sayıları içerir; final paketin dosya manifesti esas alınmalı. Takım üyeliği/üretim zamanı/hak sahibi izni ayrıca doğrulanacak. |
+| Defter HTML tasarımı | `defter-mockup`, `07ecbccb097ea796067afd8a35af615563857d43`; sonraki `00377265c740fdc973039d0266cefc8c913633b9` kaydı ayrıca karakter referansı içerir | J defterinin yerel Unity uyarlaması; gerçek Model/Expedition verileri | [Asset kredileri](../TooLateToPanic/Documentation/ASSET-CREDITS.md). Tasarımın araç ve hak sahibi beyanı tamamlanacak. |
+| Meshy karakter referansı / kaynak arşivi | Kaynak commit `00377265c740fdc973039d0266cefc8c913633b9`; sağlayıcı [Meshy](https://www.meshy.ai/) | Görünüm referansı; aktif oyuncu/NPC retained Quaternius humanoid tabanıdır | [V4.14 kaynak notu](../TooLateToPanic/Documentation/HOME-V4.14-ASSETS-2026-10-17.md). **Üreten kişi, plan ve kamuya yeniden dağıtım izni doğrulanmadı.** Atıf eklemek tek başına izin açığını kapatmaz; final public dosya listesi ayrıca incelenecek. |
+| Yerel kod/sanat/metin/efektler | Bu proje; `Assets/Game/Runtime`, `Assets/Game/Editor`, `Assets/Game/Art` | Ev, önlem işleri, FPS elleri, araç/afet görselleri, HUD/defter, logo ve oyun sistemleri | [Asset kredileri](../TooLateToPanic/Documentation/ASSET-CREDITS.md). AI destekli üretim aşağıda açıklanır; bu belge yeni genel lisans atamaz. |
+| Unity motoru ve yerleşik modüller | [Unity](https://unity.com/); `ProjectSettings/ProjectVersion.txt`, `Packages/manifest.json` | 6000.0.73f1 Built-In; Animation/Audio/IMGUI/Physics vb. motor modülleri | Üçüncü taraf motorun koşulları korunur; proje kodunun lisansı gibi gösterilmez. |
 
-- [ ] Son build seçildi (V4.13 mü, sonraki bir aday mı) ve dondurma saati ilan edildi.
-- [ ] Son release yayımlandı; tag commit'i, ZIP digest'i ve public görünürlük §1.2 komutlarıyla doğrulandı.
-- [ ] İndirme bağlantısı gizli pencerede, hesapsız açıldı.
-- [ ] Forma `main` değil **release tag commit'i** yazıldı.
-- [ ] §2.4 hazır kaynak beyanı ve §2.5 AI beyanı `[ONAY]` alanları doldurularak girildi.
-- [ ] Meshy dosyası içeren bir sürüm teslim ediliyorsa Meshy satırı ve gerekiyorsa CC BY 4.0 atfı eklendi.
-- [ ] Hak sahipleri kullanım iznini (md. 9) biliyor; temsilci yetkili.
-- [ ] Makbuz alındı; sürüm, saat ve bağlantılar kontrol edildi.
-- [ ] 18:00'den sonra release ve tag değiştirilmeyecek; otomatik yayın sadece `main`'e kaynak itse bile teslim tag'ine dokunmayacak.
+Yedi eski ElevenLabs TTS konuşması `Assets/Game/Deferred/Spoken-V47`, eski Microsoft Tolga radyo WAV'ları `Assets/Game/Deferred/Radio-legacy` altında tarihsel kaynaktır. Güncel sözsüz router bunları çağırmaz; eski “yedi konuşma aktif” beyanı kullanılmamalıdır. Final public repo/ZIP listesinde bulunup bulunmadıkları manifestle kontrol edilir; runtime dışında tutulmaları kendi başına yayın izni sağlamaz. Tolga çıktılarına doğrulanmamış dağıtım izni atfedilmez.
+
+## AI beyanı
+
+| Araç | Amaç | Kullanım yeri / kanıt |
+|---|---|---|
+| OpenAI Codex ajanları | Kullanıcı yönlendirmesiyle oyun ve prosedürel sanat kodu, Unity araçları, HUD/defter, test otomasyonu, araştırma ve belgeler | `TooLateToPanic/Assets/Game/{Runtime,Editor,Art}`, `Documentation`, `Docs`, `Tools`; [ekip kaydı](TOO-LATE-TO-PANIC-TEAM.md). Model aileleri iş kayıtlarında GPT-6.1 Sol/GPT-6 Luna olarak geçer; tüm geçmiş araç/model listesini temsilci doğrulamalıdır. |
+| Antigravity AI Agent | Blender/Unity üretim scriptleri, Yarkın eşya/ikon/materyal ve metinleri | `Assets/Vendor/Yarkin`; korunmuş upstream AI beyanı. Kaynak dalının bütün scriptleri runtime'a alınmış sayılmaz. |
+| ElevenLabs Sound Effects ve Music | Efekt, sözsüz bit/nefes ve enstrümantal müzik üretimi | `Assets/Game/Resources/Audio`; yukarıdaki provenance kayıtları. V5.9'da 11 kaynak ailesinden 21 runtime WAV, 457 mevcut kredi kaydı vardır; yeni abonelik/ödeme/aşım yoktur. |
+| ElevenLabs TTS, Eleven Multilingual v2, hazır Mia sesi | V4.7 kısa akışın tarihsel yedi Türkçe konuşması; özel klon yok | Güncel runtime dışında `Deferred/Spoken-V47`; dağıtım listesine giriyorsa kaynak/AI beyanında ayrıca yer almalı. |
+| Meshy AI | Karakter görünüm referansı modeli | Korunan kaynak arşivi; aktif rig/klip değildir. Üreten kişi/plan/dağıtım izni açık. |
+| Anthropic Claude / Claude Code | Önceki dış araştırma ve ilk teslim beyanı taslağı | `Docs/TOO-LATE-TO-PANIC-ELESTIREL-ARASTIRMA-2026-10-17.md`, arşivlenmiş 17 Ekim teslim taslağı. Eski belgenin araç beyanı korunur; bu bakım görevi Codex ile yapılmıştır. |
+| HUD HTML konsepti / ek takım araçları | Tasarım referansları | `Documentation/HUD-Concept` ve defter upstream'i: **araç/üreten kişi teyidi bekliyor**. Bilinmeyen araç için “AI kullanılmadı” seçilmez. |
+
+### Formdaki beş AI kategorisi
+
+Güncel duyuru en küçük kullanımı da ayrıntılı beyan ister. Aşağıdaki **beş kategoride Kullanıldı** seçimi, eldeki üretim kayıtlarına dayanır. Temsilci ek araçları ve final paketin kapsamını tamamlamalıdır; kaynak arşivi ile aktif oyunun kullanım yeri ayrı yazılmalıdır.
+
+| Kategori | Seçim | Araca, amaca ve kullanım yerine ilişkin forma hazır ayrıntı |
+|---|---|---|
+| Görsel | **Kullanıldı** | Codex ile ev/eşya/araç/afet görselleri, HUD ve FPS elleri için prosedürel Unity kodu yazıldı. Yarkın eşya/ikon/materyal scriptlerinde Antigravity AI Agent kullanımı upstream'de kayıtlıdır (`Assets/Vendor/Yarkin`). Meshy karakter modeli görünüm referansı olarak kaynak geçmişindedir; aktif rig retained Quaternius'tur. HUD HTML konseptinin araç/üreten kişi teyidi açıktır. |
+| Ses | **Kullanıldı** | ElevenLabs Sound Effects ve Music ile efekt, sözsüz bit/nefes ve enstrümantal fonlar üretildi (`Assets/Game/Resources/Audio`). V4.7'nin hazır Mia/Multilingual v2 TTS konuşmaları güncel runtime dışında `Deferred/Spoken-V47` içindedir. Güncel V5.9'da anlaşılır yeni konuşma veya ses klonu üretilmedi. |
+| Kod | **Kullanıldı** | Kullanıcı yönlendirmesiyle Codex ajanları runtime, prosedürel sanat, Editor/build araçları ve otomatik test kodunu yazmak/düzeltmek için kullanıldı. Antigravity'nin Yarkın üretim scriptleri kaynak provenansında kayıtlıdır; bütün upstream oyun kodu runtime'a alınmadı. |
+| Metin | **Kullanıldı** | Codex ile Türkçe oyun/defter/arayüz metinleri, altyazılar ve belgeler düzenlendi. Yarkın eşya metinlerinde Antigravity; önceki eleştirel araştırma ve ilk teslim taslağında Claude Code kullanımı kayıtlıdır. Yer: `Runtime`, `Documentation`, `Docs`, vendor beyanları. |
+| Diğer | **Kullanıldı** | Codex ajanları tasarım seçenekleri, test otomasyonu/Computer Use, kaynak-hash incelemesi ve depo/belge düzenlemesi için kullanıldı. Bu otomasyon insan oynanış veya dinleme kabulü değildir. |
+
+Forma kopyalanabilecek genel özet (beş ayrı kategori alanının yerine geçmez; açık araç alanları tamamlandıktan sonra):
+
+> Kod, prosedürel oyun görselleri, arayüz, araçlar ve testler kullanıcı yönlendirmesiyle OpenAI Codex ajanları kullanılarak geliştirildi. Yarkın kaynaklarının model/ikon/materyal üretim scriptlerinde Antigravity AI Agent kullanıldı. Ses efektleri ve enstrümantal müzikler ElevenLabs ile üretildi; güncel sürüm anlaşılır konuşma yerine sözsüz bit ve altyazı kullanır. Meshy karakter modeli görünüm referansı olarak kaynak geçmişinde yer alır. Önceki araştırma/teslim taslağında Claude Code kullanımı kayıtlıdır. Hazır kaynaklar, AI kullanım yerleri ve dağıtım sınırları bu belgede ayrı açıklanmıştır.
+
+## Teknik kanıt ve kalan sınırlar
+
+R7'nin güncel indeksi **472/472 gerçek headless Unity Editor kontrolü**, **524/524 native UI/yerel parlama kontrolü**, **69 framebuffer görüntüsü** ve sıfır runtime hatası bildirir. Bütün sağlanan görüntüler inceleme kaydına bağlıdır. Bunlar otomatik API/render ve fixture kanıtıdır. Fiziksel OS girdisi; insan oynanışı, okunurluk, dinleme/konfor; fiziksel 6-7 dalga kampanya kabulü **NOT_RUN**. R5'in 943 sonucu yeni DLL'e aktarılmaz. R7'de ayrı V56/audio suite'ları tekrarlanmadı.
+
+Kesin takım, temsilci, katılım onayı ve oyuna özgü çalışmaların resmî 48 saat içinde üretildiği bu belgeyle doğrulanmadı. Özellikle 16 Ekim 18.00 UTC+3 öncesi kayıtlı TLTP üretimi varsa genel araç/izinli hazır kaynak ile oyuna özgü içerik ayrımı yapılmalı; organizasyonun proje özelindeki kararı varsayılmamalıdır (v05 s.2 madde 1.3 ve 2; s.3 madde 3.1).
+
+Son kontroller [JAM-RULES-CHECKLIST.md](JAM-RULES-CHECKLIST.md), üç dakikalık prova metni [JAM-3-DAKIKA-SUNUM.md](JAM-3-DAKIKA-SUNUM.md)'dedir. **Henüz yarışmaya hiçbir şey gönderilmedi.** Bu belge hak sahipleri adına kabul vermez ve kendi başına GitHub yayını kanıtı değildir.
