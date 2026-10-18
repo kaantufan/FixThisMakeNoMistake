@@ -34,3 +34,7 @@ Fiziksel OS girdisi, insan oynanış/okunurluk/dinleme/konfor ve tüm kampanya k
 Aynı final DLL üzerinde ayrıca **291/291 sunum/regresyon kontrolü PASS**, **12 ek özgün kare incelendi**. Bu ikinci tur dört açılış planını, iki deprem planını, gerçek afet/sonrası aktör ve ses kapılarını, masa sabitlemesini ve fiziksel üst oda girişi/iki başarı kadrajını içerir. İki native tur toplamı696 çalıştırılmış kontrol satırıdır; ortak model regresyonları iki turda da bulunur, benzersiz test sayısı iddiası değildir.
 
 Normal otomatik tam ekran açılışı ayrıca aynı DLL üzerinde **10/10 gözlem kontrolü**, **1 root tarafından incelenmiş kare** ile bağlandı. Bu normal başlangıç gözlemidir; OS girdisi veya insan kabulü değildir. R4 ayrı native adayının başarısız popup zamanlama kontrolleri korunur; paket/LATEST/yayın yapılmadı. R6 kaynak/native kimliği ayrıdır; eski sayılar aktarılmaz. Önceki r3 ve r5 yalnız yerel kabul edilmiş paketler ve push yapılmamış hazırlanmış indexler idi; yayımlanmadı, eski public yayın V5.10-r2 olarak kalır.
+
+## GitHub yayını
+
+[v0.5.13-r6](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r6) ve [doğrulanmış ZIP](https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.13-r6/TooLateToPanic-Home-V5.13-r6-20261018-portable.zip) yayımlandı. Kabul edilmiş kaynak commit’i `e0255b561ba89c5944a60b8a2e71281a0ae11d17`; GitHub ZIP digest/boyutu yerel paketle eşleşir. Belge güncellemeleri yeni native test değildir. Eski release/tag/asset ve stable v0.4.13 korunur.

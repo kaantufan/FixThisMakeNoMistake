@@ -82,7 +82,7 @@
   "newProviderCredits": 0,
   "newPayment": 0,
   "legacyFpsProjectTouched": false,
-  "publishedToGitHub": false,
+  "publishedToGitHub": true,
   "intermediateV512": {
     "status": "VERIFIED_INTERMEDIATE_SUPERSEDED_NOT_PACKAGED_NOT_LATEST_NOT_PUBLISHED",
     "evidence": "../Evidence/GamejamOrchestra/TLTP-PRESENTATION-V512-20261018/manager",
@@ -161,5 +161,35 @@
     "publicationStatus": "SUPERSEDED_LOCAL_NOT_PUBLISHED",
     "indexBackup": "C:\\Users\\kaant\\Desktop\\civilgamejam\\TooLateToPanic\\Evidence\\GamejamOrchestra\\TLTP-CRITICAL-V513-20261018\\manager\\superseded-local-r5-index.json",
     "testsTransferredToThisDll": false
+  },
+  "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r6",
+  "downloadUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.13-r6/TooLateToPanic-Home-V5.13-r6-20261018-portable.zip",
+  "publication": {
+    "kind": "VERIFIED_MATCHING_SOURCE_AND_PLAYABLE_PRERELEASE",
+    "sourceCommit": "e0255b561ba89c5944a60b8a2e71281a0ae11d17",
+    "releaseTag": "v0.5.13-r6",
+    "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.13-r6",
+    "downloadUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/download/v0.5.13-r6/TooLateToPanic-Home-V5.13-r6-20261018-portable.zip",
+    "releasePrerelease": true,
+    "releaseDraft": false,
+    "portableZipSha256": "E0537B8C867A5698EDC1DAC6AB1FAF17058905D020FACB733096552CCC752B3A",
+    "portableZipBytes": 215411180,
+    "remoteZipDigest": "sha256:e0537b8c867a5698edc1dac6ab1faf17058905d020facb733096552ccc752b3a",
+    "sourceAndBuildRecord": "Documentation/Publications/v0.5.13-r6/source-and-build.json",
+    "releaseReceipt": "Documentation/Publications/v0.5.13-r6/release.json",
+    "verifiedUtc": "2026-10-18T13:07:30.499068+00:00",
+    "newBuildOrNativeRunForPublication": false,
+    "stableReleasePreserved": "v0.4.13",
+    "previousReleasePreserved": "v0.5.10-r2",
+    "documentationCommitMayDifferFromSourceCommit": true,
+    "competitionSubmitted": false
+  },
+  "maintenance": {
+    "cleanupReceipt": "../Evidence/GamejamOrchestra/TLTP-CRITICAL-V513-20261018/manager/cleanup-receipt.json",
+    "oldPlayerInputOrTermination": false,
+    "oldPlayerObservedAtEnd": false,
+    "realProfilesPreserved": true,
+    "singleCurrentBuildAndZip": true,
+    "runningBuildExceptions": []
   }
 }
