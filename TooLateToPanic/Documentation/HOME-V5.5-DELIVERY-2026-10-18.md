@@ -1,4 +1,4 @@
-> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.5-r2), [source/build comparison](Publications/Snapshots/20261018T062510Z/source-vs-build.json). Local-only historical evidence links remain local references.
+> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.5-r2), [source/build comparison](Publications/Snapshots/20261018T065511Z/source-vs-build.json). Local-only historical evidence links remain local references.
 
 # Home V5.5 teslimi
 
@@ -27,6 +27,8 @@ Ham rapor `C:\Users\kaant\Desktop\civilgamejam\TooLateToPanic\Evidence\GamejamOr
 DLL `82B570D390EAE53F740944C1A6D7560E2E61E1B2D2FE0F5344B66A489676A789`. ZIP `3AB6A1EFB7C6BE69CB9031B18690CD7CCE9AAAB0A2306EA78F49F78D9A150988` (219457748bayt). Portable EXE/DLL byte eşleşmesi doğrulandı. Dondurulmuş162C#/shader,0kayma. Tam kaynak40938dosya/build157dosya manifestlidir. Skor hash önce `62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C`, sonra `62D53735099315B02109CEAFBCC4836B6E6A33D4620C02F5E8395286A059B55C`; izole QA yazma hedefi kullanılır. Kesin yollar [LATEST](../LATEST-BUILD.json) ile bağlıdır. Normal launch/korunan eski player/temizlik son durumu aynı indeksin normalLaunch/retention alanındadır.
 
 ## Asset ve sınır
+
+Sonraki kullanıcı isteğiyle [ses odaklı root testi](HOME-V5.5-AUDIOREVIEW-2026-10-18.md) yapıldı: dört afet ve doğal FPS/geçişlerden310sn Windows endpoint PCM, salt okunur session meter, müzik açık/kapalı ve pause/defter ölçümleri. Aynı DLL korunur; ses yönlendirmesi/semantik/olay katmanlarında açık eksikler var. Bu yeni teknik output kanıtı, önceki113 smoke sayısına eklenmez ve insan dinleme kabulüne dönüştürülmez.
 
 18 Ekim ek inceleme: Kullanıcının eski oyunu kapatma ve V5.5'i açıp test etme isteği uygulandı. [Oynanış/hikâye raporu](HOME-V5.5-PLAYREVIEW-2026-10-18.md), 34 gerçek OS gözlemi/eylem kaydı, normal timeout kaybı, defter/kapı/F1/pause/doğal FPS ve sonradan açıkça skor dışı F3/Enter çoklu afet yolunu ayırır. Dört P2 bulgu açık; tam kazanma ve dinleme kabulü verilmedi. Kod/build aynı; V5.5 ana menüde açık. Aşağıdaki açık eski player koruması cümlesi ilk teslim zamanına aittir; bu ek turda V5.4 kullanıcı yetkisiyle kapatıldı.
 

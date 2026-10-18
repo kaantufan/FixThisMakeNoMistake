@@ -10,4 +10,6 @@ FPS'te özgün gerilim fon müziği, sürekli sınırlı kamera sarsıntısı ve
 
 [18 Ekim oynanış/hikâye incelemesi](Documentation/HOME-V5.5-PLAYREVIEW-2026-10-18.md): Eski V5.4 kullanıcı isteğiyle kapatılıp V5.5 açıldı. Gerçek OS defter/kapı/F1/pause/FPS ve normal timeout kaybı; ardından ayrı işaretli F3/Enter çoklu afet kontrolü yapıldı. Dört öncelikli HUD/yönlendirme/geçiş bulgusu açık. Kesintisiz normal kazanma, insan konforu ve dinleme kabulü yoktur. Test sonunda V5.5 ana menüde açık bırakıldı.
 
+[Ses ağırlıklı teknik test](Documentation/HOME-V5.5-AUDIOREVIEW-2026-10-18.md): Root dört afet simülasyonu ve doğal FPS müzik/pause/defter akışını gerçek OS girdisiyle test edip310sn Windows çıkışı kaydetti. FPS müzik bileşeni kaynak referansıyla güçlü eşleşti, kapalı durumda eşleşme azaldı; kararlı pause/defter pencereleri dijital sıfır. Yangın/fırtına dış kamera filtresi, manuel darbe ses zamanlaması ve olay/utility/bot ses eksikleri açık. Bu teknik output/kaynak kanıtıdır; insan dinleme/kalite kabulü değildir. Kod/build aynı, müzik AÇIK olarak geri alındı.
+
 113/113 ilgili native API/model/fizik/kamera/ekran/teknik ses kontrolü; 0 runtime hata, 29.57s. Açık kaynak-toplama/iş/konum/saat/ikincil olay/listener fixture'ları vardır. OS/insan/işitme/tüm kampanya kabulü değildir.
