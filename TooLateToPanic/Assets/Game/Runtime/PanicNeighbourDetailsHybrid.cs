@@ -90,39 +90,20 @@ namespace TooLateToPanic
         {
             var existing = FindRadioProp(model);
             if (existing) return existing;
+            Transform parent = rightHand != null ? rightHand : chest;
+            if (!parent) return null;
 
-            Transform parent = rightHand != null ? rightHand : (chest != null ? chest : model.transform);
-            var go = new GameObject("NeighbourHybridHandRadio");
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(0.04f, 0.05f, 0.02f);
-            go.transform.localRotation = Quaternion.Euler(15f, 0f, 0f);
-            go.transform.localScale = new Vector3(0.06f, 0.12f, 0.04f);
-            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.name = "RadioBody";
-            cube.transform.SetParent(go.transform, false);
-            cube.transform.localScale = Vector3.one;
-            var col = cube.GetComponent<Collider>();
-            RemoveCollider(col);
-            var mr = cube.GetComponent<MeshRenderer>();
-            if (mr)
-            {
-                mr.sharedMaterial = Mat("EmergencyRadioMat", new Color(0.12f, 0.12f, 0.14f), 0.3f);
-                Owner(model).Own(mr.sharedMaterial);
-            }
-            var ant = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            ant.name = "RadioAntenna";
-            ant.transform.SetParent(go.transform, false);
-            ant.transform.localPosition = new Vector3(0.3f, 0.9f, 0f);
-            ant.transform.localScale = new Vector3(0.15f, 0.5f, 0.15f);
-            var antCol = ant.GetComponent<Collider>();
-            RemoveCollider(antCol);
-            var antMr = ant.GetComponent<MeshRenderer>();
-            if (antMr)
-            {
-                antMr.sharedMaterial = Mat("EmergencyAntennaMat", new Color(0.2f, 0.2f, 0.2f), 0.1f);
-                Owner(model).Own(antMr.sharedMaterial);
-            }
-            return go.transform;
+            // Metres and upright axes belong to the model, not the imported hand's rotated frame.
+            // Bake into the hand once; the existing hand pose then carries this small real radio.
+            Transform root = model.transform;
+            Vector3 grip = root.InverseTransformPoint(parent.position);
+            var mesh = new FittedCosmeticMesh(root, parent);
+            mesh.Box(grip + new Vector3(.015f, .025f, .025f), new Vector3(.052f, .105f, .033f));
+            mesh.Box(grip + new Vector3(.031f, .100f, .025f), new Vector3(.007f, .050f, .007f));
+            var material = Mat("Neighbour compact hand radio", new Color(.075f, .08f, .09f), .24f);
+            var owner = Owner(model); owner.Own(material);
+            var go = mesh.Attach("NeighbourHybridHandRadio", material, owner);
+            return go ? go.transform : null;
         }
 
         public static void ApplyPose(GameObject model, Animator humanoid, PanicNeighbourActionHybrid action, float time, float blendWeight)
@@ -372,284 +353,234 @@ namespace TooLateToPanic
             return original;
         }
 
-        static GameObject AttachCuratedOrProceduralProp(string assetName, Transform parentBone, Vector3 localPos, Quaternion localRot, Vector3 localScale, string propName, PrimitiveType fallbackPrimitive, Material fallbackMat, PanicExteriorOwnedArt state)
-        {
-            if (parentBone == null) return null;
-            GameObject prop = null;
-            try
-            {
-                if (!string.IsNullOrEmpty(assetName))
-                    prop = PanicCuratedAssetArt.CreateDisplay(assetName, Mathf.Max(localScale.x, Mathf.Max(localScale.y, localScale.z)));
-            }
-            catch { }
-
-            if (!prop)
-            {
-                prop = GameObject.CreatePrimitive(fallbackPrimitive);
-                var col = prop.GetComponent<Collider>();
-                if (col)
-                {
-                    col.enabled = false;
-                    if (Application.isPlaying) UnityEngine.Object.Destroy(col);
-                    else UnityEngine.Object.DestroyImmediate(col);
-                }
-                var mr = prop.GetComponent<MeshRenderer>();
-                if (mr && fallbackMat) mr.sharedMaterial = fallbackMat;
-            }
-            else
-            {
-                StripPhysics(prop);
-            }
-
-            prop.name = propName;
-            prop.transform.SetParent(parentBone, false);
-            prop.transform.localPosition = localPos;
-            prop.transform.localRotation = localRot;
-            prop.transform.localScale = localScale;
-
-            // Imported/shared materials stay with their original resource owner; explicit fallback materials are already registered.
-
-
-            return prop;
-        }
-
         public static void DressResponder(GameObject model, Animator humanoid, int role)
         {
-            if (model == null) return;
-
-            // Strict idempotency: prevent duplicate dressing
-            if (model.transform.Find(ResponderTag) != null) return;
-
-            // Modular role normalization for negative or out-of-range indices (T2_R3_1)
+            if (!model || model.transform.Find(ResponderTag)) return;
             int roleIndex = ((role % 4) + 4) % 4;
-
-            // Resolve skeleton bones defensively (T2_R3_3)
             Transform root = model.transform;
-            Transform hips = Bone(root, humanoid, HumanBodyBones.Hips, "pelvis");
             Transform head = Bone(root, humanoid, HumanBodyBones.Head, "Head");
+            Transform hips = Bone(root, humanoid, HumanBodyBones.Hips, "pelvis");
             Transform chest = Bone(root, humanoid, HumanBodyBones.Chest, "spine_02");
-            if (chest == null) chest = Bone(root, humanoid, HumanBodyBones.UpperChest, "spine_03");
-            Transform leftHand = Bone(root, humanoid, HumanBodyBones.LeftHand, "hand_l");
-            Transform rightHand = Bone(root, humanoid, HumanBodyBones.RightHand, "hand_r");
+            if (!head && !hips && !chest) return;
+            var tag = new GameObject(ResponderTag); tag.transform.SetParent(root, false);
+            var owner = Owner(model);
+            ApplyRoleBaseMaterials(model, roleIndex, owner);
 
-            // Graceful fallback for unrigged models (T2_R3_2)
-            if (hips == null && head == null && chest == null) return;
-
-            // Tag model to guarantee idempotency
-            var tagObj = new GameObject(ResponderTag);
-            tagObj.transform.SetParent(root, false);
-
-            var state = model.GetComponent<PanicExteriorOwnedArt>() ?? model.AddComponent<PanicExteriorOwnedArt>();
-
-            // 1. Whole-body PBR material retinting across all slots (T1_R3_5)
-            ApplyRoleBaseMaterials(model, roleIndex, state);
-
-            // 2. Dress role-specific headgear, torso kit, and equipment sets
-            switch (roleIndex)
-            {
-                case 0: // Police: cap/badge, belt, radio, vest (T1_R3_1)
-                    DressPolice(root, head, chest, hips, rightHand, state);
-                    break;
-                case 1: // Paramedic: med cap, first aid kit bag, cross vest, nitrile gloves (T1_R3_2)
-                    DressParamedic(root, head, chest, hips, leftHand, rightHand, state);
-                    break;
-                case 2: // Firefighter: helmet, turnout bunker coat, scba air tank cylinder (T1_R3_3)
-                    DressFirefighter(root, head, chest, hips, state);
-                    break;
-                case 3: // Rescue: rescue helmet headlamp jumpsuit, safety harness, backpack, radio (T1_R3_4)
-                    DressRescue(root, head, chest, hips, rightHand, state);
-                    break;
-            }
-
-            // Retained NPC physics, Avatar, controller and root-motion configuration remain factory-owned.
-
+            // The previous cube caps, vests, crosses, belts and tanks used raw bone-local axes.
+            // They became the sideways yellow/red/white slabs reported by the player. The fitted
+            // retained clothes already cover the body: no extra torso/head/equipment slabs are added.
+            DressIndividualHair(model, head, roleIndex, owner);
+            // Avatar, skin weights, animation owner, locomotion, colliders and World stay untouched.
         }
 
-        static void DressPolice(Transform root, Transform head, Transform chest, Transform hips, Transform rightHand, PanicExteriorOwnedArt state)
+        static void DressIndividualHair(GameObject model, Transform head, int style, PanicExteriorOwnedArt owner)
         {
-            var navyMat = CreateRoleMaterial("Police_CapNavy", new Color(0.11f, 0.16f, 0.29f), 0.14f);
-            var visorMat = CreateRoleMaterial("Police_CapVisorBlack", new Color(0.04f, 0.05f, 0.05f), 0.85f);
-            var silverMat = CreateRoleMaterial("Police_SilverBadge", new Color(0.82f, 0.83f, 0.86f), 0.70f, 0.85f);
-            var vestMat = CreateRoleMaterial("Police_HiVisLime", new Color(0.78f, 0.90f, 0.16f), 0.25f);
-            var leatherMat = CreateRoleMaterial("Police_DutyLeather", new Color(0.07f, 0.08f, 0.09f), 0.26f);
-            var radioMat = CreateRoleMaterial("Police_RadioDark", new Color(0.12f, 0.12f, 0.14f), 0.30f);
-
-            state.Own(navyMat);
-            state.Own(visorMat);
-            state.Own(silverMat);
-            state.Own(vestMat);
-            state.Own(leatherMat);
-            state.Own(radioMat);
-
-            // Head: Peaked cap with silver badge (matches 'cap', 'peaked', 'badge')
-            if (head != null)
+            if (!head) return;
+            var inheritedCaps = new List<MeshRenderer>();
+            foreach (var renderer in head.GetComponentsInChildren<MeshRenderer>(true))
             {
-                var cap = AttachCuratedOrProceduralProp(null, head, new Vector3(0, 0.12f, 0.04f), Quaternion.Euler(6f, 0, 0), new Vector3(0.24f, 0.08f, 0.26f), "Police_PeakedCap_Badge", PrimitiveType.Cube, navyMat, state);
-                if (cap != null)
-                {
-                    var visor = AttachCuratedOrProceduralProp(null, cap.transform, new Vector3(0, -0.02f, 0.14f), Quaternion.Euler(22f, 0, 0), new Vector3(0.22f, 0.02f, 0.10f), "Peaked_Visor", PrimitiveType.Cube, visorMat, state);
-                    var badge = AttachCuratedOrProceduralProp(null, cap.transform, new Vector3(0, 0.02f, 0.13f), Quaternion.identity, new Vector3(0.06f, 0.06f, 0.02f), "Police_Badge", PrimitiveType.Cube, silverMat, state);
-                }
+                // SurvivorV2's fitted cap is a separate authored mesh child. Never disable the
+                // SkinnedMeshRenderer carrying the face, brows, eyes or the actual humanoid head.
+                if (!renderer.name.StartsWith("PanicWear_", StringComparison.Ordinal)) continue;
+                if (renderer.name.IndexOf("short dark hair and beard", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (renderer.GetComponent<MeshFilter>()) inheritedCaps.Add(renderer);
             }
-
-            // Chest: Hi-vis lime reflective vest (matches 'vest')
-            if (chest != null)
+            if (!TryHeadBounds(model.transform, model, head, out var bounds, out var headPoints))
             {
-                AttachCuratedOrProceduralProp(null, chest, new Vector3(0, 0.05f, 0), Quaternion.identity, new Vector3(0.34f, 0.30f, 0.24f), "Police_HiVisVest", PrimitiveType.Cube, vestMat, state);
+                Debug.LogWarning("NPC_APPEARANCE_HEAD_FIT_UNAVAILABLE " + model.name);
+                return; // Keep the existing cap if the actual retained head cannot be fitted safely.
             }
-
-            // Hips: Tactical duty belt with holster and pouches (matches 'duty', 'belt')
-            if (hips != null)
+            string[] names = { "Short side part", "Medium wavy sweep", "Close textured crop", "Swept back low bun" };
+            Color[] colors = { new Color(.105f,.077f,.053f), new Color(.17f,.087f,.045f),
+                new Color(.29f,.275f,.245f), new Color(.06f,.047f,.038f) };
+            var material = Mat("Neighbour hair " + names[style], colors[style], .16f);
+            var mesh = new FittedCosmeticMesh(model.transform, head);
+            mesh.Hair(bounds, headPoints, style);
+            if (style == 3)
             {
-                var belt = AttachCuratedOrProceduralProp(null, hips, new Vector3(0, 0.02f, 0), Quaternion.identity, new Vector3(0.36f, 0.08f, 0.26f), "Police_DutyBelt", PrimitiveType.Cube, leatherMat, state);
-                if (belt != null)
-                {
-                    AttachCuratedOrProceduralProp(null, belt.transform, new Vector3(0, 0, 0.135f), Quaternion.identity, new Vector3(0.08f, 0.06f, 0.02f), "Duty_Buckle", PrimitiveType.Cube, silverMat, state);
-                    AttachCuratedOrProceduralProp(null, belt.transform, new Vector3(0.18f, -0.04f, 0.02f), Quaternion.identity, new Vector3(0.08f, 0.16f, 0.08f), "Duty_Holster", PrimitiveType.Cube, leatherMat, state);
-                    AttachCuratedOrProceduralProp(null, belt.transform, new Vector3(-0.18f, 0, 0.02f), Quaternion.identity, new Vector3(0.08f, 0.08f, 0.06f), "Duty_Pouch", PrimitiveType.Cube, leatherMat, state);
-                }
+                // A soft knot intersects the swept nape shell; it is sized from the real head,
+                // not a cube or an object-scale multiplier in the imported bone frame.
+                Vector3 knot = new Vector3(bounds.center.x, bounds.min.y + bounds.size.y*.71f,
+                    bounds.min.z - bounds.size.z*.16f);
+                mesh.Ellipsoid(knot, Vector3.Scale(bounds.size, new Vector3(.20f,.155f,.24f)));
             }
-
-            // Chest / Hand: Walkie-talkie radio prop (matches 'walkie', 'radio')
-            Transform radioParent = chest != null ? chest : root;
-            var radio = AttachCuratedOrProceduralProp("EmergencyRadio", radioParent, new Vector3(-0.16f, 0.14f, 0.08f), Quaternion.Euler(15f, 0, 0), new Vector3(0.06f, 0.14f, 0.04f), "Police_WalkieTalkie_Radio_Prop", PrimitiveType.Cube, radioMat, state);
-            if (radio != null) radio.SetActive(false); // Inactive until Radio action (T2_R6_4)
+            owner.Own(material);
+            var hair = mesh.Attach("NeighbourHair_" + style + "_" + names[style], material, owner);
+            if (hair) foreach (var cap in inheritedCaps) cap.enabled = false;
         }
 
-        static void DressParamedic(Transform root, Transform head, Transform chest, Transform hips, Transform leftHand, Transform rightHand, PanicExteriorOwnedArt state)
+        static bool TryHeadBounds(Transform root, GameObject model, Transform head, out Bounds bounds, out List<Vector3> headPoints)
         {
-            var tealMat = CreateRoleMaterial("Paramedic_CapTeal", new Color(0.12f, 0.42f, 0.48f), 0.12f);
-            var redMat = CreateRoleMaterial("Paramedic_VestRed", new Color(0.83f, 0.18f, 0.18f), 0.18f);
-            var whiteMat = CreateRoleMaterial("Paramedic_ReflectiveWhite", new Color(0.97f, 0.98f, 0.99f), 0.60f);
-            var nitrileMat = CreateRoleMaterial("Paramedic_NitrileBlue", new Color(0.23f, 0.52f, 0.78f), 0.35f);
-
-            state.Own(tealMat);
-            state.Own(redMat);
-            state.Own(whiteMat);
-            state.Own(nitrileMat);
-
-            // Head: Medical scrub cap (matches 'med', 'cap', 'scrubs')
-            if (head != null)
+            // Bind is called once directly after cloning SurvivorV2, before the animation tick.
+            // This is the retained head's actual weighted reference geometry, in model space.
+            bounds = new Bounds(); headPoints = new List<Vector3>(); bool found = false;
+            foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                var medCap = AttachCuratedOrProceduralProp(null, head, new Vector3(0, 0.12f, 0), Quaternion.identity, new Vector3(0.22f, 0.08f, 0.24f), "Paramedic_MedCap_Scrubs", PrimitiveType.Cube, tealMat, state);
-                if (medCap != null)
+                string name = renderer.name.ToLowerInvariant();
+                if (name.Contains("eye") || name.Contains("brow") || name.Contains("hair")) continue;
+                var mesh = renderer.sharedMesh;
+                if (!mesh || !mesh.isReadable) continue;
+                var vertices = mesh.vertices; var weights = mesh.boneWeights; var bones = renderer.bones;
+                for (int i=0; i<vertices.Length && i<weights.Length; i++)
                 {
-                    AttachCuratedOrProceduralProp(null, medCap.transform, new Vector3(0, 0.01f, 0.12f), Quaternion.identity, new Vector3(0.04f, 0.04f, 0.01f), "Paramedic_Cap_Cross", PrimitiveType.Cube, whiteMat, state);
+                    var w = weights[i]; float influence = 0;
+                    if (w.boneIndex0 < bones.Length && bones[w.boneIndex0] == head) influence += w.weight0;
+                    if (w.boneIndex1 < bones.Length && bones[w.boneIndex1] == head) influence += w.weight1;
+                    if (w.boneIndex2 < bones.Length && bones[w.boneIndex2] == head) influence += w.weight2;
+                    if (w.boneIndex3 < bones.Length && bones[w.boneIndex3] == head) influence += w.weight3;
+                    if (influence < .35f) continue;
+                    Vector3 p = root.InverseTransformPoint(renderer.transform.TransformPoint(vertices[i]));
+                    headPoints.Add(p);
+                    if (!found) { bounds = new Bounds(p, Vector3.zero); found = true; } else bounds.Encapsulate(p);
                 }
             }
-
-            // Chest: Red response vest with white medical cross (matches 'cross', 'med')
-            if (chest != null)
-            {
-                var vest = AttachCuratedOrProceduralProp(null, chest, new Vector3(0, 0.05f, 0), Quaternion.identity, new Vector3(0.34f, 0.30f, 0.24f), "Paramedic_Vest_Cross", PrimitiveType.Cube, redMat, state);
-                if (vest != null)
-                {
-                    AttachCuratedOrProceduralProp(null, vest.transform, new Vector3(0, 0.02f, 0.125f), Quaternion.identity, new Vector3(0.12f, 0.12f, 0.01f), "Paramedic_Medical_Cross", PrimitiveType.Cube, whiteMat, state);
-                }
-            }
-
-            // Hips: First-aid kit trauma bag (matches 'firstaid', 'kit', 'bag')
-            if (hips != null)
-            {
-                AttachCuratedOrProceduralProp("FirstAidKit", hips, new Vector3(0.22f, -0.06f, 0.05f), Quaternion.Euler(0, 90f, 0), new Vector3(0.26f, 0.20f, 0.12f), "Paramedic_FirstAidKit_Bag_Prop", PrimitiveType.Cube, redMat, state);
-            }
-
-            // Hands: Nitrile blue examination gloves (matches 'glove')
-            if (leftHand != null)
-            {
-                AttachCuratedOrProceduralProp(null, leftHand, Vector3.zero, Quaternion.identity, new Vector3(0.09f, 0.09f, 0.09f), "Paramedic_NitrileGloves_L", PrimitiveType.Cube, nitrileMat, state);
-            }
-            if (rightHand != null)
-            {
-                AttachCuratedOrProceduralProp(null, rightHand, Vector3.zero, Quaternion.identity, new Vector3(0.09f, 0.09f, 0.09f), "Paramedic_NitrileGloves_R", PrimitiveType.Cube, nitrileMat, state);
-            }
+            return found && bounds.size.x > .05f && bounds.size.y > .08f && bounds.size.z > .05f;
         }
 
-        static void DressFirefighter(Transform root, Transform head, Transform chest, Transform hips, PanicExteriorOwnedArt state)
+        // Cosmetic geometry uses one explicit model-to-bone conversion for every vertex. This
+        // cancels imported bone rotations/scales and model/world rotation at the moment of fitting.
+        // Children have identity TRS; their only motion comes from the retained parent bone.
+        sealed class FittedCosmeticMesh
         {
-            var helmetYellow = CreateRoleMaterial("Firefighter_HelmetYellow", new Color(0.96f, 0.77f, 0.09f), 0.45f);
-            var visorSmoked = CreateRoleMaterial("Firefighter_VisorSmoked", new Color(0.10f, 0.13f, 0.17f), 0.85f);
-            var tankYellow = CreateRoleMaterial("Firefighter_SCBA_TankYellow", new Color(0.90f, 0.66f, 0.07f), 0.55f);
-            var brassMat = CreateRoleMaterial("Firefighter_BrassValves", new Color(0.71f, 0.60f, 0.19f), 0.60f, 0.80f);
-            var stripeSilver = CreateRoleMaterial("Firefighter_SilverStripe", new Color(0.89f, 0.91f, 0.94f), 0.65f);
-            var blackNomex = CreateRoleMaterial("Firefighter_BlackNomex", new Color(0.11f, 0.11f, 0.10f), 0.10f);
-
-            state.Own(helmetYellow);
-            state.Own(visorSmoked);
-            state.Own(tankYellow);
-            state.Own(brassMat);
-            state.Own(stripeSilver);
-            state.Own(blackNomex);
-
-            // Head: Fire helmet with neck shield and smoked visor (matches 'fire', 'helmet', 'turnout')
-            if (head != null)
+            readonly Transform root, bone;
+            readonly List<Vector3> vertices = new List<Vector3>();
+            readonly List<Vector2> uvs = new List<Vector2>();
+            readonly List<int> triangles = new List<int>();
+            public FittedCosmeticMesh(Transform root, Transform bone) { this.root=root; this.bone=bone; }
+            void Vertex(Vector3 position, Vector2 uv) { vertices.Add(position); uvs.Add(uv); }
+            void Tri(int a,int b,int c) { triangles.Add(a); triangles.Add(b); triangles.Add(c); }
+            public void Hair(Bounds h, List<Vector3> headPoints, int style)
             {
-                var helmet = AttachCuratedOrProceduralProp(null, head, new Vector3(0, 0.14f, 0), Quaternion.identity, new Vector3(0.28f, 0.12f, 0.32f), "Firefighter_FireHelmet_Turnout", PrimitiveType.Cube, helmetYellow, state);
-                if (helmet != null)
+                const int sides=32, rings=9;
+                int first=vertices.Count;
+                float width=h.size.x, height=h.size.y, depth=h.size.z;
+                for (int ring=0; ring<rings; ring++)
                 {
-                    AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, -0.04f, 0.14f), Quaternion.Euler(15f, 0, 0), new Vector3(0.24f, 0.06f, 0.02f), "Turnout_Visor", PrimitiveType.Cube, visorSmoked, state);
-                    AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, -0.06f, -0.14f), Quaternion.Euler(-10f, 0, 0), new Vector3(0.26f, 0.10f, 0.02f), "Turnout_NeckShield", PrimitiveType.Cube, blackNomex, state);
+                    float v=ring/(float)rings, theta=(1-v)*Mathf.PI*.5f;
+                    float radial=Mathf.Sin(theta), rise=Mathf.Cos(theta);
+                    for (int side=0; side<sides; side++)
+                    {
+                        float angle=side*Mathf.PI*2/sides, sx=Mathf.Sin(angle), cz=Mathf.Cos(angle);
+                        float front=Mathf.Max(0,cz), back=Mathf.Max(0,-cz), flank=Mathf.Abs(sx);
+                        float line=.76f+.055f*front-.075f*back, crown=1.035f;
+                        float thickness=style==1?.070f:style==2?.014f:style==3?.032f:.025f;
+                        float offsetX=0, volume=0;
+                        if (style==0)
+                        {
+                            // Short clipped sides, asymmetric swept crown and a shallow off-centre part.
+                            line=.77f+.047f*front-.072f*back+.012f*flank;
+                            crown=1.055f;
+                            volume=.070f*Mathf.Max(0,-sx)*radial*rise;
+                            float x=sx*radial;
+                            volume-=.027f*Mathf.Exp(-(x-.27f)*(x-.27f)/.008f)*rise*front;
+                            offsetX=-width*.085f*rise*rise;
+                        }
+                        else if (style==1)
+                        {
+                            // Longer rippling silhouette. Wavy locks are part of the scalp shell.
+                            line=.75f+.042f*front-.13f*back-.022f*flank;
+                            crown=1.10f;
+                            float wave=Mathf.Sin(angle*5+v*8)*.5f+Mathf.Cos(angle*3-v*5)*.5f;
+                            volume=.032f*wave*radial;
+                            thickness+=.018f*wave*radial;
+                            offsetX=width*.04f*rise;
+                        }
+                        else if (style==2)
+                        {
+                            // A close salt-and-pepper crop with a higher/receding front hairline.
+                            line=.78f+.065f*front+.026f*flank*front-.035f*back;
+                            crown=1.018f;
+                            volume=.008f*Mathf.Sin(angle*9+v*14)*radial*rise;
+                        }
+                        else
+                        {
+                            // Brushed-back crown with longer fitted sides/nape, ending in the low bun.
+                            line=.77f+.067f*front-.17f*back-.014f*flank;
+                            crown=1.052f;
+                            volume=.013f*Mathf.Cos(angle*7)*radial*rise;
+                        }
+                        float y=h.min.y+height*(Mathf.Lerp(line,crown,rise)+volume);
+                        // Whole-head bounds include the ears and nose: using those as a fixed
+                        // crown radius was what made the inherited cap read as a broad bowl.
+                        // Fit each shell height against the actual upper skull envelope instead.
+                        float skinY=Mathf.Min(h.max.y-height*.018f,y-height*(crown-1)-height*thickness);
+                        Bounds scalp=UpperSkullEnvelope(headPoints,skinY,h);
+                        float rx=scalp.extents.x+width*thickness;
+                        float rz=scalp.extents.z+depth*thickness;
+                        Vertex(new Vector3(scalp.center.x+sx*rx+offsetX,y,
+                            scalp.center.z+cz*rz),new Vector2(side/(float)sides,v));
+                    }
+                }
+                for (int ring=0; ring<rings-1; ring++) for (int side=0; side<sides; side++)
+                {
+                    int next=(side+1)%sides,a=first+ring*sides+side,b=first+ring*sides+next,
+                        c=first+(ring+1)*sides+next,d=first+(ring+1)*sides+side;
+                    Tri(a,b,c); Tri(a,c,d);
+                }
+                int top=vertices.Count;
+                float topY=style==1?1.10f:style==2?1.018f:style==0?1.055f:1.052f;
+                float topX=style==0?-width*.085f:style==1?width*.04f:0;
+                Bounds tip=UpperSkullEnvelope(headPoints,h.max.y-height*.018f,h);
+                Vertex(new Vector3(tip.center.x+topX,h.min.y+height*topY,tip.center.z),new Vector2(.5f,1));
+                for(int side=0;side<sides;side++) Tri(first+(rings-1)*sides+side,first+(rings-1)*sides+(side+1)%sides,top);
+                int bottom=vertices.Count; Vector3 center=Vector3.zero;
+                for(int side=0;side<sides;side++) center+=vertices[first+side];
+                Vertex(center/sides,new Vector2(.5f,0));
+                for(int side=0;side<sides;side++) Tri(bottom,first+(side+1)%sides,first+side);
+            }
+            static Bounds UpperSkullEnvelope(List<Vector3> points,float minimumY,Bounds fallback)
+            {
+                Bounds envelope=new Bounds(); bool found=false;
+                foreach(Vector3 point in points)
+                {
+                    if(point.y<minimumY) continue;
+                    if(!found) { envelope=new Bounds(point,Vector3.zero); found=true; }
+                    else envelope.Encapsulate(point);
+                }
+                return found?envelope:fallback;
+            }
+            public void Ellipsoid(Vector3 center, Vector3 radii)
+            {
+                const int sides=20, rings=11; int start=vertices.Count;
+                for(int ring=0;ring<=rings;ring++) for(int side=0;side<sides;side++)
+                {
+                    float polar=Mathf.PI*ring/rings,angle=Mathf.PI*2*side/sides;
+                    Vertex(center+Vector3.Scale(radii,new Vector3(Mathf.Sin(polar)*Mathf.Sin(angle),
+                        -Mathf.Cos(polar),Mathf.Sin(polar)*Mathf.Cos(angle))),new Vector2(side/(float)sides,ring/(float)rings));
+                }
+                for(int ring=0;ring<rings;ring++) for(int side=0;side<sides;side++)
+                {
+                    int next=(side+1)%sides,a=start+ring*sides+side,b=start+ring*sides+next,
+                        c=start+(ring+1)*sides+next,d=start+(ring+1)*sides+side;
+                    if(ring>0) Tri(a,b,c); if(ring<rings-1) Tri(a,c,d);
                 }
             }
-
-            // Chest: SCBA compressed air cylinder tank on back (matches 'tank', 'scba', 'cylinder')
-            if (chest != null)
+            public void Box(Vector3 center, Vector3 size)
             {
-                var scba = AttachCuratedOrProceduralProp(null, chest, new Vector3(0, 0.08f, -0.18f), Quaternion.identity, new Vector3(0.14f, 0.42f, 0.14f), "Firefighter_SCBA_AirTank_Cylinder", PrimitiveType.Cylinder, tankYellow, state);
-                if (scba != null)
+                Vector3 e=size*.5f;
+                Vector3[] p={new Vector3(-e.x,-e.y,-e.z),new Vector3(e.x,-e.y,-e.z),
+                    new Vector3(e.x,e.y,-e.z),new Vector3(-e.x,e.y,-e.z),new Vector3(-e.x,-e.y,e.z),
+                    new Vector3(e.x,-e.y,e.z),new Vector3(e.x,e.y,e.z),new Vector3(-e.x,e.y,e.z)};
+                int[] faces={0,3,2,1,4,5,6,7,0,4,7,3,1,2,6,5,3,7,6,2,0,1,5,4};
+                for(int face=0;face<6;face++)
                 {
-                    AttachCuratedOrProceduralProp(null, scba.transform, new Vector3(0, 0.24f, 0), Quaternion.identity, new Vector3(0.06f, 0.06f, 0.06f), "SCBA_Regulator_Valve", PrimitiveType.Cube, brassMat, state);
-                }
-
-                // Turnout bunker coat reflective stripes (matches 'bunker')
-                AttachCuratedOrProceduralProp(null, chest, new Vector3(0, -0.08f, 0), Quaternion.identity, new Vector3(0.35f, 0.05f, 0.25f), "Firefighter_BunkerCoat_Stripes", PrimitiveType.Cube, stripeSilver, state);
-            }
-        }
-
-        static void DressRescue(Transform root, Transform head, Transform chest, Transform hips, Transform rightHand, PanicExteriorOwnedArt state)
-        {
-            var whiteMat = CreateRoleMaterial("Rescue_HelmetWhite", new Color(0.97f, 0.98f, 0.99f), 0.50f);
-            var ledMat = CreateRoleMaterial("Rescue_HeadlampLens", new Color(1.00f, 0.98f, 0.92f), 0.90f);
-            var harnessMat = CreateRoleMaterial("Rescue_HarnessBlack", new Color(0.09f, 0.10f, 0.11f), 0.20f);
-            var carabinerMat = CreateRoleMaterial("Rescue_CarabinerSilver", new Color(0.58f, 0.64f, 0.72f), 0.70f, 0.85f);
-            var packMat = CreateRoleMaterial("Rescue_PackOrange", new Color(0.90f, 0.32f, 0.00f), 0.16f);
-            var radioMat = CreateRoleMaterial("Rescue_RadioDark", new Color(0.12f, 0.12f, 0.14f), 0.30f);
-
-            state.Own(whiteMat);
-            state.Own(ledMat);
-            state.Own(harnessMat);
-            state.Own(carabinerMat);
-            state.Own(packMat);
-            state.Own(radioMat);
-
-            // Head: Climbing helmet with forward LED headlamp (matches 'rescue', 'afad', 'lamp', 'jumpsuit')
-            if (head != null)
-            {
-                var helmet = AttachCuratedOrProceduralProp(null, head, new Vector3(0, 0.13f, 0), Quaternion.identity, new Vector3(0.26f, 0.10f, 0.28f), "Rescue_AFAD_Helmet_Headlamp_Jumpsuit", PrimitiveType.Cube, whiteMat, state);
-                if (helmet != null)
-                {
-                    AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, 0.01f, 0.145f), Quaternion.identity, new Vector3(0.08f, 0.04f, 0.03f), "Rescue_Headlamp_Housing", PrimitiveType.Cube, harnessMat, state);
-                    AttachCuratedOrProceduralProp(null, helmet.transform, new Vector3(0, 0.01f, 0.162f), Quaternion.identity, new Vector3(0.04f, 0.02f, 0.01f), "Rescue_Headlamp_Lens", PrimitiveType.Cube, ledMat, state);
+                    int n=vertices.Count;
+                    for(int i=0;i<4;i++) Vertex(center+p[faces[face*4+i]],new Vector2(i==1||i==2?1:0,i>=2?1:0));
+                    Tri(n,n+1,n+2); Tri(n,n+2,n+3);
                 }
             }
-
-            // Hips & Chest: Safety climbing harness (matches 'harness')
-            if (hips != null)
+            public GameObject Attach(string name, Material material, PanicExteriorOwnedArt owner)
             {
-                var harness = AttachCuratedOrProceduralProp(null, hips, new Vector3(0, 0.02f, 0), Quaternion.identity, new Vector3(0.35f, 0.08f, 0.25f), "Rescue_SafetyHarness", PrimitiveType.Cube, harnessMat, state);
-                if (harness != null)
-                {
-                    AttachCuratedOrProceduralProp(null, harness.transform, new Vector3(0, 0, 0.13f), Quaternion.identity, new Vector3(0.04f, 0.04f, 0.02f), "Rescue_Carabiner_D_Ring", PrimitiveType.Cube, carabinerMat, state);
-                }
-            }
-
-            // Chest (back): Curated Emergency Backpack (matches 'pack')
-            if (chest != null)
-            {
-                AttachCuratedOrProceduralProp("EmergencyBackpack", chest, new Vector3(0, 0.06f, -0.18f), Quaternion.Euler(0, 180f, 0), new Vector3(0.32f, 0.40f, 0.20f), "Rescue_EmergencyBackpack_Pack_Prop", PrimitiveType.Cube, packMat, state);
-
-                // Radio on chest strap (matches 'radio')
-                AttachCuratedOrProceduralProp("EmergencyRadio", chest, new Vector3(0.14f, 0.12f, 0.09f), Quaternion.Euler(10f, 0, 0), new Vector3(0.06f, 0.12f, 0.04f), "Rescue_Radio_Prop", PrimitiveType.Cube, radioMat, state);
+                if(!bone || vertices.Count==0) return null;
+                for(int i=0;i<vertices.Count;i++) vertices[i]=bone.InverseTransformPoint(root.TransformPoint(vertices[i]));
+                var mesh=new Mesh { name="NPC fitted cosmetic "+name };
+                mesh.SetVertices(vertices); mesh.SetUVs(0,uvs); mesh.SetTriangles(triangles,0);
+                mesh.RecalculateNormals(); mesh.RecalculateTangents(); mesh.RecalculateBounds();
+                var go=new GameObject(name); go.transform.SetParent(bone,false);
+                go.AddComponent<MeshFilter>().sharedMesh=mesh;
+                var renderer=go.AddComponent<MeshRenderer>(); renderer.sharedMaterial=material;
+                renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.On; renderer.receiveShadows=true;
+                owner.Own(mesh); return go;
             }
         }
 

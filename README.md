@@ -2,6 +2,8 @@
 
 # Too Late to Panic!
 
+V5.8 ara adayı: düz garaj yolu, farklı NPC saçları ve akıcı sel geçişi uygulandı; 68/68 headless Unity veri kontrolü geçti. Grafik/OS kontrolü bekliyor; bu düzeltmeler yetkili V5.9 birleşimine aktarılıyor. [Aday notları](TooLateToPanic/Documentation/HOME-V5.8-VISUAL-FIXES-2026-10-18.md).
+
 Home V5.7: ana menü, duraklatma ve ses sayfası yeniden tasarlandı. Özgün etiketli simgeler, açık süre/bütçe/hasar ve su-gıda durumları, klasik fiziksel klavye ve her tuş için ayrı açıklama içeren F1 rehberi, tek 20 yuvalı envanter ve sabit FPS kamera davranışı birlikte sunulur. Su ve gıda aynı envanterden dalga başına bir kez kullanılır; defter oda yazıları da düzeltilmiştir.
 
 [Başlat](Play-TooLateToPanic.cmd) · [Teslim](TooLateToPanic/Documentation/HOME-V5.7-UI-DELIVERY-2026-10-18.md)

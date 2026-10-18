@@ -32,7 +32,7 @@ namespace TooLateToPanic
                 var outcome = snapshot.Outcomes[observedOutcomeCount - 1];
                 if (outcome.TotalDamage > 0f) juryOutcomeAtmosphere = PanicAtmosphereArt.CreateAftermath(outcome.Disaster);
             }
-            if (snapshot.Stage == PanicJuryStage.Inspection && effects) effects.StopJuryHazard();
+            if (snapshot.Stage == PanicJuryStage.Inspection && effects) effects.StopJuryHazard(true);
             if (InputLocked || (hud && (hud.DeveloperMenuOpen || hud.DeveloperInputBlockedThisFrame))) return;
             if (observedJuryStage != snapshot.Stage)
             {

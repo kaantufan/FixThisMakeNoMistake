@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -7,7 +7,9 @@ namespace TooLateToPanic
     // Original runtime art. No colliders, model changes, forces, camera or global lighting changes.
     public static class PanicDisasterArt
     {
-        const int WaterCells = 40;
+        const int WaterCells = 80;
+        public const float FloodExtentV58 = 42f;
+        public const float FloodRunoffSecondsV58 = 12f;
         static readonly float[] QuakeStarts={.35f,1.15f,2.35f,4.15f,6.4f,8.8f};
         static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -116,7 +118,7 @@ namespace TooLateToPanic
             {
                 var e = s.Emitters[i];
                 var emission = e.System.emission;
-                float rate=e.Rate*s.Strength*presentationScale*(s.Type==DisasterType.Earthquake?.18f+QuakePulse(s.Clock)*1.45f:1f);
+                float rate=e.Rate*s.Strength*(s.Type==DisasterType.Flood&&s.FloodRecedingV58?0f:1f)*presentationScale*(s.Type==DisasterType.Earthquake?.18f+QuakePulse(s.Clock)*1.45f:1f);
                 emission.rateOverTime=rate;s.EmissionRateV52+=emission.rateOverTime.constant;
                 // Increase density/size inside each retained maximum-particle budget.
                 float sizeScale=1f+.35f*(presentationScale-1f);
@@ -136,33 +138,37 @@ namespace TooLateToPanic
             water.SetTexture("_BumpMap", normal); water.SetFloat("_BumpScale", .55f);
             water.EnableKeyword("_NORMALMAP"); water.mainTextureScale = new Vector2(7, 7);
             s.WaterMaterial = water;
-            int side = WaterCells + 1;
-            s.WaterVertices = new Vector3[side * side];
-            s.WaterNormals = new Vector3[side * side];
-            var uv = new Vector2[side * side];
-            var triangles = new int[WaterCells * WaterCells * 6];
-            for (int z = 0; z < side; z++) for (int x = 0; x < side; x++)
+            // Aligned boundary coordinates make actual holes, rather than lowering a broad
+            // triangle across the cutaway basement or the garage's visible floor.
+            var xs = FloodAxisV58(new[] { -8.16f, 8.16f, 15.34f });
+            var zs = FloodAxisV58(new[] { -6.16f, -.14f, 6.16f, 6.34f });
+            s.WaterVertices = new Vector3[xs.Count * zs.Count];
+            s.WaterNormals = new Vector3[s.WaterVertices.Length];
+            var uv = new Vector2[s.WaterVertices.Length];
+            var triangles = new List<int>(WaterCells * WaterCells * 6);
+            for (int z = 0; z < zs.Count; z++) for (int x = 0; x < xs.Count; x++)
             {
-                int v = z * side + x;
-                s.WaterVertices[v] = new Vector3(-23 + 46f * x / WaterCells, -.24f, -23 + 46f * z / WaterCells);
-                s.WaterNormals[v] = Vector3.up; uv[v] = new Vector2((float)x / WaterCells, (float)z / WaterCells);
+                int v = z * xs.Count + x;
+                s.WaterVertices[v] = new Vector3(xs[x], -.24f, zs[z]);
+                s.WaterNormals[v] = Vector3.up;
+                uv[v] = new Vector2((xs[x] + FloodExtentV58) / (FloodExtentV58 * 2), (zs[z] + FloodExtentV58) / (FloodExtentV58 * 2));
             }
-            int n = 0;
-            for (int z = 0; z < WaterCells; z++) for (int x = 0; x < WaterCells; x++)
+            for (int z = 0; z < zs.Count - 1; z++) for (int x = 0; x < xs.Count - 1; x++)
             {
-                int v = z * side + x;
-                triangles[n++] = v; triangles[n++] = v + side; triangles[n++] = v + 1;
-                triangles[n++] = v + 1; triangles[n++] = v + side; triangles[n++] = v + side + 1;
+                if (!FloodExteriorV58((xs[x] + xs[x + 1]) * .5f, (zs[z] + zs[z + 1]) * .5f)) continue;
+                int v = z * xs.Count + x;
+                triangles.Add(v); triangles.Add(v + xs.Count); triangles.Add(v + 1);
+                triangles.Add(v + 1); triangles.Add(v + xs.Count); triangles.Add(v + xs.Count + 1);
             }
-            s.WaterMesh = MeshObject(s, "Moving transparent water and advancing front", water, s.WaterVertices, triangles, uv);
+            s.WaterMesh = MeshObject(s, "Creek overflow around home street and neighbourhood", water, s.WaterVertices, triangles.ToArray(), uv);
             s.WaterMesh.normals = s.WaterNormals;
-            s.WaterMesh.MarkDynamic(); s.WaterMesh.bounds = new Bounds(Vector3.zero, new Vector3(48, 3, 48));
+            s.WaterMesh.MarkDynamic(); s.WaterMesh.bounds = new Bounds(Vector3.zero, new Vector3(86, 3, 86));
 
             s.FoamVertices = new Vector3[72 * 4]; s.FoamColors = new Color[72 * 4];
             var foamUv = QuadUV(72); var foamTriangles = QuadTriangles(72);
             var foamMaterial = ParticleMaterial(s, "Soft irregular current foam", FoamTexture(s), false);
             s.FoamMesh = MeshObject(s, "Broken wave crests and foundation eddies", foamMaterial, s.FoamVertices, foamTriangles, foamUv);
-            s.FoamMesh.colors = s.FoamColors; s.FoamMesh.MarkDynamic(); s.FoamMesh.bounds = new Bounds(Vector3.zero, new Vector3(48, 3, 48));
+            s.FoamMesh.colors = s.FoamColors; s.FoamMesh.MarkDynamic(); s.FoamMesh.bounds = new Bounds(Vector3.zero, new Vector3(86, 3, 86));
             CreateDebris(s, 28, true);
 
             // Rain falls only outside the 16 x 12 m house; no indoor rain volume.
@@ -201,21 +207,130 @@ namespace TooLateToPanic
             SetGradient(ps, new Color(.58f, .72f, .78f, 0), new Color(.58f, .72f, .78f, .38f), new Color(.58f, .72f, .78f, 0));
         }
 
+        static List<float> FloodAxisV58(float[] boundaries)
+        {
+            var axis = new List<float>(WaterCells + boundaries.Length + 1);
+            for (int i = 0; i <= WaterCells; i++) axis.Add(-FloodExtentV58 + FloodExtentV58 * 2 * i / WaterCells);
+            axis.AddRange(boundaries); axis.Sort(); return axis;
+        }
+
+        // Presentation footprint only. No collider, upper-floor water, gameplay or RNG query.
+        public static bool FloodExteriorV58(float x, float z)
+        {
+            if (x > -8.16f && x < 8.16f && z > -6.16f && z < 6.16f) return false;
+            return !(x > 8.16f && x < 15.34f && z > -.14f && z < 6.34f);
+        }
+
+        public static float FloodArrivalSecondsV58(float x, float z)
+        {
+            // Several broad overflow lobes join along the real western creek and fan onto
+            // both banks. Lower street runoff and garden flow meet around all four facades.
+            float dx = x - (PanicExteriorArt.CreekLeft + PanicExteriorArt.CreekRight) * .5f;
+            float channel = Mathf.Min(Mathf.Abs(z + 32), Mathf.Abs(z + 17));
+            channel = Mathf.Min(channel, Mathf.Min(Mathf.Abs(z - 1), Mathf.Min(Mathf.Abs(z - 20), Mathf.Abs(z - 35))));
+            float distance = Mathf.Sqrt(dx * dx + channel * channel * .85f);
+            float detour = x > -8.16f && Mathf.Abs(z) < 6.34f ? (6.34f - Mathf.Abs(z)) * .65f : 0;
+            return .3f + Mathf.Max(0, distance - 2.2f + detour) / 8.5f + .10f * Mathf.Sin(z * .29f + x * .13f);
+        }
+
+        public static float FloodArrivalWetnessV58(float clock, float x, float z)
+        {
+            if (!FloodExteriorV58(x, z)) return 0;
+            // The outer edge is a soft, irregular rounded footprint, never a square wall.
+            float nx = Mathf.Abs(x) / FloodExtentV58, nz = Mathf.Abs(z) / FloodExtentV58;
+            float edge = nx * nx * nx * nx + nz * nz * nz * nz;
+            edge += .035f * Mathf.Sin(x * .31f + z * .17f);
+            float bank = Mathf.SmoothStep(0, 1, (1.00f - edge) / .30f);
+            return bank * Mathf.SmoothStep(0, 1, (clock - FloodArrivalSecondsV58(x, z)) / 1.8f);
+        }
+
+        public static float FloodRecessionFactorV58(float elapsed, float x, float z)
+        {
+            // Higher spots empty first; low street/garden pockets linger briefly. The first
+            // sample is exactly zero everywhere, preserving the previous surface on entry.
+            float pocket = .9f + .6f * Mathf.Sin(x * .21f) * Mathf.Sin(z * .19f);
+            float street = Mathf.Abs(z + 19) < 4.8f ? .3f : 0;
+            return Mathf.SmoothStep(0, 1, (elapsed - pocket - street) / 9f);
+        }
+
+        public static bool BeginFloodRecessionV58(GameObject root)
+        {
+            var hazard = HazardRootV54(root, DisasterType.Flood);
+            var s = hazard ? hazard.GetComponent<PanicDisasterArtState>() : null;
+            if (!s) return false;
+            if (!s.FloodRecedingV58)
+            {
+                s.FloodRecedingV58 = true;
+                s.FloodRecessionStartV58 = s.Clock;
+                s.FloodRecessionPeakV58 = s.PeakPresentationStrengthV52;
+            }
+            return true;
+        }
+
+        public static GameObject DetachFloodRunoffV58(GameObject root)
+        {
+            var hazard = HazardRootV54(root, DisasterType.Flood);
+            if (!hazard) return null;
+            BeginFloodRecessionV58(root);
+            var compound = root.GetComponent<PanicCompoundDisasterArtV54>();
+            if (compound) compound.Hazards[(int)DisasterType.Flood] = null;
+            hazard.transform.SetParent(null, true);
+            return hazard;
+        }
+
+        public static float SampleFloodRunoffElapsedV58(GameObject root)
+        {
+            var hazard = HazardRootV54(root, DisasterType.Flood);
+            var s = hazard ? hazard.GetComponent<PanicDisasterArtState>() : null;
+            return s && s.FloodRecedingV58 ? Mathf.Max(0, s.Clock - s.FloodRecessionStartV58) : 0;
+        }
+
+        public static bool IsFloodRecedingV58(GameObject root)
+        {
+            var hazard = HazardRootV54(root, DisasterType.Flood);
+            var s = hazard ? hazard.GetComponent<PanicDisasterArtState>() : null;
+            return s && s.FloodRecedingV58;
+        }
+
+        public static float SampleFloodWetnessV58(GameObject root, float x, float z)
+        {
+            var hazard = HazardRootV54(root, DisasterType.Flood);
+            var s = hazard ? hazard.GetComponent<PanicDisasterArtState>() : null;
+            return s ? FloodWetnessV58(s, x, z) : 0;
+        }
+
+        static float FloodWetnessV58(PanicDisasterArtState s, float x, float z)
+        {
+            float arrivalClock = s.FloodRecedingV58 ? s.FloodRecessionStartV58 : s.Clock;
+            float recede = s.FloodRecedingV58 ? FloodRecessionFactorV58(s.Clock - s.FloodRecessionStartV58, x, z) : 0;
+            return FloodArrivalWetnessV58(arrivalClock * (1f + .25f * (s.PresentationScaleV52 - 1f)), x, z) * (1 - recede);
+        }
+
+        static float FloodHeightV58(PanicDisasterArtState s, float x, float z, float wet, float level)
+        {
+            float t = s.Clock, direction = x < -18.7f ? -1f : 1f;
+            float ripples = Mathf.Sin(x * .81f + z * .56f - t * 2.1f * direction) * .038f + Mathf.Sin(x * -.49f + z * 1.17f - t * 2.8f) * .022f;
+            float crest = 4 * wet * (1 - wet) * .075f;
+            return -.24f + wet * (level + .24f + (ripples + crest) * s.PresentationScaleV52);
+        }
+
         static void AnimateFlood(PanicDisasterArtState s)
         {
-            float t = s.Clock, front = -23 + Mathf.Min(t * (1f + .25f * (s.PresentationScaleV52 - 1f)), 9) * 5.2f;
-            // Peak water is retained during aftermath, rather than draining when intensity drops.
-            float level = -.08f + s.PeakPresentationStrengthV52 * .47f;
-            s.WaterLevelV52 = level;
+            float t = s.Clock;
+            float peak = s.FloodRecedingV58 ? s.FloodRecessionPeakV58 : s.PeakPresentationStrengthV52;
+            float level = -.08f + peak * .47f;
+            // Keep severity measurable; actual local water smoothly drains below the ground.
+            float recede = s.FloodRecedingV58 ? FloodRecessionFactorV58(t - s.FloodRecessionStartV58, 0, -10) : 0;
+            s.WaterLevelV52 = Mathf.Lerp(level, -.24f, recede);
             s.WaterPeakHeightV52 = -.24f;
             for (int i = 0; i < s.WaterVertices.Length; i++)
             {
                 var v = s.WaterVertices[i];
-                float wet = Wetness(v.x, v.z, front);
-                v.y = WaterHeight(v.x, v.z, t, front, level, wet, s.PresentationScaleV52);
+                float wet = FloodWetnessV58(s, v.x, v.z);
+                v.y = FloodHeightV58(s, v.x, v.z, wet, level);
                 s.WaterVertices[i] = v;
                 s.WaterPeakHeightV52 = Mathf.Max(s.WaterPeakHeightV52, v.y);
-                float a = v.x * .81f + v.z * .56f - t * 2.1f;
+                float a = v.x * .81f + v.z * .56f - t * 2.1f * (v.x < -18.7f ? -1f : 1f);
                 float b = v.x * -.49f + v.z * 1.17f - t * 2.8f;
                 s.WaterNormals[i] = new Vector3(-wet * s.PresentationScaleV52 * (.038f * .81f * Mathf.Cos(a) - .022f * .49f * Mathf.Cos(b)), 1, -wet * s.PresentationScaleV52 * (.038f * .56f * Mathf.Cos(a) + .022f * 1.17f * Mathf.Cos(b))).normalized;
             }
@@ -225,46 +340,32 @@ namespace TooLateToPanic
             for (int i = 0; i < 72; i++)
             {
                 bool leading = i < 28;
-                float x = leading ? front + Mathf.Sin((-22.5f+i*1.67f)*.42f+t)*.65f : Mathf.Repeat(Hash(i*7+6)*44+t*.95f+22,44)-22;
-                float z = leading ? -22.5f+i*1.67f : Mathf.Lerp(-21,21,Hash(i*13));
-                if(!leading && i>=56)
+                float z = leading ? -37 + i * 74f / 27 : Mathf.Lerp(-37, 37, Hash(i * 13));
+                float arrivalClock = s.FloodRecedingV58 ? s.FloodRecessionStartV58 : t;
+                float x = leading ? -18.7f + (i % 4 == 0 ? -1 : 1) * Mathf.Max(0, arrivalClock - .9f) * 8.5f + Mathf.Sin(z * .29f) * .7f : Mathf.Repeat(Hash(i * 7 + 6) * 74 + t * .65f + 37, 74) - 37;
+                if (!leading && i >= 56)
                 {
-                    int corner=(i-56)%4;float eddyAngle=t*.9f+i*1.37f;
-                    x=(corner<2?-8.3f:8.3f)+Mathf.Cos(eddyAngle)*(.3f+(i%4)*.10f);
-                    z=(corner%2==0?-6.3f:6.3f)+Mathf.Sin(eddyAngle)*(.35f+(i%3)*.1f);
+                    int corner = (i - 56) % 4; float eddyAngle = t * .65f + i * 1.37f;
+                    x = (corner < 2 ? -8.55f : 15.7f) + Mathf.Cos(eddyAngle) * .28f;
+                    z = (corner % 2 == 0 ? -6.6f : 6.7f) + Mathf.Sin(eddyAngle) * .25f;
                 }
-                float wet = Wetness(x, z, front);
-                float y = WaterHeight(x, z, t, front, level, wet, s.PresentationScaleV52) + .026f;
-                float length = leading ? 1.2f : .35f + Hash(i * 11) * .85f;
-                float width = (leading ? .15f : .06f) * (1f + .35f * (s.PresentationScaleV52 - 1f));
-                float angle = leading ? Mathf.PI*.5f+Mathf.Sin(z*.42f+t)*.15f : i>=56 ? t*.9f+i*1.37f : Mathf.PI*.5f+.15f*Mathf.Sin(t+i);
+                float wet = FloodWetnessV58(s, x, z);
+                float y = FloodHeightV58(s, x, z, wet, level) + .018f * wet;
+                float length = leading ? .65f : .25f + Hash(i * 11) * .65f;
+                float width = (leading ? .12f : .05f) * (1f + .35f * (s.PresentationScaleV52 - 1f));
+                float angle = i >= 56 ? t * .65f + i * 1.37f : Mathf.PI * .5f + .25f * Mathf.Sin(z * .29f + t * .3f);
                 Vector3 across = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * length;
                 Vector3 along = new Vector3(-Mathf.Sin(angle), 0, Mathf.Cos(angle)) * width;
                 Vector3 center = new Vector3(x, y, z);
                 int v = i * 4;
                 s.FoamVertices[v] = center - across - along; s.FoamVertices[v + 1] = center - across + along;
                 s.FoamVertices[v + 2] = center + across + along; s.FoamVertices[v + 3] = center + across - along;
-                float alpha = wet * (leading ? .42f : .16f + .09f * Mathf.Sin(t * 1.3f + i)) * Mathf.Clamp01(s.Peak * 3) * (1f + .35f * (s.PresentationScaleV52 - 1f));
-                if (leading && front > 23) alpha = 0;
+                float alpha = wet * (leading ? .3f * (1 - Mathf.SmoothStep(.65f, 1, wet)) : .12f + .06f * Mathf.Sin(t * 1.3f + i)) * Mathf.Clamp01(s.Peak * 3);
                 Color c = new Color(.66f, .79f, .75f, alpha);
                 s.FoamColors[v] = c; s.FoamColors[v + 1] = c; s.FoamColors[v + 2] = c; s.FoamColors[v + 3] = c;
             }
             s.FoamMesh.vertices = s.FoamVertices; s.FoamMesh.colors = s.FoamColors;
-            AnimateDebris(s, t, front, level);
-        }
-
-        static float Wetness(float x, float z, float front)
-        {
-            float edge = front + Mathf.Sin(z*.42f)*.7f;
-            return Mathf.SmoothStep(0,1,(edge-x+1.2f)*.6f);
-        }
-
-        static float WaterHeight(float x, float z, float t, float front, float level, float wet, float presentationScale)
-        {
-            float edge = x-front-Mathf.Sin(z*.42f)*.7f;
-            float crest = Mathf.Exp(-edge * edge * .8f) * .15f;
-            float ripples = Mathf.Sin(x * .81f + z * .56f - t * 2.1f) * .038f + Mathf.Sin(x * -.49f + z * 1.17f - t * 2.8f) * .022f;
-            return -.24f + wet * (level + .24f + (ripples + crest) * presentationScale);
+            AnimateDebris(s, t, 0, level);
         }
 
         static void CreateQuake(PanicDisasterArtState s, Material soft)
@@ -757,7 +858,7 @@ namespace TooLateToPanic
                 var d = new PanicDisasterArtState.DebrisPiece();
                 if (floating)
                 {
-                    d.Origin = new Vector3(-21 + Hash(i * 3 + 1) * 42, 0, -21 + Hash(i * 7 + 6) * 42);
+                    d.Origin = new Vector3(-37 + Hash(i * 3 + 1) * 74, 0, -37 + Hash(i * 7 + 6) * 74);
                     if(Mathf.Abs(d.Origin.z)<7)d.Origin.z=d.Origin.z<0?-7.2f:7.2f;
                     d.Scale = new Vector3(.25f + Hash(i * 9 + 3) * .8f, .04f + Hash(i * 13 + 8) * .09f, .12f + Hash(i * 11 + 2) * .23f);
                 }
@@ -776,20 +877,23 @@ namespace TooLateToPanic
             }
             var mat = Opaque(s, floating ? "Waterlogged floating wood" : "Broken plaster and masonry", floating ? new Color(.22f, .18f, .115f) : new Color(.43f, .4f, .33f), .12f);
             s.DebrisMesh = MeshObject(s, floating ? "Batched current driven debris" : "Batched falling and settled masonry", mat, s.DebrisVertices, triangles, null);
-            s.DebrisMesh.normals = s.DebrisNormals; s.DebrisMesh.MarkDynamic(); s.DebrisMesh.bounds = new Bounds(Vector3.zero, new Vector3(49, 16, 49));
+            s.DebrisMesh.normals = s.DebrisNormals; s.DebrisMesh.MarkDynamic(); s.DebrisMesh.bounds = new Bounds(Vector3.zero, new Vector3(floating ? 86 : 49, 16, floating ? 86 : 49));
         }
 
         static void AnimateDebris(PanicDisasterArtState s, float clock, float front, float waterLevel)
         {
             for (int i = 0; i < s.Debris.Length; i++)
             {
-                var d = s.Debris[i]; Vector3 p; Quaternion q;
+                var d = s.Debris[i]; Vector3 p; Quaternion q; Vector3 drawScale = d.Scale;
                 if (s.Type == DisasterType.Flood)
                 {
-                    p = d.Origin;p.x=Mathf.Repeat(p.x+clock*(.68f+Hash(i*17)*.6f)*s.PresentationScaleV52+23,46)-23;p.z+=Mathf.Sin(clock*.7f+i)*.28f*s.PresentationScaleV52;
-                    float wet = Wetness(p.x, p.z, front);
-                    p.y = WaterHeight(p.x, p.z, clock, front, waterLevel, wet, s.PresentationScaleV52) + .04f;
-                    if (wet < .55f) p.y = -.5f;
+                    p = d.Origin;
+                    float direction = p.x < -18.7f ? -1f : 1f;
+                    p.x = Mathf.Repeat(p.x + clock * direction * (.35f + Hash(i * 17) * .3f) * s.PresentationScaleV52 + 40, 80) - 40;
+                    p.z += Mathf.Sin(clock * .7f + i) * .28f * s.PresentationScaleV52;
+                    float wet = FloodWetnessV58(s, p.x, p.z);
+                    p.y = FloodHeightV58(s, p.x, p.z, wet, waterLevel) + .04f * wet;
+                    drawScale *= Mathf.SmoothStep(0, 1, wet * 2);
                     q = Quaternion.Euler(Mathf.Sin(clock * 1.7f + i) * 6, d.Rotation.y + clock * (2 + Hash(i * 5) * 4), Mathf.Sin(clock * 1.3f + i) * 4);
                 }
                 else
@@ -806,8 +910,8 @@ namespace TooLateToPanic
                 // Four flat triangular faces form an asymmetric shard, twelve vertices per piece.
                 Vector3 a = new Vector3(-.5f, -.35f, -.42f), b = new Vector3(.5f, -.28f, -.4f), c = new Vector3(.35f, -.28f, .5f), top = new Vector3(-.12f, .65f, .03f);
                 int v = i * 12;
-                WriteFace(s, v, p, q, d.Scale, a, top, b); WriteFace(s, v + 3, p, q, d.Scale, b, top, c);
-                WriteFace(s, v + 6, p, q, d.Scale, c, top, a); WriteFace(s, v + 9, p, q, d.Scale, a, b, c);
+                WriteFace(s, v, p, q, drawScale, a, top, b); WriteFace(s, v + 3, p, q, drawScale, b, top, c);
+                WriteFace(s, v + 6, p, q, drawScale, c, top, a); WriteFace(s, v + 9, p, q, drawScale, a, b, c);
             }
             s.DebrisMesh.vertices = s.DebrisVertices; s.DebrisMesh.normals = s.DebrisNormals;
         }
@@ -1043,6 +1147,8 @@ namespace TooLateToPanic
         public readonly List<Object> Owned = new List<Object>(20);
         public readonly List<Emitter> Emitters = new List<Emitter>(10);
         public float Clock, LastAge, Strength, Peak;
+        public bool FloodRecedingV58;
+        public float FloodRecessionStartV58, FloodRecessionPeakV58;
         public float PresentationScaleV52=1f,PeakPresentationStrengthV52,EmissionRateV52,WaterLevelV52,WaterPeakHeightV52,FlamePeakHeightV52;
         public Mesh WaterMesh, FoamMesh, DebrisMesh, Cracks,FlameMesh;
         public Vector3[] FlameSites,FlameVertices;public Color[] FlameColors;

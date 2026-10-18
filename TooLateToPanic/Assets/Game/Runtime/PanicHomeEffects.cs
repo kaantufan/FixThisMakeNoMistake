@@ -6,7 +6,12 @@ namespace TooLateToPanic
     {
         public PanicHomeWorld World;
         AudioSource oneShot, ambience, roomTone;
-        GameObject weather;
+        GameObject weather, floodRunoffV58;
+        float floodRunoffAgeV58, floodRunoffScaleV58 = 1f;
+        int weatherWaveV58;
+        public bool FloodRunoffActiveV58 { get { return floodRunoffV58 || PanicDisasterArt.IsFloodRecedingV58(weather); } }
+        public float FloodRunoffElapsedV58 { get { return PanicDisasterArt.SampleFloodRunoffElapsedV58(floodRunoffV58 ? floodRunoffV58 : weather); } }
+        public float FloodWetnessAtV58(float x, float z) { return PanicDisasterArt.SampleFloodWetnessV58(floodRunoffV58 ? floodRunoffV58 : weather, x, z); }
         readonly AudioSource[] hazardAmbiencesV54 = new AudioSource[4];
         readonly AudioLowPassFilter[] hazardFiltersV54 = new AudioLowPassFilter[4];
         readonly bool[] hazardAudioActiveV54 = new bool[4];
@@ -24,16 +29,18 @@ namespace TooLateToPanic
         public float QuakeCinematicClipRmsV55 { get { return quakeClipRmsV55; } }
         public AudioSource QuakeCinematicSourceV55 { get { return hazardAmbiencesV54[(int)DisasterType.Earthquake]; } }
         public AudioSource QuakeStructureSourceV55 { get { return quakeStructureV55; } }
-        public int ActiveHazardVisualCountV54 { get { return PanicDisasterArt.ActiveHazardCountV54(weather); } }
+        public int ActiveHazardVisualCountV54 { get { return PanicDisasterArt.ActiveHazardCountV54(weather) + (floodRunoffV58 ? 1 : 0); } }
         public int ActiveHazardAudioCountV54
         {
             get { int count=0;for(int i=0;i<4;i++)if(hazardAudioActiveV54[i])count++;return count; }
         }
-        public bool HasHazardVisualV54(DisasterType type) { return PanicDisasterArt.HazardRootV54(weather,type); }
+        GameObject HazardVisualRootV58(DisasterType type)
+        { return type == DisasterType.Flood && floodRunoffV58 ? floodRunoffV58 : PanicDisasterArt.HazardRootV54(weather, type); }
+        public bool HasHazardVisualV54(DisasterType type) { return HazardVisualRootV58(type); }
         public float HazardEmissionRateV54(DisasterType type)
-        { return PanicDisasterArt.SampleEmissionRateV52(PanicDisasterArt.HazardRootV54(weather,type)); }
+        { return PanicDisasterArt.SampleEmissionRateV52(HazardVisualRootV58(type)); }
         public float HazardPresentationScaleV54(DisasterType type)
-        { return PanicDisasterArt.SamplePresentationScaleV52(PanicDisasterArt.HazardRootV54(weather,type)); }
+        { return PanicDisasterArt.SamplePresentationScaleV52(HazardVisualRootV58(type)); }
         public AudioSource HazardSourceV56(DisasterType type) { int i=(int)type;return i>=0&&i<4?hazardAmbiencesV54[i]:null; }
         public float HazardCutoffV56(DisasterType type) { int i=(int)type;return i>=0&&i<4&&hazardFiltersV54[i]?hazardFiltersV54[i].cutoffFrequency:22000f; }
         public float HazardBaseGainV56(DisasterType type) { var s=HazardSourceV56(type);float gain=PanicAudioSettingsV56.EffectiveSfxGain;return s&&gain>0?s.volume/gain:0; }
@@ -60,8 +67,8 @@ namespace TooLateToPanic
         // Actual rendered/audio values for the native V5.2 receipt; no gameplay mutation.
         public float DisasterPresentationScaleV52 { get { return PanicDisasterArt.SamplePresentationScaleV52(weather); } }
         public float DisasterEmissionRateV52 { get { return PanicDisasterArt.SampleEmissionRateV52(weather); } }
-        public float DisasterWaterLevelV52 { get { return PanicDisasterArt.SampleWaterLevelV52(weather); } }
-        public float DisasterWaterPeakHeightV52 { get { return PanicDisasterArt.SampleWaterPeakHeightV52(weather); } }
+        public float DisasterWaterLevelV52 { get { return PanicDisasterArt.SampleWaterLevelV52(floodRunoffV58 ? floodRunoffV58 : weather); } }
+        public float DisasterWaterPeakHeightV52 { get { return PanicDisasterArt.SampleWaterPeakHeightV52(floodRunoffV58 ? floodRunoffV58 : weather); } }
         public float DisasterFlamePeakHeightV52 { get { return PanicDisasterArt.SampleFlamePeakHeightV52(weather); } }
         public float DisasterAmbienceGainV52 { get { return 1f + .45f * (PresentationScaleV52 - 1f); } }
         public float DisasterAmbienceVolumeV52
@@ -143,7 +150,9 @@ namespace TooLateToPanic
             if (phase == PanicPhase.Disaster)
             {
                 if (weather) { weather.SetActive(false); Destroy(weather); }
+                ClearFloodRunoffV58();
                 weather = PanicDisasterArt.CreateActiveV54(World.Model);
+                weatherWaveV58 = World.Model.Wave;
                 StartHazardAmbienceV54(); SetDisasterAmbienceVolume(.22f);
                 Play("warning",.35f);
             }
@@ -160,15 +169,23 @@ namespace TooLateToPanic
                     if(hazardAmbiencesV54[fire]){hazardAmbiencesV54[fire].Stop();hazardAmbiencesV54[fire].volume=0;}
                     ApplyHazardAmbienceMixV54();
                 }
+                if (phase == PanicPhase.Inspection) PanicDisasterArt.BeginFloodRecessionV58(weather);
                 if (phase == PanicPhase.Success) Play("success", .55f);
                 if (phase == PanicPhase.GameOver) Play("fail", .6f);
             }
-            else StopJuryHazard();
+            else
+            {
+                // A real next wave may begin while the visual runoff is finishing. Fresh
+                // runs/simulations reset to wave1, Title and other phase resets clear it.
+                bool nextWave = phase == PanicPhase.Preparing && World && World.Model != null && World.Model.Wave > weatherWaveV58;
+                StopJuryHazard(nextWave);
+            }
         }
         public void StartCinematicWeather()
         {
             if(!World)return;
-            if(!weather)weather=PanicDisasterArt.CreateActiveV54(World.Model);
+            ClearFloodRunoffV58();
+            if(!weather) { weather=PanicDisasterArt.CreateActiveV54(World.Model);weatherWaveV58=World.Model.Wave; }
             age=0;StartHazardAmbienceV54();SetDisasterAmbienceVolume(.22f);
         }
         void SetDisasterAmbienceVolume(float volume)
@@ -258,8 +275,24 @@ namespace TooLateToPanic
         {
             switch(type){case DisasterType.Earthquake:return "earthquake";case DisasterType.Flood:return "flood";case DisasterType.Storm:return "storm";default:return "fire";}
         }
-        public void StopJuryHazard()
+        void ClearFloodRunoffV58()
         {
+            if (floodRunoffV58) { floodRunoffV58.SetActive(false); Destroy(floodRunoffV58); }
+            floodRunoffV58 = null; floodRunoffAgeV58 = 0;
+        }
+        void PreserveFloodRunoffV58()
+        {
+            if (!weather) return;
+            var flood = PanicDisasterArt.DetachFloodRunoffV58(weather);
+            if (!flood) return;
+            ClearFloodRunoffV58();
+            floodRunoffV58 = flood; floodRunoffAgeV58 = 0;
+            floodRunoffScaleV58 = PanicDisasterArt.SamplePresentationScaleV52(flood);
+            if (weather == flood) weather = null;
+        }
+        public void StopJuryHazard(bool smoothFlood = false)
+        {
+            if (smoothFlood) PreserveFloodRunoffV58(); else ClearFloodRunoffV58();
             if(quakeStructureV55){quakeStructureV55.Stop();quakeStructureV55.volume=0;}
             nextQuakeRattleV55=0;
             for(int i=0;i<4;i++)
@@ -280,7 +313,21 @@ namespace TooLateToPanic
             if (suspended || World.Model.IsPaused || World.NotebookBlocksInput) return;
             age += Time.deltaTime;
             if (World.Model.Phase == PanicPhase.Preparing && World.Model.TimeRemaining <= 60 && !warned) { warned = true; Play("warning", .6f); }
+            if (floodRunoffV58)
+            {
+                floodRunoffAgeV58 += Time.deltaTime;
+                PanicDisasterArt.Animate(floodRunoffV58, floodRunoffAgeV58, 0, floodRunoffScaleV58);
+                if (PanicDisasterArt.SampleFloodRunoffElapsedV58(floodRunoffV58) >= PanicDisasterArt.FloodRunoffSecondsV58) ClearFloodRunoffV58();
+            }
             if (weather) PanicDisasterArt.Animate(weather, age, World.Model.Phase == PanicPhase.Disaster || World.CinematicActive&&World.Model.Phase==PanicPhase.GameOver ? Mathf.Clamp01(age * .4f) : .35f, PresentationScaleV52);
+            if (weather && PanicDisasterArt.IsFloodRecedingV58(weather) && PanicDisasterArt.SampleFloodRunoffElapsedV58(weather) >= PanicDisasterArt.FloodRunoffSecondsV58)
+            {
+                bool single = PanicDisasterArt.HazardRootV54(weather, DisasterType.Flood) == weather;
+                PanicDisasterArt.StopHazardV54(weather, DisasterType.Flood);
+                if (single) weather = null;
+                int flood = (int)DisasterType.Flood; hazardAudioActiveV54[flood] = false;
+                if (hazardAmbiencesV54[flood]) { hazardAmbiencesV54[flood].Stop(); hazardAmbiencesV54[flood].volume = 0; }
+            }
             shelterMix=Mathf.MoveTowards(shelterMix,World.AudioShelterAmount,Time.unscaledDeltaTime/1.2f);
             ApplyHazardAmbienceMixV54();
             TickQuakeRattleV55();

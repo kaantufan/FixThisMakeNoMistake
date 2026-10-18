@@ -730,16 +730,34 @@
   },
   "releaseUrl": "https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.7-r4",
   "publication": {
-    "sourceSnapshotUtc": "2026-10-18T08:54:47.3341071Z",
-    "sourceManifest": "Documentation/Publications/v0.5.7-r4/source-sha256.json",
-    "sourceVsBuildReport": "Documentation/Publications/v0.5.7-r4/source-vs-build.json",
-    "selectedSourceFiles": 4061,
-    "compiledSourceMismatches": [],
-    "selectedBuildAssetMismatches": [],
+    "sourceSnapshotUtc": "2026-10-18T09:10:32.4985474Z",
+    "sourceManifest": "Documentation/Publications/Snapshots/20261018T091013Z/source-sha256.json",
+    "sourceVsBuildReport": "Documentation/Publications/Snapshots/20261018T091013Z/source-vs-build.json",
+    "selectedSourceFiles": 4092,
+    "compiledSourceMismatches": [
+      "Assets/Game/Art/PanicDisasterArt.cs",
+      "Assets/Game/Art/PanicHomeArt.cs",
+      "Assets/Game/Editor/PanicResidenceBuild.cs",
+      "Assets/Game/Runtime/PanicBuildIdentityV56.cs",
+      "Assets/Game/Runtime/PanicHomeEffects.cs",
+      "Assets/Game/Runtime/PanicJuryPresentation.cs",
+      "Assets/Game/Runtime/PanicNeighbourDetailsHybrid.cs"
+    ],
+    "selectedBuildAssetMismatches": [
+      "Assets/Game/Art/PanicDisasterArt.cs",
+      "Assets/Game/Art/PanicHomeArt.cs",
+      "Assets/Game/Editor/PanicResidenceBuild.cs",
+      "Assets/Game/Resources/HomeArt/landscape.prefab",
+      "Assets/Game/Runtime/PanicBuildIdentityV56.cs",
+      "Assets/Game/Runtime/PanicHomeEffects.cs",
+      "Assets/Game/Runtime/PanicJuryPresentation.cs",
+      "Assets/Game/Runtime/PanicNeighbourDetailsHybrid.cs",
+      "Assets/Game/Scenes/TooLateToPanicResidence.unity"
+    ],
     "missingGuids": 0,
     "newBuildPerformed": false,
     "newNativeRunPerformed": false,
     "localEvidenceNotIncluded": true,
-    "existingReleaseUnchanged": false
+    "existingReleaseUnchanged": true
   }
 }

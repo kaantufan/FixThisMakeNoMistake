@@ -18,7 +18,7 @@ namespace TooLateToPanic
         const string HomeArt = "Assets/Game/Resources/HomeArt";
         const string ResidenceArt = "Assets/Game/Resources/ResidenceArt";
         const string ScenePath = "Assets/Game/Scenes/TooLateToPanicResidence.unity";
-        const string Version = "0.5.7";
+        const string Version = "0.5.8";
 
         // Every explicit Create case in the residence r1 package; no default/fallback IDs.
         static readonly string[] ResidenceIds =
@@ -53,12 +53,18 @@ namespace TooLateToPanic
 
                 bool reuseArt=Environment.GetCommandLineArgs().Contains("-reuseResidenceArt");
                 bool rebakeSurvivor=Environment.GetCommandLineArgs().Contains("-rebakeSurvivor");
+                bool rebakeLandscape=Environment.GetCommandLineArgs().Contains("-rebakeLandscape");
                 if(reuseArt)
                 {
                     foreach(var path in new[]{HomeArt+"/floor0.prefab",HomeArt+"/floor1.prefab",ResidenceArt+"/garage.prefab",ResidenceArt+"/bunker_interior.prefab","Assets/Game/Resources/Player/SurvivorV2.prefab"})
                         if(!AssetDatabase.LoadAssetAtPath<GameObject>(path))throw new Exception("Cached V3 art missing: "+path);
                     Debug.Log("HOME_V48_REUSE_ART previously baked current residence art; sources, audio and offline fonts imported separately");
                     if (rebakeSurvivor) BakePlayer();
+                    if (rebakeLandscape)
+                    {
+                        Bake(HomeArt, "landscape", PanicHomeArt.BuildLandscape());
+                        Debug.Log("HOME_V58_REBAKE_LANDSCAPE straight garage approach; other cached art retained");
+                    }
                 }
                 else
                 {
@@ -87,13 +93,21 @@ namespace TooLateToPanic
                 Bake(ResidenceArt, "bunker_interior", PanicResidenceArt.BuildBunkerInterior());
                 }
 
+                var visualArgs = Environment.GetCommandLineArgs();
+                int visualEvidence = Array.IndexOf(visualArgs, "-visualFixEvidence");
+                if (visualEvidence >= 0)
+                {
+                    if (visualEvidence + 1 >= visualArgs.Length) throw new ArgumentException("Missing -visualFixEvidence path");
+                    if (!PanicVisualFixesHeadlessV58.ValidateAndSave(visualArgs[visualEvidence + 1]))
+                        throw new InvalidOperationException("V5.8 headless mesh/Avatar validation failed; see visual evidence");
+                }
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
                 new GameObject("Too Late to Panic — Home V5").AddComponent<PanicHomeWorld>();
                 EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), ScenePath);
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
                 AssetDatabase.SaveAssets();
                 var project = Directory.GetParent(Application.dataPath).FullName;
-                var outputDir = Path.Combine(project, "Builds", "Home-V5.7-20261018");
+                var outputDir = Path.Combine(project, "Builds", "Home-V5.8-20261018");
                 var buildArgs = Environment.GetCommandLineArgs();
                 int auditOutput = Array.IndexOf(buildArgs, "-panicBuildDirectory");
                 if (auditOutput >= 0)

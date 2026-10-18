@@ -1028,12 +1028,8 @@ namespace TooLateToPanic
                 Vector3 across=q*Vector3.right*(width*.5f-.06f);
                 for(int side=-1;side<=1;side+=2)b.Box((a+z)*.5f+across*side+Vector3.up*.028f,new Vector3(.035f,.004f,delta.magnitude),M.Stone,.001f,q);
             };
-            // The bunker is at(11,-7),xmax11.93. This bend keeps its cover and approach route clear.
-            drive(new Vector3(11.7f,-.0115f,.13f),new Vector3(11.7f,-.0115f,-2.65f),3.2f);
-            drive(new Vector3(11.7f,-.0115f,-2.25f),new Vector3(14,-.0115f,-5.3f),3.2f);
-            drive(new Vector3(14,-.0115f,-4.45f),new Vector3(14,-.0115f,-9.1f),3.2f);
-            drive(new Vector3(14,-.0115f,-8.8f),new Vector3(11.7f,-.0115f,-11.65f),3.2f);
-            drive(new Vector3(11.7f,-.0115f,-11.2f),new Vector3(11.7f,-.0115f,-15.60f),3.2f);
+            // Straight approach aligned with the garage aperture and dropped kerb at x11.7.
+            drive(new Vector3(11.7f,-.0115f,.13f),new Vector3(11.7f,-.0115f,-15.60f),3.2f);
             for(int side=-1;side<=1;side+=2)
             {
                 float x=side<0?9.38f:14.12f;

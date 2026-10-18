@@ -1,4 +1,4 @@
-> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.7-r4), [source/build comparison](Publications/v0.5.7-r4/source-vs-build.json). Local-only historical evidence links remain local references.
+> Public publication copy: the selected source manifest differs in scope from the full local build manifest. Native results below describe the recorded package only. OS testing state is a snapshot and may still be in progress. [Download](https://github.com/kaantufan/FixThisMakeNoMistake/releases/tag/v0.5.7-r4), [source/build comparison](Publications/Snapshots/20261018T091013Z/source-vs-build.json). Local-only historical evidence links remain local references.
 
 # Home V5.7 — menü, HUD ve birleşik teslim
 
@@ -22,7 +22,7 @@ Başlatıcı: [Play-TooLateToPanic.cmd](../Play-TooLateToPanic.cmd). Açık PID 
 
 | Suite | PASS kontrol | PNG | Süre | Kesin rapor |
 |---|---:|---:|---:|---|
-| ui-v57 | 474 | 54 | 24.45sn | [JSON](<Publications/v0.5.7-r4/native-summary.json>) |
+| ui-v57 | 474 | 54 | 24.45sn | [JSON](<Publications/Snapshots/20261018T091013Z/native-summary.json>) |
 | yarkin-hybrid | 75 | 9 | 35.64sn | [JSON](<../../Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/native-r4-hybrid-6ddcd34c-407e-4e24-940a-7df8056e6f16/hybrid-report.json>) |
 | v56-regression | 151 | 10 | 41.73sn | [JSON](<../../Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/native-r4-v56-574175bd-8aff-4e99-80f6-37660e7f6c58/v56-smoke.json>) |
 | wave-ledger-v56-regression | 281 | 8 | 13.50sn | [JSON](<../../Evidence/GamejamOrchestra/TLTP-UI-REDESIGN-V57-20261018/manager/native-r4-ledger-ca1fb961-b7c8-4c30-b190-e783e38974dd/wave-ledger-v56-smoke.json>) |
